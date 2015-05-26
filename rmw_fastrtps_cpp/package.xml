@@ -1,0 +1,25 @@
+<?xml version="1.0"?>
+<package format="2">
+  <name>rmw_fastrtps_cpp</name>
+  <version>0.0.0</version>
+  <description>Implement the ROS middleware interface using eProsima FastRTPS  static code generation in C++.</description>
+  <maintainer email="ricardogonzalez@eprosima.com">Ricardo González</maintainer>
+  <license>Apache License 2.0</license>
+
+  <buildtool_depend>ament_cmake</buildtool_depend>
+  <buildtool_depend>fastrtps_cmake_module</buildtool_depend>
+
+  <buildtool_export_depend>ament_cmake</buildtool_export_depend>
+
+  <build_depend>libfastrtps</build_depend>
+  <build_depend>rmw</build_depend>
+  <build_depend>rosidl_generator_cpp</build_depend>
+  <build_depend>rosidl_typesupport_introspection_cpp</build_depend>
+
+  <build_export_depend>libfastrtps</build_export_depend>
+  <build_export_depend>rosidl_generator_cpp</build_export_depend>
+  <build_export_depend>rosidl_typesupport_introspection_cpp</build_export_depend>
+
+  <test_depend>ament_lint_auto</test_depend>
+  <test_depend>ament_lint_common</test_depend>
+</package>
