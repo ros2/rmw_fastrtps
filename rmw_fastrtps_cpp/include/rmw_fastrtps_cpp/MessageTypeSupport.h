@@ -2,7 +2,7 @@
 #define _RMW_FASTRTPS_CPP_MESSAGETYPESUPPORT_H_
 
 #include <fastrtps/TopicDataType.h>
-#include "rosidl_typesupport_introspection_cpp/MessageIntrospection.h"
+#include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
 
 namespace eprosima { namespace fastcdr {
     class Cdr;
@@ -30,9 +30,9 @@ namespace rmw_fastrtps_cpp
 
             void deleteData(void* data);
 
-            bool serializeROSmessage(const void *ros_message, void *data);
+            bool serializeROSmessage(const void *ros_message, Buffer *data);
 
-            bool deserializeROSmessage(const void* data, void *ros_message);
+            bool deserializeROSmessage(const Buffer* data, void *ros_message);
 
         private:
 
