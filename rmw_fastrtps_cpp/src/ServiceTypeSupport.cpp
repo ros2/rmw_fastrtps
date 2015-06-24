@@ -424,7 +424,6 @@ bool RequestTypeSupport::deserializeROSmessage(const void *data, void *ros_messa
     assert(ros_message);
 
     const RequestBuffer *buffer = static_cast<const RequestBuffer*>(data);
-printf("Buffer length = %d\n", buffer->length);
     eprosima::fastcdr::FastBuffer fastbuffer(buffer->pointer, buffer->length);
     eprosima::fastcdr::Cdr deser(fastbuffer);
 

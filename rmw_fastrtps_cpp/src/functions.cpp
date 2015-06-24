@@ -3,7 +3,6 @@
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/MessageTypeSupport.h"
 #include "rmw_fastrtps_cpp/ServiceTypeSupport.h"
-#include "rmw_fastrtps_cpp/AsyncTask.h"
 
 #include <fastrtps/Domain.h>
 #include <fastrtps/participant/Participant.h>
@@ -337,7 +336,7 @@ extern "C"
     };
 
     rmw_subscription_t* rmw_create_subscription(const rmw_node_t *node, const rosidl_message_type_support_t *type_support,
-            const char *topic_name, size_t queue_size)
+            const char *topic_name, size_t queue_size, bool ignore_local_publications)
     {
         assert(node);
         assert(type_support);
@@ -676,7 +675,6 @@ extern "C"
 
         if(info->request_type_support_->serializeROSmessage(ros_request, buffer))
         {
-            printf("ENVIANDO\n");
             AsyncTask *task = new AsyncTask(info);
             eprosima::rpc::ReturnMessage retcode = info->topic_endpoint_->send_async(buffer, task);
 
@@ -684,19 +682,15 @@ extern "C"
             {
                 case eprosima::rpc::OK:
                     returnedValue = RMW_RET_OK;
-                    printf("OK\n");
                     break;
                 case eprosima::rpc::CLIENT_INTERNAL_ERROR:
                     rmw_set_error_string("cannot send the request");
-                    printf("cannot send the request\n");
                     break;
                 case eprosima::rpc::SERVER_NOT_FOUND:
                     rmw_set_error_string("cannot connect to the server");
-                    printf("cannot connect to the server\n");
                     break;
                 default:
                     rmw_set_error_string("error sending the request");
-                    printf("error sending the request\n");
                     break;
             }
         }
@@ -786,8 +780,6 @@ extern "C"
             *taken = true;
 
             info->request_type_support_->deleteData(buffer);
-
-            printf("LEIDA RESPONSE %lld\n", req_id.sequence_number);
         }
 
         return RMW_RET_OK;
