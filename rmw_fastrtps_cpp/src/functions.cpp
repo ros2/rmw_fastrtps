@@ -682,6 +682,7 @@ extern "C"
             {
                 case eprosima::rpc::OK:
                     returnedValue = RMW_RET_OK;
+                    *sequence_id = ((int64_t)buffer->header.requestId().sequence_number().high()) << 32 | buffer->header.requestId().sequence_number().low();
                     break;
                 case eprosima::rpc::CLIENT_INTERNAL_ERROR:
                     rmw_set_error_string("cannot send the request");
@@ -729,8 +730,6 @@ extern "C"
         {
             info->request_type_support_->deserializeROSmessage(buffer, ros_request);
 
-            info->request_type_support_->deleteData(buffer);
-
             // Get header
             rmw_request_id_t &req_id = *(static_cast<rmw_request_id_t*>(ros_request_header));
             memcpy(req_id.writer_guid, buffer->header.requestId().writer_guid().guidPrefix(), 12);
@@ -739,6 +738,8 @@ extern "C"
             req_id.writer_guid[14] = buffer->header.requestId().writer_guid().entityId().entityKey()[2];
             req_id.writer_guid[15] = buffer->header.requestId().writer_guid().entityId().entityKind();
             req_id.sequence_number = ((int64_t)buffer->header.requestId().sequence_number().high()) << 32 | buffer->header.requestId().sequence_number().low();
+
+            info->request_type_support_->deleteData(buffer);
 
             *taken = true;
         }

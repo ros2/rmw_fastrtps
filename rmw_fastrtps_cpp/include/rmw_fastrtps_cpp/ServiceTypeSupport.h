@@ -1,22 +1,17 @@
 #ifndef _RMW_FASTRTPS_CPP_SERVICETYPESUPPORT_H_
 #define _RMW_FASTRTPS_CPP_SERVICETYPESUPPORT_H_
 
-#include "rosidl_typesupport_introspection_cpp/service_introspection.hpp"
+#include "TypeSupport.h"
 
-#include <fastrtps/TopicDataType.h>
 #include <rpcdds/protocols/dds/MessageHeader.h>
 #include <rpcdds/protocols/Protocol.h>
 
 
 struct CustomServiceInfo;
 
-namespace eprosima { namespace fastcdr {
-    class Cdr;
-}}
-
 namespace rmw_fastrtps_cpp
 {
-    class ServiceTypeSupport : public eprosima::fastrtps::TopicDataType
+    class ServiceTypeSupport : public TypeSupport
     {
         public:
 
@@ -26,8 +21,6 @@ namespace rmw_fastrtps_cpp
 
             virtual void* createData() = 0;
 
-            void deleteData(void* data);
-
             virtual bool serializeROSmessage(const void *ros_message, void *data) = 0;
 
             virtual bool deserializeROSmessage(const void* data, void *ros_message) = 0;
@@ -35,16 +28,6 @@ namespace rmw_fastrtps_cpp
         protected:
 
             ServiceTypeSupport();
-
-            bool serializeROSmessage(eprosima::fastcdr::Cdr &ser, const rosidl_typesupport_introspection_cpp::MessageMembers *members,
-                    const void *ros_message);
-
-            bool deserializeROSmessage(eprosima::fastcdr::Cdr &deser, const rosidl_typesupport_introspection_cpp::MessageMembers *members,
-                    void *ros_message);
-
-            size_t calculateMaxSerializedSize(const rosidl_typesupport_introspection_cpp::MessageMembers *members, size_t current_alignment);
-
-            const rosidl_typesupport_introspection_cpp::MessageMembers *members_;
     };
 
     class RequestTypeSupport : public ServiceTypeSupport

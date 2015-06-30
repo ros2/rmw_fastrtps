@@ -1,7 +1,7 @@
 #ifndef _RMW_FASTRTPS_CPP_MESSAGETYPESUPPORT_H_
 #define _RMW_FASTRTPS_CPP_MESSAGETYPESUPPORT_H_
 
-#include <fastrtps/TopicDataType.h>
+#include "TypeSupport.h"
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
 
 namespace eprosima { namespace fastcdr {
@@ -10,7 +10,7 @@ namespace eprosima { namespace fastcdr {
 
 namespace rmw_fastrtps_cpp
 {
-    class MessageTypeSupport : public eprosima::fastrtps::TopicDataType
+    class MessageTypeSupport : public TypeSupport
     {
         public:
 
@@ -28,23 +28,9 @@ namespace rmw_fastrtps_cpp
 
             void* createData();
 
-            void deleteData(void* data);
-
             bool serializeROSmessage(const void *ros_message, Buffer *data);
 
             bool deserializeROSmessage(const Buffer* data, void *ros_message);
-
-        private:
-
-            size_t calculateMaxSerializedSize(const rosidl_typesupport_introspection_cpp::MessageMembers *members, size_t current_alignment);
-
-            bool serializeROSmessage(eprosima::fastcdr::Cdr &ser, const rosidl_typesupport_introspection_cpp::MessageMembers *members,
-                    const void *ros_message);
-
-            bool deserializeROSmessage(eprosima::fastcdr::Cdr &deser, const rosidl_typesupport_introspection_cpp::MessageMembers *members,
-                    void *ros_message);
-
-            const rosidl_typesupport_introspection_cpp::MessageMembers *members_;
     };
 }
 
