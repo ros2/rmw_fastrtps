@@ -168,7 +168,7 @@ extern "C"
 
         if(!participant)
         {
-            rmw_set_error_string("create_node() could not create participant");
+            RMW_SET_ERROR_MSG("create_node() could not create participant");
             return NULL;
         }
 
@@ -194,7 +194,7 @@ extern "C"
 
         if(node->implementation_identifier != eprosima_fastrtps_identifier)
         {
-            rmw_set_error_string("node handle not from this implementation");
+            RMW_SET_ERROR_MSG("node handle not from this implementation");
             return NULL;
         }
 
@@ -202,7 +202,7 @@ extern "C"
 
         if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
         {
-            rmw_set_error_string("type support not from this implementation");
+            RMW_SET_ERROR_MSG("type support not from this implementation");
             return NULL;
         }
 
@@ -222,7 +222,7 @@ extern "C"
 
         if(!info->publisher_)
         {
-            rmw_set_error_string("create_publisher() could not create publisher");
+            RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
             return NULL;
         }
 
@@ -242,7 +242,7 @@ extern "C"
 
         if(publisher->implementation_identifier != eprosima_fastrtps_identifier)
         {
-            rmw_set_error_string("publisher handle not from this implementation");
+            RMW_SET_ERROR_MSG("publisher handle not from this implementation");
             return RMW_RET_ERROR;
         }
 
@@ -256,10 +256,10 @@ extern "C"
             if(info->publisher_->write((void*)buffer))
                 returnedValue = RMW_RET_OK;
             else
-                rmw_set_error_string("cannot publish data");
+                RMW_SET_ERROR_MSG("cannot publish data");
         }
         else
-            rmw_set_error_string("cannot serialize data");
+            RMW_SET_ERROR_MSG("cannot serialize data");
 
         info->type_support_->deleteData(buffer);
 
@@ -344,7 +344,7 @@ extern "C"
 
         if(node->implementation_identifier != eprosima_fastrtps_identifier)
         {
-            rmw_set_error_string("node handle not from this implementation");
+            RMW_SET_ERROR_MSG("node handle not from this implementation");
             return NULL;
         }
 
@@ -352,7 +352,7 @@ extern "C"
 
         if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
         {
-            rmw_set_error_string("type support not from this implementation");
+            RMW_SET_ERROR_MSG("type support not from this implementation");
             return NULL;
         }
 
@@ -373,7 +373,7 @@ extern "C"
 
         if(!info->subscriber_)
         {
-            rmw_set_error_string("create_subscriber() could not create subscriber");
+            RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber");
             return NULL;
         }
 
@@ -394,7 +394,7 @@ extern "C"
 
         if(subscription->implementation_identifier != eprosima_fastrtps_identifier)
         {
-            rmw_set_error_string("publisher handle not from this implementation");
+            RMW_SET_ERROR_MSG("publisher handle not from this implementation");
             return RMW_RET_ERROR;
         }
 
@@ -502,7 +502,7 @@ extern "C"
 
         if(guard_condition_handle->implementation_identifier != eprosima_fastrtps_identifier)
         {
-            rmw_set_error_string("guard condition handle not from this implementation");
+            RMW_SET_ERROR_MSG("guard condition handle not from this implementation");
             return RMW_RET_ERROR;
         }
 
@@ -607,7 +607,7 @@ extern "C"
 
         if(node->implementation_identifier != eprosima_fastrtps_identifier)
         {
-            rmw_set_error_string("node handle not from this implementation");
+            RMW_SET_ERROR_MSG("node handle not from this implementation");
             return NULL;
         }
 
@@ -615,7 +615,7 @@ extern "C"
 
         if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
         {
-            rmw_set_error_string("type support not from this implementation");
+            RMW_SET_ERROR_MSG("type support not from this implementation");
             return NULL;
         }
 
@@ -664,7 +664,7 @@ extern "C"
 
         if(client->implementation_identifier != eprosima_fastrtps_identifier)
         {
-            rmw_set_error_string("node handle not from this implementation");
+            RMW_SET_ERROR_MSG("node handle not from this implementation");
             return RMW_RET_ERROR;
         }
 
@@ -685,18 +685,18 @@ extern "C"
                     *sequence_id = ((int64_t)buffer->header.requestId().sequence_number().high()) << 32 | buffer->header.requestId().sequence_number().low();
                     break;
                 case eprosima::rpc::CLIENT_INTERNAL_ERROR:
-                    rmw_set_error_string("cannot send the request");
+                    RMW_SET_ERROR_MSG("cannot send the request");
                     break;
                 case eprosima::rpc::SERVER_NOT_FOUND:
-                    rmw_set_error_string("cannot connect to the server");
+                    RMW_SET_ERROR_MSG("cannot connect to the server");
                     break;
                 default:
-                    rmw_set_error_string("error sending the request");
+                    RMW_SET_ERROR_MSG("error sending the request");
                     break;
             }
         }
         else
-            rmw_set_error_string("cannot serialize data");
+            RMW_SET_ERROR_MSG("cannot serialize data");
 
         info->request_type_support_->deleteData(buffer);
 
@@ -717,7 +717,7 @@ extern "C"
 
         if(service->implementation_identifier != eprosima_fastrtps_identifier)
         {
-            rmw_set_error_string("service handle not from this implementation");
+            RMW_SET_ERROR_MSG("service handle not from this implementation");
             return RMW_RET_ERROR;
         }
 
@@ -761,7 +761,7 @@ extern "C"
 
         if(client->implementation_identifier != eprosima_fastrtps_identifier)
         {
-            rmw_set_error_string("service handle not from this implementation");
+            RMW_SET_ERROR_MSG("service handle not from this implementation");
             return RMW_RET_ERROR;
         }
 
@@ -798,7 +798,7 @@ extern "C"
 
         if(service->implementation_identifier != eprosima_fastrtps_identifier)
         {
-            rmw_set_error_string("service handle not from this implementation");
+            RMW_SET_ERROR_MSG("service handle not from this implementation");
             return RMW_RET_ERROR;
         }
 
@@ -855,7 +855,7 @@ extern "C"
 
         if(node->implementation_identifier != eprosima_fastrtps_identifier)
         {
-            rmw_set_error_string("node handle not from this implementation");
+            RMW_SET_ERROR_MSG("node handle not from this implementation");
             return NULL;
         }
 
@@ -863,7 +863,7 @@ extern "C"
 
         if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
         {
-            rmw_set_error_string("type support not from this implementation");
+            RMW_SET_ERROR_MSG("type support not from this implementation");
             return NULL;
         }
 
