@@ -155,12 +155,12 @@ extern "C"
         return RMW_RET_OK;
     }
 
-    rmw_node_t* rmw_create_node(const char *name)
+    rmw_node_t* rmw_create_node(const char *name, size_t domain_id)
     {
         assert(name);
 
         ParticipantAttributes participantParam;
-        participantParam.rtps.builtin.domainId = 0;
+        participantParam.rtps.builtin.domainId = domain_id;
         participantParam.rtps.builtin.leaseDuration = c_TimeInfinite;
         participantParam.rtps.setName(name);
 
