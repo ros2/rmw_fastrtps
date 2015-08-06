@@ -1,8 +1,8 @@
-#include "rmw/rmw.h"
-#include "rmw/error_handling.h"
-#include "rosidl_typesupport_introspection_cpp/identifier.hpp"
-#include "rmw_fastrtps_cpp/MessageTypeSupport.h"
-#include "rmw_fastrtps_cpp/ServiceTypeSupport.h"
+#include <rmw/rmw.h>
+#include <rmw/error_handling.h>
+#include <rosidl_typesupport_introspection_cpp/identifier.hpp>
+#include <rmw_fastrtps_cpp/MessageTypeSupport.h>
+#include <rmw_fastrtps_cpp/ServiceTypeSupport.h>
 
 #include <fastrtps/Domain.h>
 #include <fastrtps/participant/Participant.h>
@@ -155,12 +155,12 @@ extern "C"
         return RMW_RET_OK;
     }
 
-    rmw_node_t* rmw_create_node(const char *name)
+    rmw_node_t* rmw_create_node(const char *name, size_t domain_id)
     {
         assert(name);
 
         ParticipantAttributes participantParam;
-        participantParam.rtps.builtin.domainId = 0;
+        participantParam.rtps.builtin.domainId = domain_id;
         participantParam.rtps.builtin.leaseDuration = c_TimeInfinite;
         participantParam.rtps.setName(name);
 
@@ -177,6 +177,32 @@ extern "C"
         node_handle->data = participant;
 
         return node_handle;
+    } 
+
+    rmw_ret_t rmw_destroy_node(rmw_node_t * node)
+    {
+        if (!node) {
+            RMW_SET_ERROR_MSG("node handle is null");
+            return RMW_RET_ERROR;
+        }
+
+        if(node->implementation_identifier != eprosima_fastrtps_identifier)
+        {
+            RMW_SET_ERROR_MSG("node handle not from this implementation");
+            return RMW_RET_ERROR;
+        }
+
+        Participant *participant = static_cast<Participant*>(node->data);
+        if (!participant) {
+            RMW_SET_ERROR_MSG("participant handle is null");
+        }
+
+        Domain::removeParticipant(participant);
+
+        node->data = nullptr;
+        delete(node);
+
+        return RMW_RET_OK;
     }
 
     typedef struct CustomPublisherInfo
@@ -231,6 +257,45 @@ extern "C"
         rmw_publisher->data = info;
 
         return rmw_publisher;
+    }
+
+    rmw_ret_t rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
+    {
+        if (!node)
+        {
+            RMW_SET_ERROR_MSG("node handle is null");
+            return RMW_RET_ERROR;
+        }
+
+        if(node->implementation_identifier != eprosima_fastrtps_identifier)
+        {
+            RMW_SET_ERROR_MSG("publisher handle not from this implementation");
+            return RMW_RET_ERROR;
+        }
+
+        if (!publisher) {
+            RMW_SET_ERROR_MSG("publisher handle is null");
+            return RMW_RET_ERROR;
+        }
+
+        if(publisher->implementation_identifier != eprosima_fastrtps_identifier)
+        {
+            RMW_SET_ERROR_MSG("publisher handle not from this implementation");
+            return RMW_RET_ERROR;
+        }
+
+        CustomPublisherInfo *info = (CustomPublisherInfo *)publisher->data;
+        if(info != nullptr)
+        {
+            if(info->publisher_ != nullptr)
+                Domain::removePublisher(info->publisher_);
+            if(info->type_support_ != nullptr)
+                delete info->type_support_;
+            delete info;
+        }
+        delete(publisher);
+
+        return RMW_RET_OK;
     }
 
 
@@ -382,6 +447,48 @@ extern "C"
         subscription->data = info;
 
         return subscription;
+    }
+
+    rmw_ret_t rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
+    {
+        if (!node) {
+            RMW_SET_ERROR_MSG("node handle is null");
+            return RMW_RET_ERROR;
+        }
+
+        if(node->implementation_identifier != eprosima_fastrtps_identifier)
+        {
+            RMW_SET_ERROR_MSG("node handle not from this implementation");
+            return RMW_RET_ERROR;
+        }
+
+        if (!subscription) {
+            RMW_SET_ERROR_MSG("subscription handle is null");
+            return RMW_RET_ERROR;
+        }
+
+        if(subscription->implementation_identifier != eprosima_fastrtps_identifier)
+        {
+            RMW_SET_ERROR_MSG("node handle not from this implementation");
+            return RMW_RET_ERROR;
+        }
+
+        CustomSubscriberInfo *info = static_cast<CustomSubscriberInfo*>(subscription->data);
+
+        if(info != nullptr)
+        {
+            if(info->subscriber_ != nullptr)
+                Domain::removeSubscriber(info->subscriber_);
+            if(info->listener_ != nullptr)
+                delete info->listener_;
+            if(info->type_support_ != nullptr)
+                delete info->type_support_;
+            delete info;
+        }
+
+        delete(subscription);
+
+        return RMW_RET_OK;
     }
 
     rmw_ret_t rmw_take(const rmw_subscription_t *subscription, void *ros_message, bool *taken)
@@ -907,19 +1014,82 @@ extern "C"
 
     rmw_ret_t rmw_destroy_service(rmw_service_t *service)
     {
-        return RMW_RET_ERROR;
+        if (!service) {
+            RMW_SET_ERROR_MSG("service handle is null");
+            return RMW_RET_ERROR;
+        }
+        if(service->implementation_identifier != eprosima_fastrtps_identifier)
+        {
+            RMW_SET_ERROR_MSG("publisher handle not from this implementation");
+            return RMW_RET_ERROR;
+        }
+
+        CustomServiceInfo *info = (CustomServiceInfo *)service->data;
+        if(info != nullptr)
+        {
+            if(info->transport_ != nullptr)
+            {
+                info->transport_->stop();
+                delete info->transport_;
+            }
+            if(info->listener_ != nullptr)
+                delete info->listener_;
+            if(info->strategy_ != nullptr)
+                delete info->strategy_;
+            if(info->protocol_ != nullptr)
+                delete info->protocol_;
+            if(info->topic_endpoint_ != nullptr)
+                delete info->topic_endpoint_;
+            if(info->request_type_support_ != nullptr)
+                delete info->request_type_support_;
+            if(info->response_type_support_ != nullptr)
+                delete info->response_type_support_;
+            delete info;
+        }
+        delete(service);
+
+        return RMW_RET_OK;
     }
 
     rmw_ret_t rmw_destroy_client(rmw_client_t *client)
     {
-        return RMW_RET_ERROR;
+        if (!client) {
+            RMW_SET_ERROR_MSG("client handle is null");
+            return RMW_RET_ERROR;
+        }
+        if(client->implementation_identifier != eprosima_fastrtps_identifier)
+        {
+            RMW_SET_ERROR_MSG("publisher handle not from this implementation");
+            return RMW_RET_ERROR;
+        }
+
+        CustomClientInfo *info = (CustomClientInfo *)client->data;
+        if(info != nullptr)
+        {
+            if(info->transport_ != nullptr)
+            {
+                delete info->transport_;
+            }
+            if(info->listener_ != nullptr)
+                delete info->listener_;
+            if(info->topic_endpoint_ != nullptr)
+                delete info->topic_endpoint_;
+            if(info->request_type_support_ != nullptr)
+                delete info->request_type_support_;
+            if(info->response_type_support_ != nullptr)
+                delete info->response_type_support_;
+            delete info;
+        }
+        delete(client);
+
+        return RMW_RET_OK;
     }
 
     rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions,
             rmw_guard_conditions_t *guard_conditions,
             rmw_services_t *services,
             rmw_clients_t *clients,
-            bool non_blocking)
+            rmw_time_t*)
     {
         std::mutex conditionMutex;
         std::condition_variable conditionVariable;
