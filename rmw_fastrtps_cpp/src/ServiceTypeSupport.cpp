@@ -15,7 +15,7 @@ RequestTypeSupport::RequestTypeSupport(const rosidl_typesupport_introspection_cp
 {
     assert(members);
     members_ = members->request_members_;
-    std::string name = std::string(members->package_name_) + "_" + members->service_name_ + "_Request";
+    std::string name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Request_";
     setName(strdup(name.c_str()));
     m_typeSize = eprosima::rpc::protocol::dds::rpc::RequestHeader::getMaxCdrSerializedSize(0);
     m_typeSize += calculateMaxSerializedSize(members_, m_typeSize);
@@ -127,7 +127,7 @@ ResponseTypeSupport::ResponseTypeSupport(const rosidl_typesupport_introspection_
 {
     assert(members);
     members_ = members->response_members_;
-    std::string name = std::string(members->package_name_) + "_" + members->service_name_ + "_Reply";
+    std::string name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Response";
     setName(strdup(name.c_str()));
     m_typeSize = eprosima::rpc::protocol::dds::rpc::ReplyHeader::getMaxCdrSerializedSize(0);
     m_typeSize += calculateMaxSerializedSize(members_, m_typeSize);

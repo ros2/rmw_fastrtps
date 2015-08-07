@@ -738,12 +738,15 @@ extern "C"
         Domain::registerType(participant, info->request_type_support_);
         Domain::registerType(participant, info->response_type_support_);
 
+        std::string requestTopicName = std::string(service_name) + "Request";
+        std::string responseTopicName = std::string(service_name) + "Reply";
+
         //TODO Change "Prueba"
         info->topic_endpoint_ = dynamic_cast<eprosima::rpc::transport::dds::RTPSProxyProcedureEndpoint*>(info->transport_->createProcedureEndpoint("Prueba",
                     info->request_type_support_->getName(),
-                    info->request_type_support_->getName(),
+                    requestTopicName.c_str(),
                     info->response_type_support_->getName(),
-                    info->response_type_support_->getName(),
+                    responseTopicName.c_str(),
                     (eprosima::rpc::transport::dds::RTPSTransport::Create_data)rmw_fastrtps_cpp::ResponseTypeSupport::create_data,
                     (eprosima::rpc::transport::dds::RTPSTransport::Copy_data)rmw_fastrtps_cpp::ResponseTypeSupport::copy_data,
                     (eprosima::rpc::transport::dds::RTPSTransport::Destroy_data)rmw_fastrtps_cpp::ResponseTypeSupport::delete_data,
@@ -990,12 +993,15 @@ extern "C"
         Domain::registerType(participant, info->request_type_support_);
         Domain::registerType(participant, info->response_type_support_);
 
+        std::string requestTopicName = std::string(service_name) + "Request";
+        std::string responseTopicName = std::string(service_name) + "Reply";
+
         //TODO Change "Prueba"
         info->topic_endpoint_ = dynamic_cast<eprosima::rpc::transport::dds::RTPSServerProcedureEndpoint*>(info->transport_->createProcedureEndpoint("Prueba",
                     info->response_type_support_->getName(),
-                    info->response_type_support_->getName(),
+                    responseTopicName.c_str(),
                     info->request_type_support_->getName(),
-                    info->request_type_support_->getName(),
+                    requestTopicName.c_str(),
                     (eprosima::rpc::transport::dds::RTPSTransport::Create_data)rmw_fastrtps_cpp::RequestTypeSupport::create_data,
                     (eprosima::rpc::transport::dds::RTPSTransport::Copy_data)rmw_fastrtps_cpp::RequestTypeSupport::copy_data,
                     (eprosima::rpc::transport::dds::RTPSTransport::Destroy_data)rmw_fastrtps_cpp::RequestTypeSupport::delete_data,
@@ -1038,8 +1044,6 @@ extern "C"
                 delete info->strategy_;
             if(info->protocol_ != nullptr)
                 delete info->protocol_;
-            if(info->topic_endpoint_ != nullptr)
-                delete info->topic_endpoint_;
             if(info->request_type_support_ != nullptr)
                 delete info->request_type_support_;
             if(info->response_type_support_ != nullptr)
@@ -1072,8 +1076,6 @@ extern "C"
             }
             if(info->listener_ != nullptr)
                 delete info->listener_;
-            if(info->topic_endpoint_ != nullptr)
-                delete info->topic_endpoint_;
             if(info->request_type_support_ != nullptr)
                 delete info->request_type_support_;
             if(info->response_type_support_ != nullptr)
@@ -1089,7 +1091,7 @@ extern "C"
             rmw_guard_conditions_t *guard_conditions,
             rmw_services_t *services,
             rmw_clients_t *clients,
-            rmw_time_t*)
+            rmw_time_t *wait_timeout)
     {
         std::mutex conditionMutex;
         std::condition_variable conditionVariable;
@@ -1160,7 +1162,16 @@ extern "C"
         }
 
         if(hasToWait)
-            conditionVariable.wait(lock);
+        {
+            if(!wait_timeout)
+                conditionVariable.wait(lock);
+            else
+            {
+                std::chrono::nanoseconds n(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(wait_timeout->sec)));
+                n += std::chrono::nanoseconds(wait_timeout->nsec);
+                conditionVariable.wait_for(lock, n);
+            }
+        }
         
         for(unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
         {
