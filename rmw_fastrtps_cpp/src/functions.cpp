@@ -212,7 +212,7 @@ extern "C"
     } CustomPublisherInfo;
 
     rmw_publisher_t* rmw_create_publisher(const rmw_node_t *node, const rosidl_message_type_support_t *type_support,
-            const char* topic_name, size_t queue_size)
+            const char* topic_name, const rmw_qos_profile_t & qos_policies)
     {
         assert(node);
         assert(type_support);
@@ -401,7 +401,7 @@ extern "C"
     };
 
     rmw_subscription_t* rmw_create_subscription(const rmw_node_t *node, const rosidl_message_type_support_t *type_support,
-            const char *topic_name, size_t queue_size, bool ignore_local_publications)
+            const char *topic_name, const rmw_qos_profile_t & qos_policies, bool ignore_local_publications)
     {
         assert(node);
         assert(type_support);
