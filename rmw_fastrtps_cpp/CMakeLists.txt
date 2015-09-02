@@ -5,9 +5,9 @@ project(rmw_fastrtps_cpp)
 find_package(ament_cmake REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
-find_package(fastcdr)
-find_package(fastrtps)
-find_package(rpcdds)
+find_package(fastcdr REQUIRED)
+find_package(fastrpc REQUIRED)
+# find_package(fastrtps)
 
 find_package(rmw REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)

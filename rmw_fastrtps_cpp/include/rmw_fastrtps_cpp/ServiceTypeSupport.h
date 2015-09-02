@@ -100,7 +100,7 @@ namespace rmw_fastrtps_cpp
 
         private:
 
-            bool setTransport(eprosima::rpc::transport::Transport&) {}
+            bool setTransport(eprosima::rpc::transport::Transport&) { return false; }
 
             struct CustomServiceInfo *info_;
     };

@@ -177,7 +177,7 @@ extern "C"
         node_handle->data = participant;
 
         return node_handle;
-    } 
+    }
 
     rmw_ret_t rmw_destroy_node(rmw_node_t * node)
     {
@@ -212,7 +212,7 @@ extern "C"
     } CustomPublisherInfo;
 
     rmw_publisher_t* rmw_create_publisher(const rmw_node_t *node, const rosidl_message_type_support_t *type_support,
-            const char* topic_name, size_t queue_size)
+            const char* topic_name, const rmw_qos_profile_t & qos_policies)
     {
         assert(node);
         assert(type_support);
@@ -401,7 +401,7 @@ extern "C"
     };
 
     rmw_subscription_t* rmw_create_subscription(const rmw_node_t *node, const rosidl_message_type_support_t *type_support,
-            const char *topic_name, size_t queue_size, bool ignore_local_publications)
+            const char *topic_name, const rmw_qos_profile_t & qos_policies, bool ignore_local_publications)
     {
         assert(node);
         assert(type_support);
@@ -442,7 +442,7 @@ extern "C"
             return NULL;
         }
 
-        rmw_subscription_t *subscription = new rmw_subscription_t; 
+        rmw_subscription_t *subscription = new rmw_subscription_t;
         subscription->implementation_identifier = eprosima_fastrtps_identifier;
         subscription->data = info;
 
@@ -755,7 +755,7 @@ extern "C"
 
         info->listener_ = new ClientListener(info);
 
-        rmw_client_t *client = new rmw_client_t; 
+        rmw_client_t *client = new rmw_client_t;
         client->implementation_identifier = eprosima_fastrtps_identifier;
         client->data = info;
 
@@ -1011,7 +1011,7 @@ extern "C"
         info->listener_ = new ServiceListener(info);
         info->transport_->run();
 
-        rmw_service_t *service = new rmw_service_t; 
+        rmw_service_t *service = new rmw_service_t;
         service->implementation_identifier = eprosima_fastrtps_identifier;
         service->data = info;
 
@@ -1172,7 +1172,7 @@ extern "C"
                 conditionVariable.wait_for(lock, n);
             }
         }
-        
+
         for(unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
         {
             void *data = subscriptions->subscribers[i];
@@ -1218,6 +1218,43 @@ extern "C"
         }
 
         return RMW_RET_OK;
+    }
+
+    rmw_ret_t
+    rmw_get_topic_names_and_types(
+      const rmw_node_t * node,
+      rmw_topic_names_and_types_t * topic_names_and_types)
+    {
+        RMW_SET_ERROR_MSG("not implemented");
+        return RMW_RET_ERROR;
+    }
+
+    rmw_ret_t
+    rmw_destroy_topic_names_and_types(
+      rmw_topic_names_and_types_t * topic_names_and_types)
+    {
+        RMW_SET_ERROR_MSG("not implemented");
+        return RMW_RET_ERROR;
+    }
+
+    rmw_ret_t
+    rmw_count_publishers(
+      const rmw_node_t * node,
+      const char * topic_name,
+      size_t * count)
+    {
+        RMW_SET_ERROR_MSG("not implemented");
+        return RMW_RET_ERROR;
+    }
+
+    rmw_ret_t
+    rmw_count_subscribers(
+      const rmw_node_t * node,
+      const char * topic_name,
+      size_t * count)
+    {
+        RMW_SET_ERROR_MSG("not implemented");
+        return RMW_RET_ERROR;
     }
 }
 
