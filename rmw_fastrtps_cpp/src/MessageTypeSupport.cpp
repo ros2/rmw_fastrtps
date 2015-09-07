@@ -9,14 +9,22 @@
 
 using namespace rmw_fastrtps_cpp;
 
-MessageTypeSupport::MessageTypeSupport(const rosidl_typesupport_introspection_cpp::MessageMembers *members)
+MessageTypeSupport::MessageTypeSupport(const rosidl_typesupport_introspection_cpp::MessageMembers *members) : typeTooLarge_(false)
 {
     assert(members);
     members_ = members;
 
+    if(strcmp(members->message_name_, "ParameterEvent") == 0)
+        typeTooLarge_ = true;
+
     std::string name = std::string(members->package_name_) + "::dds_::" + members->message_name_ + "_";
     setName(strdup(name.c_str()));
-    m_typeSize = calculateMaxSerializedSize(members, 0);
+
+    if(members->member_count_ != 0)
+        m_typeSize = calculateMaxSerializedSize(members, 0);
+    else
+        m_typeSize = 1;
+
     m_isGetKeyDefined = false;
 }
 
@@ -63,7 +71,10 @@ bool MessageTypeSupport::serializeROSmessage(const void *ros_message, Buffer *bu
     eprosima::fastcdr::FastBuffer fastbuffer(buffer->pointer, m_typeSize);
     eprosima::fastcdr::Cdr ser(fastbuffer);
 
-    TypeSupport::serializeROSmessage(ser, members_, ros_message);
+    if(members_->member_count_ != 0)
+        TypeSupport::serializeROSmessage(ser, members_, ros_message);
+    else
+        ser << (uint8_t)0;
 
     buffer->length = (uint32_t)ser.getSerializedDataLength();
     return true;
@@ -77,7 +88,13 @@ bool MessageTypeSupport::deserializeROSmessage(const Buffer *buffer, void *ros_m
     eprosima::fastcdr::FastBuffer fastbuffer(buffer->pointer, buffer->length);
     eprosima::fastcdr::Cdr deser(fastbuffer);
 
-    TypeSupport::deserializeROSmessage(deser, members_, ros_message, false);
+    if(members_->member_count_ != 0)
+        TypeSupport::deserializeROSmessage(deser, members_, ros_message, false);
+    else
+    {
+        uint8_t dump;
+        deser >> dump;
+    }
 
     return true;
 }

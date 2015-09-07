@@ -209,6 +209,7 @@ extern "C"
     {
         Publisher *publisher_;
         rmw_fastrtps_cpp::MessageTypeSupport *type_support_;
+        rmw_gid_t publisher_gid;
     } CustomPublisherInfo;
 
     rmw_publisher_t* rmw_create_publisher(const rmw_node_t *node, const rosidl_message_type_support_t *type_support,
@@ -251,6 +252,16 @@ extern "C"
             RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
             return NULL;
         }
+
+        info->publisher_gid.implementation_identifier = eprosima_fastrtps_identifier;
+        static_assert(
+                sizeof(eprosima::fastrtps::rtps::GUID_t) <= RMW_GID_STORAGE_SIZE,
+                "RMW_GID_STORAGE_SIZE insufficient to store the rmw_fastrtps_cpp GID implementation."
+                );
+
+        memset(info->publisher_gid.data, 0, RMW_GID_STORAGE_SIZE);
+        const GUID_t &guid = info->publisher_->getGuid();
+        memcpy(info->publisher_gid.data, &guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
 
         rmw_publisher_t *rmw_publisher = new rmw_publisher_t;
         rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
@@ -516,6 +527,53 @@ extern "C"
             if(sinfo.sampleKind == ALIVE)
             {
                 info->type_support_->deserializeROSmessage(buffer, ros_message);
+                *taken = true;
+            }
+        }
+
+        info->type_support_->deleteData(buffer);
+
+        return RMW_RET_OK;
+    }
+
+    rmw_ret_t rmw_take_with_info(
+            const rmw_subscription_t * subscription,
+            void * ros_message,
+            bool * taken,
+            rmw_message_info_t * message_info)
+    {
+        assert(subscription);
+        assert(ros_message);
+        assert(taken);
+
+        if (!message_info) {
+            RMW_SET_ERROR_MSG("message info is null");
+            return RMW_RET_ERROR;
+        }
+
+        *taken = false;
+
+        if(subscription->implementation_identifier != eprosima_fastrtps_identifier)
+        {
+            RMW_SET_ERROR_MSG("publisher handle not from this implementation");
+            return RMW_RET_ERROR;
+        }
+
+        CustomSubscriberInfo *info = (CustomSubscriberInfo*)subscription->data;
+        assert(info);
+
+        rmw_fastrtps_cpp::MessageTypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::MessageTypeSupport::Buffer*)info->type_support_->createData();
+        SampleInfo_t sinfo;
+
+        if(info->subscriber_->takeNextData(buffer, &sinfo))
+        {
+            if(sinfo.sampleKind == ALIVE)
+            {
+                info->type_support_->deserializeROSmessage(buffer, ros_message);
+                rmw_gid_t * sender_gid = &message_info->publisher_gid;
+                sender_gid->implementation_identifier = eprosima_fastrtps_identifier;
+                memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
+                memcpy(sender_gid->data, &sinfo.writerGUID, sizeof(sinfo.writerGUID));
                 *taken = true;
             }
         }
@@ -1258,3 +1316,73 @@ extern "C"
     }
 }
 
+rmw_ret_t
+rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
+{
+  if (!publisher) {
+    RMW_SET_ERROR_MSG("publisher is null");
+    return RMW_RET_ERROR;
+  }
+
+  if(publisher->implementation_identifier != eprosima_fastrtps_identifier)
+  {
+	  RMW_SET_ERROR_MSG("publisher handle not from this implementation");
+	  return RMW_RET_ERROR;
+  }
+
+  if (!gid)
+  {
+    RMW_SET_ERROR_MSG("gid is null");
+    return RMW_RET_ERROR;
+  }
+
+  const CustomPublisherInfo *info = static_cast<const CustomPublisherInfo *>(publisher->data);
+
+  if (!info)
+  {
+    RMW_SET_ERROR_MSG("publisher info handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  *gid = info->publisher_gid;
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * result)
+{
+  if (!gid1)
+  {
+    RMW_SET_ERROR_MSG("gid1 is null");
+    return RMW_RET_ERROR;
+  }
+
+  if(gid1->implementation_identifier != eprosima_fastrtps_identifier)
+  {
+	  RMW_SET_ERROR_MSG("guid1 handle not from this implementation");
+	  return RMW_RET_ERROR;
+  }
+
+  if (!gid2)
+  {
+    RMW_SET_ERROR_MSG("gid2 is null");
+    return RMW_RET_ERROR;
+  }
+
+  if(gid2->implementation_identifier != eprosima_fastrtps_identifier)
+  {
+	  RMW_SET_ERROR_MSG("gid1 handle not from this implementation");
+	  return RMW_RET_ERROR;
+  }
+
+  if (!result)
+  {
+    RMW_SET_ERROR_MSG("result is null");
+    return RMW_RET_ERROR;
+  }
+
+  *result =
+    memcmp(gid1->data, gid2->data, sizeof(eprosima::fastrtps::rtps::GUID_t)) == 0;
+
+  return RMW_RET_OK;
+}

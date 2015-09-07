@@ -35,6 +35,8 @@ namespace rmw_fastrtps_cpp
 
             size_t calculateMaxSerializedSize(const rosidl_typesupport_introspection_cpp::MessageMembers *members, size_t current_alignment);
 
+            virtual bool typeByDefaultLarge() { return false; }
+
             const rosidl_typesupport_introspection_cpp::MessageMembers *members_;
     };
 }

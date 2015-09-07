@@ -177,7 +177,7 @@ static size_t size_of(const rosidl_typesupport_introspection_cpp::MessageMembers
         ser.serializeArray((TYPE*)field, member->array_size_); \
     } else { \
         std::vector<TYPE> &vector = *reinterpret_cast<std::vector<TYPE> *>(field); \
-        if(vector.size() > (member->is_upper_bound_ ? member->array_size_ : 50)) { \
+        if(vector.size() > (member->is_upper_bound_ ? member->array_size_ : (typeByDefaultLarge() ? 30 : 101))) { \
             printf("vector overcomes the maximum length\n"); \
             throw std::runtime_error("vector overcomes the maximum length"); \
         } \
@@ -244,9 +244,9 @@ bool TypeSupport::serializeROSmessage(eprosima::fastcdr::Cdr &ser, const rosidl_
                         std::string &str = *(std::string*)field;
 
                         // Control maximum length.
-                        if((member->string_upper_bound_ && str.length() > member->string_upper_bound_ + 1) || str.length() > 127)
+                        if((member->string_upper_bound_ && str.length() > member->string_upper_bound_ + 1) || str.length() > 256)
                         {
-                            printf("string overcomes the maximum length\n");
+                            printf("string overcomes the maximum length with length %lu\n", str.length());
                             throw std::runtime_error("string overcomes the maximum length");
                         }
                         ser << str;
@@ -324,7 +324,7 @@ bool TypeSupport::serializeROSmessage(eprosima::fastcdr::Cdr &ser, const rosidl_
                             std::vector<unsigned char> *vector = reinterpret_cast<std::vector<unsigned char> *>(field);
                             void *ptr = (void*)sub_members_size;
                             size_t vsize = vector->size() / (size_t)align_(max_align, 0, ptr, space);
-                            if(vsize > (member->is_upper_bound_ ? member->array_size_ : 50)) {
+                            if(vsize > (member->is_upper_bound_ ? member->array_size_ : (typeByDefaultLarge() ? 30 : 101))) {
                                 printf("vector overcomes the maximum length\n");
                                 throw std::runtime_error("vector overcomes the maximum length");
                             }
@@ -564,7 +564,7 @@ size_t TypeSupport::calculateMaxSerializedSize(const rosidl_typesupport_introspe
                     current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-                    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + (member->string_upper_bound_ ? member->string_upper_bound_ + 1 : 128);
+                    current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + (member->string_upper_bound_ ? member->string_upper_bound_ + 1 : 257);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
                     {
@@ -586,7 +586,7 @@ size_t TypeSupport::calculateMaxSerializedSize(const rosidl_typesupport_introspe
             {
                 current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
-                if(array_size == 0) array_size = 50;
+                if(array_size == 0) typeByDefaultLarge() ? array_size = 30 : array_size = 101;
             }
 
             switch(member->type_id_) 
@@ -615,7 +615,7 @@ size_t TypeSupport::calculateMaxSerializedSize(const rosidl_typesupport_introspe
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
                     {
                         for(size_t index = 0; index < array_size; ++index)
-                            current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + (member->string_upper_bound_ ? member->string_upper_bound_ + 1 : 128);
+                            current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4) + (member->string_upper_bound_ ? member->string_upper_bound_ + 1 : 257);
                     }
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:

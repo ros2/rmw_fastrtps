@@ -31,6 +31,12 @@ namespace rmw_fastrtps_cpp
             bool serializeROSmessage(const void *ros_message, Buffer *data);
 
             bool deserializeROSmessage(const Buffer* data, void *ros_message);
+
+private:
+
+            bool typeByDefaultLarge() { return typeTooLarge_; }
+
+            bool typeTooLarge_;
     };
 }
 
