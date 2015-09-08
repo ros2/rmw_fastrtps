@@ -215,6 +215,9 @@ extern "C"
     rmw_publisher_t* rmw_create_publisher(const rmw_node_t *node, const rosidl_message_type_support_t *type_support,
             const char* topic_name, const rmw_qos_profile_t & qos_policies)
     {
+        rmw_publisher_t *rmw_publisher  = nullptr;
+        const GUID_t *guid = nullptr;
+
         assert(node);
         assert(type_support);
         assert(topic_name);
@@ -245,12 +248,61 @@ extern "C"
         publisherParam.topic.topicDataType = std::string(members->package_name_) + "::dds_::" + members->message_name_ + "_";
         publisherParam.topic.topicName = topic_name;
 
+        switch (qos_policies.history)
+        {
+            case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
+                publisherParam.topic.historyQos.kind = KEEP_LAST_HISTORY_QOS;
+                break;
+            case RMW_QOS_POLICY_KEEP_ALL_HISTORY:
+                publisherParam.topic.historyQos.kind = KEEP_ALL_HISTORY_QOS;
+                break;
+            case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
+                break;
+            default:
+                RMW_SET_ERROR_MSG("Unknown QoS history policy");
+                goto fail;
+        }
+
+        switch (qos_policies.reliability)
+        {
+            case RMW_QOS_POLICY_BEST_EFFORT:
+                publisherParam.qos.m_reliability.kind = BEST_EFFORT_RELIABILITY_QOS;
+                break;
+            case RMW_QOS_POLICY_RELIABLE:
+                publisherParam.qos.m_reliability.kind = RELIABLE_RELIABILITY_QOS;
+                break;
+            case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
+                break;
+            default:
+                RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
+                goto fail;
+        }
+
+        if (qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
+            publisherParam.topic.historyQos.depth = static_cast<int32_t>(qos_policies.depth);
+        }
+
+        // ensure the history depth is at least the requested queue size
+        assert(publisherParam.topic.historyQos.depth >= 0);
+        if (
+                publisherParam.topic.historyQos.kind == KEEP_LAST_HISTORY_QOS &&
+                static_cast<size_t>(publisherParam.topic.historyQos.depth) < qos_policies.depth
+           )
+        {
+            if (qos_policies.depth > (std::numeric_limits<int32_t>::max)()) {
+                RMW_SET_ERROR_MSG(
+                        "failed to set history depth since the requested queue size exceeds the DDS type");
+                goto fail;
+            }
+            publisherParam.topic.historyQos.depth = static_cast<int32_t>(qos_policies.depth);
+        }
+
         info->publisher_ = Domain::createPublisher(participant, publisherParam, NULL);
 
         if(!info->publisher_)
         {
             RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
-            return NULL;
+            goto fail;
         }
 
         info->publisher_gid.implementation_identifier = eprosima_fastrtps_identifier;
@@ -260,14 +312,26 @@ extern "C"
                 );
 
         memset(info->publisher_gid.data, 0, RMW_GID_STORAGE_SIZE);
-        const GUID_t &guid = info->publisher_->getGuid();
-        memcpy(info->publisher_gid.data, &guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
+        guid = &info->publisher_->getGuid();
+        memcpy(info->publisher_gid.data, guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
 
-        rmw_publisher_t *rmw_publisher = new rmw_publisher_t;
+        rmw_publisher = new rmw_publisher_t;
         rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
         rmw_publisher->data = info;
 
         return rmw_publisher;
+fail:
+
+        if(info != nullptr)
+        {
+            if(info->type_support_ != nullptr)
+                delete info->type_support_;
+
+            delete info;
+        }
+
+        return NULL;
+
     }
 
     rmw_ret_t rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
@@ -414,6 +478,8 @@ extern "C"
     rmw_subscription_t* rmw_create_subscription(const rmw_node_t *node, const rosidl_message_type_support_t *type_support,
             const char *topic_name, const rmw_qos_profile_t & qos_policies, bool ignore_local_publications)
     {
+        rmw_subscription_t *subscription = nullptr;
+
         assert(node);
         assert(type_support);
         assert(topic_name);
@@ -444,20 +510,79 @@ extern "C"
         subscriberParam.topic.topicDataType = std::string(members->package_name_) + "::dds_::" + members->message_name_ + "_";
         subscriberParam.topic.topicName = topic_name;
 
+        switch (qos_policies.history) {
+            case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
+                subscriberParam.topic.historyQos.kind = KEEP_LAST_HISTORY_QOS;
+                break;
+            case RMW_QOS_POLICY_KEEP_ALL_HISTORY:
+                subscriberParam.topic.historyQos.kind = KEEP_ALL_HISTORY_QOS;
+                break;
+            case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
+                break;
+            default:
+                RMW_SET_ERROR_MSG("Unknown QoS history policy");
+                goto fail;
+        }
+
+        switch (qos_policies.reliability)
+        {
+            case RMW_QOS_POLICY_BEST_EFFORT:
+                subscriberParam.qos.m_reliability.kind = BEST_EFFORT_RELIABILITY_QOS;
+                break;
+            case RMW_QOS_POLICY_RELIABLE:
+                subscriberParam.qos.m_reliability.kind = RELIABLE_RELIABILITY_QOS;
+                break;
+            case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
+                break;
+            default:
+                RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
+                goto fail;
+        }
+
+        if (qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
+            subscriberParam.topic.historyQos.depth = static_cast<int32_t>(qos_policies.depth);
+        }
+
+        // ensure the history depth is at least the requested queue size
+        assert(subscriberParam.topic.historyQos.depth >= 0);
+        if (
+                subscriberParam.topic.historyQos.kind == KEEP_LAST_HISTORY_QOS &&
+                static_cast<size_t>(subscriberParam.topic.historyQos.depth) < qos_policies.depth
+           )
+        {
+            if (qos_policies.depth > (std::numeric_limits<int32_t>::max)()) {
+                RMW_SET_ERROR_MSG(
+                        "failed to set history depth since the requested queue size exceeds the DDS type");
+                goto fail;
+            }
+            subscriberParam.topic.historyQos.depth = static_cast<int32_t>(qos_policies.depth);
+        }
+
         info->listener_ = new SubListener(info);
         info->subscriber_ = Domain::createSubscriber(participant, subscriberParam, info->listener_);
 
         if(!info->subscriber_)
         {
             RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber");
-            return NULL;
+            goto fail;
         }
 
-        rmw_subscription_t *subscription = new rmw_subscription_t;
+        subscription = new rmw_subscription_t;
         subscription->implementation_identifier = eprosima_fastrtps_identifier;
         subscription->data = info;
 
         return subscription;
+fail:
+
+        if(info != nullptr)
+        {
+            if(info->type_support_ != nullptr)
+                delete info->type_support_;
+
+            delete info;
+        }
+
+        return NULL;
     }
 
     rmw_ret_t rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
