@@ -17,7 +17,7 @@ MessageTypeSupport::MessageTypeSupport(const rosidl_typesupport_introspection_cp
     if(strcmp(members->message_name_, "ParameterEvent") == 0)
         typeTooLarge_ = true;
 
-    std::string name = std::string(members->package_name_) + "::dds_::" + members->message_name_ + "_";
+    std::string name = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
     setName(strdup(name.c_str()));
 
     if(members->member_count_ != 0)
@@ -35,6 +35,7 @@ bool MessageTypeSupport::serialize(void *data, SerializedPayload_t *payload)
 
     Buffer *buffer = static_cast<Buffer*>(data);
     payload->length = buffer->length;
+    payload->encapsulation = CDR_LE;
     memcpy(payload->data, buffer->pointer, buffer->length);
     return true;
 }
@@ -74,7 +75,7 @@ bool MessageTypeSupport::serializeROSmessage(const void *ros_message, Buffer *bu
     if(members_->member_count_ != 0)
         TypeSupport::serializeROSmessage(ser, members_, ros_message);
     else
-        ser << (uint8_t)0;
+        ser << false;
 
     buffer->length = (uint32_t)ser.getSerializedDataLength();
     return true;
@@ -92,7 +93,7 @@ bool MessageTypeSupport::deserializeROSmessage(const Buffer *buffer, void *ros_m
         TypeSupport::deserializeROSmessage(deser, members_, ros_message, false);
     else
     {
-        uint8_t dump;
+        bool dump;
         deser >> dump;
     }
 

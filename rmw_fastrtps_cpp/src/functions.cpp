@@ -245,7 +245,7 @@ extern "C"
 
         PublisherAttributes publisherParam;
         publisherParam.topic.topicKind = NO_KEY;
-        publisherParam.topic.topicDataType = std::string(members->package_name_) + "::dds_::" + members->message_name_ + "_";
+        publisherParam.topic.topicDataType = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
         publisherParam.topic.topicName = topic_name;
 
         switch (qos_policies.history)
@@ -419,7 +419,7 @@ fail:
     {
         public:
 
-            SubListener(CustomSubscriberInfo *info) : info_(info), hasData_(false),
+            SubListener(CustomSubscriberInfo *info) : info_(info), data_(0),
             conditionMutex_(NULL), conditionVariable_(NULL) {}
 
             void onSubscriptionMatched(Subscriber *sub, MatchingInfo &info) {}
@@ -431,12 +431,12 @@ fail:
                 if(conditionMutex_ != NULL)
                 {
                     std::unique_lock<std::mutex> clock(*conditionMutex_);
-                    hasData_ = true;
+                    ++data_;
                     clock.unlock();
                     conditionVariable_->notify_one();
                 }
                 else
-                    hasData_ = true;
+                    ++data_;
 
             }
 
@@ -456,21 +456,29 @@ fail:
 
             bool hasData()
             {
-                return hasData_;
+                return data_ > 0;
             }
 
-            bool getHasData()
+            void data_taken()
             {
-                bool ret = hasData_;
-                hasData_ = false;
-                return ret;
+                std::lock_guard<std::mutex> lock(internalMutex_);
+
+                if(conditionMutex_ != NULL)
+                {
+                    std::unique_lock<std::mutex> clock(*conditionMutex_);
+                    --data_;
+                }
+                else
+                    --data_;
+
+                return;
             }
 
         private:
 
             CustomSubscriberInfo *info_;
             std::mutex internalMutex_;
-            bool hasData_;
+            uint32_t data_;
             std::mutex *conditionMutex_;
             std::condition_variable *conditionVariable_;
     };
@@ -507,7 +515,7 @@ fail:
 
         SubscriberAttributes subscriberParam;
         subscriberParam.topic.topicKind = NO_KEY;
-        subscriberParam.topic.topicDataType = std::string(members->package_name_) + "::dds_::" + members->message_name_ + "_";
+        subscriberParam.topic.topicDataType = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
         subscriberParam.topic.topicName = topic_name;
 
         switch (qos_policies.history) {
@@ -649,6 +657,8 @@ fail:
 
         if(info->subscriber_->takeNextData(buffer, &sinfo))
         {
+            info->listener_->data_taken();
+
             if(sinfo.sampleKind == ALIVE)
             {
                 info->type_support_->deserializeROSmessage(buffer, ros_message);
@@ -692,6 +702,8 @@ fail:
 
         if(info->subscriber_->takeNextData(buffer, &sinfo))
         {
+            info->listener_->data_taken();
+
             if(sinfo.sampleKind == ALIVE)
             {
                 info->type_support_->deserializeROSmessage(buffer, ros_message);
@@ -1360,7 +1372,7 @@ fail:
         {
             void *data = subscriptions->subscribers[i];
             CustomSubscriberInfo *custom_subscriber_info = (CustomSubscriberInfo*)data;
-            if(!custom_subscriber_info->listener_->getHasData())
+            if(!custom_subscriber_info->listener_->hasData())
             {
                 subscriptions->subscribers[i] = 0;
             }

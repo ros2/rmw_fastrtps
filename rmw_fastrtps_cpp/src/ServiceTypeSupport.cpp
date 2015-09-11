@@ -34,6 +34,7 @@ bool RequestTypeSupport::serialize(void *data, SerializedPayload_t *payload)
     ser << buffer->header;
     memcpy(ser.getCurrentPosition(), buffer->pointer, buffer->length);
     payload->length = ser.getSerializedDataLength() + buffer->length;
+    payload->encapsulation = CDR_LE;
     return true;
 }
 
@@ -145,6 +146,7 @@ bool ResponseTypeSupport::serialize(void *data, SerializedPayload_t *payload)
     ser << buffer->header;
     memcpy(ser.getCurrentPosition(), buffer->pointer, buffer->length);
     payload->length = ser.getSerializedDataLength() + buffer->length;
+    payload->encapsulation = CDR_LE;
     return true;
 }
 
