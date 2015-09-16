@@ -7,7 +7,7 @@
 
 using namespace rmw_fastrtps_cpp;
 
-TypeSupport::TypeSupport()
+TypeSupport::TypeSupport() : typeTooLarge_(false)
 {
     m_isGetKeyDefined = false;
 }
@@ -633,4 +633,77 @@ size_t TypeSupport::calculateMaxSerializedSize(const rosidl_typesupport_introspe
     }
 
     return current_alignment - initial_alignment;
+}
+
+
+bool TypeSupport::serializeROSmessage(const void *ros_message, Buffer *buffer)
+{
+    assert(buffer);
+    assert(ros_message);
+
+    eprosima::fastcdr::FastBuffer fastbuffer(buffer->pointer, m_typeSize);
+    eprosima::fastcdr::Cdr ser(fastbuffer);
+
+    if(members_->member_count_ != 0)
+        TypeSupport::serializeROSmessage(ser, members_, ros_message);
+    else
+        ser << false;
+
+    buffer->length = (uint32_t)ser.getSerializedDataLength();
+    return true;
+}
+
+bool TypeSupport::deserializeROSmessage(const Buffer *buffer, void *ros_message)
+{
+    assert(buffer);
+    assert(ros_message);
+
+    eprosima::fastcdr::FastBuffer fastbuffer(buffer->pointer, buffer->length);
+    eprosima::fastcdr::Cdr deser(fastbuffer);
+
+    if(members_->member_count_ != 0)
+        TypeSupport::deserializeROSmessage(deser, members_, ros_message, false);
+    else
+    {
+        bool dump;
+        deser >> dump;
+    }
+
+    return true;
+}
+
+void* TypeSupport::createData()
+{
+    Buffer *buffer = static_cast<Buffer*>(malloc(sizeof(Buffer) + m_typeSize));
+
+    if(buffer)
+    {
+        buffer->length = 0;
+        buffer->pointer = (char*)(buffer + 1);
+    }
+
+    return buffer;
+}
+
+bool TypeSupport::serialize(void *data, SerializedPayload_t *payload)
+{
+    assert(data);
+    assert(payload);
+
+    Buffer *buffer = static_cast<Buffer*>(data);
+    payload->length = buffer->length;
+    payload->encapsulation = CDR_LE;
+    memcpy(payload->data, buffer->pointer, buffer->length);
+    return true;
+}
+
+bool TypeSupport::deserialize(SerializedPayload_t *payload, void *data)
+{
+    assert(data);
+    assert(payload);
+
+    Buffer *buffer = static_cast<Buffer*>(data);
+    buffer->length = payload->length;
+    memcpy(buffer->pointer, payload->data, payload->length);
+    return true;
 }

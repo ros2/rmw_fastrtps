@@ -15,11 +15,21 @@ namespace rmw_fastrtps_cpp
     {
         public:
 
-            virtual bool serialize(void *data, SerializedPayload_t *payload) = 0;
+            typedef struct Buffer
+            {
+                uint32_t length;
+                char *pointer;
+            } Buffer;
 
-            virtual bool deserialize(SerializedPayload_t *payload, void *data) = 0;
+            bool serializeROSmessage(const void *ros_message, Buffer *data);
 
-            virtual void* createData() = 0;
+            bool deserializeROSmessage(const Buffer* data, void *ros_message);
+
+            bool serialize(void *data, SerializedPayload_t *payload);
+
+            bool deserialize(SerializedPayload_t *payload, void *data);
+
+            void* createData();
 
             void deleteData(void* data);
 
@@ -27,17 +37,21 @@ namespace rmw_fastrtps_cpp
 
             TypeSupport();
 
+            size_t calculateMaxSerializedSize(const rosidl_typesupport_introspection_cpp::MessageMembers *members, size_t current_alignment);
+
+            const rosidl_typesupport_introspection_cpp::MessageMembers *members_;
+
+            bool typeTooLarge_;
+
+        private:
+
             bool serializeROSmessage(eprosima::fastcdr::Cdr &ser, const rosidl_typesupport_introspection_cpp::MessageMembers *members,
                     const void *ros_message);
 
             bool deserializeROSmessage(eprosima::fastcdr::Cdr &deser, const rosidl_typesupport_introspection_cpp::MessageMembers *members,
                     void *ros_message, bool call_new);
 
-            size_t calculateMaxSerializedSize(const rosidl_typesupport_introspection_cpp::MessageMembers *members, size_t current_alignment);
-
-            virtual bool typeByDefaultLarge() { return false; }
-
-            const rosidl_typesupport_introspection_cpp::MessageMembers *members_;
+            bool typeByDefaultLarge() { return typeTooLarge_; }
     };
 }
 

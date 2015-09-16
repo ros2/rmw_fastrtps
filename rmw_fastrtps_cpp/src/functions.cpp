@@ -14,13 +14,6 @@
 #include <fastrtps/subscriber/SampleInfo.h>
 #include <fastrtps/attributes/SubscriberAttributes.h>
 
-#include <rpcdds/transports/dds/RTPSProxyTransport.h>
-#include <rpcdds/transports/dds/RTPSServerTransport.h>
-#include <rpcdds/transports/dds/components/RTPSProxyProcedureEndpoint.h>
-#include <rpcdds/transports/dds/components/RTPSServerProcedureEndpoint.h>
-#include <rpcdds/strategies/SingleThreadStrategy.h>
-#include <rpcdds/transports/dds/RTPSAsyncTask.h>
-
 #include <cassert>
 #include <mutex>
 #include <condition_variable>
@@ -32,14 +25,23 @@ class ClientListener;
 
 typedef struct CustomClientInfo
 {
-    eprosima::rpc::transport::dds::RTPSProxyTransport *transport_;
     rmw_fastrtps_cpp::RequestTypeSupport *request_type_support_;
     rmw_fastrtps_cpp::ResponseTypeSupport *response_type_support_;
-    eprosima::rpc::transport::dds::RTPSProxyProcedureEndpoint *topic_endpoint_;
+    Subscriber *response_subscriber_;
+    Publisher *request_publisher_;
     ClientListener *listener_;
+    eprosima::fastrtps::rtps::GUID_t writer_guid_;
 } CustomClientInfo;
 
-class ClientListener
+typedef struct CustomClientResponse
+{
+    eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
+    rmw_fastrtps_cpp::TypeSupport::Buffer *buffer_;
+
+    CustomClientResponse() : buffer_(nullptr) {}
+} CustomClientResponse;
+
+class ClientListener : public SubscriberListener
 {
     public:
 
@@ -47,41 +49,56 @@ class ClientListener
         conditionMutex_(NULL), conditionVariable_(NULL) {}
 
 
-        void onNewResponse(rmw_fastrtps_cpp::ResponseTypeSupport::ResponseBuffer *buffer)
+        void onNewDataMessage(Subscriber *sub)
         {
-            assert(buffer);
-            std::lock_guard<std::mutex> lock(internalMutex_);
+            assert(sub);
 
-            if(conditionMutex_ != NULL)
+            CustomClientResponse response;
+            response.buffer_ = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info_->response_type_support_->createData();
+            SampleInfo_t sinfo;
+
+            if(info_->response_subscriber_->takeNextData(response.buffer_, &sinfo))
             {
-                std::unique_lock<std::mutex> clock(*conditionMutex_);
-                list.push_back(buffer);
-                clock.unlock();
-                conditionVariable_->notify_one();
-            }
-            else
-                list.push_back(buffer);
+                if(sinfo.sampleKind == ALIVE)
+                {
+                    response.sample_identity_ = sinfo.related_sample_identity;
 
+                    if(info_->writer_guid_ == response.sample_identity_.writer_guid())
+                    {
+                        std::lock_guard<std::mutex> lock(internalMutex_);
+
+                        if(conditionMutex_ != NULL)
+                        {
+                            std::unique_lock<std::mutex> clock(*conditionMutex_);
+                            list.push_back(response);
+                            clock.unlock();
+                            conditionVariable_->notify_one();
+                        }
+                        else
+                            list.push_back(response);
+                    }
+                }
+            }
         }
 
-        rmw_fastrtps_cpp::ResponseTypeSupport::ResponseBuffer* getResponse()
+        CustomClientResponse getResponse()
         {
             std::lock_guard<std::mutex> lock(internalMutex_);
-            rmw_fastrtps_cpp::ResponseTypeSupport::ResponseBuffer *buffer = nullptr;
+            CustomClientResponse response;
 
             if(conditionMutex_ != NULL)
             {
                 std::unique_lock<std::mutex> clock(*conditionMutex_);
-                buffer = list.front();
+                response = list.front();
                 list.pop_front();
             }
             else
             {
-                buffer = list.front();
+                response = list.front();
                 list.pop_front();
             }
 
-            return buffer;
+            return response;
         }
 
         void attachCondition(std::mutex *conditionMutex, std::condition_variable *conditionVariable)
@@ -107,38 +124,9 @@ class ClientListener
 
         CustomClientInfo *info_;
         std::mutex internalMutex_;
-        std::list<rmw_fastrtps_cpp::ResponseTypeSupport::ResponseBuffer*> list;
+        std::list<CustomClientResponse> list;
         std::mutex *conditionMutex_;
         std::condition_variable *conditionVariable_;
-};
-
-
-class AsyncTask : public eprosima::rpc::transport::dds::RTPSAsyncTask
-{
-    public:
-
-        AsyncTask(CustomClientInfo *info) :
-            info_(info),
-            buffer_(static_cast<rmw_fastrtps_cpp::ResponseTypeSupport::ResponseBuffer*>(info->response_type_support_->createData()))
-    {
-    }
-
-        virtual ~AsyncTask(){}
-
-        virtual void execute()
-        {
-            info_->listener_->onNewResponse(buffer_);
-        }
-
-        virtual void on_exception(const eprosima::rpc::exception::SystemException &ex){}
-
-        virtual void* getReplyInstance() { return buffer_; }
-
-    private:
-
-        CustomClientInfo *info_;
-
-        rmw_fastrtps_cpp::ResponseTypeSupport::ResponseBuffer *buffer_;
 };
 
 extern "C"
@@ -389,7 +377,7 @@ fail:
         CustomPublisherInfo *info = (CustomPublisherInfo*)publisher->data;
         assert(info);
 
-        rmw_fastrtps_cpp::MessageTypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::MessageTypeSupport::Buffer*)info->type_support_->createData();
+        rmw_fastrtps_cpp::TypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info->type_support_->createData();
 
         if(info->type_support_->serializeROSmessage(ros_message, buffer))
         {
@@ -652,7 +640,7 @@ fail:
         CustomSubscriberInfo *info = (CustomSubscriberInfo*)subscription->data;
         assert(info);
 
-        rmw_fastrtps_cpp::MessageTypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::MessageTypeSupport::Buffer*)info->type_support_->createData();
+        rmw_fastrtps_cpp::TypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info->type_support_->createData();
         SampleInfo_t sinfo;
 
         if(info->subscriber_->takeNextData(buffer, &sinfo))
@@ -697,7 +685,7 @@ fail:
         CustomSubscriberInfo *info = (CustomSubscriberInfo*)subscription->data;
         assert(info);
 
-        rmw_fastrtps_cpp::MessageTypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::MessageTypeSupport::Buffer*)info->type_support_->createData();
+        rmw_fastrtps_cpp::TypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info->type_support_->createData();
         SampleInfo_t sinfo;
 
         if(info->subscriber_->takeNextData(buffer, &sinfo))
@@ -710,7 +698,7 @@ fail:
                 rmw_gid_t * sender_gid = &message_info->publisher_gid;
                 sender_gid->implementation_identifier = eprosima_fastrtps_identifier;
                 memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
-                memcpy(sender_gid->data, &sinfo.writerGUID, sizeof(sinfo.writerGUID));
+                memcpy(sender_gid->data, &sinfo.sample_identity.writer_guid(), sizeof(eprosima::fastrtps::rtps::GUID_t));
                 *taken = true;
             }
         }
@@ -817,16 +805,22 @@ fail:
 
     typedef struct CustomServiceInfo
     {
-        eprosima::rpc::transport::dds::RTPSServerTransport *transport_;
-        eprosima::rpc::strategy::SingleThreadStrategy *strategy_;
-        rmw_fastrtps_cpp::Protocol *protocol_;
         rmw_fastrtps_cpp::RequestTypeSupport *request_type_support_;
         rmw_fastrtps_cpp::ResponseTypeSupport *response_type_support_;
-        eprosima::rpc::transport::dds::RTPSServerProcedureEndpoint *topic_endpoint_;
+        Subscriber *request_subscriber_;
+        Publisher *response_publisher_;
         ServiceListener *listener_;
     } CustomServiceInfo;
 
-    class ServiceListener
+    typedef struct CustomServiceRequest
+    {
+	    eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
+	    rmw_fastrtps_cpp::TypeSupport::Buffer *buffer_;
+
+	    CustomServiceRequest() : buffer_(nullptr) {}
+    } CustomServiceRequest;
+
+    class ServiceListener : public SubscriberListener
     {
         public:
 
@@ -834,41 +828,53 @@ fail:
             conditionMutex_(NULL), conditionVariable_(NULL) {}
 
 
-            void onNewRequest(rmw_fastrtps_cpp::RequestTypeSupport::RequestBuffer *buffer)
+            void onNewDataMessage(Subscriber *sub)
             {
-                assert(buffer);
-                std::lock_guard<std::mutex> lock(internalMutex_);
+                assert(sub);
 
-                if(conditionMutex_ != NULL)
+                CustomServiceRequest request;
+                request.buffer_ = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info_->request_type_support_->createData();
+                SampleInfo_t sinfo;
+
+                if(info_->request_subscriber_->takeNextData(request.buffer_, &sinfo))
                 {
-                    std::unique_lock<std::mutex> clock(*conditionMutex_);
-                    list.push_back(buffer);
-                    clock.unlock();
-                    conditionVariable_->notify_one();
-                }
-                else
-                    list.push_back(buffer);
+                    if(sinfo.sampleKind == ALIVE)
+                    {
+                        request.sample_identity_ = sinfo.sample_identity;
 
+                        std::lock_guard<std::mutex> lock(internalMutex_);
+
+                        if(conditionMutex_ != NULL)
+                        {
+                            std::unique_lock<std::mutex> clock(*conditionMutex_);
+                            list.push_back(request);
+                            clock.unlock();
+                            conditionVariable_->notify_one();
+                        }
+                        else
+                            list.push_back(request);
+                    }
+                }
             }
 
-            rmw_fastrtps_cpp::RequestTypeSupport::RequestBuffer* getRequest()
+            CustomServiceRequest getRequest()
             {
                 std::lock_guard<std::mutex> lock(internalMutex_);
-                rmw_fastrtps_cpp::RequestTypeSupport::RequestBuffer *buffer = nullptr;
+                CustomServiceRequest request;
 
                 if(conditionMutex_ != NULL)
                 {
                     std::unique_lock<std::mutex> clock(*conditionMutex_);
-                    buffer = list.front();
+                    request = list.front();
                     list.pop_front();
                 }
                 else
                 {
-                    buffer = list.front();
+                    request = list.front();
                     list.pop_front();
                 }
 
-                return buffer;
+                return request;
             }
 
             void attachCondition(std::mutex *conditionMutex, std::condition_variable *conditionVariable)
@@ -894,7 +900,7 @@ fail:
 
             CustomServiceInfo *info_;
             std::mutex internalMutex_;
-            std::list<rmw_fastrtps_cpp::RequestTypeSupport::RequestBuffer*> list;
+            std::list<CustomServiceRequest> list;
             std::mutex *conditionMutex_;
             std::condition_variable *conditionVariable_;
     };
@@ -903,6 +909,9 @@ fail:
             const rosidl_service_type_support_t *type_support,
             const char *service_name)
     {
+        CustomClientInfo *info = nullptr;
+        rmw_client_t *client = nullptr;
+
         assert(node);
         assert(type_support);
         assert(service_name);
@@ -921,40 +930,85 @@ fail:
             return NULL;
         }
 
-        CustomClientInfo *info = new CustomClientInfo();
+        info = new CustomClientInfo();
 
         const rosidl_typesupport_introspection_cpp::ServiceMembers *members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers*>(type_support->data);
         info->request_type_support_ = new rmw_fastrtps_cpp::RequestTypeSupport(members);
         info->response_type_support_ = new rmw_fastrtps_cpp::ResponseTypeSupport(members);
 
-        info->transport_  = new eprosima::rpc::transport::dds::RTPSProxyTransport(participant, service_name, service_name);
-        info->transport_->initialize();
-
         Domain::registerType(participant, info->request_type_support_);
         Domain::registerType(participant, info->response_type_support_);
 
-        std::string requestTopicName = std::string(service_name) + "Request";
-        std::string responseTopicName = std::string(service_name) + "Reply";
+        SubscriberAttributes subscriberParam;
+        PublisherAttributes publisherParam;
 
-        //TODO Change "Prueba"
-        info->topic_endpoint_ = dynamic_cast<eprosima::rpc::transport::dds::RTPSProxyProcedureEndpoint*>(info->transport_->createProcedureEndpoint("Prueba",
-                    info->request_type_support_->getName(),
-                    requestTopicName.c_str(),
-                    info->response_type_support_->getName(),
-                    responseTopicName.c_str(),
-                    (eprosima::rpc::transport::dds::RTPSTransport::Create_data)rmw_fastrtps_cpp::ResponseTypeSupport::create_data,
-                    (eprosima::rpc::transport::dds::RTPSTransport::Copy_data)rmw_fastrtps_cpp::ResponseTypeSupport::copy_data,
-                    (eprosima::rpc::transport::dds::RTPSTransport::Destroy_data)rmw_fastrtps_cpp::ResponseTypeSupport::delete_data,
-                    NULL,
-                    info->response_type_support_->m_typeSize));
+        subscriberParam.topic.topicKind = NO_KEY;
+        subscriberParam.topic.topicDataType = info->response_type_support_->getName();
+        subscriberParam.topic.topicName = std::string(service_name) + "Reply";
+        subscriberParam.qos.m_reliability.kind = RELIABLE_RELIABILITY_QOS;
 
         info->listener_ = new ClientListener(info);
+        info->response_subscriber_ = Domain::createSubscriber(participant, subscriberParam, info->listener_);
 
-        rmw_client_t *client = new rmw_client_t;
+        if(!info->response_subscriber_)
+        {
+            RMW_SET_ERROR_MSG("create_client() could not create subscriber");
+            goto fail;
+        }
+
+        publisherParam.topic.topicKind = NO_KEY;
+        publisherParam.topic.topicDataType = info->request_type_support_->getName();
+        publisherParam.topic.topicName = std::string(service_name) + "Request";
+
+        info->request_publisher_ = Domain::createPublisher(participant, publisherParam, NULL);
+
+        if(!info->request_publisher_)
+        {
+            RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
+            goto fail;
+        }
+
+        info->writer_guid_ = info->request_publisher_->getGuid();
+
+        client = new rmw_client_t;
         client->implementation_identifier = eprosima_fastrtps_identifier;
         client->data = info;
 
         return client;
+
+fail:
+
+        if(info != nullptr)
+        {
+            if(info->request_publisher_ != nullptr)
+            {
+                Domain::removePublisher(info->request_publisher_);
+            }
+
+            if(info->response_subscriber_ != nullptr)
+            {
+                Domain::removeSubscriber(info->response_subscriber_);
+            }
+
+            if(info->listener_ != nullptr)
+            {
+                delete info->listener_;
+            }
+
+            if(info->request_type_support_ != nullptr)
+            {
+                delete info->request_type_support_;
+            }
+
+            if(info->response_type_support_ != nullptr)
+            {
+                delete info->request_type_support_;
+            }
+
+            delete info;
+        }
+
+        return NULL;
     }
 
     rmw_ret_t rmw_send_request(const rmw_client_t *client,
@@ -976,29 +1030,19 @@ fail:
         CustomClientInfo *info = (CustomClientInfo*)client->data;
         assert(info);
 
-        rmw_fastrtps_cpp::RequestTypeSupport::RequestBuffer *buffer = static_cast<rmw_fastrtps_cpp::RequestTypeSupport::RequestBuffer*>(info->request_type_support_->createData());
+        rmw_fastrtps_cpp::TypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info->request_type_support_->createData();
 
         if(info->request_type_support_->serializeROSmessage(ros_request, buffer))
         {
-            AsyncTask *task = new AsyncTask(info);
-            eprosima::rpc::ReturnMessage retcode = info->topic_endpoint_->send_async(buffer, task);
+            eprosima::fastrtps::rtps::WriteParams wparams;
 
-            switch (retcode)
+            if(info->request_publisher_->write((void*)buffer, wparams))
             {
-                case eprosima::rpc::OK:
-                    returnedValue = RMW_RET_OK;
-                    *sequence_id = ((int64_t)buffer->header.requestId().sequence_number().high()) << 32 | buffer->header.requestId().sequence_number().low();
-                    break;
-                case eprosima::rpc::CLIENT_INTERNAL_ERROR:
-                    RMW_SET_ERROR_MSG("cannot send the request");
-                    break;
-                case eprosima::rpc::SERVER_NOT_FOUND:
-                    RMW_SET_ERROR_MSG("cannot connect to the server");
-                    break;
-                default:
-                    RMW_SET_ERROR_MSG("error sending the request");
-                    break;
+                returnedValue = RMW_RET_OK;
+                *sequence_id = ((int64_t)wparams.sample_identity().sequence_number().high) << 32 | wparams.sample_identity().sequence_number().low;
             }
+            else
+                RMW_SET_ERROR_MSG("cannot publish data");
         }
         else
             RMW_SET_ERROR_MSG("cannot serialize data");
@@ -1029,22 +1073,19 @@ fail:
         CustomServiceInfo *info = (CustomServiceInfo*)service->data;
         assert(info);
 
-        rmw_fastrtps_cpp::RequestTypeSupport::RequestBuffer *buffer = info->listener_->getRequest();
+        CustomServiceRequest request = info->listener_->getRequest();
 
-        if(buffer != nullptr)
+        if(request.buffer_ != nullptr)
         {
-            info->request_type_support_->deserializeROSmessage(buffer, ros_request);
+            info->request_type_support_->deserializeROSmessage(request.buffer_, ros_request);
 
             // Get header
             rmw_request_id_t &req_id = *(static_cast<rmw_request_id_t*>(ros_request_header));
-            memcpy(req_id.writer_guid, buffer->header.requestId().writer_guid().guidPrefix(), 12);
-            req_id.writer_guid[12] = buffer->header.requestId().writer_guid().entityId().entityKey()[0];
-            req_id.writer_guid[13] = buffer->header.requestId().writer_guid().entityId().entityKey()[1];
-            req_id.writer_guid[14] = buffer->header.requestId().writer_guid().entityId().entityKey()[2];
-            req_id.writer_guid[15] = buffer->header.requestId().writer_guid().entityId().entityKind();
-            req_id.sequence_number = ((int64_t)buffer->header.requestId().sequence_number().high()) << 32 | buffer->header.requestId().sequence_number().low();
+            memcpy(req_id.writer_guid, &request.sample_identity_.writer_guid(), sizeof(eprosima::fastrtps::rtps::GUID_t));
+            req_id.sequence_number = ((int64_t)request.sample_identity_.sequence_number().high) << 32 | request.sample_identity_.sequence_number().low;
+printf("SEQ=%lld\n", req_id.sequence_number);
 
-            info->request_type_support_->deleteData(buffer);
+            info->request_type_support_->deleteData(request.buffer_);
 
             *taken = true;
         }
@@ -1075,17 +1116,17 @@ fail:
 
         rmw_request_id_t &req_id = *(static_cast<rmw_request_id_t*>(ros_request_header));
 
-        rmw_fastrtps_cpp::ResponseTypeSupport::ResponseBuffer *buffer = info->listener_->getResponse();
+        CustomClientResponse response = info->listener_->getResponse();
 
-        if(buffer != nullptr)
+        if(response.buffer_ != nullptr)
         {
-            info->response_type_support_->deserializeROSmessage(buffer, ros_response);
+            info->response_type_support_->deserializeROSmessage(response.buffer_, ros_response);
 
-            req_id.sequence_number = ((int64_t)buffer->header.relatedRequestId().sequence_number().high()) << 32 | buffer->header.relatedRequestId().sequence_number().low();
+            req_id.sequence_number = ((int64_t)response.sample_identity_.sequence_number().high) << 32 | response.sample_identity_.sequence_number().low;
 
             *taken = true;
 
-            info->request_type_support_->deleteData(buffer);
+            info->request_type_support_->deleteData(response.buffer_);
         }
 
         return RMW_RET_OK;
@@ -1110,50 +1151,38 @@ fail:
         CustomServiceInfo *info = (CustomServiceInfo*)service->data;
         assert(info);
 
-        rmw_fastrtps_cpp::ResponseTypeSupport::ResponseBuffer *buffer = static_cast<rmw_fastrtps_cpp::ResponseTypeSupport::ResponseBuffer*>(info->response_type_support_->createData());
+        rmw_fastrtps_cpp::TypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info->response_type_support_->createData();
 
         if(buffer != nullptr)
         {
             info->response_type_support_->serializeROSmessage(ros_response, buffer);
-
-            //Set header
+            eprosima::fastrtps::rtps::WriteParams wparams;
             rmw_request_id_t &req_id = *(static_cast<rmw_request_id_t*>(ros_request_header));
-            memcpy(buffer->header.relatedRequestId().writer_guid().guidPrefix(), req_id.writer_guid, 12);
-            buffer->header.relatedRequestId().writer_guid().entityId().entityKey()[0] = req_id.writer_guid[12];
-            buffer->header.relatedRequestId().writer_guid().entityId().entityKey()[1] = req_id.writer_guid[13];
-            buffer->header.relatedRequestId().writer_guid().entityId().entityKey()[2] = req_id.writer_guid[14];
-            buffer->header.relatedRequestId().writer_guid().entityId().entityKind() = req_id.writer_guid[15];
-            buffer->header.relatedRequestId().sequence_number().high((int32_t)((req_id.sequence_number & 0xFFFFFFFF00000000) >> 32));
-            buffer->header.relatedRequestId().sequence_number().low((int32_t)(req_id.sequence_number & 0xFFFFFFFF));
+            memcpy(&wparams.related_sample_identity().writer_guid(), req_id.writer_guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
+            wparams.related_sample_identity().sequence_number().high = (int32_t)((req_id.sequence_number & 0xFFFFFFFF00000000) >> 32);
+            wparams.related_sample_identity().sequence_number().low = (int32_t)(req_id.sequence_number & 0xFFFFFFFF);
 
-            info->topic_endpoint_->sendReply(buffer);
+            if(info->response_publisher_->write((void*)buffer, wparams))
+            {
+                returnedValue = RMW_RET_OK;
+            }
+            else
+                RMW_SET_ERROR_MSG("cannot publish data");
 
-
-            returnedValue = RMW_RET_OK;
-
+            info->response_type_support_->deleteData(buffer);
         }
 
-        info->response_type_support_->deleteData(buffer);
 
         return returnedValue;
-    }
-
-    void serve(eprosima::rpc::protocol::Protocol &protocol, void *data,
-            eprosima::rpc::transport::Endpoint *endpoint)
-    {
-        assert(data);
-        rmw_fastrtps_cpp::Protocol &proto = dynamic_cast<rmw_fastrtps_cpp::Protocol&>(protocol);
-        ServiceListener *listener = proto.getInfo()->listener_;
-        rmw_fastrtps_cpp::RequestTypeSupport::RequestBuffer *src = static_cast<rmw_fastrtps_cpp::RequestTypeSupport::RequestBuffer*>(data);
-        rmw_fastrtps_cpp::RequestTypeSupport::RequestBuffer *dst = static_cast<rmw_fastrtps_cpp::RequestTypeSupport::RequestBuffer*>(proto.getInfo()->request_type_support_->createData());
-        rmw_fastrtps_cpp::RequestTypeSupport::copy_data(dst, src);
-        listener->onNewRequest(dst);
     }
 
     rmw_service_t *rmw_create_service(const rmw_node_t *node,
             const rosidl_service_type_support_t *type_support,
             const char *service_name)
     {
+        CustomServiceInfo *info = nullptr;
+        rmw_service_t *service  = nullptr;
+
         assert(node);
         assert(type_support);
         assert(service_name);
@@ -1172,45 +1201,83 @@ fail:
             return NULL;
         }
 
-        CustomServiceInfo *info = new CustomServiceInfo();
+        info = new CustomServiceInfo();
 
         const rosidl_typesupport_introspection_cpp::ServiceMembers *members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers*>(type_support->data);
         info->request_type_support_ = new rmw_fastrtps_cpp::RequestTypeSupport(members);
         info->response_type_support_ = new rmw_fastrtps_cpp::ResponseTypeSupport(members);
 
-        info->strategy_ = new eprosima::rpc::strategy::SingleThreadStrategy();
-        info->protocol_ = new rmw_fastrtps_cpp::Protocol(info);
-        info->transport_  = new eprosima::rpc::transport::dds::RTPSServerTransport(participant, service_name, service_name);
-        info->transport_->setStrategy(*info->strategy_);
-        info->transport_->linkProtocol(*info->protocol_);
-        info->transport_->initialize();
-
         Domain::registerType(participant, info->request_type_support_);
         Domain::registerType(participant, info->response_type_support_);
 
-        std::string requestTopicName = std::string(service_name) + "Request";
-        std::string responseTopicName = std::string(service_name) + "Reply";
+        SubscriberAttributes subscriberParam;
+        PublisherAttributes publisherParam;
 
-        //TODO Change "Prueba"
-        info->topic_endpoint_ = dynamic_cast<eprosima::rpc::transport::dds::RTPSServerProcedureEndpoint*>(info->transport_->createProcedureEndpoint("Prueba",
-                    info->response_type_support_->getName(),
-                    responseTopicName.c_str(),
-                    info->request_type_support_->getName(),
-                    requestTopicName.c_str(),
-                    (eprosima::rpc::transport::dds::RTPSTransport::Create_data)rmw_fastrtps_cpp::RequestTypeSupport::create_data,
-                    (eprosima::rpc::transport::dds::RTPSTransport::Copy_data)rmw_fastrtps_cpp::RequestTypeSupport::copy_data,
-                    (eprosima::rpc::transport::dds::RTPSTransport::Destroy_data)rmw_fastrtps_cpp::RequestTypeSupport::delete_data,
-                    serve,
-                    info->request_type_support_->m_typeSize));
+        subscriberParam.topic.topicKind = NO_KEY;
+        subscriberParam.topic.topicDataType = info->request_type_support_->getName();
+        subscriberParam.topic.topicName = std::string(service_name) + "Request";
+        subscriberParam.qos.m_reliability.kind = RELIABLE_RELIABILITY_QOS;
 
         info->listener_ = new ServiceListener(info);
-        info->transport_->run();
+        info->request_subscriber_ = Domain::createSubscriber(participant, subscriberParam, info->listener_);
 
-        rmw_service_t *service = new rmw_service_t;
+        if(!info->request_subscriber_)
+        {
+            RMW_SET_ERROR_MSG("create_client() could not create subscriber");
+            goto fail;
+        }
+
+        publisherParam.topic.topicKind = NO_KEY;
+        publisherParam.topic.topicDataType = info->response_type_support_->getName();
+        publisherParam.topic.topicName = std::string(service_name) + "Reply";
+
+        info->response_publisher_ = Domain::createPublisher(participant, publisherParam, NULL);
+
+        if(!info->response_publisher_)
+        {
+            RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
+            goto fail;
+        }
+
+        service = new rmw_service_t;
         service->implementation_identifier = eprosima_fastrtps_identifier;
         service->data = info;
 
         return service;
+
+fail:
+
+        if(info != nullptr)
+        {
+            if(info->response_publisher_ != nullptr)
+            {
+                Domain::removePublisher(info->response_publisher_);
+            }
+
+            if(info->request_subscriber_ != nullptr)
+            {
+                Domain::removeSubscriber(info->request_subscriber_);
+            }
+
+            if(info->listener_ != nullptr)
+            {
+                delete info->listener_;
+            }
+
+            if(info->request_type_support_ != nullptr)
+            {
+                delete info->request_type_support_;
+            }
+
+            if(info->response_type_support_ != nullptr)
+            {
+                delete info->request_type_support_;
+            }
+
+            delete info;
+        }
+
+        return NULL;
     }
 
     rmw_ret_t rmw_destroy_service(rmw_service_t *service)
@@ -1228,17 +1295,16 @@ fail:
         CustomServiceInfo *info = (CustomServiceInfo *)service->data;
         if(info != nullptr)
         {
-            if(info->transport_ != nullptr)
+            if(info->request_subscriber_ != nullptr)
             {
-                info->transport_->stop();
-                delete info->transport_;
+                Domain::removeSubscriber(info->request_subscriber_);
+            }
+            if(info->response_publisher_ != nullptr)
+            {
+                Domain::removePublisher(info->response_publisher_);
             }
             if(info->listener_ != nullptr)
                 delete info->listener_;
-            if(info->strategy_ != nullptr)
-                delete info->strategy_;
-            if(info->protocol_ != nullptr)
-                delete info->protocol_;
             if(info->request_type_support_ != nullptr)
                 delete info->request_type_support_;
             if(info->response_type_support_ != nullptr)
@@ -1265,10 +1331,10 @@ fail:
         CustomClientInfo *info = (CustomClientInfo *)client->data;
         if(info != nullptr)
         {
-            if(info->transport_ != nullptr)
-            {
-                delete info->transport_;
-            }
+            if(info->response_subscriber_ != nullptr)
+                Domain::removeSubscriber(info->response_subscriber_);
+            if(info->request_publisher_ != nullptr)
+                Domain::removePublisher(info->request_publisher_);
             if(info->listener_ != nullptr)
                 delete info->listener_;
             if(info->request_type_support_ != nullptr)
