@@ -647,7 +647,7 @@ bool TypeSupport::serializeROSmessage(const void *ros_message, Buffer *buffer)
     if(members_->member_count_ != 0)
         TypeSupport::serializeROSmessage(ser, members_, ros_message);
     else
-        ser << false;
+        ser << (uint8_t)0;
 
     buffer->length = (uint32_t)ser.getSerializedDataLength();
     return true;
@@ -665,7 +665,7 @@ bool TypeSupport::deserializeROSmessage(const Buffer *buffer, void *ros_message)
         TypeSupport::deserializeROSmessage(deser, members_, ros_message, false);
     else
     {
-        bool dump;
+        uint8_t dump;
         deser >> dump;
     }
 

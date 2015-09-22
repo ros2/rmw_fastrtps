@@ -1083,7 +1083,6 @@ fail:
             rmw_request_id_t &req_id = *(static_cast<rmw_request_id_t*>(ros_request_header));
             memcpy(req_id.writer_guid, &request.sample_identity_.writer_guid(), sizeof(eprosima::fastrtps::rtps::GUID_t));
             req_id.sequence_number = ((int64_t)request.sample_identity_.sequence_number().high) << 32 | request.sample_identity_.sequence_number().low;
-printf("SEQ=%lld\n", req_id.sequence_number);
 
             info->request_type_support_->deleteData(request.buffer_);
 
