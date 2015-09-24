@@ -45,4 +45,4 @@ if(FastRTPS_HOME)
 endif()
 
 find_path(FastRTPS_INCLUDE_DIR
-    NAMES fastrtps/
+    NAMES fastrtps/)
