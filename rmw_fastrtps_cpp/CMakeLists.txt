@@ -39,8 +39,8 @@ ament_export_libraries(rmw_fastrtps_cpp fastcdr fastrtps)
 register_rmw_implementation("rosidl_typesupport_introspection_cpp")
 
 if(AMENT_ENABLE_TESTING)
-    find_package(ament_lint_auto REQUIRED)
-    ament_lint_auto_find_test_dependencies()
+    find_package(ament_cmake_cppcheck REQUIRED)
+    ament_cppcheck()
 endif()
 
 ament_package()
