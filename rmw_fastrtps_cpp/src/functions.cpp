@@ -31,6 +31,7 @@ typedef struct CustomClientInfo
     Publisher *request_publisher_;
     ClientListener *listener_;
     eprosima::fastrtps::rtps::GUID_t writer_guid_;
+    Participant *participant_;
 } CustomClientInfo;
 
 typedef struct CustomClientResponse
@@ -89,13 +90,19 @@ class ClientListener : public SubscriberListener
             if(conditionMutex_ != NULL)
             {
                 std::unique_lock<std::mutex> clock(*conditionMutex_);
-                response = list.front();
-                list.pop_front();
+                if(!list.empty())
+                {
+                    response = list.front();
+                    list.pop_front();
+                }
             }
             else
             {
-                response = list.front();
-                list.pop_front();
+                if(!list.empty())
+                {
+                    response = list.front();
+                    list.pop_front();
+                }
             }
 
             return response;
@@ -334,9 +341,13 @@ extern "C"
         CustomPublisherInfo *info = new CustomPublisherInfo();
 
         const rosidl_typesupport_introspection_cpp::MessageMembers *members = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers*>(type_support->data);
-        info->type_support_ = new rmw_fastrtps_cpp::MessageTypeSupport(members);
+        std::string type_name = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
+        if(!Domain::getRegisteredType(participant, type_name.c_str(), (TopicDataType**)&info->type_support_))
+        {
 
-        Domain::registerType(participant, info->type_support_);
+            info->type_support_ = new rmw_fastrtps_cpp::MessageTypeSupport(members);
+            Domain::registerType(participant, info->type_support_);
+        }
 
         PublisherAttributes publisherParam;
         publisherParam.topic.topicKind = NO_KEY;
@@ -414,7 +425,11 @@ fail:
             if(info->publisher_ != nullptr)
                 Domain::removePublisher(info->publisher_);
             if(info->type_support_ != nullptr)
-                delete info->type_support_;
+            {
+                Participant *participant = static_cast<Participant*>(node->data);
+                if(Domain::unregisterType(participant, info->type_support_->getName()))
+                    delete info->type_support_;
+            }
             delete info;
         }
         delete(publisher);
@@ -558,9 +573,13 @@ fail:
         CustomSubscriberInfo *info = new CustomSubscriberInfo();
 
         const rosidl_typesupport_introspection_cpp::MessageMembers *members = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers*>(type_support->data);
-        info->type_support_ = new rmw_fastrtps_cpp::MessageTypeSupport(members);
+        std::string type_name = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
+        if(!Domain::getRegisteredType(participant, type_name.c_str(), (TopicDataType**)&info->type_support_))
+        {
 
-        Domain::registerType(participant, info->type_support_);
+            info->type_support_ = new rmw_fastrtps_cpp::MessageTypeSupport(members);
+            Domain::registerType(participant, info->type_support_);
+        }
 
         SubscriberAttributes subscriberParam;
         subscriberParam.topic.topicKind = NO_KEY;
@@ -630,7 +649,11 @@ fail:
             if(info->listener_ != nullptr)
                 delete info->listener_;
             if(info->type_support_ != nullptr)
-                delete info->type_support_;
+            {
+                Participant *participant = static_cast<Participant*>(node->data);
+                if(Domain::unregisterType(participant, info->type_support_->getName()))
+                    delete info->type_support_;
+            }
             delete info;
         }
 
@@ -826,6 +849,7 @@ fail:
         Subscriber *request_subscriber_;
         Publisher *response_publisher_;
         ServiceListener *listener_;
+        Participant *participant_;
     } CustomServiceInfo;
 
     typedef struct CustomServiceRequest
@@ -881,13 +905,19 @@ fail:
                 if(conditionMutex_ != NULL)
                 {
                     std::unique_lock<std::mutex> clock(*conditionMutex_);
-                    request = list.front();
-                    list.pop_front();
+                    if(!list.empty())
+                    {
+                        request = list.front();
+                        list.pop_front();
+                    }
                 }
                 else
                 {
-                    request = list.front();
-                    list.pop_front();
+                    if(!list.empty())
+                    {
+                        request = list.front();
+                        list.pop_front();
+                    }
                 }
 
                 return request;
@@ -947,13 +977,24 @@ fail:
         }
 
         info = new CustomClientInfo();
+        info->participant_ = participant;
 
         const rosidl_typesupport_introspection_cpp::ServiceMembers *members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers*>(type_support->data);
-        info->request_type_support_ = new rmw_fastrtps_cpp::RequestTypeSupport(members);
-        info->response_type_support_ = new rmw_fastrtps_cpp::ResponseTypeSupport(members);
 
-        Domain::registerType(participant, info->request_type_support_);
-        Domain::registerType(participant, info->response_type_support_);
+        std::string request_type_name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Request_";
+        if(!Domain::getRegisteredType(participant, request_type_name.c_str(), (TopicDataType**)&info->request_type_support_))
+        {
+
+            info->request_type_support_ = new rmw_fastrtps_cpp::RequestTypeSupport(members);
+            Domain::registerType(participant, info->request_type_support_);
+        }
+
+        std::string response_type_name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Response_";
+        if(!Domain::getRegisteredType(participant, response_type_name.c_str(), (TopicDataType**)&info->response_type_support_))
+        {
+            info->response_type_support_ = new rmw_fastrtps_cpp::ResponseTypeSupport(members);
+            Domain::registerType(participant, info->response_type_support_);
+        }
 
         SubscriberAttributes subscriberParam;
         PublisherAttributes publisherParam;
@@ -1016,14 +1057,17 @@ fail:
                 delete info->listener_;
             }
 
+            Participant *participant = static_cast<Participant*>(node->data);
             if(info->request_type_support_ != nullptr)
             {
-                delete info->request_type_support_;
+                if(Domain::unregisterType(participant, info->request_type_support_->getName()))
+                    delete info->request_type_support_;
             }
 
             if(info->response_type_support_ != nullptr)
             {
-                delete info->request_type_support_;
+                if(Domain::unregisterType(participant, info->response_type_support_->getName()))
+                    delete info->response_type_support_;
             }
 
             delete info;
@@ -1222,13 +1266,24 @@ fail:
         }
 
         info = new CustomServiceInfo();
+        info->participant_ = participant;
 
         const rosidl_typesupport_introspection_cpp::ServiceMembers *members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers*>(type_support->data);
-        info->request_type_support_ = new rmw_fastrtps_cpp::RequestTypeSupport(members);
-        info->response_type_support_ = new rmw_fastrtps_cpp::ResponseTypeSupport(members);
 
-        Domain::registerType(participant, info->request_type_support_);
-        Domain::registerType(participant, info->response_type_support_);
+        std::string request_type_name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Request_";
+        if(!Domain::getRegisteredType(participant, request_type_name.c_str(), (TopicDataType**)&info->request_type_support_))
+        {
+
+            info->request_type_support_ = new rmw_fastrtps_cpp::RequestTypeSupport(members);
+            Domain::registerType(participant, info->request_type_support_);
+        }
+
+        std::string response_type_name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Response_";
+        if(!Domain::getRegisteredType(participant, response_type_name.c_str(), (TopicDataType**)&info->response_type_support_))
+        {
+            info->response_type_support_ = new rmw_fastrtps_cpp::ResponseTypeSupport(members);
+            Domain::registerType(participant, info->response_type_support_);
+        }
 
         SubscriberAttributes subscriberParam;
         PublisherAttributes publisherParam;
@@ -1291,12 +1346,14 @@ fail:
 
             if(info->request_type_support_ != nullptr)
             {
-                delete info->request_type_support_;
+                if(Domain::unregisterType(participant, info->request_type_support_->getName()))
+                    delete info->request_type_support_;
             }
 
             if(info->response_type_support_ != nullptr)
             {
-                delete info->request_type_support_;
+                if(Domain::unregisterType(participant, info->response_type_support_->getName()))
+                    delete info->response_type_support_;
             }
 
             delete info;
@@ -1330,10 +1387,17 @@ fail:
             }
             if(info->listener_ != nullptr)
                 delete info->listener_;
+
             if(info->request_type_support_ != nullptr)
-                delete info->request_type_support_;
+            {
+                if(Domain::unregisterType(info->participant_, info->request_type_support_->getName()))
+                    delete info->request_type_support_;
+            }
             if(info->response_type_support_ != nullptr)
-                delete info->response_type_support_;
+            {
+                if(Domain::unregisterType(info->participant_, info->response_type_support_->getName()))
+                    delete info->response_type_support_;
+            }
             delete info;
         }
         delete(service);
@@ -1353,7 +1417,7 @@ fail:
             return RMW_RET_ERROR;
         }
 
-        CustomClientInfo *info = (CustomClientInfo *)client->data;
+        CustomClientInfo *info = (CustomClientInfo*)client->data;
         if(info != nullptr)
         {
             if(info->response_subscriber_ != nullptr)
@@ -1363,9 +1427,15 @@ fail:
             if(info->listener_ != nullptr)
                 delete info->listener_;
             if(info->request_type_support_ != nullptr)
-                delete info->request_type_support_;
+            {
+                if(Domain::unregisterType(info->participant_, info->request_type_support_->getName()))
+                    delete info->request_type_support_;
+            }
             if(info->response_type_support_ != nullptr)
-                delete info->response_type_support_;
+            {
+                if(Domain::unregisterType(info->participant_, info->response_type_support_->getName()))
+                    delete info->response_type_support_;
+            }
             delete info;
         }
         delete(client);
@@ -1467,7 +1537,9 @@ fail:
             {
                 subscriptions->subscribers[i] = 0;
             }
+	    lock.unlock();
             custom_subscriber_info->listener_->dettachCondition();
+	    lock.lock();
         }
 
         for(unsigned long i = 0; i < clients->client_count; ++i)
@@ -1478,7 +1550,9 @@ fail:
             {
                 clients->clients[i] = 0;
             }
+	    lock.unlock();
             custom_client_info->listener_->dettachCondition();
+	    lock.lock();
         }
 
         for(unsigned long i = 0; i < services->service_count; ++i)
@@ -1489,7 +1563,9 @@ fail:
             {
                 services->services[i] = 0;
             }
+	    lock.unlock();
             custom_service_info->listener_->dettachCondition();
+	    lock.lock();
         }
 
         for(unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
@@ -1500,7 +1576,9 @@ fail:
             {
                 guard_conditions->guard_conditions[i] = 0;
             }
+	    lock.unlock();
             guard_condition->dettachCondition();
+	    lock.lock();
         }
 
         return RMW_RET_OK;

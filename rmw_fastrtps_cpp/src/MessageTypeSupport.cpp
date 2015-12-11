@@ -14,7 +14,7 @@ MessageTypeSupport::MessageTypeSupport(const rosidl_typesupport_introspection_cp
     assert(members);
     members_ = members;
 
-    if(strcmp(members->message_name_, "ParameterEvent") == 0)
+    if(strcmp(members->package_name_, "rcl_interfaces") == 0 && strcmp(members->message_name_, "ParameterEvent") == 0)
         typeTooLarge_ = true;
 
     std::string name = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
