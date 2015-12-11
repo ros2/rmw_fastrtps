@@ -261,6 +261,8 @@ extern "C"
     {
         assert(name);
 
+	eprosima::Log::setVerbosity(eprosima::VERB_ERROR);
+
         ParticipantAttributes participantParam;
         participantParam.rtps.builtin.domainId = domain_id;
         participantParam.rtps.builtin.leaseDuration = c_TimeInfinite;
