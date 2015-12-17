@@ -259,7 +259,10 @@ extern "C"
 
     rmw_node_t* rmw_create_node(const char *name, size_t domain_id)
     {
-        assert(name);
+        if (!name) {
+            RMW_SET_ERROR_MSG("name is null");
+            return NULL;
+        }
 
 	eprosima::Log::setVerbosity(eprosima::VERB_ERROR);
 
@@ -279,6 +282,14 @@ extern "C"
         rmw_node_t *node_handle = new rmw_node_t;
         node_handle->implementation_identifier = eprosima_fastrtps_identifier;
         node_handle->data = participant;
+
+        node_handle->name =
+            reinterpret_cast<const char *>(malloc(sizeof(char) * strlen(name) + 1));
+        if (!node_handle->name) {
+            RMW_SET_ERROR_MSG("failed to allocate memory");
+            return NULL;
+        }
+        memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
 
         return node_handle;
     }
@@ -304,6 +315,10 @@ extern "C"
         Domain::removeParticipant(participant);
 
         node->data = nullptr;
+        if (node->name) {
+            delete(const_cast<char *>(node->name));
+            node->name = nullptr;
+        }
         delete(node);
 
         return RMW_RET_OK;
@@ -317,7 +332,7 @@ extern "C"
     } CustomPublisherInfo;
 
     rmw_publisher_t* rmw_create_publisher(const rmw_node_t *node, const rosidl_message_type_support_t *type_support,
-            const char* topic_name, const rmw_qos_profile_t & qos_policies)
+            const char* topic_name, const rmw_qos_profile_t * qos_policies)
     {
         rmw_publisher_t *rmw_publisher  = nullptr;
         const GUID_t *guid = nullptr;
@@ -325,6 +340,7 @@ extern "C"
         assert(node);
         assert(type_support);
         assert(topic_name);
+        assert(qos_policies);
 
         if(node->implementation_identifier != eprosima_fastrtps_identifier)
         {
@@ -356,7 +372,7 @@ extern "C"
         publisherParam.topic.topicDataType = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
         publisherParam.topic.topicName = topic_name;
 
-        if(!get_datawriter_qos(qos_policies, publisherParam))
+        if(!get_datawriter_qos(*qos_policies, publisherParam))
             goto fail;
 
         info->publisher_ = Domain::createPublisher(participant, publisherParam, NULL);
@@ -550,13 +566,14 @@ fail:
     };
 
     rmw_subscription_t* rmw_create_subscription(const rmw_node_t *node, const rosidl_message_type_support_t *type_support,
-            const char *topic_name, const rmw_qos_profile_t & qos_policies, bool ignore_local_publications)
+            const char *topic_name, const rmw_qos_profile_t * qos_policies, bool ignore_local_publications)
     {
         rmw_subscription_t *subscription = nullptr;
 
         assert(node);
         assert(type_support);
         assert(topic_name);
+        assert(qos_policies);
 
         if(node->implementation_identifier != eprosima_fastrtps_identifier)
         {
@@ -588,7 +605,7 @@ fail:
         subscriberParam.topic.topicDataType = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
         subscriberParam.topic.topicName = topic_name;
 
-        if(!get_datareader_qos(qos_policies, subscriberParam))
+        if(!get_datareader_qos(*qos_policies, subscriberParam))
             goto fail;
 
         info->listener_ = new SubListener(info);
@@ -955,7 +972,7 @@ fail:
 
     rmw_client_t* rmw_create_client(const rmw_node_t *node,
             const rosidl_service_type_support_t *type_support,
-            const char *service_name, const rmw_qos_profile_t & qos_policies)
+            const char *service_name, const rmw_qos_profile_t * qos_policies)
     {
         CustomClientInfo *info = nullptr;
         rmw_client_t *client = nullptr;
@@ -963,6 +980,7 @@ fail:
         assert(node);
         assert(type_support);
         assert(service_name);
+        assert(qos_policies);
 
         if(node->implementation_identifier != eprosima_fastrtps_identifier)
         {
@@ -1005,7 +1023,7 @@ fail:
         subscriberParam.topic.topicDataType = info->response_type_support_->getName();
         subscriberParam.topic.topicName = std::string(service_name) + "Reply";
 
-        if(!get_datareader_qos(qos_policies, subscriberParam))
+        if(!get_datareader_qos(*qos_policies, subscriberParam))
             goto fail;
 
         info->listener_ = new ClientListener(info);
@@ -1021,7 +1039,7 @@ fail:
         publisherParam.topic.topicDataType = info->request_type_support_->getName();
         publisherParam.topic.topicName = std::string(service_name) + "Request";
 
-        if(!get_datawriter_qos(qos_policies, publisherParam))
+        if(!get_datawriter_qos(*qos_policies, publisherParam))
             goto fail;
 
         info->request_publisher_ = Domain::createPublisher(participant, publisherParam, NULL);
@@ -1244,7 +1262,7 @@ fail:
 
     rmw_service_t *rmw_create_service(const rmw_node_t *node,
             const rosidl_service_type_support_t *type_support,
-            const char *service_name, const rmw_qos_profile_t & qos_policies)
+            const char *service_name, const rmw_qos_profile_t * qos_policies)
     {
         CustomServiceInfo *info = nullptr;
         rmw_service_t *service  = nullptr;
@@ -1252,6 +1270,7 @@ fail:
         assert(node);
         assert(type_support);
         assert(service_name);
+        assert(qos_policies);
 
         if(node->implementation_identifier != eprosima_fastrtps_identifier)
         {
@@ -1294,7 +1313,7 @@ fail:
         subscriberParam.topic.topicDataType = info->request_type_support_->getName();
         subscriberParam.topic.topicName = std::string(service_name) + "Request";
 
-        if(!get_datareader_qos(qos_policies, subscriberParam))
+        if(!get_datareader_qos(*qos_policies, subscriberParam))
             goto fail;
 
         info->listener_ = new ServiceListener(info);
@@ -1310,7 +1329,7 @@ fail:
         publisherParam.topic.topicDataType = info->response_type_support_->getName();
         publisherParam.topic.topicName = std::string(service_name) + "Reply";
 
-        if(!get_datawriter_qos(qos_policies, publisherParam))
+        if(!get_datawriter_qos(*qos_policies, publisherParam))
             goto fail;
 
         info->response_publisher_ = Domain::createPublisher(participant, publisherParam, NULL);
