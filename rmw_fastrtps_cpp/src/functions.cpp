@@ -1468,7 +1468,7 @@ fail:
             rmw_guard_conditions_t *guard_conditions,
             rmw_services_t *services,
             rmw_clients_t *clients,
-            rmw_time_t *wait_timeout)
+            const rmw_time_t *wait_timeout)
     {
         std::mutex conditionMutex;
         std::condition_variable conditionVariable;
