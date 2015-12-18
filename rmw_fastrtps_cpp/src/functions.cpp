@@ -1,3 +1,4 @@
+#include "rmw/allocators.h"
 #include <rmw/rmw.h>
 #include <rmw/error_handling.h>
 #include <rosidl_typesupport_introspection_cpp/identifier.hpp>
@@ -279,7 +280,11 @@ extern "C"
             return NULL;
         }
 
-        rmw_node_t *node_handle = new rmw_node_t;
+        rmw_node_t * node_handle = rmw_node_allocate();
+        if (!node_handle) {
+            RMW_SET_ERROR_MSG("failed to allocate rmw_node_t");
+            return NULL;
+        }
         node_handle->implementation_identifier = eprosima_fastrtps_identifier;
         node_handle->data = participant;
 
@@ -1468,7 +1473,7 @@ fail:
             rmw_guard_conditions_t *guard_conditions,
             rmw_services_t *services,
             rmw_clients_t *clients,
-            rmw_time_t *wait_timeout)
+            const rmw_time_t *wait_timeout)
     {
         std::mutex conditionMutex;
         std::condition_variable conditionVariable;
