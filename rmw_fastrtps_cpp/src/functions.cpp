@@ -280,7 +280,8 @@ extern "C"
             return NULL;
         }
 
-        rmw_node_t * node_handle = rmw_node_allocate();
+        rmw_node_t * node_handle =
+            static_cast<rmw_node_t *>(malloc(sizeof(rmw_node_t)));
         if (!node_handle) {
             RMW_SET_ERROR_MSG("failed to allocate rmw_node_t");
             return NULL;
@@ -289,7 +290,7 @@ extern "C"
         node_handle->data = participant;
 
         node_handle->name =
-            reinterpret_cast<const char *>(malloc(sizeof(char) * strlen(name) + 1));
+            static_cast<const char *>(malloc(sizeof(char) * strlen(name) + 1));
         if (!node_handle->name) {
             RMW_SET_ERROR_MSG("failed to allocate memory");
             return NULL;
@@ -321,10 +322,10 @@ extern "C"
 
         node->data = nullptr;
         if (node->name) {
-            delete(const_cast<char *>(node->name));
+            free(const_cast<char *>(node->name));
             node->name = nullptr;
         }
-        delete(node);
+        free(static_cast<void*>(node));
 
         return RMW_RET_OK;
     }
