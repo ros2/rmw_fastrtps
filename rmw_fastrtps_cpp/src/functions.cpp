@@ -59,7 +59,7 @@ class ClientListener : public SubscriberListener
             response.buffer_ = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info_->response_type_support_->createData();
             SampleInfo_t sinfo;
 
-            if(info_->response_subscriber_->takeNextData(response.buffer_, &sinfo))
+            if(sub->takeNextData(response.buffer_, &sinfo))
             {
                 if(sinfo.sampleKind == ALIVE)
                 {
@@ -901,7 +901,7 @@ fail:
                 request.buffer_ = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info_->request_type_support_->createData();
                 SampleInfo_t sinfo;
 
-                if(info_->request_subscriber_->takeNextData(request.buffer_, &sinfo))
+                if(sub->takeNextData(request.buffer_, &sinfo))
                 {
                     if(sinfo.sampleKind == ALIVE)
                     {
