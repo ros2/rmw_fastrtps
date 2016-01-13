@@ -1,6 +1,7 @@
 #include "rmw/allocators.h"
 #include <rmw/rmw.h>
 #include <rmw/error_handling.h>
+#include <rmw/impl/cpp/macros.hpp>
 #include <rosidl_typesupport_introspection_cpp/identifier.hpp>
 #include <rmw_fastrtps_cpp/MessageTypeSupport.h>
 #include <rmw_fastrtps_cpp/ServiceTypeSupport.h>
@@ -23,6 +24,12 @@
 using namespace eprosima::fastrtps;
 
 class ClientListener;
+
+typedef struct CustomWaitsetInfo
+{
+    std::condition_variable condition;
+    std::mutex condition_mutex;
+} CustomWaitsetInfo;
 
 typedef struct CustomClientInfo
 {
@@ -865,6 +872,117 @@ fail:
         return RMW_RET_OK;
     }
 
+    rmw_waitset_t *
+    rmw_create_waitset(rmw_guard_conditions_t * fixed_guard_conditions, size_t max_conditions)
+    {
+        rmw_waitset_t * waitset = rmw_waitset_allocate();
+        GuardCondition * rtps_guard_cond = nullptr;
+        CustomWaitsetInfo * waitset_info = nullptr;
+
+        // From here onward, error results in unrolling in the goto fail block.
+        if (!waitset) {
+            RMW_SET_ERROR_MSG("failed to allocate waitset");
+            goto fail;
+        }
+        waitset->implementation_identifier = eprosima_fastrtps_identifier;
+        waitset->data = rmw_allocate(sizeof(CustomWaitsetInfo));
+        // This should default-construct the fields of CustomWaitsetInfo
+        waitset_info = static_cast<CustomWaitsetInfo *>(waitset->data);
+        RMW_TRY_PLACEMENT_NEW(waitset_info, waitset_info, goto fail, CustomWaitsetInfo);
+        if (!waitset_info) {
+            RMW_SET_ERROR_MSG("failed to construct waitset info struct");
+            goto fail;
+        }
+
+        waitset->fixed_guard_conditions = fixed_guard_conditions;
+        if (fixed_guard_conditions) {
+            if (!fixed_guard_conditions->guard_conditions) {
+                RMW_SET_ERROR_MSG("Received invalid guard condition array");
+                goto fail;
+            }
+            // Attach the fixed guard conditions to the waitset (and detach them in destroy)
+            for (size_t i = 0; i < fixed_guard_conditions->guard_condition_count; ++i) {
+                void * guard_cond = fixed_guard_conditions->guard_conditions[i];
+                if (!guard_cond) {
+                    RMW_SET_ERROR_MSG("Received invalid guard condition");
+                    goto fail;
+                }
+                rtps_guard_cond = static_cast<GuardCondition *>(guard_cond);
+                rtps_guard_cond->attachCondition(
+                    &waitset_info->condition_mutex, &waitset_info->condition);
+            }
+        }
+
+        return waitset;
+
+fail:
+        if (waitset) {
+            if (waitset->data) {
+                RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
+                    waitset_info->~CustomWaitsetInfo(), waitset_info)
+                rmw_free(waitset->data);
+            }
+            rmw_waitset_free(waitset);
+        }
+        return nullptr;
+    }
+
+    rmw_ret_t
+    rmw_destroy_waitset(rmw_waitset_t * waitset)
+    {
+        if (!waitset) {
+            RMW_SET_ERROR_MSG("waitset handle is null");
+            return RMW_RET_ERROR;
+        }
+        RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+                waitset handle,
+                waitset->implementation_identifier, eprosima_fastrtps_identifier,
+                return RMW_RET_ERROR)
+
+        auto result = RMW_RET_OK;
+        CustomWaitsetInfo * waitset_info = static_cast<CustomWaitsetInfo *>(waitset->data);
+        if (!waitset_info) {
+            RMW_SET_ERROR_MSG("waitset info is null");
+            return RMW_RET_ERROR;
+        }
+        std::mutex * conditionMutex = &waitset_info->condition_mutex;
+        if (!conditionMutex) {
+            RMW_SET_ERROR_MSG("waitset mutex is null");
+            return RMW_RET_ERROR;
+        }
+
+        rmw_guard_conditions_t * fixed_guard_conditions = waitset->fixed_guard_conditions;
+        if (fixed_guard_conditions && fixed_guard_conditions->guard_conditions) {
+            // Attach the fixed guard conditions to the waitset (and detach them in destroy)
+            std::unique_lock<std::mutex> lock(*conditionMutex);
+            for (size_t i = 0; i < fixed_guard_conditions->guard_condition_count; ++i) {
+                void * guard_cond = fixed_guard_conditions->guard_conditions[i];
+                if (!guard_cond) {
+                    continue;
+                }
+                GuardCondition * rtps_guard_cond = static_cast<GuardCondition *>(guard_cond);
+                if (!rtps_guard_cond) {
+                    continue;
+                }
+                lock.unlock();
+                rtps_guard_cond->dettachCondition();
+                lock.lock();
+            }
+        }
+
+        if (waitset) {
+            if (waitset->data) {
+                if (waitset_info) {
+                    RMW_TRY_DESTRUCTOR(
+                        waitset_info->~CustomWaitsetInfo(), waitset_info, result = RMW_RET_ERROR)
+                }
+                rmw_free(waitset->data);
+            }
+            rmw_waitset_free(waitset);
+        }
+        return result;
+    }
+
     class ServiceListener;
 
     typedef struct CustomServiceInfo
@@ -1474,43 +1592,67 @@ fail:
             rmw_guard_conditions_t *guard_conditions,
             rmw_services_t *services,
             rmw_clients_t *clients,
+            rmw_waitset_t * waitset,
             const rmw_time_t *wait_timeout)
     {
-        std::mutex conditionMutex;
-        std::condition_variable conditionVariable;
+        if (!waitset) {
+            RMW_SET_ERROR_MSG("Waitset handle is null");
+            return RMW_RET_ERROR;
+        }
+        CustomWaitsetInfo * waitset_info = static_cast<CustomWaitsetInfo*>(waitset->data);
+        if (!waitset_info) {
+            RMW_SET_ERROR_MSG("Waitset info struct is null");
+            return RMW_RET_ERROR;
+        }
+        std::mutex * conditionMutex = &waitset_info->condition_mutex;
+        std::condition_variable * conditionVariable = &waitset_info->condition;
+        if (!conditionMutex) {
+            RMW_SET_ERROR_MSG("Mutex for waitset was null");
+            return RMW_RET_ERROR;
+        }
+        if (!conditionVariable) {
+            RMW_SET_ERROR_MSG("Condition variable for waitset was null");
+            return RMW_RET_ERROR;
+        }
 
         for(unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
         {
             void *data = subscriptions->subscribers[i];
             CustomSubscriberInfo *custom_subscriber_info = (CustomSubscriberInfo*)data;
-            custom_subscriber_info->listener_->attachCondition(&conditionMutex, &conditionVariable);
+            custom_subscriber_info->listener_->attachCondition(conditionMutex, conditionVariable);
         }
 
         for(unsigned long i = 0; i < clients->client_count; ++i)
         {
             void *data = clients->clients[i];
             CustomClientInfo *custom_client_info = (CustomClientInfo*)data;
-            custom_client_info->listener_->attachCondition(&conditionMutex, &conditionVariable);
+            custom_client_info->listener_->attachCondition(conditionMutex, conditionVariable);
         }
 
         for(unsigned long i = 0; i < services->service_count; ++i)
         {
             void *data = services->services[i];
             CustomServiceInfo *custom_service_info = (CustomServiceInfo*)data;
-            custom_service_info->listener_->attachCondition(&conditionMutex, &conditionVariable);
+            custom_service_info->listener_->attachCondition(conditionMutex, conditionVariable);
         }
 
-        for(unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
-        {
-            void *data = guard_conditions->guard_conditions[i];
-            GuardCondition *guard_condition = (GuardCondition*)data;
-            guard_condition->attachCondition(&conditionMutex, &conditionVariable);
+        if (guard_conditions) {
+            for(unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
+            {
+                void *data = guard_conditions->guard_conditions[i];
+                GuardCondition *guard_condition = (GuardCondition*)data;
+                guard_condition->attachCondition(conditionMutex, conditionVariable);
+            }
         }
+        rmw_guard_conditions_t * fixed_guard_conditions = waitset->fixed_guard_conditions;
 
-        std::unique_lock<std::mutex> lock(conditionMutex);
+        std::unique_lock<std::mutex> lock(*conditionMutex);
 
         // First check variables.
-        bool hasToWait = true;
+        // If wait_timeout is null, wait indefinitely (so we have to wait)
+        // If wait_timeout is not null and either of its fields are nonzero, we have to wait
+        bool hasToWait = (wait_timeout && (wait_timeout->sec > 0 || wait_timeout->nsec > 0)) ||
+            !wait_timeout;
 
         for(unsigned long i = 0; hasToWait && i < subscriptions->subscriber_count; ++i)
         {
@@ -1536,23 +1678,34 @@ fail:
                 hasToWait = false;
         }
 
-        for(unsigned long i = 0; hasToWait && i < guard_conditions->guard_condition_count; ++i)
-        {
-            void *data = guard_conditions->guard_conditions[i];
-            GuardCondition *guard_condition = (GuardCondition*)data;
-            if(guard_condition->hasTriggered())
-                hasToWait = false;
+        if (guard_conditions) {
+            for (unsigned long i = 0; hasToWait && i < guard_conditions->guard_condition_count; ++i)
+            {
+                void *data = guard_conditions->guard_conditions[i];
+                GuardCondition *guard_condition = (GuardCondition*)data;
+                if(guard_condition->hasTriggered())
+                    hasToWait = false;
+            }
+        }
+        if (fixed_guard_conditions) {
+            for (unsigned long i = 0; hasToWait && i < fixed_guard_conditions->guard_condition_count; ++i)
+            {
+                void *data = fixed_guard_conditions->guard_conditions[i];
+                GuardCondition *guard_condition = (GuardCondition*)data;
+                if(guard_condition->getHasTriggered())
+                    hasToWait = false;
+            }
         }
 
         if(hasToWait)
         {
             if(!wait_timeout)
-                conditionVariable.wait(lock);
+                conditionVariable->wait(lock);
             else
             {
                 std::chrono::nanoseconds n(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(wait_timeout->sec)));
                 n += std::chrono::nanoseconds(wait_timeout->nsec);
-                conditionVariable.wait_for(lock, n);
+                conditionVariable->wait_for(lock, n);
             }
         }
 
@@ -1595,17 +1748,20 @@ fail:
 	    lock.lock();
         }
 
-        for(unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
+        if (guard_conditions)
         {
-            void *data = guard_conditions->guard_conditions[i];
-            GuardCondition *guard_condition = (GuardCondition*)data;
-            if(!guard_condition->getHasTriggered())
+            for(unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
             {
-                guard_conditions->guard_conditions[i] = 0;
+                void *data = guard_conditions->guard_conditions[i];
+                GuardCondition *guard_condition = (GuardCondition*)data;
+                if(!guard_condition->getHasTriggered())
+                {
+                    guard_conditions->guard_conditions[i] = 0;
+                }
+                lock.unlock();
+                guard_condition->dettachCondition();
+                lock.lock();
             }
-	    lock.unlock();
-            guard_condition->dettachCondition();
-	    lock.lock();
         }
 
         return RMW_RET_OK;
