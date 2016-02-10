@@ -22,6 +22,7 @@
   <build_export_depend>fastrtps</build_export_depend>
   <build_export_depend>rmw</build_export_depend>
   <build_export_depend>rosidl_generator_cpp</build_export_depend>
+  <build_export_depend>rosidl_typesupport_introspection_c</build_export_depend>
   <build_export_depend>rosidl_typesupport_introspection_cpp</build_export_depend>
 
   <test_depend>ament_cmake_cppcheck</test_depend>
