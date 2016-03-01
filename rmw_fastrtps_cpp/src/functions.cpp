@@ -1262,12 +1262,12 @@ fail:
     }
 
     rmw_ret_t rmw_take_request(const rmw_service_t *service,
-            void *ros_request_header,
+            rmw_request_id_t *request_header,
             void *ros_request,
             bool *taken)
     {
         assert(service);
-        assert(ros_request_header);
+        assert(request_header);
         assert(ros_request);
         assert(taken);
 
@@ -1289,9 +1289,8 @@ fail:
             info->request_type_support_->deserializeROSmessage(request.buffer_, ros_request);
 
             // Get header
-            rmw_request_id_t &req_id = *(static_cast<rmw_request_id_t*>(ros_request_header));
-            memcpy(req_id.writer_guid, &request.sample_identity_.writer_guid(), sizeof(eprosima::fastrtps::rtps::GUID_t));
-            req_id.sequence_number = ((int64_t)request.sample_identity_.sequence_number().high) << 32 | request.sample_identity_.sequence_number().low;
+            memcpy(request_header->writer_guid, &request.sample_identity_.writer_guid(), sizeof(eprosima::fastrtps::rtps::GUID_t));
+            request_header->sequence_number = ((int64_t)request.sample_identity_.sequence_number().high) << 32 | request.sample_identity_.sequence_number().low;
 
             info->request_type_support_->deleteData(request.buffer_);
 
@@ -1302,12 +1301,12 @@ fail:
     }
 
     rmw_ret_t rmw_take_response(const rmw_client_t *client,
-            void *ros_request_header,
+            rmw_request_id_t *request_header,
             void *ros_response,
             bool *taken)
     {
         assert(client);
-        assert(ros_request_header);
+        assert(request_header);
         assert(ros_response);
         assert(taken);
 
@@ -1322,15 +1321,13 @@ fail:
         CustomClientInfo *info = (CustomClientInfo*)client->data;
         assert(info);
 
-        rmw_request_id_t &req_id = *(static_cast<rmw_request_id_t*>(ros_request_header));
-
         CustomClientResponse response = info->listener_->getResponse();
 
         if(response.buffer_ != nullptr)
         {
             info->response_type_support_->deserializeROSmessage(response.buffer_, ros_response);
 
-            req_id.sequence_number = ((int64_t)response.sample_identity_.sequence_number().high) << 32 | response.sample_identity_.sequence_number().low;
+            request_header->sequence_number = ((int64_t)response.sample_identity_.sequence_number().high) << 32 | response.sample_identity_.sequence_number().low;
 
             *taken = true;
 
@@ -1341,11 +1338,11 @@ fail:
     }
 
     rmw_ret_t rmw_send_response(const rmw_service_t *service,
-            void *ros_request_header,
+            rmw_request_id_t *request_header,
             void *ros_response)
     {
         assert(service);
-        assert(ros_request_header);
+        assert(request_header);
         assert(ros_response);
 
         rmw_ret_t returnedValue = RMW_RET_ERROR;
@@ -1365,10 +1362,9 @@ fail:
         {
             info->response_type_support_->serializeROSmessage(ros_response, buffer);
             eprosima::fastrtps::rtps::WriteParams wparams;
-            rmw_request_id_t &req_id = *(static_cast<rmw_request_id_t*>(ros_request_header));
-            memcpy(&wparams.related_sample_identity().writer_guid(), req_id.writer_guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
-            wparams.related_sample_identity().sequence_number().high = (int32_t)((req_id.sequence_number & 0xFFFFFFFF00000000) >> 32);
-            wparams.related_sample_identity().sequence_number().low = (int32_t)(req_id.sequence_number & 0xFFFFFFFF);
+            memcpy(&wparams.related_sample_identity().writer_guid(), request_header->writer_guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
+            wparams.related_sample_identity().sequence_number().high = (int32_t)((request_header->sequence_number & 0xFFFFFFFF00000000) >> 32);
+            wparams.related_sample_identity().sequence_number().low = (int32_t)(request_header->sequence_number & 0xFFFFFFFF);
 
             if(info->response_publisher_->write((void*)buffer, wparams))
             {
