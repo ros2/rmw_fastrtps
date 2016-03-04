@@ -10,6 +10,7 @@ find_package(fastrtps REQUIRED CONFIG)
 
 find_package(rmw REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
+find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 
 ament_export_dependencies(rmw)
@@ -22,14 +23,12 @@ include_directories(include)
 
 add_library(rmw_fastrtps_cpp SHARED
         src/functions.cpp
-        src/TypeSupport.cpp
-        src/MessageTypeSupport.cpp
-        src/ServiceTypeSupport.cpp
 )
 target_link_libraries(rmw_fastrtps_cpp
 		fastcdr fastrtps)
 
 ament_target_dependencies(rmw_fastrtps_cpp
+  "rosidl_typesupport_introspection_c"
   "rosidl_typesupport_introspection_cpp"
   "rmw"
   "rosidl_generator_cpp")
@@ -38,7 +37,7 @@ configure_rmw_library(rmw_fastrtps_cpp)
 
 ament_export_libraries(rmw_fastrtps_cpp fastcdr fastrtps)
 
-register_rmw_implementation("rosidl_typesupport_introspection_cpp")
+register_rmw_implementation("rosidl_typesupport_introspection_c;rosidl_typesupport_introspection_cpp")
 
 if(AMENT_ENABLE_TESTING)
     find_package(ament_cmake_cppcheck REQUIRED)
