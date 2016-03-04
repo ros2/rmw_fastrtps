@@ -2,7 +2,6 @@
 #include <rmw/rmw.h>
 #include <rmw/error_handling.h>
 #include <rmw/impl/cpp/macros.hpp>
-#include <rosidl_typesupport_introspection_cpp/identifier.hpp>
 #include <rmw_fastrtps_cpp/MessageTypeSupport.h>
 #include <rmw_fastrtps_cpp/ServiceTypeSupport.h>
 
@@ -21,7 +20,301 @@
 #include <condition_variable>
 #include <list>
 
+#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
+#include "rosidl_typesupport_introspection_cpp/identifier.hpp"
+#include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
+#include "rosidl_typesupport_introspection_cpp/service_introspection.hpp"
+#include "rosidl_typesupport_introspection_cpp/visibility_control.h"
+
+#include "rosidl_typesupport_introspection_c/field_types.h"
+#include "rosidl_typesupport_introspection_c/identifier.h"
+#include "rosidl_typesupport_introspection_c/message_introspection.h"
+#include "rosidl_typesupport_introspection_c/service_introspection.h"
+#include "rosidl_typesupport_introspection_c/visibility_control.h"
+
 using namespace eprosima::fastrtps;
+
+using MessageTypeSupport_c = rmw_fastrtps_cpp::MessageTypeSupport<rosidl_typesupport_introspection_c__MessageMembers>;
+using MessageTypeSupport_cpp = rmw_fastrtps_cpp::MessageTypeSupport<rosidl_typesupport_introspection_cpp::MessageMembers>;
+using TypeSupport_c = rmw_fastrtps_cpp::TypeSupport<rosidl_typesupport_introspection_c__MessageMembers>;
+using TypeSupport_cpp = rmw_fastrtps_cpp::TypeSupport<rosidl_typesupport_introspection_cpp::MessageMembers>;
+
+using RequestTypeSupport_c = rmw_fastrtps_cpp::RequestTypeSupport<
+    rosidl_typesupport_introspection_c__ServiceMembers,
+    rosidl_typesupport_introspection_c__MessageMembers
+>;
+using RequestTypeSupport_cpp = rmw_fastrtps_cpp::RequestTypeSupport<
+    rosidl_typesupport_introspection_cpp::ServiceMembers,
+    rosidl_typesupport_introspection_cpp::MessageMembers
+>;
+
+using ResponseTypeSupport_c = rmw_fastrtps_cpp::ResponseTypeSupport<
+    rosidl_typesupport_introspection_c__ServiceMembers,
+    rosidl_typesupport_introspection_c__MessageMembers
+>;
+using ResponseTypeSupport_cpp = rmw_fastrtps_cpp::ResponseTypeSupport<
+    rosidl_typesupport_introspection_cpp::ServiceMembers,
+    rosidl_typesupport_introspection_cpp::MessageMembers
+>;
+
+bool using_introspection_c_typesupport(const char * typesupport_identifier)
+{
+    return typesupport_identifier == rosidl_typesupport_introspection_c__identifier;
+}
+
+bool using_introspection_cpp_typesupport(const char * typesupport_identifier)
+{
+    return typesupport_identifier == rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier;
+}
+
+template<typename MembersType>
+ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
+inline std::string
+_create_type_name(
+    const void * untyped_members,
+    const std::string & sep)
+{
+    auto members = static_cast<const MembersType *>(untyped_members);
+    if (!members) {
+        RMW_SET_ERROR_MSG("members handle is null");
+        return "";
+    }
+    return
+        std::string(members->package_name_) + "::" + sep + "::dds_::" + members->message_name_ + "_";
+}
+
+ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
+inline std::string
+_create_type_name(
+  const void * untyped_members,
+  const std::string & sep,
+  const char * typesupport)
+{
+    if (using_introspection_c_typesupport(typesupport)) {
+        return _create_type_name<rosidl_typesupport_introspection_c__MessageMembers>(
+            untyped_members, sep);
+    } else if (using_introspection_cpp_typesupport(typesupport)) {
+        return _create_type_name<rosidl_typesupport_introspection_cpp::MessageMembers>(
+            untyped_members, sep);
+    }
+    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return "";
+}
+
+template<typename ServiceType>
+const void * get_request_ptr(const void * untyped_service_members)
+{
+    auto service_members = static_cast<const ServiceType *>(untyped_service_members);
+    if (!service_members) {
+        RMW_SET_ERROR_MSG("service members handle is null");
+        return NULL;
+    }
+    return service_members->request_members_;
+}
+
+const void * get_request_ptr(const void * untyped_service_members, const char * typesupport)
+{
+    if (using_introspection_c_typesupport(typesupport)) {
+        return get_request_ptr<rosidl_typesupport_introspection_c__ServiceMembers>(
+            untyped_service_members);
+    } else if (using_introspection_cpp_typesupport(typesupport)) {
+        return get_request_ptr<rosidl_typesupport_introspection_cpp::ServiceMembers>(
+            untyped_service_members);
+    }
+    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return NULL;
+}
+
+template<typename ServiceType>
+const void * get_response_ptr(const void * untyped_service_members)
+{
+    auto service_members = static_cast<const ServiceType *>(untyped_service_members);
+    if (!service_members) {
+        RMW_SET_ERROR_MSG("service members handle is null");
+        return NULL;
+    }
+    return service_members->response_members_;
+}
+
+const void * get_response_ptr(const void * untyped_service_members, const char * typesupport)
+{
+    if (using_introspection_c_typesupport(typesupport)) {
+        return get_response_ptr<rosidl_typesupport_introspection_c__ServiceMembers>(
+            untyped_service_members);
+    } else if (using_introspection_cpp_typesupport(typesupport)) {
+        return get_response_ptr<rosidl_typesupport_introspection_cpp::ServiceMembers>(
+            untyped_service_members);
+    }
+    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return NULL;
+}
+
+void *
+_create_message_type_support(const void * untyped_members, const char * typesupport_identifier)
+{
+    if (using_introspection_c_typesupport(typesupport_identifier)) {
+        auto members = static_cast<const rosidl_typesupport_introspection_c__MessageMembers*>(
+            untyped_members);
+        return new MessageTypeSupport_c(members);
+    } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
+        auto members = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers*>(
+            untyped_members);
+        return new MessageTypeSupport_cpp(members);
+    }
+    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return nullptr;
+}
+
+void *
+_create_request_type_support(const void * untyped_members, const char * typesupport_identifier)
+{
+    if (using_introspection_c_typesupport(typesupport_identifier)) {
+        auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers*>(
+            untyped_members);
+        return new RequestTypeSupport_c(members);
+    } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
+        auto members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers*>(
+            untyped_members);
+        return new RequestTypeSupport_cpp(members);
+    }
+    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return nullptr;
+}
+
+void *
+_create_response_type_support(const void * untyped_members, const char * typesupport_identifier)
+{
+    if (using_introspection_c_typesupport(typesupport_identifier)) {
+      auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers*>(
+          untyped_members);
+      return new ResponseTypeSupport_c(members);
+    } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
+      auto members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers*>(
+          untyped_members);
+      return new ResponseTypeSupport_cpp(members);
+    }
+    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return nullptr;
+}
+
+void
+_register_type(
+    eprosima::fastrtps::Participant * participant, void * untyped_typesupport,
+    const char* typesupport_identifier)
+{
+    if (using_introspection_c_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<TypeSupport_c *>(untyped_typesupport);
+        Domain::registerType(participant, typed_typesupport);
+    } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<TypeSupport_cpp *>(untyped_typesupport);
+        Domain::registerType(participant, typed_typesupport);
+    } else {
+        RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    }
+}
+
+void
+_unregister_type(
+    eprosima::fastrtps::Participant * participant, void * untyped_typesupport,
+    const char* typesupport_identifier)
+{
+    if (using_introspection_c_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<TypeSupport_c *>(untyped_typesupport);
+        if(Domain::unregisterType(participant, typed_typesupport->getName()))
+            delete typed_typesupport;
+    } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<TypeSupport_cpp *>(untyped_typesupport);
+        if(Domain::unregisterType(participant, typed_typesupport->getName()))
+            delete typed_typesupport;
+    } else {
+        RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    }
+}
+
+void
+_delete_typesupport(void * untyped_typesupport, const char* typesupport_identifier)
+{
+    if (using_introspection_c_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<MessageTypeSupport_cpp *>(untyped_typesupport);
+        if (typed_typesupport != nullptr)
+            delete typed_typesupport;
+    } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<MessageTypeSupport_cpp *>(untyped_typesupport);
+        if (typed_typesupport != nullptr)
+            delete typed_typesupport;
+    } else {
+        RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    }
+}
+
+rmw_fastrtps_cpp::Buffer *
+_create_data(void * untyped_typesupport, const char* typesupport_identifier)
+{
+    if (using_introspection_c_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<TypeSupport_c *>(untyped_typesupport);
+        return static_cast<rmw_fastrtps_cpp::Buffer *>(typed_typesupport->createData());
+    } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<TypeSupport_cpp *>(untyped_typesupport);
+        return static_cast<rmw_fastrtps_cpp::Buffer *>(typed_typesupport->createData());
+    }
+    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return nullptr;
+}
+
+void
+_delete_data(
+    rmw_fastrtps_cpp::Buffer * buffer, void * untyped_typesupport,
+    const char* typesupport_identifier)
+{
+    if (using_introspection_c_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<TypeSupport_c *>(untyped_typesupport);
+        typed_typesupport->deleteData(buffer);
+    } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<TypeSupport_cpp *>(untyped_typesupport);
+        typed_typesupport->deleteData(buffer);
+    } else {
+        RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    }
+}
+
+bool
+_serialize_ros_message(
+    const void *ros_message, rmw_fastrtps_cpp::Buffer * buffer, void * untyped_typesupport,
+    const char* typesupport_identifier)
+{
+    if (using_introspection_c_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<MessageTypeSupport_c *>(untyped_typesupport);
+        return typed_typesupport->serializeROSmessage(ros_message, buffer);
+    } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<MessageTypeSupport_cpp *>(untyped_typesupport);
+        return typed_typesupport->serializeROSmessage(ros_message, buffer);
+    }
+    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return false;
+}
+
+bool
+_deserialize_ros_message(
+    const rmw_fastrtps_cpp::Buffer * buffer, void *ros_message, void * untyped_typesupport,
+    const char* typesupport_identifier)
+{
+    if (using_introspection_c_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<TypeSupport_c *>(untyped_typesupport);
+        return typed_typesupport->deserializeROSmessage(buffer, ros_message);
+    } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
+        auto typed_typesupport = static_cast<TypeSupport_cpp *>(untyped_typesupport);
+        return typed_typesupport->deserializeROSmessage(buffer, ros_message);
+    }
+    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return false;
+}
+
+// This extern "C" prevents accidental overloading of functions. With this in
+// place, overloading produces an error rather than a new C++ symbol.
+extern "C"
+{
+ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_EXPORT
+const char * eprosima_fastrtps_identifier = "fastrtps";
 
 class ClientListener;
 
@@ -33,19 +326,20 @@ typedef struct CustomWaitsetInfo
 
 typedef struct CustomClientInfo
 {
-    rmw_fastrtps_cpp::RequestTypeSupport *request_type_support_;
-    rmw_fastrtps_cpp::ResponseTypeSupport *response_type_support_;
+    void *request_type_support_;
+    void *response_type_support_;
     Subscriber *response_subscriber_;
     Publisher *request_publisher_;
     ClientListener *listener_;
     eprosima::fastrtps::rtps::GUID_t writer_guid_;
     Participant *participant_;
+    const char *typesupport_identifier_;
 } CustomClientInfo;
 
 typedef struct CustomClientResponse
 {
     eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
-    rmw_fastrtps_cpp::TypeSupport::Buffer *buffer_;
+    rmw_fastrtps_cpp::Buffer *buffer_;
 
     CustomClientResponse() : buffer_(nullptr) {}
 } CustomClientResponse;
@@ -63,7 +357,7 @@ class ClientListener : public SubscriberListener
             assert(sub);
 
             CustomClientResponse response;
-            response.buffer_ = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info_->response_type_support_->createData();
+            response.buffer_ = _create_data(info_->response_type_support_, info_->typesupport_identifier_);
             SampleInfo_t sinfo;
 
             if(sub->takeNextData(response.buffer_, &sinfo))
@@ -341,8 +635,9 @@ extern "C"
     typedef struct CustomPublisherInfo
     {
         Publisher *publisher_;
-        rmw_fastrtps_cpp::MessageTypeSupport *type_support_;
+        void *type_support_;
         rmw_gid_t publisher_gid;
+        const char * typesupport_identifier_;
     } CustomPublisherInfo;
 
     rmw_publisher_t* rmw_create_publisher(const rmw_node_t *node, const rosidl_message_type_support_t *type_support,
@@ -364,26 +659,21 @@ extern "C"
 
         Participant *participant = static_cast<Participant*>(node->data);
 
-        if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
-        {
-            RMW_SET_ERROR_MSG("type support not from this implementation");
-            return NULL;
-        }
-
         CustomPublisherInfo *info = new CustomPublisherInfo();
+        info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-        const rosidl_typesupport_introspection_cpp::MessageMembers *members = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers*>(type_support->data);
-        std::string type_name = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
+        std::string type_name = _create_type_name(type_support->data, "msg",
+            info->typesupport_identifier_);
         if(!Domain::getRegisteredType(participant, type_name.c_str(), (TopicDataType**)&info->type_support_))
         {
 
-            info->type_support_ = new rmw_fastrtps_cpp::MessageTypeSupport(members);
-            Domain::registerType(participant, info->type_support_);
+            info->type_support_ = _create_message_type_support(type_support->data, info->typesupport_identifier_);
+            _register_type(participant, info->type_support_, info->typesupport_identifier_);
         }
 
         PublisherAttributes publisherParam;
         publisherParam.topic.topicKind = NO_KEY;
-        publisherParam.topic.topicDataType = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
+        publisherParam.topic.topicDataType = type_name;
         publisherParam.topic.topicName = topic_name;
 
         if(!get_datawriter_qos(*qos_policies, publisherParam))
@@ -410,15 +700,14 @@ extern "C"
         rmw_publisher = new rmw_publisher_t;
         rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
         rmw_publisher->data = info;
-
+        rmw_publisher->topic_name = reinterpret_cast<const char *>(new char [strlen(topic_name) + 1]);
+        memcpy(const_cast<char *>(rmw_publisher->topic_name), topic_name, strlen(topic_name)+1);
         return rmw_publisher;
 fail:
 
         if(info != nullptr)
         {
-            if(info->type_support_ != nullptr)
-                delete info->type_support_;
-
+            _delete_typesupport(info->type_support_, info->typesupport_identifier_);
             delete info;
         }
 
@@ -459,8 +748,7 @@ fail:
             if(info->type_support_ != nullptr)
             {
                 Participant *participant = static_cast<Participant*>(node->data);
-                if(Domain::unregisterType(participant, info->type_support_->getName()))
-                    delete info->type_support_;
+                _unregister_type(participant, info->type_support_, info->typesupport_identifier_);
             }
             delete info;
         }
@@ -485,9 +773,9 @@ fail:
         CustomPublisherInfo *info = (CustomPublisherInfo*)publisher->data;
         assert(info);
 
-        rmw_fastrtps_cpp::TypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info->type_support_->createData();
+        rmw_fastrtps_cpp::Buffer *buffer = _create_data(info->type_support_, info->typesupport_identifier_);
 
-        if(info->type_support_->serializeROSmessage(ros_message, buffer))
+        if(_serialize_ros_message(ros_message, buffer, info->type_support_, info->typesupport_identifier_))
         {
             if(info->publisher_->write((void*)buffer))
                 returnedValue = RMW_RET_OK;
@@ -497,7 +785,7 @@ fail:
         else
             RMW_SET_ERROR_MSG("cannot serialize data");
 
-        info->type_support_->deleteData(buffer);
+        _delete_data(buffer, info->type_support_, info->typesupport_identifier_);
 
         return returnedValue;
     }
@@ -508,7 +796,8 @@ fail:
     {
         Subscriber *subscriber_;
         SubListener *listener_;
-        rmw_fastrtps_cpp::MessageTypeSupport *type_support_;
+        void *type_support_;
+        const char *typesupport_identifier_;
     } CustomSubscriberInfo;
 
     class SubListener : public SubscriberListener
@@ -597,26 +886,22 @@ fail:
 
         Participant *participant = static_cast<Participant*>(node->data);
 
-        if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
-        {
-            RMW_SET_ERROR_MSG("type support not from this implementation");
-            return NULL;
-        }
-
         CustomSubscriberInfo *info = new CustomSubscriberInfo();
+        info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-        const rosidl_typesupport_introspection_cpp::MessageMembers *members = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers*>(type_support->data);
-        std::string type_name = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
+        std::string type_name = _create_type_name(
+            type_support->data, "msg", info->typesupport_identifier_);
+
         if(!Domain::getRegisteredType(participant, type_name.c_str(), (TopicDataType**)&info->type_support_))
         {
 
-            info->type_support_ = new rmw_fastrtps_cpp::MessageTypeSupport(members);
-            Domain::registerType(participant, info->type_support_);
+            info->type_support_ = _create_message_type_support(type_support->data, info->typesupport_identifier_);
+            _register_type(participant, info->type_support_, info->typesupport_identifier_);
         }
 
         SubscriberAttributes subscriberParam;
         subscriberParam.topic.topicKind = NO_KEY;
-        subscriberParam.topic.topicDataType = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
+        subscriberParam.topic.topicDataType = type_name;
         subscriberParam.topic.topicName = topic_name;
 
         if(!get_datareader_qos(*qos_policies, subscriberParam))
@@ -634,6 +919,8 @@ fail:
         subscription = new rmw_subscription_t;
         subscription->implementation_identifier = eprosima_fastrtps_identifier;
         subscription->data = info;
+        subscription->topic_name = reinterpret_cast<const char *>(new char [strlen(topic_name) + 1]);
+        memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name)+1);
 
         return subscription;
 fail:
@@ -641,8 +928,7 @@ fail:
         if(info != nullptr)
         {
             if(info->type_support_ != nullptr)
-                delete info->type_support_;
-
+            _delete_typesupport(info->type_support_, info->typesupport_identifier_);
             delete info;
         }
 
@@ -684,8 +970,7 @@ fail:
             if(info->type_support_ != nullptr)
             {
                 Participant *participant = static_cast<Participant*>(node->data);
-                if(Domain::unregisterType(participant, info->type_support_->getName()))
-                    delete info->type_support_;
+                _unregister_type(participant, info->type_support_, info->typesupport_identifier_);
             }
             delete info;
         }
@@ -712,7 +997,7 @@ fail:
         CustomSubscriberInfo *info = (CustomSubscriberInfo*)subscription->data;
         assert(info);
 
-        rmw_fastrtps_cpp::TypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info->type_support_->createData();
+        rmw_fastrtps_cpp::Buffer *buffer = _create_data(info->type_support_, info->typesupport_identifier_);
         SampleInfo_t sinfo;
 
         if(info->subscriber_->takeNextData(buffer, &sinfo))
@@ -721,12 +1006,12 @@ fail:
 
             if(sinfo.sampleKind == ALIVE)
             {
-                info->type_support_->deserializeROSmessage(buffer, ros_message);
+                _deserialize_ros_message(buffer, ros_message, info->type_support_, info->typesupport_identifier_);
                 *taken = true;
             }
         }
 
-        info->type_support_->deleteData(buffer);
+        _delete_data(buffer, info->type_support_, info->typesupport_identifier_);
 
         return RMW_RET_OK;
     }
@@ -757,7 +1042,7 @@ fail:
         CustomSubscriberInfo *info = (CustomSubscriberInfo*)subscription->data;
         assert(info);
 
-        rmw_fastrtps_cpp::TypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info->type_support_->createData();
+        rmw_fastrtps_cpp::Buffer *buffer = _create_data(info->type_support_, info->typesupport_identifier_);
         SampleInfo_t sinfo;
 
         if(info->subscriber_->takeNextData(buffer, &sinfo))
@@ -766,7 +1051,7 @@ fail:
 
             if(sinfo.sampleKind == ALIVE)
             {
-                info->type_support_->deserializeROSmessage(buffer, ros_message);
+                _deserialize_ros_message(buffer, ros_message, info->type_support_, info->typesupport_identifier_);
                 rmw_gid_t * sender_gid = &message_info->publisher_gid;
                 sender_gid->implementation_identifier = eprosima_fastrtps_identifier;
                 memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
@@ -775,7 +1060,7 @@ fail:
             }
         }
 
-        info->type_support_->deleteData(buffer);
+        _delete_data(buffer, info->type_support_, info->typesupport_identifier_);
 
         return RMW_RET_OK;
     }
@@ -950,18 +1235,19 @@ fail:
 
     typedef struct CustomServiceInfo
     {
-        rmw_fastrtps_cpp::RequestTypeSupport *request_type_support_;
-        rmw_fastrtps_cpp::ResponseTypeSupport *response_type_support_;
+        void *request_type_support_;
+        void *response_type_support_;
         Subscriber *request_subscriber_;
         Publisher *response_publisher_;
         ServiceListener *listener_;
         Participant *participant_;
+        const char *typesupport_identifier_;
     } CustomServiceInfo;
 
     typedef struct CustomServiceRequest
     {
 	    eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
-	    rmw_fastrtps_cpp::TypeSupport::Buffer *buffer_;
+	    rmw_fastrtps_cpp::Buffer *buffer_;
 
 	    CustomServiceRequest() : buffer_(nullptr) {}
     } CustomServiceRequest;
@@ -979,7 +1265,7 @@ fail:
                 assert(sub);
 
                 CustomServiceRequest request;
-                request.buffer_ = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info_->request_type_support_->createData();
+                request.buffer_ = _create_data(info_->request_type_support_, info_->typesupport_identifier_);
                 SampleInfo_t sinfo;
 
                 if(sub->takeNextData(request.buffer_, &sinfo))
@@ -1077,37 +1363,41 @@ fail:
 
         Participant *participant = static_cast<Participant*>(node->data);
 
-        if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
-        {
-            RMW_SET_ERROR_MSG("type support not from this implementation");
-            return NULL;
-        }
-
         info = new CustomClientInfo();
         info->participant_ = participant;
+        info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-        const rosidl_typesupport_introspection_cpp::ServiceMembers *members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers*>(type_support->data);
+        const void * untyped_request_members;
+        const void * untyped_response_members;
 
-        std::string request_type_name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Request_";
+        untyped_request_members =
+            get_request_ptr(type_support->data, info->typesupport_identifier_);
+        untyped_response_members = get_response_ptr(type_support->data,
+            info->typesupport_identifier_);
+
+        std::string request_type_name = _create_type_name(untyped_request_members, "srv",
+            info->typesupport_identifier_);
+        std::string response_type_name = _create_type_name(untyped_response_members, "srv",
+            info->typesupport_identifier_);
+
         if(!Domain::getRegisteredType(participant, request_type_name.c_str(), (TopicDataType**)&info->request_type_support_))
         {
 
-            info->request_type_support_ = new rmw_fastrtps_cpp::RequestTypeSupport(members);
-            Domain::registerType(participant, info->request_type_support_);
+            info->request_type_support_ = _create_request_type_support(type_support->data, info->typesupport_identifier_);
+            _register_type(participant, info->request_type_support_, info->typesupport_identifier_);
         }
 
-        std::string response_type_name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Response_";
         if(!Domain::getRegisteredType(participant, response_type_name.c_str(), (TopicDataType**)&info->response_type_support_))
         {
-            info->response_type_support_ = new rmw_fastrtps_cpp::ResponseTypeSupport(members);
-            Domain::registerType(participant, info->response_type_support_);
+            info->response_type_support_ = _create_response_type_support(type_support->data, info->typesupport_identifier_);
+            _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
         }
 
         SubscriberAttributes subscriberParam;
         PublisherAttributes publisherParam;
 
         subscriberParam.topic.topicKind = NO_KEY;
-        subscriberParam.topic.topicDataType = info->response_type_support_->getName();
+        subscriberParam.topic.topicDataType = response_type_name;
         subscriberParam.topic.topicName = std::string(service_name) + "Reply";
 
         if(!get_datareader_qos(*qos_policies, subscriberParam))
@@ -1123,7 +1413,7 @@ fail:
         }
 
         publisherParam.topic.topicKind = NO_KEY;
-        publisherParam.topic.topicDataType = info->request_type_support_->getName();
+        publisherParam.topic.topicDataType = request_type_name;
         publisherParam.topic.topicName = std::string(service_name) + "Request";
 
         if(!get_datawriter_qos(*qos_policies, publisherParam))
@@ -1167,14 +1457,12 @@ fail:
             Participant *participant = static_cast<Participant*>(node->data);
             if(info->request_type_support_ != nullptr)
             {
-                if(Domain::unregisterType(participant, info->request_type_support_->getName()))
-                    delete info->request_type_support_;
+                _unregister_type(participant, info->request_type_support_, info->typesupport_identifier_);
             }
 
             if(info->response_type_support_ != nullptr)
             {
-                if(Domain::unregisterType(participant, info->response_type_support_->getName()))
-                    delete info->response_type_support_;
+                _unregister_type(participant, info->response_type_support_, info->typesupport_identifier_);
             }
 
             delete info;
@@ -1202,9 +1490,9 @@ fail:
         CustomClientInfo *info = (CustomClientInfo*)client->data;
         assert(info);
 
-        rmw_fastrtps_cpp::TypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info->request_type_support_->createData();
+        rmw_fastrtps_cpp::Buffer *buffer = _create_data(info->request_type_support_, info->typesupport_identifier_);
 
-        if(info->request_type_support_->serializeROSmessage(ros_request, buffer))
+        if(_serialize_ros_message(ros_request, buffer, info->request_type_support_, info->typesupport_identifier_))
         {
             eprosima::fastrtps::rtps::WriteParams wparams;
 
@@ -1219,7 +1507,7 @@ fail:
         else
             RMW_SET_ERROR_MSG("cannot serialize data");
 
-        info->request_type_support_->deleteData(buffer);
+        _delete_data(buffer, info->request_type_support_, info->typesupport_identifier_);
 
         return returnedValue;
     }
@@ -1249,13 +1537,13 @@ fail:
 
         if(request.buffer_ != nullptr)
         {
-            info->request_type_support_->deserializeROSmessage(request.buffer_, ros_request);
+            _deserialize_ros_message(request.buffer_, ros_request, info->request_type_support_, info->typesupport_identifier_);
 
             // Get header
             memcpy(request_header->writer_guid, &request.sample_identity_.writer_guid(), sizeof(eprosima::fastrtps::rtps::GUID_t));
             request_header->sequence_number = ((int64_t)request.sample_identity_.sequence_number().high) << 32 | request.sample_identity_.sequence_number().low;
 
-            info->request_type_support_->deleteData(request.buffer_);
+            _delete_data(request.buffer_, info->request_type_support_, info->typesupport_identifier_);
 
             *taken = true;
         }
@@ -1288,13 +1576,13 @@ fail:
 
         if(response.buffer_ != nullptr)
         {
-            info->response_type_support_->deserializeROSmessage(response.buffer_, ros_response);
+            _deserialize_ros_message(response.buffer_, ros_response, info->response_type_support_, info->typesupport_identifier_);
 
             request_header->sequence_number = ((int64_t)response.sample_identity_.sequence_number().high) << 32 | response.sample_identity_.sequence_number().low;
 
             *taken = true;
 
-            info->request_type_support_->deleteData(response.buffer_);
+            _delete_data(response.buffer_, info->request_type_support_, info->typesupport_identifier_);
         }
 
         return RMW_RET_OK;
@@ -1319,11 +1607,11 @@ fail:
         CustomServiceInfo *info = (CustomServiceInfo*)service->data;
         assert(info);
 
-        rmw_fastrtps_cpp::TypeSupport::Buffer *buffer = (rmw_fastrtps_cpp::TypeSupport::Buffer*)info->response_type_support_->createData();
+        rmw_fastrtps_cpp::Buffer *buffer = _create_data(info->response_type_support_, info->typesupport_identifier_);
 
         if(buffer != nullptr)
         {
-            info->response_type_support_->serializeROSmessage(ros_response, buffer);
+            _serialize_ros_message(ros_response, buffer, info->response_type_support_, info->typesupport_identifier_);
             eprosima::fastrtps::rtps::WriteParams wparams;
             memcpy(&wparams.related_sample_identity().writer_guid(), request_header->writer_guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
             wparams.related_sample_identity().sequence_number().high = (int32_t)((request_header->sequence_number & 0xFFFFFFFF00000000) >> 32);
@@ -1336,7 +1624,7 @@ fail:
             else
                 RMW_SET_ERROR_MSG("cannot publish data");
 
-            info->response_type_support_->deleteData(buffer);
+            _delete_data(buffer, info->response_type_support_, info->typesupport_identifier_);
         }
 
 
@@ -1363,37 +1651,40 @@ fail:
 
         Participant *participant = static_cast<Participant*>(node->data);
 
-        if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
-        {
-            RMW_SET_ERROR_MSG("type support not from this implementation");
-            return NULL;
-        }
-
         info = new CustomServiceInfo();
         info->participant_ = participant;
+        info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-        const rosidl_typesupport_introspection_cpp::ServiceMembers *members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers*>(type_support->data);
+        const void * untyped_request_members;
+        const void * untyped_response_members;
 
-        std::string request_type_name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Request_";
+        untyped_request_members =
+            get_request_ptr(type_support->data, info->typesupport_identifier_);
+        untyped_response_members = get_response_ptr(type_support->data,
+            info->typesupport_identifier_);
+
+        std::string request_type_name = _create_type_name(untyped_request_members, "srv",
+            info->typesupport_identifier_);
+        std::string response_type_name = _create_type_name(untyped_response_members, "srv",
+            info->typesupport_identifier_);
+
         if(!Domain::getRegisteredType(participant, request_type_name.c_str(), (TopicDataType**)&info->request_type_support_))
         {
-
-            info->request_type_support_ = new rmw_fastrtps_cpp::RequestTypeSupport(members);
-            Domain::registerType(participant, info->request_type_support_);
+            info->request_type_support_ = _create_request_type_support(type_support->data, info->typesupport_identifier_);
+            _register_type(participant, info->request_type_support_, info->typesupport_identifier_);
         }
 
-        std::string response_type_name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Response_";
         if(!Domain::getRegisteredType(participant, response_type_name.c_str(), (TopicDataType**)&info->response_type_support_))
         {
-            info->response_type_support_ = new rmw_fastrtps_cpp::ResponseTypeSupport(members);
-            Domain::registerType(participant, info->response_type_support_);
+            info->response_type_support_ = _create_response_type_support(type_support->data, info->typesupport_identifier_);
+            _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
         }
 
         SubscriberAttributes subscriberParam;
         PublisherAttributes publisherParam;
 
         subscriberParam.topic.topicKind = NO_KEY;
-        subscriberParam.topic.topicDataType = info->request_type_support_->getName();
+        subscriberParam.topic.topicDataType = request_type_name;
         subscriberParam.topic.topicName = std::string(service_name) + "Request";
 
         if(!get_datareader_qos(*qos_policies, subscriberParam))
@@ -1409,7 +1700,7 @@ fail:
         }
 
         publisherParam.topic.topicKind = NO_KEY;
-        publisherParam.topic.topicDataType = info->response_type_support_->getName();
+        publisherParam.topic.topicDataType = response_type_name;
         publisherParam.topic.topicName = std::string(service_name) + "Reply";
 
         if(!get_datawriter_qos(*qos_policies, publisherParam))
@@ -1450,14 +1741,12 @@ fail:
 
             if(info->request_type_support_ != nullptr)
             {
-                if(Domain::unregisterType(participant, info->request_type_support_->getName()))
-                    delete info->request_type_support_;
+                _unregister_type(participant, info->request_type_support_, info->typesupport_identifier_);
             }
 
             if(info->response_type_support_ != nullptr)
             {
-                if(Domain::unregisterType(participant, info->response_type_support_->getName()))
-                    delete info->response_type_support_;
+                _unregister_type(participant, info->response_type_support_, info->typesupport_identifier_);
             }
 
             delete info;
@@ -1494,13 +1783,11 @@ fail:
 
             if(info->request_type_support_ != nullptr)
             {
-                if(Domain::unregisterType(info->participant_, info->request_type_support_->getName()))
-                    delete info->request_type_support_;
+                _unregister_type(info->participant_, info->request_type_support_, info->typesupport_identifier_);
             }
             if(info->response_type_support_ != nullptr)
             {
-                if(Domain::unregisterType(info->participant_, info->response_type_support_->getName()))
-                    delete info->response_type_support_;
+                _unregister_type(info->participant_, info->response_type_support_, info->typesupport_identifier_);
             }
             delete info;
         }
@@ -1532,13 +1819,11 @@ fail:
                 delete info->listener_;
             if(info->request_type_support_ != nullptr)
             {
-                if(Domain::unregisterType(info->participant_, info->request_type_support_->getName()))
-                    delete info->request_type_support_;
+                _unregister_type(info->participant_, info->request_type_support_, info->typesupport_identifier_);
             }
             if(info->response_type_support_ != nullptr)
             {
-                if(Domain::unregisterType(info->participant_, info->response_type_support_->getName()))
-                    delete info->response_type_support_;
+                _unregister_type(info->participant_, info->response_type_support_, info->typesupport_identifier_);
             }
             delete info;
         }
@@ -1712,6 +1997,18 @@ fail:
             }
         }
 
+        if (fixed_guard_conditions && fixed_guard_conditions->guard_conditions)
+        {
+            for(unsigned long i = 0; i < fixed_guard_conditions->guard_condition_count; ++i)
+            {
+                void *data = fixed_guard_conditions->guard_conditions[i];
+                if (data) {
+                    GuardCondition *guard_condition = (GuardCondition*)data;
+                    guard_condition->getHasTriggered();
+                }
+            }
+        }
+
         return RMW_RET_OK;
     }
 
@@ -1751,7 +2048,6 @@ fail:
         RMW_SET_ERROR_MSG("not implemented");
         return RMW_RET_ERROR;
     }
-}
 
 rmw_ret_t
 rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
@@ -1823,3 +2119,4 @@ rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * re
 
   return RMW_RET_OK;
 }
+}  // extern "C"
