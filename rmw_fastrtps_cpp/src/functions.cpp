@@ -1393,14 +1393,6 @@ fail:
         info->participant_ = participant;
         info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-        const void * untyped_request_members;
-        const void * untyped_response_members;
-
-        untyped_request_members =
-            get_request_ptr(type_support->data, info->typesupport_identifier_);
-        untyped_response_members = get_response_ptr(type_support->data,
-            info->typesupport_identifier_);
-
         std::string request_type_name = _create_type_name(untyped_request_members, "srv",
             info->typesupport_identifier_);
         std::string response_type_name = _create_type_name(untyped_response_members, "srv",
@@ -1409,13 +1401,13 @@ fail:
         if(!Domain::getRegisteredType(participant, request_type_name.c_str(), (TopicDataType**)&info->request_type_support_))
         {
 
-            info->request_type_support_ = _create_request_type_support(untyped_request_members, info->typesupport_identifier_);
+            info->request_type_support_ = _create_request_type_support(type_support->data, info->typesupport_identifier_);
             _register_type(participant, info->request_type_support_, info->typesupport_identifier_);
         }
 
         if(!Domain::getRegisteredType(participant, response_type_name.c_str(), (TopicDataType**)&info->response_type_support_))
         {
-            info->response_type_support_ = _create_response_type_support(untyped_response_members, info->typesupport_identifier_);
+            info->response_type_support_ = _create_response_type_support(type_support->data, info->typesupport_identifier_);
             _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
         }
 
@@ -1681,14 +1673,6 @@ fail:
         info->participant_ = participant;
         info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-        const void * untyped_request_members;
-        const void * untyped_response_members;
-
-        untyped_request_members =
-            get_request_ptr(type_support->data, info->typesupport_identifier_);
-        untyped_response_members = get_response_ptr(type_support->data,
-            info->typesupport_identifier_);
-
         std::string request_type_name = _create_type_name(untyped_request_members, "srv",
             info->typesupport_identifier_);
         std::string response_type_name = _create_type_name(untyped_response_members, "srv",
@@ -1696,13 +1680,13 @@ fail:
 
         if(!Domain::getRegisteredType(participant, request_type_name.c_str(), (TopicDataType**)&info->request_type_support_))
         {
-            info->request_type_support_ = _create_request_type_support(untyped_request_members, info->typesupport_identifier_);
+            info->request_type_support_ = _create_request_type_support(type_support->data, info->typesupport_identifier_);
             _register_type(participant, info->request_type_support_, info->typesupport_identifier_);
         }
 
         if(!Domain::getRegisteredType(participant, response_type_name.c_str(), (TopicDataType**)&info->response_type_support_))
         {
-            info->response_type_support_ = _create_response_type_support(untyped_response_members, info->typesupport_identifier_);
+            info->response_type_support_ = _create_response_type_support(type_support->data, info->typesupport_identifier_);
             _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
         }
 
