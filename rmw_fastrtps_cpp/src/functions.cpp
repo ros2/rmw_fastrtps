@@ -1393,6 +1393,14 @@ fail:
         info->participant_ = participant;
         info->typesupport_identifier_ = type_support->typesupport_identifier;
 
+        const void * untyped_request_members;
+        const void * untyped_response_members;
+
+        untyped_request_members =
+            get_request_ptr(type_support->data, info->typesupport_identifier_);
+        untyped_response_members = get_response_ptr(type_support->data,
+            info->typesupport_identifier_);
+
         std::string request_type_name = _create_type_name(untyped_request_members, "srv",
             info->typesupport_identifier_);
         std::string response_type_name = _create_type_name(untyped_response_members, "srv",
@@ -1672,6 +1680,14 @@ fail:
         info = new CustomServiceInfo();
         info->participant_ = participant;
         info->typesupport_identifier_ = type_support->typesupport_identifier;
+
+        const void * untyped_request_members;
+        const void * untyped_response_members;
+
+        untyped_request_members =
+            get_request_ptr(type_support->data, info->typesupport_identifier_);
+        untyped_response_members = get_response_ptr(type_support->data,
+            info->typesupport_identifier_);
 
         std::string request_type_name = _create_type_name(untyped_request_members, "srv",
             info->typesupport_identifier_);
