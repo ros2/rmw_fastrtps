@@ -873,7 +873,7 @@ fail:
     }
 
     rmw_waitset_t *
-    rmw_create_waitset(rmw_guard_conditions_t * fixed_guard_conditions, size_t max_conditions)
+    rmw_create_waitset(size_t max_conditions)
     {
         rmw_waitset_t * waitset = rmw_waitset_allocate();
         GuardCondition * rtps_guard_cond = nullptr;
@@ -892,25 +892,6 @@ fail:
         if (!waitset_info) {
             RMW_SET_ERROR_MSG("failed to construct waitset info struct");
             goto fail;
-        }
-
-        waitset->fixed_guard_conditions = fixed_guard_conditions;
-        if (fixed_guard_conditions) {
-            if (!fixed_guard_conditions->guard_conditions) {
-                RMW_SET_ERROR_MSG("Received invalid guard condition array");
-                goto fail;
-            }
-            // Attach the fixed guard conditions to the waitset (and detach them in destroy)
-            for (size_t i = 0; i < fixed_guard_conditions->guard_condition_count; ++i) {
-                void * guard_cond = fixed_guard_conditions->guard_conditions[i];
-                if (!guard_cond) {
-                    RMW_SET_ERROR_MSG("Received invalid guard condition");
-                    goto fail;
-                }
-                rtps_guard_cond = static_cast<GuardCondition *>(guard_cond);
-                rtps_guard_cond->attachCondition(
-                    &waitset_info->condition_mutex, &waitset_info->condition);
-            }
         }
 
         return waitset;
@@ -949,25 +930,6 @@ fail:
         if (!conditionMutex) {
             RMW_SET_ERROR_MSG("waitset mutex is null");
             return RMW_RET_ERROR;
-        }
-
-        rmw_guard_conditions_t * fixed_guard_conditions = waitset->fixed_guard_conditions;
-        if (fixed_guard_conditions && fixed_guard_conditions->guard_conditions) {
-            // Attach the fixed guard conditions to the waitset (and detach them in destroy)
-            std::unique_lock<std::mutex> lock(*conditionMutex);
-            for (size_t i = 0; i < fixed_guard_conditions->guard_condition_count; ++i) {
-                void * guard_cond = fixed_guard_conditions->guard_conditions[i];
-                if (!guard_cond) {
-                    continue;
-                }
-                GuardCondition * rtps_guard_cond = static_cast<GuardCondition *>(guard_cond);
-                if (!rtps_guard_cond) {
-                    continue;
-                }
-                lock.unlock();
-                rtps_guard_cond->dettachCondition();
-                lock.lock();
-            }
         }
 
         if (waitset) {
@@ -1640,7 +1602,6 @@ fail:
                 guard_condition->attachCondition(conditionMutex, conditionVariable);
             }
         }
-        rmw_guard_conditions_t * fixed_guard_conditions = waitset->fixed_guard_conditions;
 
         std::unique_lock<std::mutex> lock(*conditionMutex);
 
@@ -1680,15 +1641,6 @@ fail:
                 void *data = guard_conditions->guard_conditions[i];
                 GuardCondition *guard_condition = (GuardCondition*)data;
                 if(guard_condition->hasTriggered())
-                    hasToWait = false;
-            }
-        }
-        if (fixed_guard_conditions) {
-            for (unsigned long i = 0; hasToWait && i < fixed_guard_conditions->guard_condition_count; ++i)
-            {
-                void *data = fixed_guard_conditions->guard_conditions[i];
-                GuardCondition *guard_condition = (GuardCondition*)data;
-                if(guard_condition->getHasTriggered())
                     hasToWait = false;
             }
         }
