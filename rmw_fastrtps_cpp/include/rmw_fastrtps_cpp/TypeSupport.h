@@ -324,6 +324,7 @@ bool rmw_fastrtps_cpp::TypeSupport<MembersType>::deserializeROSmessage(
     {
         uint8_t dump;
         deser >> dump;
+        (void)dump;
     }
 
     return true;

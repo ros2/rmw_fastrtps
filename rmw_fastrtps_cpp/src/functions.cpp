@@ -1168,12 +1168,12 @@ fail:
 
         waitset->fixed_guard_conditions = fixed_guard_conditions;
         if (fixed_guard_conditions) {
-/*
-            if (!fixed_guard_conditions->guard_conditions) {
+            if (fixed_guard_conditions->guard_condition_count != 0 &&
+                !fixed_guard_conditions->guard_conditions)
+            {
                 RMW_SET_ERROR_MSG("Received invalid guard condition array");
                 goto fail;
             }
-*/
             // Attach the fixed guard conditions to the waitset (and detach them in destroy)
             for (size_t i = 0; i < fixed_guard_conditions->guard_condition_count; ++i) {
                 void * guard_cond = fixed_guard_conditions->guard_conditions[i];
