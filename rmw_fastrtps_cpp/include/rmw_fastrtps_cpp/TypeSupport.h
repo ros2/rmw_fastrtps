@@ -119,6 +119,8 @@ static size_t calculateMaxAlign(const MembersType *members)
                     alignment = alignof(uint64_t);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
+                    // StringHelper exposes rosidl_generator_c__String as std::string
+                    // so we don't need differentiate between C and C++ introspection typesupport
                     alignment = alignof(std::string);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
@@ -188,6 +190,8 @@ static size_t size_of(const MembersType *members)
                 size = sizeof(uint64_t);
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
+                // StringHelper exposes rosidl_generator_c__String as std::string
+                // so we don't need differentiate between C and C++ introspection typesupport
                 size = sizeof(std::string);
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
@@ -208,9 +212,13 @@ static size_t size_of(const MembersType *members)
 namespace rmw_fastrtps_cpp
 {
 
+    // Helper class that uses template specialization to read/write string types to/from a
+    // eprosima::fastcdr::Cdr
     template <typename MembersType>
     struct StringHelper;
 
+    // For C introspection typesupport we create intermediate instances of std::string so that
+    // eprosima::fastcdr::Cdr can handle the string properly.
     template<>
     struct StringHelper<rosidl_typesupport_introspection_c__MessageMembers> {
         using type = rosidl_generator_c__String;
@@ -227,6 +235,7 @@ namespace rmw_fastrtps_cpp
         }
     };
 
+    // For C++ introspection typesupport we just reuse the same std::string transparently.
     template<>
     struct StringHelper<rosidl_typesupport_introspection_cpp::MessageMembers> {
         using type = std::string;
@@ -605,6 +614,8 @@ bool rmw_fastrtps_cpp::TypeSupport<MembersType>::serializeROSmessage(
                     SER_ARRAY_SIZE_AND_VALUES(uint64_t)
                         break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
+                    // StringHelper exposes rosidl_generator_c__String as std::string
+                    // so we don't need differentiate between C and C++ introspection typesupport
                     SER_ARRAY_SIZE_AND_VALUES(std::string)
                         break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
