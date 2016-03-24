@@ -689,7 +689,8 @@ class ClientListener : public SubscriberListener
         rmw_publisher = new rmw_publisher_t;
         rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
         rmw_publisher->data = info;
-
+        rmw_publisher->topic_name = reinterpret_cast<const char *>(new char [strlen(topic_name) + 1]);
+        memcpy(const_cast<char *>(rmw_publisher->topic_name), topic_name, strlen(topic_name)+1);
         return rmw_publisher;
 fail:
 
@@ -907,6 +908,8 @@ fail:
         subscription = new rmw_subscription_t;
         subscription->implementation_identifier = eprosima_fastrtps_identifier;
         subscription->data = info;
+        subscription->topic_name = reinterpret_cast<const char *>(new char [strlen(topic_name) + 1]);
+        memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name)+1);
 
         return subscription;
 fail:
@@ -2031,6 +2034,18 @@ fail:
                 lock.unlock();
                 guard_condition->dettachCondition();
                 lock.lock();
+            }
+        }
+
+        if (fixed_guard_conditions && fixed_guard_conditions->guard_conditions)
+        {
+            for(unsigned long i = 0; i < fixed_guard_conditions->guard_condition_count; ++i)
+            {
+                void *data = fixed_guard_conditions->guard_conditions[i];
+                if (data) {
+                    GuardCondition *guard_condition = (GuardCondition*)data;
+                    guard_condition->getHasTriggered();
+                }
             }
         }
 
