@@ -162,6 +162,7 @@ _create_message_type_support(const void * untyped_members, const char * typesupp
         return new MessageTypeSupport_cpp(members);
     }
     RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return nullptr;
 }
 
 void *
@@ -177,6 +178,7 @@ _create_request_type_support(const void * untyped_members, const char * typesupp
         return new RequestTypeSupport_cpp(members);
     }
     RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return nullptr;
 }
 
 void *
@@ -192,6 +194,7 @@ _create_response_type_support(const void * untyped_members, const char * typesup
       return new ResponseTypeSupport_cpp(members);
     }
     RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return nullptr;
 }
 
 void
@@ -255,6 +258,7 @@ _create_data(void * untyped_typesupport, const char* typesupport_identifier)
         return static_cast<rmw_fastrtps_cpp::Buffer *>(typed_typesupport->createData());
     }
     RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return nullptr;
 }
 
 void
@@ -286,6 +290,7 @@ _serialize_ros_message(
         return typed_typesupport->serializeROSmessage(ros_message, buffer);
     }
     RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return false;
 }
 
 bool
@@ -301,6 +306,7 @@ _deserialize_ros_message(
         return typed_typesupport->deserializeROSmessage(buffer, ros_message);
     }
     RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+    return false;
 }
 
 // This extern "C" prevents accidental overloading of functions. With this in
