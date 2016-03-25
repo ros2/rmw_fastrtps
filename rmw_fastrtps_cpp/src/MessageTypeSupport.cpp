@@ -21,7 +21,7 @@ MessageTypeSupport::MessageTypeSupport(const rosidl_typesupport_introspection_cp
     setName(strdup(name.c_str()));
 
     if(members->member_count_ != 0)
-        m_typeSize = calculateMaxSerializedSize(members, 0);
+        m_typeSize = static_cast<uint32_t>(calculateMaxSerializedSize(members, 0));
     else
         m_typeSize = 1;
 }
