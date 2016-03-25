@@ -1702,8 +1702,6 @@ fail:
             {
                 void *data = guard_conditions->guard_conditions[i];
                 GuardCondition *guard_condition = (GuardCondition*)data;
-                // Guard conditions persist (don't set to null)
-                // We call getHasTriggered to reset the trigger state.
                 if (!guard_condition->getHasTriggered()) {
                     guard_conditions->guard_conditions[i] = 0;
                 }
