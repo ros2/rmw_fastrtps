@@ -300,6 +300,7 @@ extern "C"
             static_cast<const char *>(malloc(sizeof(char) * strlen(name) + 1));
         if (!node_handle->name) {
             RMW_SET_ERROR_MSG("failed to allocate memory");
+            free(static_cast<void*>(node_handle));
             return NULL;
         }
         memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
