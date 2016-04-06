@@ -37,6 +37,9 @@ ament_target_dependencies(rmw_fastrtps_cpp
 configure_rmw_library(rmw_fastrtps_cpp)
 
 ament_export_libraries(rmw_fastrtps_cpp fastcdr fastrtps)
+if(NOT WIN32)
+  ament_export_libraries(pthread)
+endif()
 
 register_rmw_implementation("rosidl_typesupport_introspection_cpp")
 
