@@ -41,7 +41,7 @@ if(NOT WIN32)
   ament_export_libraries(pthread)
 endif()
 
-register_rmw_implementation(CPP "rosidl_typesupport_introspection_cpp")
+register_rmw_implementation("cpp:rosidl_typesupport_introspection_cpp")
 
 if(AMENT_ENABLE_TESTING)
     find_package(ament_cmake_cppcheck REQUIRED)
