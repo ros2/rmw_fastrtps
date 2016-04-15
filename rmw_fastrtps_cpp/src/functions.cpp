@@ -146,7 +146,7 @@ class ClientListener : public SubscriberListener
 
 extern "C"
 {
-    const char* const eprosima_fastrtps_identifier = "fastrtps";
+    const char* const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
 
     const char* rmw_get_implementation_identifier()
     {
