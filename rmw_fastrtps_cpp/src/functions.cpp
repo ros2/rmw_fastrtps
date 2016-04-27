@@ -275,7 +275,7 @@ extern "C"
 	eprosima::Log::setVerbosity(eprosima::VERB_ERROR);
 
         ParticipantAttributes participantParam;
-        participantParam.rtps.builtin.domainId = domain_id;
+        participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
         participantParam.rtps.builtin.leaseDuration = c_TimeInfinite;
         participantParam.rtps.setName(name);
 
