@@ -18,7 +18,7 @@ MessageTypeSupport::MessageTypeSupport(const rosidl_typesupport_introspection_cp
         typeTooLarge_ = true;
 
     std::string name = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
-    setName(strdup(name.c_str()));
+    setName(name.c_str());
 
     if(members->member_count_ != 0)
         m_typeSize = static_cast<uint32_t>(calculateMaxSerializedSize(members, 0));

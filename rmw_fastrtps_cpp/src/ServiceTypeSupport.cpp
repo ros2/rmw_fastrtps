@@ -21,10 +21,10 @@ RequestTypeSupport::RequestTypeSupport(const rosidl_typesupport_introspection_cp
         typeTooLarge_ = true;
 
     std::string name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Request_";
-    setName(strdup(name.c_str()));
+    setName(name.c_str());
 
     if(members_->member_count_ != 0)
-        m_typeSize = calculateMaxSerializedSize(members_, 0);
+        m_typeSize = static_cast<uint32_t>(calculateMaxSerializedSize(members_, 0));
     else
         m_typeSize = 1;
 }
@@ -35,10 +35,10 @@ ResponseTypeSupport::ResponseTypeSupport(const rosidl_typesupport_introspection_
     members_ = members->response_members_;
 
     std::string name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Response_";
-    setName(strdup(name.c_str()));
+    setName(name.c_str());
 
     if(members_->member_count_ != 0)
-        m_typeSize = calculateMaxSerializedSize(members_, 0);
+        m_typeSize = static_cast<uint32_t>(calculateMaxSerializedSize(members_, 0));
     else
         m_typeSize = 1;
 }
