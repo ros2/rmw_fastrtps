@@ -43,7 +43,7 @@ endif()
 
 register_rmw_implementation("rosidl_typesupport_introspection_cpp")
 
-if(AMENT_ENABLE_TESTING)
+if(BUILD_TESTING)
     find_package(ament_cmake_cppcheck REQUIRED)
     ament_cppcheck()
 endif()
