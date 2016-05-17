@@ -35,8 +35,7 @@
 #include <fastrtps/rtps/RTPSDomain.h>
 #include <fastrtps/rtps/builtin/data/WriterProxyData.h>
 #include <fastrtps/rtps/common/CDRMessage_t.h>
-
-#include <fastrtps/rtps/reader/RTPSReader.h>
+#include <fastrtps/rtps/reader/RTPSReader.h> 
 #include <fastrtps/rtps/reader/StatefulReader.h>
 #include <fastrtps/rtps/reader/ReaderListener.h>
 #include <fastrtps/rtps/builtin/discovery/endpoint/EDPSimple.h>
@@ -466,7 +465,7 @@ typedef struct CustomParticipantInfo{
 
 extern "C"
 {
-    const char* const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
+    const char* const eprosima_fastrtps_identifier = "fastrtps";
 
     const char* rmw_get_implementation_identifier()
     {
@@ -675,7 +674,6 @@ extern "C"
 
 	node_impl->secondarySubListener = tnat_1;
 	node_impl->secondaryPubListener = tnat_2;
-
 
  	std::pair<StatefulReader*, StatefulReader*> EDPReaders = participant->getEDPReaders();
 	
@@ -2323,6 +2321,7 @@ fail:
 	}
 	slave_target->mapmutex.unlock();
  	slave_target = impl->secondaryPubListener; 
+
 	slave_target->mapmutex.lock();
 	for(auto it : slave_target->topicNtypes){
 		for(auto & itt: it.second){
@@ -2335,6 +2334,7 @@ fail:
 	for(auto & it : unfiltered_topics){
 		if(it.second.size() == 1)	topics[it.first] = *it.second.begin();
 	}	
+
 	std::string substring = "::msg::dds_::";
 	for (auto & it : topics) {
 	       size_t substring_position = it.second.find(substring);
@@ -2369,6 +2369,7 @@ fail:
 #endif
 			//Alloc
 			char *topic_name = __local_strdup(it.first.c_str());
+
 			if(!topic_name){
 				RMW_SET_ERROR_MSG("Failed to allocate memory");
 				return RMW_RET_ERROR;
@@ -2565,7 +2566,6 @@ rmw_node_get_graph_guard_condition(const rmw_node_t* node)
     }
     return impl->graph_guard_condition;
 }
-
 
 rmw_ret_t
 rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
