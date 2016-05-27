@@ -1751,6 +1751,23 @@ fail:
         RMW_SET_ERROR_MSG("not implemented");
         return RMW_RET_ERROR;
     }
+
+    rmw_ret_t
+    rmw_service_server_is_available(
+      const rmw_node_t * node,
+      const rmw_client_t * client,
+      bool * is_available)
+    {
+      RMW_SET_ERROR_MSG("not implemented");
+      return RMW_RET_ERROR;
+    }
+
+    const rmw_guard_condition_t *
+    rmw_node_get_graph_guard_condition(const rmw_node_t * node)
+    {
+      RMW_SET_ERROR_MSG("not implemented");
+      return (const rmw_guard_condition_t *)0xf;
+    }
 }
 
 rmw_ret_t
