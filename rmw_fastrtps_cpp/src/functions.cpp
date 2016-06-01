@@ -144,6 +144,11 @@ class ClientListener : public SubscriberListener
         std::condition_variable *conditionVariable_;
 };
 
+struct FastRTPSNodeImpl {
+    Participant * participant;
+    rmw_guard_condition_t * graph_guard_condition;
+};
+
 extern "C"
 {
     const char* const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
@@ -272,7 +277,7 @@ extern "C"
             return NULL;
         }
 
-	eprosima::Log::setVerbosity(eprosima::VERB_ERROR);
+        eprosima::Log::setVerbosity(eprosima::VERB_ERROR);
 
         ParticipantAttributes participantParam;
         participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
@@ -287,6 +292,20 @@ extern "C"
             return NULL;
         }
 
+        rmw_guard_condition_t * graph_guard_condition = rmw_create_guard_condition();
+        if (!graph_guard_condition) {
+            // error already set
+            return NULL;
+        }
+
+        FastRTPSNodeImpl * node_impl = nullptr;
+        try {
+            node_impl = new FastRTPSNodeImpl();
+        } catch(std::bad_alloc & exc) {
+            RMW_SET_ERROR_MSG("failed to allocate node impl struct");
+            return NULL;
+        }
+
         rmw_node_t * node_handle =
             static_cast<rmw_node_t *>(malloc(sizeof(rmw_node_t)));
         if (!node_handle) {
@@ -294,7 +313,9 @@ extern "C"
             return NULL;
         }
         node_handle->implementation_identifier = eprosima_fastrtps_identifier;
-        node_handle->data = participant;
+        node_impl->participant = participant;
+        node_impl->graph_guard_condition = graph_guard_condition;
+        node_handle->data = node_impl;
 
         node_handle->name =
             static_cast<const char *>(malloc(sizeof(char) * strlen(name) + 1));
@@ -321,18 +342,29 @@ extern "C"
             return RMW_RET_ERROR;
         }
 
-        Participant *participant = static_cast<Participant*>(node->data);
-        if (!participant) {
-            RMW_SET_ERROR_MSG("participant handle is null");
+        FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+        if (!impl) {
+            RMW_SET_ERROR_MSG("node impl is null");
+            return RMW_RET_ERROR;
+        }
+
+        Participant *participant = impl->participant;
+
+        if (RMW_RET_OK != rmw_destroy_guard_condition(impl->graph_guard_condition)) {
+            RMW_SET_ERROR_MSG("failed to destroy graph guard condition");
+            return RMW_RET_ERROR;
         }
 
         Domain::removeParticipant(participant);
 
+        delete impl;
         node->data = nullptr;
+
         if (node->name) {
             free(const_cast<char *>(node->name));
             node->name = nullptr;
         }
+
         free(static_cast<void*>(node));
 
         return RMW_RET_OK;
@@ -362,7 +394,13 @@ extern "C"
             return NULL;
         }
 
-        Participant *participant = static_cast<Participant*>(node->data);
+        FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+        if (!impl) {
+            RMW_SET_ERROR_MSG("node impl is null");
+            return NULL;
+        }
+
+        Participant *participant = impl->participant;
 
         if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
         {
@@ -458,7 +496,13 @@ fail:
                 Domain::removePublisher(info->publisher_);
             if(info->type_support_ != nullptr)
             {
-                Participant *participant = static_cast<Participant*>(node->data);
+                FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+                if (!impl) {
+                    RMW_SET_ERROR_MSG("node impl is null");
+                    return RMW_RET_ERROR;
+                }
+
+                Participant *participant = impl->participant;
                 if(Domain::unregisterType(participant, info->type_support_->getName()))
                     delete info->type_support_;
             }
@@ -595,7 +639,13 @@ fail:
             return NULL;
         }
 
-        Participant *participant = static_cast<Participant*>(node->data);
+        FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+        if (!impl) {
+            RMW_SET_ERROR_MSG("node impl is null");
+            return NULL;
+        }
+
+        Participant *participant = impl->participant;
 
         if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
         {
@@ -683,7 +733,13 @@ fail:
                 delete info->listener_;
             if(info->type_support_ != nullptr)
             {
-                Participant *participant = static_cast<Participant*>(node->data);
+                FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+                if (!impl) {
+                    RMW_SET_ERROR_MSG("node impl is null");
+                    return RMW_RET_ERROR;
+                }
+
+                Participant *participant = impl->participant;
                 if(Domain::unregisterType(participant, info->type_support_->getName()))
                     delete info->type_support_;
             }
@@ -1075,7 +1131,13 @@ fail:
             return NULL;
         }
 
-        Participant *participant = static_cast<Participant*>(node->data);
+        FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+        if (!impl) {
+            RMW_SET_ERROR_MSG("node impl is null");
+            return NULL;
+        }
+
+        Participant *participant = impl->participant;
 
         if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
         {
@@ -1164,17 +1226,23 @@ fail:
                 delete info->listener_;
             }
 
-            Participant *participant = static_cast<Participant*>(node->data);
-            if(info->request_type_support_ != nullptr)
-            {
-                if(Domain::unregisterType(participant, info->request_type_support_->getName()))
-                    delete info->request_type_support_;
-            }
+            FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+            if (impl) {
+                Participant *participant = impl->participant;
+                if(info->request_type_support_ != nullptr)
+                {
+                    if(Domain::unregisterType(participant, info->request_type_support_->getName()))
+                        delete info->request_type_support_;
+                }
 
-            if(info->response_type_support_ != nullptr)
-            {
-                if(Domain::unregisterType(participant, info->response_type_support_->getName()))
-                    delete info->response_type_support_;
+                if(info->response_type_support_ != nullptr)
+                {
+                    if(Domain::unregisterType(participant, info->response_type_support_->getName()))
+                        delete info->response_type_support_;
+                }
+            } else {
+                fprintf(stderr,
+                    "[rmw_fastrtps] leaking type support objects because node impl is null\n");
             }
 
             delete info;
@@ -1361,7 +1429,13 @@ fail:
             return NULL;
         }
 
-        Participant *participant = static_cast<Participant*>(node->data);
+        FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+        if (!impl) {
+            RMW_SET_ERROR_MSG("node impl is null");
+            return NULL;
+        }
+
+        Participant *participant = impl->participant;
 
         if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
         {
@@ -1765,8 +1839,13 @@ fail:
     const rmw_guard_condition_t *
     rmw_node_get_graph_guard_condition(const rmw_node_t * node)
     {
-      RMW_SET_ERROR_MSG("not implemented");
-      return (const rmw_guard_condition_t *)0xf;
+      // TODO(wjwwood): actually use the graph guard condition and notify it when changes happen.
+      FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+      if (!impl) {
+        RMW_SET_ERROR_MSG("node impl is null");
+        return NULL;
+      }
+      return impl->graph_guard_condition;
     }
 }
 
