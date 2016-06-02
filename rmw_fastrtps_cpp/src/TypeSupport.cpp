@@ -246,7 +246,7 @@ bool TypeSupport::serializeROSmessage(eprosima::fastcdr::Cdr &ser, const rosidl_
                         // Control maximum length.
                         if((member->string_upper_bound_ && str.length() > member->string_upper_bound_ + 1) || str.length() > 256)
                         {
-                            printf("string overcomes the maximum length with length %lu\n", str.length());
+                            printf("string overcomes the maximum length with length %zu\n", str.length());
                             throw std::runtime_error("string overcomes the maximum length");
                         }
                         ser << str;
