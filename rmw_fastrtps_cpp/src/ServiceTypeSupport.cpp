@@ -16,10 +16,6 @@ RequestTypeSupport::RequestTypeSupport(const rosidl_typesupport_introspection_cp
     assert(members);
     members_ = members->request_members_;
 
-    if(strcmp(members->package_name_, "rcl_interfaces") == 0 && (strcmp(members->service_name_, "SetParameters") == 0 ||
-            strcmp(members->service_name_, "SetParametersAtomically") == 0))
-        typeTooLarge_ = true;
-
     std::string name = std::string(members->package_name_) + "::srv::dds_::" + members->service_name_ + "_Request_";
     setName(name.c_str());
 
