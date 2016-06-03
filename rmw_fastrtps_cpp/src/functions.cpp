@@ -301,7 +301,7 @@ extern "C"
         FastRTPSNodeImpl * node_impl = nullptr;
         try {
             node_impl = new FastRTPSNodeImpl();
-        } catch(std::bad_alloc & exc) {
+        } catch(std::bad_alloc) {
             RMW_SET_ERROR_MSG("failed to allocate node impl struct");
             return NULL;
         }
