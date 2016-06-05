@@ -202,8 +202,10 @@ bool TypeSupport::serializeROSmessage(eprosima::fastcdr::Cdr &ser, const rosidl_
             {
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
                     {
-                        bool sb = false, &b = *(bool*)field;
-                        if(b) sb = true; 
+                        bool sb = false;
+                        // don't cast to bool here because if the bool is
+                        // uninitialized the random value can't be deserialized
+                        if(*(uint8_t*)field) sb = true;
                         ser << sb;
                     }
                     break;
