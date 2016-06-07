@@ -850,13 +850,20 @@ fail:
     {
         public:
 
-            SubListener(CustomSubscriberInfo *info) : info_(info), data_(0),
-            conditionMutex_(NULL), conditionVariable_(NULL) {}
+            SubListener(CustomSubscriberInfo *info) : data_(0),
+            conditionMutex_(NULL), conditionVariable_(NULL) {
+              // Field is not used right now
+              (void)info;
+            }
 
-            void onSubscriptionMatched(Subscriber *sub, MatchingInfo &info) {}
+            void onSubscriptionMatched(Subscriber *sub, MatchingInfo &info) {
+              (void)sub;
+              (void)info;
+            }
 
             void onNewDataMessage(Subscriber *sub)
             {
+                (void)sub;
                 std::lock_guard<std::mutex> lock(internalMutex_);
 
                 if(conditionMutex_ != NULL)
@@ -907,7 +914,6 @@ fail:
 
         private:
 
-            CustomSubscriberInfo *info_;
             std::mutex internalMutex_;
             uint32_t data_;
             std::mutex *conditionMutex_;
@@ -917,6 +923,7 @@ fail:
     rmw_subscription_t* rmw_create_subscription(const rmw_node_t *node, const rosidl_message_type_support_t *type_support,
             const char *topic_name, const rmw_qos_profile_t * qos_policies, bool ignore_local_publications)
     {
+        (void)ignore_local_publications;
         rmw_subscription_t *subscription = nullptr;
 
         assert(node);
@@ -1228,8 +1235,8 @@ fail:
     rmw_waitset_t *
     rmw_create_waitset(size_t max_conditions)
     {
+        (void)max_conditions;
         rmw_waitset_t * waitset = rmw_waitset_allocate();
-        GuardCondition * rtps_guard_cond = nullptr;
         CustomWaitsetInfo * waitset_info = nullptr;
 
         // From here onward, error results in unrolling in the goto fail block.
@@ -2047,6 +2054,7 @@ fail:
             }
         }
 
+        bool timeout = false;
         if(hasToWait)
         {
             if(!wait_timeout)
@@ -2055,14 +2063,18 @@ fail:
             {
                 std::chrono::nanoseconds n(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(wait_timeout->sec)));
                 n += std::chrono::nanoseconds(wait_timeout->nsec);
-                conditionVariable->wait_for(lock, n);
+                if (conditionVariable->wait_for(lock, n) == std::cv_status::timeout) {
+                  timeout = true;
+                }
             }
         }
+        bool hasData = false;
 
         for(unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
         {
             void *data = subscriptions->subscribers[i];
             CustomSubscriberInfo *custom_subscriber_info = (CustomSubscriberInfo*)data;
+            hasData |= custom_subscriber_info->listener_->hasData();
             if(!custom_subscriber_info->listener_->hasData())
             {
                 subscriptions->subscribers[i] = 0;
@@ -2076,6 +2088,7 @@ fail:
         {
             void *data = clients->clients[i];
             CustomClientInfo *custom_client_info = (CustomClientInfo*)data;
+            hasData |= custom_client_info->listener_->hasData();
             if(!custom_client_info->listener_->hasData())
             {
                 clients->clients[i] = 0;
@@ -2089,6 +2102,7 @@ fail:
         {
             void *data = services->services[i];
             CustomServiceInfo *custom_service_info = (CustomServiceInfo*)data;
+            hasData |= custom_service_info->listener_->hasData();
             if(!custom_service_info->listener_->hasData())
             {
                 services->services[i] = 0;
@@ -2107,13 +2121,17 @@ fail:
                 if (!guard_condition->getHasTriggered()) {
                     guard_conditions->guard_conditions[i] = 0;
                 }
+                hasData |= guard_conditions->guard_conditions[i] != 0;
                 lock.unlock();
                 guard_condition->dettachCondition();
                 lock.lock();
             }
         }
+        if (!hasData && wait_timeout && wait_timeout->sec == 0 && wait_timeout->nsec == 0) {
+          return RMW_RET_TIMEOUT;
+        }
 
-        return RMW_RET_OK;
+        return timeout ? RMW_RET_TIMEOUT : RMW_RET_OK;
     }
 
     rmw_ret_t
@@ -2121,6 +2139,8 @@ fail:
       const rmw_node_t * node,
       rmw_topic_names_and_types_t * topic_names_and_types)
     {
+        (void)node;
+        (void)topic_names_and_types;
         RMW_SET_ERROR_MSG("not implemented");
         return RMW_RET_ERROR;
     }
@@ -2129,6 +2149,7 @@ fail:
     rmw_destroy_topic_names_and_types(
       rmw_topic_names_and_types_t * topic_names_and_types)
     {
+        (void)topic_names_and_types;
         RMW_SET_ERROR_MSG("not implemented");
         return RMW_RET_ERROR;
     }
@@ -2139,6 +2160,9 @@ fail:
       const char * topic_name,
       size_t * count)
     {
+        (void)node;
+        (void)topic_name;
+        (void)count;
         RMW_SET_ERROR_MSG("not implemented");
         return RMW_RET_ERROR;
     }
@@ -2149,6 +2173,9 @@ fail:
       const char * topic_name,
       size_t * count)
     {
+        (void)node;
+        (void)topic_name;
+        (void)count;
         RMW_SET_ERROR_MSG("not implemented");
         return RMW_RET_ERROR;
     }
@@ -2159,6 +2186,9 @@ fail:
       const rmw_client_t * client,
       bool * is_available)
     {
+        (void)node;
+        (void)client;
+        (void)is_available;
       RMW_SET_ERROR_MSG("not implemented");
       return RMW_RET_ERROR;
     }
