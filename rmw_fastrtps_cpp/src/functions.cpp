@@ -1514,6 +1514,12 @@ fail:
         client = new rmw_client_t;
         client->implementation_identifier = eprosima_fastrtps_identifier;
         client->data = info;
+        client->service_name = reinterpret_cast<const char*>(rmw_allocate(strlen(service_name) + 1));
+        if (!client->service_name) {
+          RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+          goto fail;
+        }
+        memcpy(const_cast<char *>(client->service_name), service_name, strlen(service_name) + 1);
 
         return client;
 
@@ -1820,6 +1826,13 @@ fail:
         service = new rmw_service_t;
         service->implementation_identifier = eprosima_fastrtps_identifier;
         service->data = info;
+        service->service_name = reinterpret_cast<const char *>(
+          rmw_allocate(strlen(service_name) +1));
+        if (!service->service_name) {
+          RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+          goto fail;
+        }
+        memcpy(const_cast<char *>(service->service_name), service_name, strlen(service_name) + 1);
 
         return service;
 
