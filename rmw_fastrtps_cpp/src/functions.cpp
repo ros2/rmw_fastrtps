@@ -724,6 +724,7 @@ extern "C"
             return RMW_RET_ERROR;
         }
 
+
 	Domain::removeParticipant(participant);
 
 	delete(impl);
