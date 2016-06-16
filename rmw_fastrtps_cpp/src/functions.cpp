@@ -1955,6 +1955,54 @@ fail:
         return RMW_RET_OK;
     }
 
+    // helper function for wait
+    bool check_waitset_for_data(const rmw_subscriptions_t *subscriptions,
+            const rmw_guard_conditions_t *guard_conditions,
+            const rmw_services_t *services,
+            const rmw_clients_t *clients)
+    {
+        for(unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
+        {
+            void *data = subscriptions->subscribers[i];
+            CustomSubscriberInfo *custom_subscriber_info = (CustomSubscriberInfo*)data;
+            // Short circuiting out of this function is possible
+            if (custom_subscriber_info && custom_subscriber_info->listener_->hasData()) {
+              return true;
+            }
+        }
+
+        for(unsigned long i = 0; i < clients->client_count; ++i)
+        {
+            void *data = clients->clients[i];
+            CustomClientInfo *custom_client_info = (CustomClientInfo*)data;
+            if (custom_client_info && custom_client_info->listener_->hasData()) {
+              return true;
+            }
+        }
+
+        for(unsigned long i = 0; i < services->service_count; ++i)
+        {
+            void *data = services->services[i];
+            CustomServiceInfo *custom_service_info = (CustomServiceInfo*)data;
+            if (custom_service_info && custom_service_info->listener_->hasData()) {
+              return true;
+            }
+        }
+
+        if (guard_conditions)
+        {
+            for(unsigned long i = 0; i < guard_conditions->guard_condition_count; ++i)
+            {
+                void *data = guard_conditions->guard_conditions[i];
+                GuardCondition *guard_condition = (GuardCondition*)data;
+                if (guard_condition && guard_condition->hasTriggered()) {
+                  return true;
+                }
+            }
+        }
+        return false;
+    }
+
     rmw_ret_t rmw_wait(rmw_subscriptions_t *subscriptions,
             rmw_guard_conditions_t *guard_conditions,
             rmw_services_t *services,
@@ -2055,61 +2103,60 @@ fail:
         }
 
         bool timeout = false;
+
         if(hasToWait)
         {
             if(!wait_timeout)
                 conditionVariable->wait(lock);
             else
             {
-                std::chrono::nanoseconds n(std::chrono::duration_cast<std::chrono::nanoseconds>(std::chrono::seconds(wait_timeout->sec)));
+                auto predicate = [subscriptions, guard_conditions, services, clients]() {
+                  return check_waitset_for_data(subscriptions, guard_conditions, services, clients);
+                };
+                auto n = std::chrono::duration_cast<std::chrono::nanoseconds>(
+                    std::chrono::seconds(wait_timeout->sec));
                 n += std::chrono::nanoseconds(wait_timeout->nsec);
-                if (conditionVariable->wait_for(lock, n) == std::cv_status::timeout) {
-                  timeout = true;
-                }
+                timeout = !conditionVariable->wait_for(lock, n, predicate);
             }
         }
-        bool hasData = false;
 
         for(unsigned long i = 0; i < subscriptions->subscriber_count; ++i)
         {
             void *data = subscriptions->subscribers[i];
             CustomSubscriberInfo *custom_subscriber_info = (CustomSubscriberInfo*)data;
-            hasData |= custom_subscriber_info->listener_->hasData();
             if(!custom_subscriber_info->listener_->hasData())
             {
                 subscriptions->subscribers[i] = 0;
             }
-	    lock.unlock();
+            lock.unlock();
             custom_subscriber_info->listener_->dettachCondition();
-	    lock.lock();
+            lock.lock();
         }
 
         for(unsigned long i = 0; i < clients->client_count; ++i)
         {
             void *data = clients->clients[i];
             CustomClientInfo *custom_client_info = (CustomClientInfo*)data;
-            hasData |= custom_client_info->listener_->hasData();
             if(!custom_client_info->listener_->hasData())
             {
                 clients->clients[i] = 0;
             }
-	    lock.unlock();
+            lock.unlock();
             custom_client_info->listener_->dettachCondition();
-	    lock.lock();
+            lock.lock();
         }
 
         for(unsigned long i = 0; i < services->service_count; ++i)
         {
             void *data = services->services[i];
             CustomServiceInfo *custom_service_info = (CustomServiceInfo*)data;
-            hasData |= custom_service_info->listener_->hasData();
             if(!custom_service_info->listener_->hasData())
             {
                 services->services[i] = 0;
             }
-	    lock.unlock();
+            lock.unlock();
             custom_service_info->listener_->dettachCondition();
-	    lock.lock();
+            lock.lock();
         }
 
         if (guard_conditions)
@@ -2121,18 +2168,20 @@ fail:
                 if (!guard_condition->getHasTriggered()) {
                     guard_conditions->guard_conditions[i] = 0;
                 }
-                hasData |= guard_conditions->guard_conditions[i] != 0;
                 lock.unlock();
                 guard_condition->dettachCondition();
                 lock.lock();
             }
         }
+        // Make timeout behavior consistent with rcl expectations for zero timeout value
+        bool hasData = check_waitset_for_data(subscriptions, guard_conditions, services, clients);
         if (!hasData && wait_timeout && wait_timeout->sec == 0 && wait_timeout->nsec == 0) {
-          return RMW_RET_TIMEOUT;
+         return RMW_RET_TIMEOUT;
         }
 
         return timeout ? RMW_RET_TIMEOUT : RMW_RET_OK;
     }
+
 
     rmw_ret_t
     rmw_get_topic_names_and_types(
@@ -2204,7 +2253,6 @@ fail:
       }
       return impl->graph_guard_condition;
     }
-}
 
 rmw_ret_t
 rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
@@ -2275,4 +2323,6 @@ rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * re
     memcmp(gid1->data, gid2->data, sizeof(eprosima::fastrtps::rtps::GUID_t)) == 0;
 
   return RMW_RET_OK;
+}
+
 }
