@@ -2337,7 +2337,6 @@ fail:
 	for(auto & it : unfiltered_topics){
 		if(it.second.size() == 1)	topics[it.first] = *it.second.begin();
 	}	
-
 	std::string substring = "::msg::dds_::";
 	for (auto & it : topics) {
 	       size_t substring_position = it.second.find(substring);
