@@ -613,7 +613,7 @@ extern "C"
     {
         return RMW_RET_OK;
     }
-    
+
     rmw_node_t* rmw_create_node(const char *name, size_t domain_id)
     {
         if (!name) {
@@ -628,6 +628,7 @@ extern "C"
         participantParam.rtps.setName(name);
 
         Participant *participant = Domain::createParticipant(participantParam);
+
         if(!participant)
         {
             RMW_SET_ERROR_MSG("create_node() could not create participant");
@@ -1134,6 +1135,8 @@ fail:
 
                 Participant *participant = impl->participant;
                 _unregister_type(participant, info->type_support_, info->typesupport_identifier_);
+                if(Domain::unregisterType(participant, info->type_support_->getName()))
+                    delete info->type_support_;
             }
             delete info;
         }
