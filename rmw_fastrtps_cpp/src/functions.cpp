@@ -281,7 +281,6 @@ extern "C"
 
         ParticipantAttributes participantParam;
         participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
-        participantParam.rtps.builtin.leaseDuration = c_TimeInfinite;
         participantParam.rtps.setName(name);
 
         Participant *participant = Domain::createParticipant(participantParam);
