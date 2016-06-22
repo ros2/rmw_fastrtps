@@ -3,19 +3,26 @@
 
 #include "TypeSupport.h"
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
+#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
-namespace eprosima { namespace fastcdr {
-    class Cdr;
-}}
+#include <fastcdr/FastBuffer.h>
+#include <fastcdr/Cdr.h>
+
+#include <cassert>
+#include <memory>
+
 
 namespace rmw_fastrtps_cpp
 {
-    class MessageTypeSupport : public TypeSupport
+    template <typename MembersType>
+    class MessageTypeSupport : public TypeSupport<MembersType>
     {
         public:
 
-            MessageTypeSupport(const rosidl_typesupport_introspection_cpp::MessageMembers *members);
+            MessageTypeSupport(const MembersType *members);
     };
 }
+
+#include "MessageTypeSupport_impl.h"
 
 #endif // _RMW_FASTRTPS_CPP_MESSAGETYPESUPPORT_H_

@@ -2,31 +2,42 @@
 #define _RMW_FASTRTPS_CPP_SERVICETYPESUPPORT_H_
 
 #include "TypeSupport.h"
+#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
+
+#include <fastcdr/FastBuffer.h>
+#include <fastcdr/Cdr.h>
+#include <cassert>
+
 
 struct CustomServiceInfo;
 
 namespace rmw_fastrtps_cpp
 {
-    class ServiceTypeSupport : public TypeSupport
+    template <typename MembersType>
+    class ServiceTypeSupport : public TypeSupport<MembersType>
     {
         protected:
 
             ServiceTypeSupport();
     };
 
-    class RequestTypeSupport : public ServiceTypeSupport
+    template <typename ServiceMembersType, typename MessageMembersType>
+    class RequestTypeSupport : public ServiceTypeSupport<MessageMembersType>
     {
         public:
 
-            RequestTypeSupport(const rosidl_typesupport_introspection_cpp::ServiceMembers *members);
+            RequestTypeSupport(const ServiceMembersType *members);
     };
 
-    class ResponseTypeSupport : public ServiceTypeSupport
+    template <typename ServiceMembersType, typename MessageMembersType>
+    class ResponseTypeSupport : public ServiceTypeSupport<MessageMembersType>
     {
         public:
 
-            ResponseTypeSupport(const rosidl_typesupport_introspection_cpp::ServiceMembers *members);
+            ResponseTypeSupport(const ServiceMembersType *members);
     };
 }
+
+#include "ServiceTypeSupport_impl.h"
 
 #endif // _RMW_FASTRTPS_CPP_SERVICETYPESUPPORT_H_

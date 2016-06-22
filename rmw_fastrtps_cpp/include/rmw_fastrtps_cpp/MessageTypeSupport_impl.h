@@ -1,3 +1,6 @@
+#ifndef _RMW_FASTRTPS_CPP_MESSAGETYPESUPPORT_IMPL_H_
+#define _RMW_FASTRTPS_CPP_MESSAGETYPESUPPORT_IMPL_H_
+
 #include "rmw_fastrtps_cpp/MessageTypeSupport.h"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
@@ -9,19 +12,22 @@
 
 using namespace rmw_fastrtps_cpp;
 
-MessageTypeSupport::MessageTypeSupport(const rosidl_typesupport_introspection_cpp::MessageMembers *members)
+template <typename MembersType>
+MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType *members)
 {
     assert(members);
-    members_ = members;
+    this->members_ = members;
 
     if(strcmp(members->package_name_, "rcl_interfaces") == 0 && strcmp(members->message_name_, "ParameterEvent") == 0)
-        typeTooLarge_ = true;
+        this->typeTooLarge_ = true;
 
     std::string name = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
-    setName(name.c_str());
+    this->setName(name.c_str());
 
     if(members->member_count_ != 0)
-        m_typeSize = static_cast<uint32_t>(calculateMaxSerializedSize(members, 0));
+        this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(members, 0));
     else
-        m_typeSize = 1;
+        this->m_typeSize = 1;
 }
+
+#endif // _RMW_FASTRTPS_CPP_MESSAGETYPESUPPORT_IMPL_H_
