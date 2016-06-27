@@ -459,7 +459,7 @@ extern "C"
         return eprosima_fastrtps_identifier;
     }
 
-    bool get_datareader_qos(const rmw_qos_profile_t& qos_policies, SubscriberAttributes sattr)
+    bool get_datareader_qos(const rmw_qos_profile_t& qos_policies, SubscriberAttributes& sattr)
     {
         switch (qos_policies.history) {
             case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
@@ -512,7 +512,7 @@ extern "C"
         return true;
     }
 
-    bool get_datawriter_qos(const rmw_qos_profile_t& qos_policies, PublisherAttributes pattr)
+    bool get_datawriter_qos(const rmw_qos_profile_t& qos_policies, PublisherAttributes& pattr)
     {
         switch (qos_policies.history)
         {
