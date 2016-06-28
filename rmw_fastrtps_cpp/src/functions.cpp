@@ -490,6 +490,21 @@ extern "C"
                 return false;
         }
 
+        switch (qos_policies.durability)
+        {
+            case RMW_QOS_POLICY_TRANSIENT_LOCAL_DURABILITY:
+                sattr.qos.m_durability.kind = TRANSIENT_LOCAL_DURABILITY_QOS;
+                break;
+            case RMW_QOS_POLICY_VOLATILE_DURABILITY:
+                sattr.qos.m_durability.kind = VOLATILE_DURABILITY_QOS;
+                break;
+            case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
+                break;
+            default:
+                RMW_SET_ERROR_MSG("Unknown QoS durability policy");
+                return false;
+        }
+
         if (qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
             sattr.topic.historyQos.depth = static_cast<int32_t>(qos_policies.depth);
         }
@@ -526,6 +541,21 @@ extern "C"
                 break;
             default:
                 RMW_SET_ERROR_MSG("Unknown QoS history policy");
+                return false;
+        }
+
+        switch (qos_policies.durability)
+        {
+            case RMW_QOS_POLICY_TRANSIENT_LOCAL_DURABILITY:
+                pattr.qos.m_durability.kind = TRANSIENT_LOCAL_DURABILITY_QOS;
+                break;
+            case RMW_QOS_POLICY_VOLATILE_DURABILITY:
+                pattr.qos.m_durability.kind = VOLATILE_DURABILITY_QOS;
+                break;
+            case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
+                break;
+            default:
+                RMW_SET_ERROR_MSG("Unknown QoS durability policy");
                 return false;
         }
 
