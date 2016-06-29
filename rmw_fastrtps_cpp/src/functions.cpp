@@ -954,7 +954,7 @@ fail:
         }
 
         void onParticipantDiscovery(Participant* p, ParticipantDiscoveryInfo info){
-           if(info.rtps.m_RTPSParticipantName.size()>2){
+           if(info.rtps.m_RTPSParticipantName.size()>2 && info.rtps.m_RTPSParticipantName.compare("get_node_names")!=0){
                node_name.push_back(info.rtps.m_RTPSParticipantName);
            }
         }
@@ -986,7 +986,6 @@ fail:
         #endif
 
         eprosima::Log::setVerbosity(eprosima::VERB_ERROR);
-        std::cout << "Starting "<< std::endl;
 
         ParticipantAttributes participantParam;
         participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
