@@ -695,7 +695,40 @@ fail:
     rmw_ret_t 
     rmw_destroy_ros_meta(rmw_ros_meta_t * rosmeta)
     {
+      if (!rosmeta) {
+        RMW_SET_ERROR_MSG("received null pointer");
+        return RMW_RET_ERROR;
+      }
 
+      for (int i=0;i < rosmeta->count; i++){
+        if (!rosmeta->node_names[i].data) {
+          RMW_SET_ERROR_MSG("received null pointer");
+          return RMW_RET_ERROR;
+        }
+        rmw_free((char*)rosmeta->node_names[i].data);
+        
+        if (!rosmeta->ids[i].implementation_identifier) {
+          RMW_SET_ERROR_MSG("received null pointer");
+          return RMW_RET_ERROR;
+        }
+        rmw_free((char*)rosmeta->ids[i].implementation_identifier);
+      }
+
+      if (!rosmeta->node_names) {
+        RMW_SET_ERROR_MSG("received null pointer");
+        return RMW_RET_ERROR;
+      }
+      rmw_free((rmw_string_t *)rosmeta->node_names);
+
+      if (!rosmeta->ids) {
+        RMW_SET_ERROR_MSG("received null pointer");
+        return RMW_RET_ERROR;
+      }
+      rmw_free((rmw_gid_t *)rosmeta->ids);
+
+      rmw_free((rmw_ros_meta_t *)rosmeta);
+
+      return RMW_RET_OK;
     }
 
     rmw_ret_t
