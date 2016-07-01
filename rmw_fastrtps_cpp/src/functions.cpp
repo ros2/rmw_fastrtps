@@ -1076,6 +1076,8 @@ fail:
         // Assign the size
         ros_meta_data->count = node_name.size();
 
+        Domain::removeParticipant(participant);
+
         return ros_meta_data;
     }
 
