@@ -38,10 +38,9 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType *members)
     std::string name = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
     this->setName(name.c_str());
 
-    if(members->member_count_ != 0)
-        this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(members, 0));
-    else
-        this->m_typeSize = 1;
+    // TODO(wjwwood): this could be more intelligent, setting m_typeSize to the
+    // maximum serialized size of the message, when the message is a bonded one.
+    this->m_typeSize = 0;
 }
 
 #endif // _RMW_FASTRTPS_CPP_MESSAGETYPESUPPORT_IMPL_H_
