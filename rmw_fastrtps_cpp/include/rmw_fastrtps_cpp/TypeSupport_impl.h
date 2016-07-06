@@ -381,7 +381,7 @@ bool TypeSupport<MembersType>::serializeROSmessage(
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
                     {
-                        auto str = StringHelper<MembersType>::convert_to_std_string(field);
+                        auto && str = StringHelper<MembersType>::convert_to_std_string(field);
 
                         // Control maximum length.
                         if((member->string_upper_bound_ && str.length() > member->string_upper_bound_ + 1) || str.length() > 256)
