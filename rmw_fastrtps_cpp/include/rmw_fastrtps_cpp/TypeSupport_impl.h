@@ -15,6 +15,8 @@
 #ifndef _RMW_FASTRTPS_CPP_TYPESUPPORT_IMPL_H_
 #define _RMW_FASTRTPS_CPP_TYPESUPPORT_IMPL_H_
 
+#include <type_traits>
+
 #include "rmw_fastrtps_cpp/TypeSupport.h"
 #include "rmw_fastrtps_cpp/macros.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
@@ -381,7 +383,17 @@ bool TypeSupport<MembersType>::serializeROSmessage(
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
                     {
-                        auto str = StringHelper<MembersType>::convert_to_std_string(field);
+                        using str_type = typename std::conditional<
+                            std::is_same<MembersType, rosidl_typesupport_introspection_cpp::MessageMembers>::value,
+                            std::string &,
+                            typename std::conditional<
+                                std::is_same<MembersType, rosidl_typesupport_introspection_c__MessageMembers>::value,
+                                std::string,
+                                void
+                             >::type
+                        >::type;
+
+                        str_type str = StringHelper<MembersType>::convert_to_std_string(field);
 
                         // Control maximum length.
                         if((member->string_upper_bound_ && str.length() > member->string_upper_bound_ + 1) || str.length() > 256)
