@@ -729,7 +729,7 @@ extern "C"
         publisherParam.topic.topicDataType = type_name;
         publisherParam.topic.topicName = topic_name;
         publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
-	publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+        publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
         // 1 Heartbeat every 10ms
         publisherParam.times.heartbeatPeriod.seconds = 0;
@@ -992,7 +992,7 @@ fail:
         subscriberParam.topic.topicKind = NO_KEY;
         subscriberParam.topic.topicDataType = type_name;
         subscriberParam.topic.topicName = topic_name;
-	subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+        subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
         Locator_t multicast_locator;
         multicast_locator.set_IP4_address("239.255.0.1");
