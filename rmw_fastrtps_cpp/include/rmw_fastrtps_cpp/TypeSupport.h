@@ -106,7 +106,7 @@ namespace rmw_fastrtps_cpp
 
             bool deserialize(SerializedPayload_t *payload, void *data);
 
-	    std::function<uint32_t()> getSerializedSizeProvider(void* data);
+	    std::function<uint32_t()> getCdrSerializedSizeProvider(void* data);
 
             void* createData();
 

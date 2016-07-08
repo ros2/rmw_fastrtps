@@ -885,7 +885,7 @@ bool TypeSupport<MembersType>::deserialize(SerializedPayload_t *payload, void *d
 }
 
 template <typename MembersType>
-std::function<uint32_t()> TypeSupport<MembersType>::getSerializedSizeProvider(void* data)
+std::function<uint32_t()> TypeSupport<MembersType>::getCdrSerializedSizeProvider(void* data)
 {
     assert(data);
 
