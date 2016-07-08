@@ -429,7 +429,7 @@ extern "C"
         return eprosima_fastrtps_identifier;
     }
 
-    bool get_datareader_qos(const rmw_qos_profile_t& qos_policies, SubscriberAttributes sattr)
+    bool get_datareader_qos(const rmw_qos_profile_t& qos_policies, SubscriberAttributes& sattr)
     {
         switch (qos_policies.history) {
             case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
@@ -460,6 +460,21 @@ extern "C"
                 return false;
         }
 
+        switch (qos_policies.durability)
+        {
+            case RMW_QOS_POLICY_TRANSIENT_LOCAL_DURABILITY:
+                sattr.qos.m_durability.kind = TRANSIENT_LOCAL_DURABILITY_QOS;
+                break;
+            case RMW_QOS_POLICY_VOLATILE_DURABILITY:
+                sattr.qos.m_durability.kind = VOLATILE_DURABILITY_QOS;
+                break;
+            case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
+                break;
+            default:
+                RMW_SET_ERROR_MSG("Unknown QoS durability policy");
+                return false;
+        }
+
         if (qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
             sattr.topic.historyQos.depth = static_cast<int32_t>(qos_policies.depth);
         }
@@ -482,7 +497,7 @@ extern "C"
         return true;
     }
 
-    bool get_datawriter_qos(const rmw_qos_profile_t& qos_policies, PublisherAttributes pattr)
+    bool get_datawriter_qos(const rmw_qos_profile_t& qos_policies, PublisherAttributes& pattr)
     {
         switch (qos_policies.history)
         {
@@ -496,6 +511,21 @@ extern "C"
                 break;
             default:
                 RMW_SET_ERROR_MSG("Unknown QoS history policy");
+                return false;
+        }
+
+        switch (qos_policies.durability)
+        {
+            case RMW_QOS_POLICY_TRANSIENT_LOCAL_DURABILITY:
+                pattr.qos.m_durability.kind = TRANSIENT_LOCAL_DURABILITY_QOS;
+                break;
+            case RMW_QOS_POLICY_VOLATILE_DURABILITY:
+                pattr.qos.m_durability.kind = VOLATILE_DURABILITY_QOS;
+                break;
+            case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
+                break;
+            default:
+                RMW_SET_ERROR_MSG("Unknown QoS durability policy");
                 return false;
         }
 
@@ -699,7 +729,7 @@ extern "C"
         publisherParam.topic.topicDataType = type_name;
         publisherParam.topic.topicName = topic_name;
         publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
-	publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+        publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
         // 1 Heartbeat every 10ms
         publisherParam.times.heartbeatPeriod.seconds = 0;
@@ -962,7 +992,7 @@ fail:
         subscriberParam.topic.topicKind = NO_KEY;
         subscriberParam.topic.topicDataType = type_name;
         subscriberParam.topic.topicName = topic_name;
-	subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+        subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
         Locator_t multicast_locator;
         multicast_locator.set_IP4_address("239.255.0.1");
