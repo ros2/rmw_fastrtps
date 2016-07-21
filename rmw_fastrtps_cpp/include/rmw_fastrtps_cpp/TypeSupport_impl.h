@@ -866,6 +866,8 @@ bool TypeSupport<MembersType>::serialize(
     assert(payload);
 
     eprosima::fastcdr::FastBuffer *buffer = static_cast<eprosima::fastcdr::FastBuffer*>(data);
+    if(buffer->getBufferSize() > payload->max_size)
+	    return false;
     payload->length = buffer->getBufferSize();
     payload->encapsulation = CDR_LE;
     memcpy(payload->data, buffer->getBuffer(), buffer->getBufferSize());
