@@ -911,4 +911,13 @@ bool TypeSupport<MembersType>::deserialize(SerializedPayload_t *payload, void *d
     return true;
 }
 
+template <typename MembersType>
+std::function<uint32_t()> TypeSupport<MembersType>::getSerializedSizeProvider(void* data)
+{
+  assert(data);
+
+  eprosima::fastcdr::Cdr *ser = static_cast<eprosima::fastcdr::Cdr*>(data);
+  return [ser]() -> uint32_t { return ser->getSerializedDataLength(); };
+}
+
 #endif // _RMW_FASTRTPS_CPP_TYPESUPPORT_IMPL_H_
