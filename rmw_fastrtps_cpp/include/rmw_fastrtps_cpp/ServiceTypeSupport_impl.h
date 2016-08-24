@@ -45,7 +45,7 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(c
     if(this->members_->member_count_ != 0)
         this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 0));
     else
-        this->m_typeSize = 1;
+        this->m_typeSize = 4;
 }
 
 template <typename ServiceMembersType, typename MessageMembersType>
@@ -60,7 +60,7 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
     if(this->members_->member_count_ != 0)
         this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 0));
     else
-        this->m_typeSize = 1;
+        this->m_typeSize = 4;
 }
 
 #endif // _RMW_FASTRTPS_CPP_SERVICETYPESUPPORT_IMPL_H_
