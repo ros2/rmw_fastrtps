@@ -608,7 +608,7 @@ extern "C"
             return NULL;
         }
 
-        eprosima::Log::setVerbosity(eprosima::VERB_ERROR);
+        eprosima::fastrtps::Log::SetVerbosity(eprosima::fastrtps::Log::Error);
 
         ParticipantAttributes participantParam;
         participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
