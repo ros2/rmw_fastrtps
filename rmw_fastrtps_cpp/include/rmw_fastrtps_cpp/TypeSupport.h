@@ -93,24 +93,20 @@ namespace rmw_fastrtps_cpp
         }
     };
 
-    typedef struct Buffer
-    {
-        uint32_t length;
-        char *pointer;
-    } Buffer;
-
     template <typename MembersType>
     class TypeSupport : public eprosima::fastrtps::TopicDataType
     {
         public:
 
-            bool serializeROSmessage(const void *ros_message, Buffer *data);
+            bool serializeROSmessage(const void *ros_message, eprosima::fastcdr::Cdr& ser);
 
-            bool deserializeROSmessage(const Buffer* data, void *ros_message);
+            bool deserializeROSmessage(eprosima::fastcdr::FastBuffer *data, void *ros_message);
 
             bool serialize(void *data, SerializedPayload_t *payload);
 
             bool deserialize(SerializedPayload_t *payload, void *data);
+
+            std::function<uint32_t()> getSerializedSizeProvider(void* data);
 
             void* createData();
 
@@ -124,15 +120,11 @@ namespace rmw_fastrtps_cpp
 
             const MembersType *members_;
 
-            bool typeTooLarge_;
-
         private:
 
             bool serializeROSmessage(eprosima::fastcdr::Cdr &ser, const MembersType *members, const void *ros_message);
 
             bool deserializeROSmessage(eprosima::fastcdr::Cdr &deser, const MembersType *members, void *ros_message, bool call_new);
-
-            bool typeByDefaultLarge() { return typeTooLarge_; }
     };
 }
 

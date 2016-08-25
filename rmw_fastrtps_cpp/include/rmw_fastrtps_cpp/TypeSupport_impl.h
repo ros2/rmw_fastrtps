@@ -51,7 +51,7 @@ SPECIALIZE_GENERIC_C_ARRAY(uint64, uint64_t)
 
 
 template <typename MembersType>
-TypeSupport<MembersType>::TypeSupport() : typeTooLarge_(false)
+TypeSupport<MembersType>::TypeSupport()
 {
     m_isGetKeyDefined = false;
 }
@@ -60,7 +60,7 @@ template <typename MembersType>
 void TypeSupport<MembersType>::deleteData(void* data)
 {
     assert(data);
-    free(data);
+    delete static_cast<eprosima::fastcdr::FastBuffer *>(data);
 }
 
 static inline void*
@@ -228,17 +228,12 @@ template<typename T>
 void serialize_array(
     const rosidl_typesupport_introspection_cpp::MessageMember * member,
     void * field,
-    eprosima::fastcdr::Cdr &ser,
-    bool typeTooLarge)
+    eprosima::fastcdr::Cdr &ser)
 {
     if (member->array_size_ && !member->is_upper_bound_) {
         ser.serializeArray((T*)field, member->array_size_);
     } else {
         std::vector<T> & data = *reinterpret_cast<std::vector<T> *>(field);
-        if(data.size() > (member->is_upper_bound_ ? member->array_size_ : (typeTooLarge ? 30 : 101))) {
-            printf("vector overcomes the maximum length\n");
-            throw std::runtime_error("vector overcomes the maximum length");
-        }
         ser << data;
     }
 }
@@ -248,17 +243,12 @@ template<typename T>
 void serialize_array(
     const rosidl_typesupport_introspection_c__MessageMember * member,
     void * field,
-    eprosima::fastcdr::Cdr &ser,
-    bool typeTooLarge)
+    eprosima::fastcdr::Cdr &ser)
 {
     if (member->array_size_ && !member->is_upper_bound_) {
         ser.serializeArray((T*)field, member->array_size_);
     } else {
         auto & data = *reinterpret_cast<typename GenericCArray<T>::type *>(field);
-        if(data.size > (member->is_upper_bound_ ? member->array_size_ : (typeTooLarge ? 30 : 101))) {
-            printf("vector overcomes the maximum length\n");
-            throw std::runtime_error("vector overcomes the maximum length");
-        }
         ser.serializeArray((T*)data.data, data.size);
     }
 }
@@ -267,8 +257,7 @@ template<>
 void serialize_array<std::string>(
     const rosidl_typesupport_introspection_c__MessageMember * member,
     void * field,
-    eprosima::fastcdr::Cdr &ser,
-    bool typeTooLarge)
+    eprosima::fastcdr::Cdr &ser)
 {
     using CStringHelper = StringHelper<rosidl_typesupport_introspection_c__MessageMembers>;
     // First, cast field to rosidl_generator_c
@@ -278,11 +267,6 @@ void serialize_array<std::string>(
         ser.serializeArray(string_field->data, member->array_size_);
     } else {
         auto & string_array_field = *reinterpret_cast<rosidl_generator_c__String__Array *>(field);
-        if(
-            string_array_field.size > (member->is_upper_bound_ ? member->array_size_ : (typeTooLarge ? 30 : 101))) {
-            printf("vector overcomes the maximum length\n");
-            throw std::runtime_error("vector overcomes the maximum length");
-        }
         std::vector<std::string> cpp_string_vector;
         for (size_t i = 0; i < string_array_field.size; ++i) {
           cpp_string_vector.push_back(CStringHelper::convert_to_std_string(string_array_field.data[i]));
@@ -408,42 +392,42 @@ bool TypeSupport<MembersType>::serializeROSmessage(
             switch(member->type_id_)
             {
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-                    serialize_array<bool>(member, field, ser, typeByDefaultLarge());
+                    serialize_array<bool>(member, field, ser);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
-                    serialize_array<uint8_t>(member, field, ser, typeByDefaultLarge());
+                    serialize_array<uint8_t>(member, field, ser);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-                    serialize_array<char>(member, field, ser, typeByDefaultLarge());
+                    serialize_array<char>(member, field, ser);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
-                    serialize_array<float>(member, field, ser, typeByDefaultLarge());
+                    serialize_array<float>(member, field, ser);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
-                    serialize_array<double>(member, field, ser, typeByDefaultLarge());
+                    serialize_array<double>(member, field, ser);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
-                    serialize_array<int16_t>(member, field, ser, typeByDefaultLarge());
+                    serialize_array<int16_t>(member, field, ser);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-                    serialize_array<uint16_t>(member, field, ser, typeByDefaultLarge());
+                    serialize_array<uint16_t>(member, field, ser);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
-                    serialize_array<int32_t>(member, field, ser, typeByDefaultLarge());
+                    serialize_array<int32_t>(member, field, ser);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-                    serialize_array<uint32_t>(member, field, ser, typeByDefaultLarge());
+                    serialize_array<uint32_t>(member, field, ser);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
-                    serialize_array<int64_t>(member, field, ser, typeByDefaultLarge());
+                    serialize_array<int64_t>(member, field, ser);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-                    serialize_array<uint64_t>(member, field, ser, typeByDefaultLarge());
+                    serialize_array<uint64_t>(member, field, ser);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-                    serialize_array<std::string>(member, field, ser, typeByDefaultLarge());
+                    serialize_array<std::string>(member, field, ser);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
                     {
@@ -781,7 +765,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
             {
                 current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
 
-                if(array_size == 0) typeByDefaultLarge() ? array_size = 30 : array_size = 101;
+                if(array_size == 0) array_size = 101;
             }
 
             switch(member->type_id_)
@@ -832,32 +816,26 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
 
 template <typename MembersType>
 bool TypeSupport<MembersType>::serializeROSmessage(
-    const void *ros_message, Buffer *buffer)
+    const void *ros_message, eprosima::fastcdr::Cdr& ser)
 {
-    assert(buffer);
     assert(ros_message);
-
-    eprosima::fastcdr::FastBuffer fastbuffer(buffer->pointer, m_typeSize);
-    eprosima::fastcdr::Cdr ser(fastbuffer);
 
     if(members_->member_count_ != 0)
         TypeSupport::serializeROSmessage(ser, members_, ros_message);
     else
         ser << (uint8_t)0;
 
-    buffer->length = (uint32_t)ser.getSerializedDataLength();
     return true;
 }
 
 template <typename MembersType>
 bool TypeSupport<MembersType>::deserializeROSmessage(
-    const Buffer* buffer, void *ros_message)
+    eprosima::fastcdr::FastBuffer* buffer, void *ros_message)
 {
     assert(buffer);
     assert(ros_message);
 
-    eprosima::fastcdr::FastBuffer fastbuffer(buffer->pointer, buffer->length);
-    eprosima::fastcdr::Cdr deser(fastbuffer);
+    eprosima::fastcdr::Cdr deser(*buffer);
 
     if(members_->member_count_ != 0)
         TypeSupport::deserializeROSmessage(deser, members_, ros_message, false);
@@ -874,15 +852,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
 template <typename MembersType>
 void* TypeSupport<MembersType>::createData()
 {
-    Buffer *buffer = static_cast<Buffer*>(malloc(sizeof(Buffer) + m_typeSize));
-
-    if(buffer)
-    {
-        buffer->length = 0;
-        buffer->pointer = (char*)(buffer + 1);
-    }
-
-    return buffer;
+    return new eprosima::fastcdr::FastBuffer();
 }
 
 template <typename MembersType>
@@ -892,11 +862,16 @@ bool TypeSupport<MembersType>::serialize(
     assert(data);
     assert(payload);
 
-    Buffer *buffer = static_cast<Buffer*>(data);
-    payload->length = buffer->length;
-    payload->encapsulation = CDR_LE;
-    memcpy(payload->data, buffer->pointer, buffer->length);
-    return true;
+    eprosima::fastcdr::Cdr *ser = static_cast<eprosima::fastcdr::Cdr*>(data);
+    if(payload->max_size >= ser->getSerializedDataLength())
+    {
+        payload->length = ser->getSerializedDataLength();
+        payload->encapsulation = CDR_LE;
+        memcpy(payload->data, ser->getBufferPointer(), ser->getSerializedDataLength());
+        return true;
+    }
+
+    return false;
 }
 
 template <typename MembersType>
@@ -905,10 +880,19 @@ bool TypeSupport<MembersType>::deserialize(SerializedPayload_t *payload, void *d
     assert(data);
     assert(payload);
 
-    Buffer *buffer = static_cast<Buffer*>(data);
-    buffer->length = payload->length;
-    memcpy(buffer->pointer, payload->data, payload->length);
+    eprosima::fastcdr::FastBuffer *buffer = static_cast<eprosima::fastcdr::FastBuffer*>(data);
+    buffer->resize(payload->length);
+    memcpy(buffer->getBuffer(), payload->data, payload->length);
     return true;
+}
+
+template <typename MembersType>
+std::function<uint32_t()> TypeSupport<MembersType>::getSerializedSizeProvider(void* data)
+{
+    assert(data);
+
+    eprosima::fastcdr::Cdr *ser = static_cast<eprosima::fastcdr::Cdr*>(data);
+    return [ser]() -> uint32_t { return ser->getSerializedDataLength(); };
 }
 
 #endif // _RMW_FASTRTPS_CPP_TYPESUPPORT_IMPL_H_

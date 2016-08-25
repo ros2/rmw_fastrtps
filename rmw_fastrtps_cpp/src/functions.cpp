@@ -24,10 +24,22 @@
 #include <fastrtps/attributes/ParticipantAttributes.h>
 #include <fastrtps/publisher/Publisher.h>
 #include <fastrtps/attributes/PublisherAttributes.h>
+#include <fastrtps/publisher/PublisherListener.h>
 #include <fastrtps/subscriber/Subscriber.h>
 #include <fastrtps/subscriber/SubscriberListener.h>
 #include <fastrtps/subscriber/SampleInfo.h>
 #include <fastrtps/attributes/SubscriberAttributes.h>
+
+
+
+#include <fastrtps/rtps/RTPSDomain.h>
+#include <fastrtps/rtps/builtin/data/WriterProxyData.h>
+#include <fastrtps/rtps/common/CDRMessage_t.h>
+
+#include <fastrtps/rtps/reader/RTPSReader.h> 
+#include <fastrtps/rtps/reader/StatefulReader.h>
+#include <fastrtps/rtps/reader/ReaderListener.h>
+#include <fastrtps/rtps/builtin/discovery/endpoint/EDPSimple.h>
 
 #include <cassert>
 #include <mutex>
@@ -249,43 +261,13 @@ void
 _delete_typesupport(void * untyped_typesupport, const char* typesupport_identifier)
 {
     if (using_introspection_c_typesupport(typesupport_identifier)) {
-        auto typed_typesupport = static_cast<MessageTypeSupport_cpp *>(untyped_typesupport);
+        auto typed_typesupport = static_cast<MessageTypeSupport_c *>(untyped_typesupport);
         if (typed_typesupport != nullptr)
             delete typed_typesupport;
     } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
         auto typed_typesupport = static_cast<MessageTypeSupport_cpp *>(untyped_typesupport);
         if (typed_typesupport != nullptr)
             delete typed_typesupport;
-    } else {
-        RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-    }
-}
-
-rmw_fastrtps_cpp::Buffer *
-_create_data(void * untyped_typesupport, const char* typesupport_identifier)
-{
-    if (using_introspection_c_typesupport(typesupport_identifier)) {
-        auto typed_typesupport = static_cast<TypeSupport_c *>(untyped_typesupport);
-        return static_cast<rmw_fastrtps_cpp::Buffer *>(typed_typesupport->createData());
-    } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-        auto typed_typesupport = static_cast<TypeSupport_cpp *>(untyped_typesupport);
-        return static_cast<rmw_fastrtps_cpp::Buffer *>(typed_typesupport->createData());
-    }
-    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-    return nullptr;
-}
-
-void
-_delete_data(
-    rmw_fastrtps_cpp::Buffer * buffer, void * untyped_typesupport,
-    const char* typesupport_identifier)
-{
-    if (using_introspection_c_typesupport(typesupport_identifier)) {
-        auto typed_typesupport = static_cast<TypeSupport_c *>(untyped_typesupport);
-        typed_typesupport->deleteData(buffer);
-    } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-        auto typed_typesupport = static_cast<TypeSupport_cpp *>(untyped_typesupport);
-        typed_typesupport->deleteData(buffer);
     } else {
         RMW_SET_ERROR_MSG("Unknown typesupport identifier");
     }
@@ -293,15 +275,15 @@ _delete_data(
 
 bool
 _serialize_ros_message(
-    const void *ros_message, rmw_fastrtps_cpp::Buffer * buffer, void * untyped_typesupport,
+    const void *ros_message, eprosima::fastcdr::Cdr& ser, void * untyped_typesupport,
     const char* typesupport_identifier)
 {
     if (using_introspection_c_typesupport(typesupport_identifier)) {
         auto typed_typesupport = static_cast<MessageTypeSupport_c *>(untyped_typesupport);
-        return typed_typesupport->serializeROSmessage(ros_message, buffer);
+        return typed_typesupport->serializeROSmessage(ros_message, ser);
     } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
         auto typed_typesupport = static_cast<MessageTypeSupport_cpp *>(untyped_typesupport);
-        return typed_typesupport->serializeROSmessage(ros_message, buffer);
+        return typed_typesupport->serializeROSmessage(ros_message, ser);
     }
     RMW_SET_ERROR_MSG("Unknown typesupport identifier");
     return false;
@@ -309,7 +291,7 @@ _serialize_ros_message(
 
 bool
 _deserialize_ros_message(
-    const rmw_fastrtps_cpp::Buffer * buffer, void *ros_message, void * untyped_typesupport,
+    eprosima::fastcdr::FastBuffer * buffer, void *ros_message, void * untyped_typesupport,
     const char* typesupport_identifier)
 {
     if (using_introspection_c_typesupport(typesupport_identifier)) {
@@ -346,10 +328,32 @@ typedef struct CustomClientInfo
 typedef struct CustomClientResponse
 {
     eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
-    rmw_fastrtps_cpp::Buffer *buffer_;
+    eprosima::fastcdr::FastBuffer *buffer_;
 
     CustomClientResponse() : buffer_(nullptr) {}
 } CustomClientResponse;
+
+class topicnamesandtypesReaderListener : public ReaderListener {
+	public:
+	topicnamesandtypesReaderListener(){};
+	void onNewCacheChangeAdded(RTPSReader* reader, const CacheChange_t* const change_in){
+		CacheChange_t* change = (CacheChange_t*) change_in;
+		if(change->kind == ALIVE){
+			WriterProxyData proxyData;
+			CDRMessage_t tempMsg;
+			tempMsg.msg_endian = change->serializedPayload.encapsulation == PL_CDR_BE ? BIGEND:LITTLEEND;
+			tempMsg.length = change->serializedPayload.length;
+			memcpy(tempMsg.buffer,change->serializedPayload.data,tempMsg.length);
+			if(proxyData.readFromCDRMessage(&tempMsg)){
+				mapmutex.lock();
+				topicNtypes[proxyData.topicName()].insert(proxyData.typeName());		
+				mapmutex.unlock();
+			}
+		}
+	}
+	std::map<std::string,std::set<std::string>> topicNtypes;
+	std::mutex mapmutex;
+};
 
 class ClientListener : public SubscriberListener
 {
@@ -364,7 +368,7 @@ class ClientListener : public SubscriberListener
             assert(sub);
 
             CustomClientResponse response;
-            response.buffer_ = _create_data(info_->response_type_support_, info_->typesupport_identifier_);
+            response.buffer_ = new eprosima::fastcdr::FastBuffer();
             SampleInfo_t sinfo;
 
             if(sub->takeNextData(response.buffer_, &sinfo))
@@ -445,10 +449,12 @@ class ClientListener : public SubscriberListener
         std::condition_variable *conditionVariable_;
 };
 
-struct FastRTPSNodeImpl {
+typedef struct CustomParticipantInfo{
     Participant * participant;
+    topicnamesandtypesReaderListener *secondarySubListener;
+    topicnamesandtypesReaderListener *secondaryPubListener;
     rmw_guard_condition_t * graph_guard_condition;
-};
+} CustomParticipantInfo;
 
 extern "C"
 {
@@ -600,7 +606,7 @@ extern "C"
     {
         return RMW_RET_OK;
     }
-
+    
     rmw_node_t* rmw_create_node(const char *name, size_t domain_id)
     {
         if (!name) {
@@ -608,14 +614,13 @@ extern "C"
             return NULL;
         }
 
-        eprosima::Log::setVerbosity(eprosima::VERB_ERROR);
+        eprosima::fastrtps::Log::SetVerbosity(eprosima::fastrtps::Log::Error);
 
         ParticipantAttributes participantParam;
         participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
         participantParam.rtps.setName(name);
 
         Participant *participant = Domain::createParticipant(participantParam);
-
         if(!participant)
         {
             RMW_SET_ERROR_MSG("create_node() could not create participant");
@@ -628,9 +633,9 @@ extern "C"
             return NULL;
         }
 
-        FastRTPSNodeImpl * node_impl = nullptr;
+        CustomParticipantInfo* node_impl = nullptr;
         try {
-            node_impl = new FastRTPSNodeImpl();
+            node_impl = new CustomParticipantInfo();
         } catch(std::bad_alloc) {
             RMW_SET_ERROR_MSG("failed to allocate node impl struct");
             return NULL;
@@ -647,6 +652,7 @@ extern "C"
         node_impl->graph_guard_condition = graph_guard_condition;
         node_handle->data = node_impl;
 
+
         node_handle->name =
             static_cast<const char *>(malloc(sizeof(char) * strlen(name) + 1));
         if (!node_handle->name) {
@@ -655,8 +661,28 @@ extern "C"
             return NULL;
         }
         memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
+        
+	topicnamesandtypesReaderListener* tnat_1 = new topicnamesandtypesReaderListener();
+	topicnamesandtypesReaderListener* tnat_2 = new topicnamesandtypesReaderListener();
+
+	node_impl->secondarySubListener = tnat_1;
+	node_impl->secondaryPubListener = tnat_2;
+
+
+ 	std::pair<StatefulReader*, StatefulReader*> EDPReaders = participant->getEDPReaders();
+	
+	if( !( EDPReaders.first->setListener(tnat_1) & EDPReaders.second->setListener(tnat_2) ) ){
+		RMW_SET_ERROR_MSG("Failed to attach ROS related logic to the Participant");
+		goto fail;	
+	}
 
         return node_handle;
+    	fail:
+	delete(tnat_1);
+	delete(tnat_2);
+	delete(node_impl);
+	return NULL;
+
     }
 
     rmw_ret_t rmw_destroy_node(rmw_node_t * node)
@@ -672,7 +698,7 @@ extern "C"
             return RMW_RET_ERROR;
         }
 
-        FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+        CustomParticipantInfo* impl = static_cast<CustomParticipantInfo *>(node->data);
         if (!impl) {
             RMW_SET_ERROR_MSG("node impl is null");
             return RMW_RET_ERROR;
@@ -680,16 +706,21 @@ extern "C"
 
         Participant *participant = impl->participant;
 
+	std::pair<StatefulReader*,StatefulReader*> EDPReaders = participant->getEDPReaders();
+	EDPReaders.first->setListener(nullptr);
+	delete(impl->secondarySubListener);
+	EDPReaders.second->setListener(nullptr);
+	delete(impl->secondaryPubListener);
+
+
         if (RMW_RET_OK != rmw_destroy_guard_condition(impl->graph_guard_condition)) {
             RMW_SET_ERROR_MSG("failed to destroy graph guard condition");
             return RMW_RET_ERROR;
         }
 
-        Domain::removeParticipant(participant);
+	Domain::removeParticipant(participant);
 
-        delete impl;
-        node->data = nullptr;
-
+	delete(impl);
         if (node->name) {
             free(const_cast<char *>(node->name));
             node->name = nullptr;
@@ -725,7 +756,7 @@ extern "C"
             return NULL;
         }
 
-        FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+        CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
         if (!impl) {
             RMW_SET_ERROR_MSG("node impl is null");
             return NULL;
@@ -758,6 +789,16 @@ extern "C"
         publisherParam.topic.topicKind = NO_KEY;
         publisherParam.topic.topicDataType = type_name;
         publisherParam.topic.topicName = topic_name;
+        publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
+        publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+        // 1 Heartbeat every 10ms
+        //publisherParam.times.heartbeatPeriod.seconds = 0;
+        //publisherParam.times.heartbeatPeriod.fraction = 42949673;
+
+        // 300000 bytes each 10ms
+        //ThroughputControllerDescriptor throughputController{3000000, 10};
+        //publisherParam.throughputController = throughputController;
 
         if(!get_datawriter_qos(*qos_policies, publisherParam))
             goto fail;
@@ -830,7 +871,7 @@ fail:
                 Domain::removePublisher(info->publisher_);
             if(info->type_support_ != nullptr)
             {
-                FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+                CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
                 if (!impl) {
                     RMW_SET_ERROR_MSG("node impl is null");
                     return RMW_RET_ERROR;
@@ -862,19 +903,18 @@ fail:
         CustomPublisherInfo *info = (CustomPublisherInfo*)publisher->data;
         assert(info);
 
-        rmw_fastrtps_cpp::Buffer *buffer = _create_data(info->type_support_, info->typesupport_identifier_);
+        eprosima::fastcdr::FastBuffer buffer;
+        eprosima::fastcdr::Cdr ser(buffer);
 
-        if(_serialize_ros_message(ros_message, buffer, info->type_support_, info->typesupport_identifier_))
+        if(_serialize_ros_message(ros_message, ser, info->type_support_, info->typesupport_identifier_))
         {
-            if(info->publisher_->write((void*)buffer))
+            if(info->publisher_->write(&ser))
                 returnedValue = RMW_RET_OK;
             else
                 RMW_SET_ERROR_MSG("cannot publish data");
         }
         else
             RMW_SET_ERROR_MSG("cannot serialize data");
-
-        _delete_data(buffer, info->type_support_, info->typesupport_identifier_);
 
         return returnedValue;
     }
@@ -980,14 +1020,13 @@ fail:
             return NULL;
         }
 
-        FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+        CustomParticipantInfo* impl = static_cast<CustomParticipantInfo *>(node->data);
         if (!impl) {
             RMW_SET_ERROR_MSG("node impl is null");
             return NULL;
         }
 
         Participant *participant = impl->participant;
-
         if(
             strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_c__identifier) != 0 &&
             strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0
@@ -1014,6 +1053,7 @@ fail:
         subscriberParam.topic.topicKind = NO_KEY;
         subscriberParam.topic.topicDataType = type_name;
         subscriberParam.topic.topicName = topic_name;
+        subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
         if(!get_datareader_qos(*qos_policies, subscriberParam))
             goto fail;
@@ -1080,7 +1120,7 @@ fail:
                 delete info->listener_;
             if(info->type_support_ != nullptr)
             {
-                FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+                CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
                 if (!impl) {
                     RMW_SET_ERROR_MSG("node impl is null");
                     return RMW_RET_ERROR;
@@ -1114,21 +1154,19 @@ fail:
         CustomSubscriberInfo *info = (CustomSubscriberInfo*)subscription->data;
         assert(info);
 
-        rmw_fastrtps_cpp::Buffer *buffer = _create_data(info->type_support_, info->typesupport_identifier_);
+        eprosima::fastcdr::FastBuffer buffer;
         SampleInfo_t sinfo;
 
-        if(info->subscriber_->takeNextData(buffer, &sinfo))
+        if(info->subscriber_->takeNextData(&buffer, &sinfo))
         {
             info->listener_->data_taken();
 
             if(sinfo.sampleKind == ALIVE)
             {
-                _deserialize_ros_message(buffer, ros_message, info->type_support_, info->typesupport_identifier_);
+                _deserialize_ros_message(&buffer, ros_message, info->type_support_, info->typesupport_identifier_);
                 *taken = true;
             }
         }
-
-        _delete_data(buffer, info->type_support_, info->typesupport_identifier_);
 
         return RMW_RET_OK;
     }
@@ -1159,16 +1197,16 @@ fail:
         CustomSubscriberInfo *info = (CustomSubscriberInfo*)subscription->data;
         assert(info);
 
-        rmw_fastrtps_cpp::Buffer *buffer = _create_data(info->type_support_, info->typesupport_identifier_);
+        eprosima::fastcdr::FastBuffer buffer;
         SampleInfo_t sinfo;
 
-        if(info->subscriber_->takeNextData(buffer, &sinfo))
+        if(info->subscriber_->takeNextData(&buffer, &sinfo))
         {
             info->listener_->data_taken();
 
             if(sinfo.sampleKind == ALIVE)
             {
-                _deserialize_ros_message(buffer, ros_message, info->type_support_, info->typesupport_identifier_);
+                _deserialize_ros_message(&buffer, ros_message, info->type_support_, info->typesupport_identifier_);
                 rmw_gid_t * sender_gid = &message_info->publisher_gid;
                 sender_gid->implementation_identifier = eprosima_fastrtps_identifier;
                 memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
@@ -1176,8 +1214,6 @@ fail:
                 *taken = true;
             }
         }
-
-        _delete_data(buffer, info->type_support_, info->typesupport_identifier_);
 
         return RMW_RET_OK;
     }
@@ -1364,7 +1400,7 @@ fail:
     typedef struct CustomServiceRequest
     {
 	    eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
-	    rmw_fastrtps_cpp::Buffer *buffer_;
+	    eprosima::fastcdr::FastBuffer *buffer_;
 
 	    CustomServiceRequest() : buffer_(nullptr) {}
     } CustomServiceRequest;
@@ -1373,8 +1409,11 @@ fail:
     {
         public:
 
-            ServiceListener(CustomServiceInfo *info) : info_(info),
-            conditionMutex_(NULL), conditionVariable_(NULL) {}
+            explicit ServiceListener(CustomServiceInfo *info)
+            : info_(info), conditionMutex_(NULL), conditionVariable_(NULL)
+            {
+                (void)info_;
+            }
 
 
             void onNewDataMessage(Subscriber *sub)
@@ -1382,7 +1421,7 @@ fail:
                 assert(sub);
 
                 CustomServiceRequest request;
-                request.buffer_ = _create_data(info_->request_type_support_, info_->typesupport_identifier_);
+                request.buffer_ = new eprosima::fastcdr::FastBuffer();
                 SampleInfo_t sinfo;
 
                 if(sub->takeNextData(request.buffer_, &sinfo))
@@ -1478,7 +1517,7 @@ fail:
             return NULL;
         }
 
-        FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+        CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
         if (!impl) {
             RMW_SET_ERROR_MSG("node impl is null");
             return NULL;
@@ -1592,7 +1631,7 @@ fail:
                 delete info->listener_;
             }
 
-            FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+            CustomParticipantInfo* impl = static_cast<CustomParticipantInfo *>(node->data);
             if (impl) {
                 Participant *participant = impl->participant;
                 if(info->request_type_support_ != nullptr)
@@ -1634,13 +1673,14 @@ fail:
         CustomClientInfo *info = (CustomClientInfo*)client->data;
         assert(info);
 
-        rmw_fastrtps_cpp::Buffer *buffer = _create_data(info->request_type_support_, info->typesupport_identifier_);
+        eprosima::fastcdr::FastBuffer buffer;
+        eprosima::fastcdr::Cdr ser(buffer);
 
-        if(_serialize_ros_message(ros_request, buffer, info->request_type_support_, info->typesupport_identifier_))
+        if(_serialize_ros_message(ros_request, ser, info->request_type_support_, info->typesupport_identifier_))
         {
             eprosima::fastrtps::rtps::WriteParams wparams;
 
-            if(info->request_publisher_->write((void*)buffer, wparams))
+            if(info->request_publisher_->write(&ser, wparams))
             {
                 returnedValue = RMW_RET_OK;
                 *sequence_id = ((int64_t)wparams.sample_identity().sequence_number().high) << 32 | wparams.sample_identity().sequence_number().low;
@@ -1650,8 +1690,6 @@ fail:
         }
         else
             RMW_SET_ERROR_MSG("cannot serialize data");
-
-        _delete_data(buffer, info->request_type_support_, info->typesupport_identifier_);
 
         return returnedValue;
     }
@@ -1687,7 +1725,7 @@ fail:
             memcpy(request_header->writer_guid, &request.sample_identity_.writer_guid(), sizeof(eprosima::fastrtps::rtps::GUID_t));
             request_header->sequence_number = ((int64_t)request.sample_identity_.sequence_number().high) << 32 | request.sample_identity_.sequence_number().low;
 
-            _delete_data(request.buffer_, info->request_type_support_, info->typesupport_identifier_);
+            delete request.buffer_;
 
             *taken = true;
         }
@@ -1724,9 +1762,9 @@ fail:
 
             request_header->sequence_number = ((int64_t)response.sample_identity_.sequence_number().high) << 32 | response.sample_identity_.sequence_number().low;
 
-            *taken = true;
+            delete response.buffer_;
 
-            _delete_data(response.buffer_, info->request_type_support_, info->typesupport_identifier_);
+            *taken = true;
         }
 
         return RMW_RET_OK;
@@ -1751,26 +1789,21 @@ fail:
         CustomServiceInfo *info = (CustomServiceInfo*)service->data;
         assert(info);
 
-        rmw_fastrtps_cpp::Buffer *buffer = _create_data(info->response_type_support_, info->typesupport_identifier_);
+        eprosima::fastcdr::FastBuffer buffer;
+        eprosima::fastcdr::Cdr ser(buffer);
 
-        if(buffer != nullptr)
+        _serialize_ros_message(ros_response, ser, info->response_type_support_, info->typesupport_identifier_);
+        eprosima::fastrtps::rtps::WriteParams wparams;
+        memcpy(&wparams.related_sample_identity().writer_guid(), request_header->writer_guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
+        wparams.related_sample_identity().sequence_number().high = (int32_t)((request_header->sequence_number & 0xFFFFFFFF00000000) >> 32);
+        wparams.related_sample_identity().sequence_number().low = (int32_t)(request_header->sequence_number & 0xFFFFFFFF);
+
+        if(info->response_publisher_->write(&ser, wparams))
         {
-            _serialize_ros_message(ros_response, buffer, info->response_type_support_, info->typesupport_identifier_);
-            eprosima::fastrtps::rtps::WriteParams wparams;
-            memcpy(&wparams.related_sample_identity().writer_guid(), request_header->writer_guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
-            wparams.related_sample_identity().sequence_number().high = (int32_t)((request_header->sequence_number & 0xFFFFFFFF00000000) >> 32);
-            wparams.related_sample_identity().sequence_number().low = (int32_t)(request_header->sequence_number & 0xFFFFFFFF);
-
-            if(info->response_publisher_->write((void*)buffer, wparams))
-            {
-                returnedValue = RMW_RET_OK;
-            }
-            else
-                RMW_SET_ERROR_MSG("cannot publish data");
-
-            _delete_data(buffer, info->response_type_support_, info->typesupport_identifier_);
+            returnedValue = RMW_RET_OK;
         }
-
+        else
+            RMW_SET_ERROR_MSG("cannot publish data");
 
         return returnedValue;
     }
@@ -1793,14 +1826,13 @@ fail:
             return NULL;
         }
 
-        FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
+        CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
         if (!impl) {
             RMW_SET_ERROR_MSG("node impl is null");
             return NULL;
         }
 
         Participant *participant = impl->participant;
-
         if(
             strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_c__identifier) != 0 &&
             strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0
@@ -2231,19 +2263,120 @@ fail:
       const rmw_node_t * node,
       rmw_topic_names_and_types_t * topic_names_and_types)
     {
-        (void)node;
-        (void)topic_names_and_types;
-        RMW_SET_ERROR_MSG("not implemented");
-        return RMW_RET_ERROR;
+	
+	if(!node){
+		RMW_SET_ERROR_MSG("null node handle");
+		return RMW_RET_ERROR;
+	}	
+	if(!topic_names_and_types){
+		RMW_SET_ERROR_MSG("null topics_names_and_types");
+		return RMW_RET_ERROR;
+	}
+	//Get participant pointer from node
+        if(node->implementation_identifier != eprosima_fastrtps_identifier)
+        {
+            RMW_SET_ERROR_MSG("node handle not from this implementation");
+            return RMW_RET_ERROR;
+        }
+
+	CustomParticipantInfo* impl = static_cast<CustomParticipantInfo*>(node->data);
+        Participant *participant = impl->participant;
+
+        //if(strcmp(type_support->typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
+        //{
+        //    RMW_SET_ERROR_MSG("type support not from this implementation");
+        //    return NULL;
+        //}
+
+	//Get and combine info from both Pub and Sub
+	std::pair<StatefulReader*,StatefulReader*> EDPReaders = participant->getEDPReaders();
+	//Access the slave Listeners, which are the ones that have the topicnamesandtypes member
+  	//Get info from publisher and subscriber
+	std::map<std::string,std::set<std::string>> unfiltered_topics; //Combined results from the two lists
+	topicnamesandtypesReaderListener* slave_target = impl->secondarySubListener; 
+	slave_target->mapmutex.lock();
+	for(auto it : slave_target->topicNtypes){
+		for(auto & itt: it.second){
+			unfiltered_topics[it.first].insert(itt);
+		}
+	}
+	slave_target->mapmutex.unlock();
+ 	slave_target = impl->secondaryPubListener; 
+	slave_target->mapmutex.lock();
+	for(auto it : slave_target->topicNtypes){
+		for(auto & itt: it.second){
+			unfiltered_topics[it.first].insert(itt);
+		}
+	}
+	slave_target->mapmutex.unlock();
+	//Filter duplicates
+	std::map<std::string,std::string> topics;
+	for(auto & it : unfiltered_topics){
+		if(it.second.size() == 1)	topics[it.first] = *it.second.begin();
+	}	
+	std::string substring = "::msg::dds_::";
+	for (auto & it : topics) {
+	       size_t substring_position = it.second.find(substring);
+	       if(it.second[it.second.size()-1] == '_' && substring_position != std::string::npos){
+		       it.second = it.second.substr(0,substring_position) + "/" + it.second.substr(substring_position + substring.size(), it.second.size() - substring_position -substring.size() -1);
+		}
+	}
+
+
+	//Copy data to results handle
+	if(topics.size() > 0){
+		//Alloc memory for pointers to instances
+		topic_names_and_types->topic_names = static_cast<char **>(rmw_allocate(sizeof(char*) * topics.size()));
+		if(!topic_names_and_types->topic_names){
+			RMW_SET_ERROR_MSG("Failed to allocate memory");
+			return RMW_RET_ERROR;
+		}
+		topic_names_and_types->type_names = static_cast<char **>(rmw_allocate(sizeof(char *) * topics.size()));
+		if(!topic_names_and_types->type_names){
+			rmw_free(topic_names_and_types->topic_names);
+			RMW_SET_ERROR_MSG("Failed to allocate memory");
+			return RMW_RET_ERROR;
+		}
+		//Iterate topics for instances
+		int index;
+		topic_names_and_types->topic_count = 0;
+		for(auto it : topics){
+			index = topic_names_and_types->topic_count;
+			//Alloc
+			char *topic_name = strdup(it.first.c_str());
+			if(!topic_name){
+				RMW_SET_ERROR_MSG("Failed to allocate memory");
+				return RMW_RET_ERROR;
+			}
+			char *topic_type = strdup(it.second.c_str());
+			if(!topic_type){
+				rmw_free(topic_name);
+				RMW_SET_ERROR_MSG("Failed to allocate memory");
+				return RMW_RET_ERROR;
+			}
+			//Insert
+			topic_names_and_types->topic_names[index] = topic_name;
+			topic_names_and_types->type_names[index] = topic_type;
+			++topic_names_and_types->topic_count;
+		}
+
+	}
+        return RMW_RET_OK;
+
     }
 
     rmw_ret_t
     rmw_destroy_topic_names_and_types(
       rmw_topic_names_and_types_t * topic_names_and_types)
     {
-        (void)topic_names_and_types;
-        RMW_SET_ERROR_MSG("not implemented");
-        return RMW_RET_ERROR;
+        int cap = topic_names_and_types->topic_count;
+	for(int i=0;i < cap; i++){
+		rmw_free(topic_names_and_types->topic_names[i]);
+		rmw_free(topic_names_and_types->type_names[i]);
+	}	
+	rmw_free(topic_names_and_types->topic_names);
+	rmw_free(topic_names_and_types->type_names);
+        return RMW_RET_OK; 
     }
 
     rmw_ret_t
@@ -2252,11 +2385,42 @@ fail:
       const char * topic_name,
       size_t * count)
     {
-        (void)node;
-        (void)topic_name;
-        (void)count;
-        RMW_SET_ERROR_MSG("not implemented");
-        return RMW_RET_ERROR;
+        char *target_topic = const_cast<char *>(topic_name);
+	//safechecks
+	
+	if(!node){
+		RMW_SET_ERROR_MSG("null node handle");
+		return RMW_RET_ERROR;
+	}	
+	//Get participant pointer from node
+        if(node->implementation_identifier != eprosima_fastrtps_identifier)
+        {
+            RMW_SET_ERROR_MSG("node handle not from this implementation");
+            return RMW_RET_ERROR;
+        }
+
+        CustomParticipantInfo* impl = static_cast<CustomParticipantInfo*>(node->data);
+	Participant *participant = impl->participant;
+
+	std::map<std::string,std::set<std::string>>unfiltered_topics;
+	topicnamesandtypesReaderListener* slave_target = impl->secondaryPubListener;
+	slave_target->mapmutex.lock();
+	for(auto it : slave_target->topicNtypes){
+		for(auto & itt: it.second){
+			unfiltered_topics[it.first].insert(itt);
+		}
+	}
+	slave_target->mapmutex.unlock();
+
+	//get count
+	auto it = unfiltered_topics.find(topic_name);
+	if(it == unfiltered_topics.end()){
+		*count = 0;
+	}else{
+		*count = it->second.size();
+	}
+	return RMW_RET_OK;
+
     }
 
     rmw_ret_t
@@ -2264,38 +2428,70 @@ fail:
       const rmw_node_t * node,
       const char * topic_name,
       size_t * count)
-    {
-        (void)node;
-        (void)topic_name;
-        (void)count;
-        RMW_SET_ERROR_MSG("not implemented");
-        return RMW_RET_ERROR;
-    }
+{
+	char *target_topic = const_cast<char *>(topic_name);
+	//safechecks
+	
+	if(!node){
+		RMW_SET_ERROR_MSG("null node handle");
+		return RMW_RET_ERROR;
+	}	
+	//Get participant pointer from node
+        if(node->implementation_identifier != eprosima_fastrtps_identifier)
+        {
+            RMW_SET_ERROR_MSG("node handle not from this implementation");
+            return RMW_RET_ERROR;
+        }
 
-    rmw_ret_t
-    rmw_service_server_is_available(
-      const rmw_node_t * node,
-      const rmw_client_t * client,
-      bool * is_available)
-    {
-        (void)node;
-        (void)client;
-        (void)is_available;
-      RMW_SET_ERROR_MSG("not implemented");
-      return RMW_RET_ERROR;
-    }
+        CustomParticipantInfo* impl = static_cast<CustomParticipantInfo*>(node->data);
+	Participant *participant = impl->participant;
 
-    const rmw_guard_condition_t *
-    rmw_node_get_graph_guard_condition(const rmw_node_t * node)
-    {
-      // TODO(wjwwood): actually use the graph guard condition and notify it when changes happen.
-      FastRTPSNodeImpl * impl = static_cast<FastRTPSNodeImpl *>(node->data);
-      if (!impl) {
-        RMW_SET_ERROR_MSG("node impl is null");
-        return NULL;
-      }
-      return impl->graph_guard_condition;
-    }
+	std::map<std::string,std::set<std::string>>unfiltered_topics;
+	topicnamesandtypesReaderListener* slave_target = impl->secondarySubListener;
+	slave_target->mapmutex.lock();
+	for(auto it : slave_target->topicNtypes){
+		for(auto & itt: it.second){
+			unfiltered_topics[it.first].insert(itt);
+		}
+	}
+	slave_target->mapmutex.unlock();
+
+	//get_count
+	auto it = unfiltered_topics.find(topic_name);
+	if(it == unfiltered_topics.end()){
+		*count = 0;
+	}else{
+		*count = it->second.size();
+	}
+
+	return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_service_server_is_available(
+	const rmw_node_t *node,
+	const rmw_client_t *client,
+	bool *is_available)
+{
+	(void)node;
+	(void)client;
+	(void)is_available;
+	RMW_SET_ERROR_MSG("not implemented");
+	return RMW_RET_ERROR;
+}
+
+const rmw_guard_condition_t *
+rmw_node_get_graph_guard_condition(const rmw_node_t* node)
+{
+	//TODO(wjwwood): actually use the graph guard condition and notify it when changes happen.
+	CustomParticipantInfo* impl = static_cast<CustomParticipantInfo*>(node->data);
+	if(!impl){
+		RMW_SET_ERROR_MSG("node impl is null");
+		return NULL;
+	}
+	return impl->graph_guard_condition;
+}
+
 
 rmw_ret_t
 rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
