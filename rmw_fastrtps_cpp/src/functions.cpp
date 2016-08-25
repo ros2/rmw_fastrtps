@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <map>
+
 #include "rmw/allocators.h"
 #include <rmw/rmw.h>
 #include <rmw/error_handling.h>
@@ -30,13 +32,11 @@
 #include <fastrtps/subscriber/SampleInfo.h>
 #include <fastrtps/attributes/SubscriberAttributes.h>
 
-
-
 #include <fastrtps/rtps/RTPSDomain.h>
 #include <fastrtps/rtps/builtin/data/WriterProxyData.h>
 #include <fastrtps/rtps/common/CDRMessage_t.h>
 
-#include <fastrtps/rtps/reader/RTPSReader.h> 
+#include <fastrtps/rtps/reader/RTPSReader.h>
 #include <fastrtps/rtps/reader/StatefulReader.h>
 #include <fastrtps/rtps/reader/ReaderListener.h>
 #include <fastrtps/rtps/builtin/discovery/endpoint/EDPSimple.h>
@@ -1953,8 +1953,9 @@ fail:
         return NULL;
     }
 
-    rmw_ret_t rmw_destroy_service(rmw_service_t *service)
+    rmw_ret_t rmw_destroy_service(rmw_node_t * node, rmw_service_t *service)
     {
+        (void)node;
         if (!service) {
             RMW_SET_ERROR_MSG("service handle is null");
             return RMW_RET_ERROR;
@@ -1994,8 +1995,9 @@ fail:
         return RMW_RET_OK;
     }
 
-    rmw_ret_t rmw_destroy_client(rmw_client_t *client)
+    rmw_ret_t rmw_destroy_client(rmw_node_t * node, rmw_client_t *client)
     {
+        (void)node;
         if (!client) {
             RMW_SET_ERROR_MSG("client handle is null");
             return RMW_RET_ERROR;
