@@ -337,6 +337,7 @@ class topicnamesandtypesReaderListener : public ReaderListener {
 	public:
 	topicnamesandtypesReaderListener(){};
 	void onNewCacheChangeAdded(RTPSReader* reader, const CacheChange_t* const change_in){
+        (void)reader;
 		CacheChange_t* change = (CacheChange_t*) change_in;
 		if(change->kind == ALIVE){
 			WriterProxyData proxyData;
@@ -2292,6 +2293,7 @@ fail:
 
 	//Get and combine info from both Pub and Sub
 	std::pair<StatefulReader*,StatefulReader*> EDPReaders = participant->getEDPReaders();
+    (void)EDPReaders;
 	//Access the slave Listeners, which are the ones that have the topicnamesandtypes member
   	//Get info from publisher and subscriber
 	std::map<std::string,std::set<std::string>> unfiltered_topics; //Combined results from the two lists
@@ -2387,7 +2389,6 @@ fail:
       const char * topic_name,
       size_t * count)
     {
-        char *target_topic = const_cast<char *>(topic_name);
 	//safechecks
 	
 	if(!node){
@@ -2402,7 +2403,6 @@ fail:
         }
 
         CustomParticipantInfo* impl = static_cast<CustomParticipantInfo*>(node->data);
-	Participant *participant = impl->participant;
 
 	std::map<std::string,std::set<std::string>>unfiltered_topics;
 	topicnamesandtypesReaderListener* slave_target = impl->secondaryPubListener;
@@ -2431,7 +2431,6 @@ fail:
       const char * topic_name,
       size_t * count)
 {
-	char *target_topic = const_cast<char *>(topic_name);
 	//safechecks
 	
 	if(!node){
@@ -2446,7 +2445,6 @@ fail:
         }
 
         CustomParticipantInfo* impl = static_cast<CustomParticipantInfo*>(node->data);
-	Participant *participant = impl->participant;
 
 	std::map<std::string,std::set<std::string>>unfiltered_topics;
 	topicnamesandtypesReaderListener* slave_target = impl->secondarySubListener;
