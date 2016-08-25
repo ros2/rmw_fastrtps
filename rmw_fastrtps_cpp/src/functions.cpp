@@ -1954,9 +1954,8 @@ fail:
         return NULL;
     }
 
-    rmw_ret_t rmw_destroy_service(rmw_node_t * node, rmw_service_t *service)
+    rmw_ret_t rmw_destroy_service(rmw_service_t *service)
     {
-        (void)node;
         if (!service) {
             RMW_SET_ERROR_MSG("service handle is null");
             return RMW_RET_ERROR;
@@ -1996,9 +1995,8 @@ fail:
         return RMW_RET_OK;
     }
 
-    rmw_ret_t rmw_destroy_client(rmw_node_t * node, rmw_client_t *client)
+    rmw_ret_t rmw_destroy_client(rmw_client_t *client)
     {
-        (void)node;
         if (!client) {
             RMW_SET_ERROR_MSG("client handle is null");
             return RMW_RET_ERROR;
