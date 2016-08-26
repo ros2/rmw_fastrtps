@@ -2340,17 +2340,21 @@ fail:
 			return RMW_RET_ERROR;
 		}
 		//Iterate topics for instances
-		int index;
 		topic_names_and_types->topic_count = 0;
 		for(auto it : topics){
-			index = topic_names_and_types->topic_count;
+			size_t index = topic_names_and_types->topic_count;
+#ifdef _WIN32
+#define __local_strdup _strdup
+#else
+#define __local_strdup strdup
+#endif
 			//Alloc
-			char *topic_name = strdup(it.first.c_str());
+			char *topic_name = __local_strdup(it.first.c_str());
 			if(!topic_name){
 				RMW_SET_ERROR_MSG("Failed to allocate memory");
 				return RMW_RET_ERROR;
 			}
-			char *topic_type = strdup(it.second.c_str());
+			char *topic_type = __local_strdup(it.second.c_str());
 			if(!topic_type){
 				rmw_free(topic_name);
 				RMW_SET_ERROR_MSG("Failed to allocate memory");
@@ -2371,8 +2375,8 @@ fail:
     rmw_destroy_topic_names_and_types(
       rmw_topic_names_and_types_t * topic_names_and_types)
     {
-        int cap = topic_names_and_types->topic_count;
-	for(int i=0;i < cap; i++){
+        size_t cap = topic_names_and_types->topic_count;
+	for(size_t i=0;i < cap; i++){
 		rmw_free(topic_names_and_types->topic_names[i]);
 		rmw_free(topic_names_and_types->type_names[i]);
 	}	

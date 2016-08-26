@@ -865,7 +865,7 @@ bool TypeSupport<MembersType>::serialize(
     eprosima::fastcdr::Cdr *ser = static_cast<eprosima::fastcdr::Cdr*>(data);
     if(payload->max_size >= ser->getSerializedDataLength())
     {
-        payload->length = ser->getSerializedDataLength();
+        payload->length = static_cast<uint32_t>(ser->getSerializedDataLength());
         payload->encapsulation = CDR_LE;
         memcpy(payload->data, ser->getBufferPointer(), ser->getSerializedDataLength());
         return true;
@@ -892,7 +892,7 @@ std::function<uint32_t()> TypeSupport<MembersType>::getSerializedSizeProvider(vo
     assert(data);
 
     eprosima::fastcdr::Cdr *ser = static_cast<eprosima::fastcdr::Cdr*>(data);
-    return [ser]() -> uint32_t { return ser->getSerializedDataLength(); };
+    return [ser]() -> uint32_t { return static_cast<uint32_t>(ser->getSerializedDataLength()); };
 }
 
 #endif // _RMW_FASTRTPS_CPP_TYPESUPPORT_IMPL_H_
