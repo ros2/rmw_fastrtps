@@ -287,7 +287,6 @@ size_t get_array_size_and_assign_field(
     void *ptr = (void*)sub_members_size;
     size_t vsize = vector->size() / (size_t)align_(max_align, 0, ptr, space);
     if (member->is_upper_bound_ && vsize > member->array_size_) {
-        printf("vector overcomes the maximum length\n");
         throw std::runtime_error("vector overcomes the maximum length");
     }
     subros_message = reinterpret_cast<void*>(vector->data());
@@ -370,7 +369,6 @@ bool TypeSupport<MembersType>::serializeROSmessage(
                         // Control maximum length.
                         if((member->string_upper_bound_ && str.length() > member->string_upper_bound_ + 1) || str.length() > 256)
                         {
-                            printf("string overcomes the maximum length with length %zu\n", str.length());
                             throw std::runtime_error("string overcomes the maximum length");
                         }
                         ser << str;
@@ -383,7 +381,6 @@ bool TypeSupport<MembersType>::serializeROSmessage(
                     }
                     break;
                 default:
-                    printf("unknown type id %u\n", member->type_id_);
                     throw std::runtime_error("unknown type");
             }
         }
@@ -462,7 +459,6 @@ bool TypeSupport<MembersType>::serializeROSmessage(
                     }
                     break;
                 default:
-                    printf("unknown type id %u\n", member->type_id_);
                     throw std::runtime_error("unknown type");
             }
         }
@@ -637,7 +633,6 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
                     }
                     break;
                 default:
-                    printf("unknown type id %u\n", member->type_id_);
                     throw std::runtime_error("unknown type");
             }
         }
@@ -716,7 +711,6 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
                     }
                     break;
                 default:
-                    printf("unknown type id %u\n", member->type_id_);
                     throw std::runtime_error("unknown type");
             }
         }
@@ -772,7 +766,6 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
                     }
                     break;
                 default:
-                    printf("unknown type id %u\n", member->type_id_);
                     throw std::runtime_error("unknown type");
             }
         }
@@ -825,7 +818,6 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
                     }
                     break;
                 default:
-                    printf("unknown type id %u\n", member->type_id_);
                     throw std::runtime_error("unknown type");
             }
         }
