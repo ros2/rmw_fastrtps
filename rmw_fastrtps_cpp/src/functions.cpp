@@ -2475,11 +2475,65 @@ rmw_service_server_is_available(
 	const rmw_client_t *client,
 	bool *is_available)
 {
-	(void)node;
-	(void)client;
-	(void)is_available;
-	RMW_SET_ERROR_MSG("not implemented");
-	return RMW_RET_ERROR;
+    if (!node) {
+        RMW_SET_ERROR_MSG("node handle is null");
+        return RMW_RET_ERROR;
+    }
+
+    RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+            node handle,
+            node->implementation_identifier, eprosima_fastrtps_identifier,
+            return RMW_RET_ERROR);
+
+    if (!client) {
+        RMW_SET_ERROR_MSG("client handle is null");
+        return RMW_RET_ERROR;
+    }
+
+    if (!is_available) {
+        RMW_SET_ERROR_MSG("is_available is null");
+        return RMW_RET_ERROR;
+    }
+
+    CustomClientInfo* client_info = static_cast<CustomClientInfo*>(client->data);
+    if (!client_info) {
+        RMW_SET_ERROR_MSG("client info handle is null");
+        return RMW_RET_ERROR;
+    }
+
+    *is_available = false;
+
+    size_t number_of_request_subscribers = 0;
+    rmw_ret_t ret = rmw_count_subscribers(
+            node,
+            client_info->request_publisher_->getAttributes().topic.getTopicName().c_str(),
+            &number_of_request_subscribers);
+    if (ret != RMW_RET_OK) {
+        // error string already set
+        return ret;
+    }
+    if (number_of_request_subscribers == 0) {
+        // not ready
+        return RMW_RET_OK;
+    }
+
+    size_t number_of_response_publishers = 0;
+    ret = rmw_count_publishers(
+            node,
+            client_info->response_subscriber_->getAttributes().topic.getTopicName().c_str(),
+            &number_of_response_publishers);
+    if (ret != RMW_RET_OK) {
+        // error string already set
+        return ret;
+    }
+    if (number_of_response_publishers == 0) {
+        // not ready
+        return RMW_RET_OK;
+    }
+
+    // all conditions met, there is a service server available
+    *is_available = true;
+    return RMW_RET_OK;
 }
 
 const rmw_guard_condition_t *
