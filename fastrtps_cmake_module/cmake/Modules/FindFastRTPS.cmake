@@ -70,3 +70,11 @@ find_package_handle_standard_args(FastRTPS
   REQUIRED_VARS
     FastRTPS_INCLUDE_DIR
 )
+
+find_library(FastRTPS_LIBRARY
+    NAMES fastrtps)
+
+find_library(FastCDR_LIBRARY
+    NAMES fastcdr)
+
+set(FastRTPS_LIBRARIES ${FastRTPS_LIBRARY} ${FastCDR_LIBRARY})
