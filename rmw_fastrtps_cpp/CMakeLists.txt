@@ -20,7 +20,7 @@ if(NOT WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -Wpedantic")
 endif()
 
-find_package(ament_cmake REQUIRED)
+find_package(ament_cmake_ros REQUIRED)
 
 find_package(rcutils REQUIRED)
 
@@ -42,7 +42,7 @@ ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 
 include_directories(include)
 
-add_library(rmw_fastrtps_cpp SHARED
+add_library(rmw_fastrtps_cpp
   src/functions.cpp
 )
 target_link_libraries(rmw_fastrtps_cpp
