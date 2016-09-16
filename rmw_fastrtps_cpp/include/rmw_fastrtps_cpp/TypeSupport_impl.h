@@ -249,7 +249,7 @@ void serialize_array(
         ser.serializeArray((T*)field, member->array_size_);
     } else {
         auto & data = *reinterpret_cast<typename GenericCArray<T>::type *>(field);
-        ser.serializeArray((T*)data.data, data.size);
+        ser.serializeSequence((T*)data.data, data.size);
     }
 }
 
@@ -498,6 +498,12 @@ void deserialize_array(
     (void)call_new;
     if (member->array_size_ && !member->is_upper_bound_) {
         deser.deserializeArray((T*)field, member->array_size_);
+    } else {
+        auto & data = *reinterpret_cast<typename GenericCArray<T>::type *>(field);
+        int32_t dsize = 0;
+        deser >> dsize;
+        GenericCArray<T>::init(&data, dsize);
+        deser.deserializeArray((T*)data.data, dsize);
     }
 }
 
@@ -512,6 +518,20 @@ void deserialize_array<std::string>(
     (void)call_new;
     if (member->array_size_ && !member->is_upper_bound_) {
         deser.deserializeArray(((rosidl_generator_c__String*)field)->data, member->array_size_);
+    } else {
+        std::vector<std::string> cpp_string_vector;
+        deser >> cpp_string_vector;
+
+        auto & string_array_field = *reinterpret_cast<rosidl_generator_c__String__Array *>(field);
+        if(!rosidl_generator_c__String__Array__init(&string_array_field, cpp_string_vector.size())) {
+            throw std::runtime_error("unable to initialize rosidl_generator_c__String array");
+        }
+
+        for(size_t i = 0; i < cpp_string_vector.size(); ++i) {
+            if(!rosidl_generator_c__String__assign(&string_array_field.data[i], cpp_string_vector[i].c_str())) {
+                throw std::runtime_error("unable to assign rosidl_generator_c__String");
+            }
+        }
     }
 }
 
