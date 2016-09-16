@@ -335,10 +335,12 @@ typedef struct CustomClientResponse
 
 class topicnamesandtypesReaderListener : public ReaderListener {
 	public:
-	topicnamesandtypesReaderListener(){};
-	void onNewCacheChangeAdded(RTPSReader* reader, const CacheChange_t* const change_in){
+	topicnamesandtypesReaderListener(rmw_guard_condition_t * graph_guard_condition)
+    : graph_guard_condition_(graph_guard_condition)
+    {}
+
+    void onNewCacheChangeAdded(RTPSReader* reader, const CacheChange_t* const change){
         (void)reader;
-		CacheChange_t* change = (CacheChange_t*) change_in;
 		if(change->kind == ALIVE){
 			WriterProxyData proxyData;
 			CDRMessage_t tempMsg;
@@ -347,13 +349,18 @@ class topicnamesandtypesReaderListener : public ReaderListener {
 			memcpy(tempMsg.buffer,change->serializedPayload.data,tempMsg.length);
 			if(proxyData.readFromCDRMessage(&tempMsg)){
 				mapmutex.lock();
-				topicNtypes[proxyData.topicName()].insert(proxyData.typeName());		
+				topicNtypes[proxyData.topicName()].insert(proxyData.typeName());
+                rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
+                if (ret != RMW_RET_OK) {
+                    fprintf(stderr, "failed to trigger graph guard condition: %s\n", rmw_get_error_string_safe());
+                }
 				mapmutex.unlock();
 			}
 		}
 	}
 	std::map<std::string,std::set<std::string>> topicNtypes;
 	std::mutex mapmutex;
+    rmw_guard_condition_t * graph_guard_condition_;
 };
 
 class ClientListener : public SubscriberListener
@@ -663,8 +670,8 @@ extern "C"
         }
         memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
         
-	topicnamesandtypesReaderListener* tnat_1 = new topicnamesandtypesReaderListener();
-	topicnamesandtypesReaderListener* tnat_2 = new topicnamesandtypesReaderListener();
+	topicnamesandtypesReaderListener* tnat_1 = new topicnamesandtypesReaderListener(graph_guard_condition);
+	topicnamesandtypesReaderListener* tnat_2 = new topicnamesandtypesReaderListener(graph_guard_condition);
 
 	node_impl->secondarySubListener = tnat_1;
 	node_impl->secondaryPubListener = tnat_2;
@@ -2539,13 +2546,12 @@ rmw_service_server_is_available(
 const rmw_guard_condition_t *
 rmw_node_get_graph_guard_condition(const rmw_node_t* node)
 {
-	//TODO(wjwwood): actually use the graph guard condition and notify it when changes happen.
-	CustomParticipantInfo* impl = static_cast<CustomParticipantInfo*>(node->data);
-	if(!impl){
-		RMW_SET_ERROR_MSG("node impl is null");
-		return NULL;
-	}
-	return impl->graph_guard_condition;
+    CustomParticipantInfo* impl = static_cast<CustomParticipantInfo*>(node->data);
+    if(!impl){
+        RMW_SET_ERROR_MSG("node impl is null");
+        return NULL;
+    }
+    return impl->graph_guard_condition;
 }
 
 
