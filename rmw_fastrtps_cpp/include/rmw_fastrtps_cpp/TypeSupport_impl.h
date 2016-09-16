@@ -263,8 +263,12 @@ void serialize_array<std::string>(
     // First, cast field to rosidl_generator_c
     // Then convert to a std::string using StringHelper and serialize the std::string
     if (member->array_size_ && !member->is_upper_bound_) {
-        auto string_field = (rosidl_generator_c__String *) field;
-        ser.serializeArray(string_field->data, member->array_size_);
+      std::string stringseq[member->array_size_];
+      auto string_field = (rosidl_generator_c__String *) field;
+      for (size_t i = 0; i < member->array_size_; ++i) {
+        stringseq[i] = string_field[i].data;
+      }
+      ser.serializeArray(stringseq, member->array_size_);
     } else {
         auto & string_array_field = *reinterpret_cast<rosidl_generator_c__String__Array *>(field);
         std::vector<std::string> cpp_string_vector;
@@ -302,6 +306,7 @@ size_t get_array_size_and_assign_field(
 {
     subros_message = field;
     // TODO
+    printf("\nAaaah Don't know how to handle that message type :S \n");
     return member->array_size_;
 }
 
@@ -513,7 +518,18 @@ void deserialize_array<std::string>(
 {
     (void)call_new;
     if (member->array_size_ && !member->is_upper_bound_) {
-        deser.deserializeArray(((rosidl_generator_c__String*)field)->data, member->array_size_);
+        auto deser_field = (rosidl_generator_c__String*)field;
+        std::string stringseq[member->array_size_];
+        deser.deserializeArray(stringseq, member->array_size_);
+        for (size_t i = 0; i < member->array_size_; ++i) {
+          // NOTE: Do we need to call init ?
+          // if(!rosidl_generator_c__String__init(&deser_field[i])) {
+          //     throw std::runtime_error("unable to init rosidl_generator_c__String");
+          // }
+          if(!rosidl_generator_c__String__assign(&deser_field[i], stringseq[i].c_str())) {
+              throw std::runtime_error("unable to assign rosidl_generator_c__String");
+          }
+        }
     } else {
         std::vector<std::string> cpp_string_vector;
         deser >> cpp_string_vector;
