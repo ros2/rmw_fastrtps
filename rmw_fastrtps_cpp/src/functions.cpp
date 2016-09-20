@@ -335,10 +335,12 @@ typedef struct CustomClientResponse
 
 class topicnamesandtypesReaderListener : public ReaderListener {
 	public:
-	topicnamesandtypesReaderListener(){};
-	void onNewCacheChangeAdded(RTPSReader* reader, const CacheChange_t* const change_in){
+	topicnamesandtypesReaderListener(rmw_guard_condition_t * graph_guard_condition)
+    : graph_guard_condition_(graph_guard_condition)
+    {}
+
+    void onNewCacheChangeAdded(RTPSReader* reader, const CacheChange_t* const change){
         (void)reader;
-		CacheChange_t* change = (CacheChange_t*) change_in;
 		if(change->kind == ALIVE){
 			WriterProxyData proxyData;
 			CDRMessage_t tempMsg;
@@ -347,13 +349,18 @@ class topicnamesandtypesReaderListener : public ReaderListener {
 			memcpy(tempMsg.buffer,change->serializedPayload.data,tempMsg.length);
 			if(proxyData.readFromCDRMessage(&tempMsg)){
 				mapmutex.lock();
-				topicNtypes[proxyData.topicName()].insert(proxyData.typeName());		
+				topicNtypes[proxyData.topicName()].insert(proxyData.typeName());
+                rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
+                if (ret != RMW_RET_OK) {
+                    fprintf(stderr, "failed to trigger graph guard condition: %s\n", rmw_get_error_string_safe());
+                }
 				mapmutex.unlock();
 			}
 		}
 	}
 	std::map<std::string,std::set<std::string>> topicNtypes;
 	std::mutex mapmutex;
+    rmw_guard_condition_t * graph_guard_condition_;
 };
 
 class ClientListener : public SubscriberListener
@@ -663,8 +670,8 @@ extern "C"
         }
         memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
         
-	topicnamesandtypesReaderListener* tnat_1 = new topicnamesandtypesReaderListener();
-	topicnamesandtypesReaderListener* tnat_2 = new topicnamesandtypesReaderListener();
+	topicnamesandtypesReaderListener* tnat_1 = new topicnamesandtypesReaderListener(graph_guard_condition);
+	topicnamesandtypesReaderListener* tnat_2 = new topicnamesandtypesReaderListener(graph_guard_condition);
 
 	node_impl->secondarySubListener = tnat_1;
 	node_impl->secondaryPubListener = tnat_2;
@@ -2475,23 +2482,76 @@ rmw_service_server_is_available(
 	const rmw_client_t *client,
 	bool *is_available)
 {
-	(void)node;
-	(void)client;
-	(void)is_available;
-	RMW_SET_ERROR_MSG("not implemented");
-	return RMW_RET_ERROR;
+    if (!node) {
+        RMW_SET_ERROR_MSG("node handle is null");
+        return RMW_RET_ERROR;
+    }
+
+    RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+            node handle,
+            node->implementation_identifier, eprosima_fastrtps_identifier,
+            return RMW_RET_ERROR);
+
+    if (!client) {
+        RMW_SET_ERROR_MSG("client handle is null");
+        return RMW_RET_ERROR;
+    }
+
+    if (!is_available) {
+        RMW_SET_ERROR_MSG("is_available is null");
+        return RMW_RET_ERROR;
+    }
+
+    CustomClientInfo* client_info = static_cast<CustomClientInfo*>(client->data);
+    if (!client_info) {
+        RMW_SET_ERROR_MSG("client info handle is null");
+        return RMW_RET_ERROR;
+    }
+
+    *is_available = false;
+
+    size_t number_of_request_subscribers = 0;
+    rmw_ret_t ret = rmw_count_subscribers(
+            node,
+            client_info->request_publisher_->getAttributes().topic.getTopicName().c_str(),
+            &number_of_request_subscribers);
+    if (ret != RMW_RET_OK) {
+        // error string already set
+        return ret;
+    }
+    if (number_of_request_subscribers == 0) {
+        // not ready
+        return RMW_RET_OK;
+    }
+
+    size_t number_of_response_publishers = 0;
+    ret = rmw_count_publishers(
+            node,
+            client_info->response_subscriber_->getAttributes().topic.getTopicName().c_str(),
+            &number_of_response_publishers);
+    if (ret != RMW_RET_OK) {
+        // error string already set
+        return ret;
+    }
+    if (number_of_response_publishers == 0) {
+        // not ready
+        return RMW_RET_OK;
+    }
+
+    // all conditions met, there is a service server available
+    *is_available = true;
+    return RMW_RET_OK;
 }
 
 const rmw_guard_condition_t *
 rmw_node_get_graph_guard_condition(const rmw_node_t* node)
 {
-	//TODO(wjwwood): actually use the graph guard condition and notify it when changes happen.
-	CustomParticipantInfo* impl = static_cast<CustomParticipantInfo*>(node->data);
-	if(!impl){
-		RMW_SET_ERROR_MSG("node impl is null");
-		return NULL;
-	}
-	return impl->graph_guard_condition;
+    CustomParticipantInfo* impl = static_cast<CustomParticipantInfo*>(node->data);
+    if(!impl){
+        RMW_SET_ERROR_MSG("node impl is null");
+        return NULL;
+    }
+    return impl->graph_guard_condition;
 }
 
 
