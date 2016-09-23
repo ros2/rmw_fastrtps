@@ -374,17 +374,19 @@ size_t get_array_size_and_assign_field(
     return vsize;
 }
 
-// Hhhhhhhhhhmmmmm We need to know the message type to cast it to the right type and get the size
 size_t get_array_size_and_assign_field(
     const rosidl_typesupport_introspection_c__MessageMember * member,
     void * field,
     void *& subros_message,
     size_t, size_t, size_t)
 {
-    subros_message = field;
-    // TODO
-    printf("\nAaaah Don't know how to handle that message type :S \n");
-    return member->array_size_;
+    rosidl_generator_c__void__Array * tmparray = (rosidl_generator_c__void__Array *) field;
+    void * ptr = (void *)(tmparray->size);
+    if (member->is_upper_bound_ &&  tmparray->size > member->array_size_) {
+        throw std::runtime_error("vector overcomes the maximum length");
+    }
+    subros_message = reinterpret_cast<void*>(tmparray->data);
+    return tmparray->size;
 }
 
 template <typename MembersType>
