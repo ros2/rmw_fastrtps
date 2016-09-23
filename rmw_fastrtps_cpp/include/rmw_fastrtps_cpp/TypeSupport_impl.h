@@ -49,6 +49,15 @@ SPECIALIZE_GENERIC_C_ARRAY(uint32, uint32_t)
 SPECIALIZE_GENERIC_C_ARRAY(int64, int64_t)
 SPECIALIZE_GENERIC_C_ARRAY(uint64, uint64_t)
 
+typedef struct rosidl_generator_c__void__Array
+{
+  void * data;
+  /// The number of valid items in data
+  size_t size;
+  /// The number of allocated items in data
+  size_t capacity;
+} rosidl_generator_c__void__Array;
+
 
 template <typename MembersType>
 TypeSupport<MembersType>::TypeSupport()
