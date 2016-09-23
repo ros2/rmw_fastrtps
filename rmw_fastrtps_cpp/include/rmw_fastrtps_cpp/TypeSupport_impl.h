@@ -152,8 +152,8 @@ static size_t calculateMaxAlign(const MembersType *members)
     return max_align;
 }
 
-template <typename MembersType>
-static size_t size_of(const MembersType *members)
+// C++ specialization
+static size_t size_of(const rosidl_typesupport_introspection_cpp::MessageMembers *members)
 {
     size_t size = 0;
 
@@ -203,13 +203,81 @@ static size_t size_of(const MembersType *members)
                 size = sizeof(uint64_t);
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-                // StringHelper exposes rosidl_generator_c__String as std::string
-                // so we don't need differentiate between C and C++ introspection typesupport
+                // Note: specialization needed because size_of is called before casting submembers as rosidl_generator_c__String
                 size = sizeof(std::string);
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
                 {
-                    const MembersType *sub_members = (const MembersType*)last_member.members_->data;
+                    const rosidl_typesupport_introspection_cpp::MessageMembers *sub_members = (const rosidl_typesupport_introspection_cpp::MessageMembers*)last_member.members_->data;
+                    size = size_of(sub_members);
+                }
+                break;
+        }
+
+        if(last_member.is_array_)
+            size *= last_member.array_size_;
+    }
+
+    return last_member.offset_ + size;
+}
+
+// C specialization
+static size_t size_of(const rosidl_typesupport_introspection_c__MessageMembers *members)
+{
+    size_t size = 0;
+
+    const auto &last_member = members->members_[members->member_count_ - 1];
+
+    if(last_member.is_array_ && (!last_member.array_size_ || last_member.is_upper_bound_))
+    {
+        size = sizeof(std::vector<unsigned char>);
+    }
+    else
+    {
+        switch(last_member.type_id_)
+        {
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
+                size = sizeof(bool);
+                break;
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
+                size = sizeof(uint8_t);
+                break;
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
+                size = sizeof(char);
+                break;
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
+                size = sizeof(float);
+                break;
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
+                size = sizeof(double);
+                break;
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
+                size = sizeof(int16_t);
+                break;
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
+                size = sizeof(uint16_t);
+                break;
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
+                size = sizeof(int32_t);
+                break;
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
+                size = sizeof(uint32_t);
+                break;
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
+                size = sizeof(int64_t);
+                break;
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
+                size = sizeof(uint64_t);
+                break;
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
+                // Note: specialization needed because size_of is called before casting submembers as rosidl_generator_c__String
+                size = sizeof(rosidl_generator_c__String);
+                break;
+            case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
+                {
+                    const rosidl_typesupport_introspection_c__MessageMembers *sub_members = (const rosidl_typesupport_introspection_c__MessageMembers*)last_member.members_->data;
                     size = size_of(sub_members);
                 }
                 break;
