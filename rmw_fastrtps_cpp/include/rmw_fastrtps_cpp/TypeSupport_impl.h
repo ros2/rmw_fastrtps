@@ -58,11 +58,10 @@ typedef struct rosidl_generator_c__void__Array
   /// The number of allocated items in data
   size_t capacity;
 } rosidl_generator_c__void__Array;
-// SPECIALIZE_GENERIC_C_ARRAY(void, void)
 
 bool
-rosidl_generator_c__void__Array__init(rosidl_generator_c__void__Array * array, size_t size, size_t member_size)
-
+rosidl_generator_c__void__Array__init(
+    rosidl_generator_c__void__Array * array, size_t size, size_t member_size)
 {
   if (!array) {
     return false;
@@ -100,10 +99,6 @@ rosidl_generator_c__void__Array__fini(rosidl_generator_c__void__Array * array)
     assert(0 == array->capacity);
   }
 }
-
-
-
-
 
 template <typename MembersType>
 TypeSupport<MembersType>::TypeSupport()
@@ -258,7 +253,8 @@ static size_t size_of(const rosidl_typesupport_introspection_cpp::MessageMembers
                 size = sizeof(uint64_t);
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-                // Note: specialization needed because size_of is called before casting submembers as rosidl_generator_c__String
+                // Note: specialization needed because size_of is called before
+                // casting submembers as rosidl_generator_c__String
                 size = sizeof(std::string);
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
@@ -327,7 +323,8 @@ static size_t size_of(const rosidl_typesupport_introspection_c__MessageMembers *
                 size = sizeof(uint64_t);
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-                // Note: specialization needed because size_of is called before casting submembers as rosidl_generator_c__String
+                // Note: specialization needed because size_of is called before
+                // casting submembers as rosidl_generator_c__String
                 size = sizeof(rosidl_generator_c__String);
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
@@ -396,7 +393,8 @@ void serialize_array<std::string>(
         auto & string_array_field = *reinterpret_cast<rosidl_generator_c__String__Array *>(field);
         std::vector<std::string> cpp_string_vector;
         for (size_t i = 0; i < string_array_field.size; ++i) {
-          cpp_string_vector.push_back(CStringHelper::convert_to_std_string(string_array_field.data[i]));
+          cpp_string_vector.push_back(
+              CStringHelper::convert_to_std_string(string_array_field.data[i]));
         }
         ser << cpp_string_vector;
     }
