@@ -49,6 +49,7 @@ SPECIALIZE_GENERIC_C_ARRAY(uint32, uint32_t)
 SPECIALIZE_GENERIC_C_ARRAY(int64, int64_t)
 SPECIALIZE_GENERIC_C_ARRAY(uint64, uint64_t)
 
+// TODO(mikaelarguedas) find right spot to define these
 typedef struct rosidl_generator_c__void__Array
 {
   void * data;
@@ -57,6 +58,51 @@ typedef struct rosidl_generator_c__void__Array
   /// The number of allocated items in data
   size_t capacity;
 } rosidl_generator_c__void__Array;
+// SPECIALIZE_GENERIC_C_ARRAY(void, void)
+
+bool
+rosidl_generator_c__void__Array__init(rosidl_generator_c__void__Array * array, size_t size, size_t member_size)
+
+{
+  if (!array) {
+    return false;
+  }
+  void * data = NULL;
+  if (size) {
+    data = (void *)calloc(size, member_size);
+    if (!data) {
+      return false;
+    }
+  }
+  array->data = data;
+  array->size = size;
+  array->capacity = size;
+  return true;
+}
+
+void
+rosidl_generator_c__void__Array__fini(rosidl_generator_c__void__Array * array)
+{
+  if (!array) {
+    return;
+  }
+  if (array->data) {
+    // ensure that data and capacity values are consistent
+    assert(array->capacity > 0);
+    // finalize all array elements
+    free(array->data);
+    array->data = NULL;
+    array->size = 0;
+    array->capacity = 0;
+  } else {
+    // ensure that data, size, and capacity values are consistent
+    assert(0 == array->size);
+    assert(0 == array->capacity);
+  }
+}
+
+
+
 
 
 template <typename MembersType>
@@ -381,7 +427,6 @@ size_t get_array_size_and_assign_field(
     size_t, size_t, size_t)
 {
     rosidl_generator_c__void__Array * tmparray = (rosidl_generator_c__void__Array *) field;
-    void * ptr = (void *)(tmparray->size);
     if (member->is_upper_bound_ &&  tmparray->size > member->array_size_) {
         throw std::runtime_error("vector overcomes the maximum length");
     }
@@ -654,13 +699,18 @@ size_t get_submessage_array_deserialize(
     eprosima::fastcdr::Cdr & deser,
     void * field,
     void *& subros_message,
-    bool, size_t, size_t, size_t)
+    bool,
+    size_t sub_members_size,
+    size_t, size_t)
 {
-  (void)member;
-  uint32_t size = 0;
-  deser >> size;
-  subros_message = field;
-  return size;
+    (void)member;
+    // Deserialize length
+    uint32_t vsize = 0;
+    deser >> vsize;
+    rosidl_generator_c__void__Array * tmparray = (rosidl_generator_c__void__Array *)field;
+    rosidl_generator_c__void__Array__init(tmparray, vsize, sub_members_size);
+    subros_message = reinterpret_cast<void*>(tmparray->data);
+    return vsize;
 }
 
 template <typename MembersType>
@@ -680,9 +730,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
             switch(member->type_id_)
             {
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-                    {
-                        deser >> *(bool*)field;
-                    }
+                    deser >> *(bool*)field;
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
