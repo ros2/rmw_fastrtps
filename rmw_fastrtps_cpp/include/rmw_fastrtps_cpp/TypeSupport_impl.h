@@ -317,12 +317,12 @@ void serialize_array<std::string>(
     // First, cast field to rosidl_generator_c
     // Then convert to a std::string using StringHelper and serialize the std::string
     if (member->array_size_ && !member->is_upper_bound_) {
-      std::vector<std::string> stringseq(member->array_size_);
+      std::string tmpstring;
       auto string_field = (rosidl_generator_c__String *) field;
       for (size_t i = 0; i < member->array_size_; ++i) {
-        stringseq[i] = string_field[i].data;
+        tmpstring = string_field[i].data;
+        ser.serialize(tmpstring);
       }
-      ser.serializeArray(&stringseq[0], member->array_size_);
     } else {
         auto & string_array_field = *reinterpret_cast<rosidl_generator_c__String__Array *>(field);
         std::vector<std::string> cpp_string_vector;
@@ -575,10 +575,10 @@ void deserialize_array<std::string>(
     (void)call_new;
     if (member->array_size_ && !member->is_upper_bound_) {
         auto deser_field = (rosidl_generator_c__String*)field;
-        std::vector<std::string> stringseq(member->array_size_);
-        deser.deserializeArray(&stringseq[0], member->array_size_);
+        std::string tmpstring;
         for (size_t i = 0; i < member->array_size_; ++i) {
-            if(!rosidl_generator_c__String__assign(&deser_field[i], stringseq[i].c_str())) {
+            deser.deserialize(tmpstring);
+            if(!rosidl_generator_c__String__assign(&deser_field[i], tmpstring.c_str())) {
                 throw std::runtime_error("unable to assign rosidl_generator_c__String");
             }
         }
