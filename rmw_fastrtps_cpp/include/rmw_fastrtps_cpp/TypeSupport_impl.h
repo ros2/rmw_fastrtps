@@ -578,13 +578,12 @@ void deserialize_array<std::string>(
         std::vector<std::string> stringseq(member->array_size_);
         deser.deserializeArray(&stringseq[0], member->array_size_);
         for (size_t i = 0; i < member->array_size_; ++i) {
-          // NOTE: Do we need to call init ?
-          // if(!rosidl_generator_c__String__init(&deser_field[i])) {
-          //     throw std::runtime_error("unable to init rosidl_generator_c__String");
-          // }
-          if(!rosidl_generator_c__String__assign(&deser_field[i], stringseq[i].c_str())) {
-              throw std::runtime_error("unable to assign rosidl_generator_c__String");
-          }
+            if(!rosidl_generator_c__String__init(&deser_field[i])) {
+                throw std::runtime_error("unable to init rosidl_generator_c__String");
+            }
+            if(!rosidl_generator_c__String__assign(&deser_field[i], stringseq[i].c_str())) {
+                throw std::runtime_error("unable to assign rosidl_generator_c__String");
+            }
         }
     } else {
         std::vector<std::string> cpp_string_vector;
