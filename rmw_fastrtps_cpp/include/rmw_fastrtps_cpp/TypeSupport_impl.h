@@ -317,11 +317,13 @@ void serialize_array<std::string>(
     // First, cast field to rosidl_generator_c
     // Then convert to a std::string using StringHelper and serialize the std::string
     if (member->array_size_ && !member->is_upper_bound_) {
+      // tmpstring is defined here and not below to avoid
+      // memory allocation in every iteration of the for loop
       std::string tmpstring;
       auto string_field = (rosidl_generator_c__String *) field;
       for (size_t i = 0; i < member->array_size_; ++i) {
-        tmpstring = string_field[i].data;
-        ser.serialize(tmpstring);
+          tmpstring = string_field[i].data;
+          ser.serialize(tmpstring);
       }
     } else {
         auto & string_array_field = *reinterpret_cast<rosidl_generator_c__String__Array *>(field);
@@ -575,6 +577,8 @@ void deserialize_array<std::string>(
     (void)call_new;
     if (member->array_size_ && !member->is_upper_bound_) {
         auto deser_field = (rosidl_generator_c__String*)field;
+        // tmpstring is defined here and not below to avoid
+        // memory allocation in every iteration of the for loop
         std::string tmpstring;
         for (size_t i = 0; i < member->array_size_; ++i) {
             deser.deserialize(tmpstring);
