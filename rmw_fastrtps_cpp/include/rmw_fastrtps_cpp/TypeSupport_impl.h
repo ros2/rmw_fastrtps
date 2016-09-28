@@ -49,7 +49,6 @@ SPECIALIZE_GENERIC_C_ARRAY(uint32, uint32_t)
 SPECIALIZE_GENERIC_C_ARRAY(int64, int64_t)
 SPECIALIZE_GENERIC_C_ARRAY(uint64, uint64_t)
 
-// TODO(mikaelarguedas) find right spot to define these
 typedef struct rosidl_generator_c__void__Array
 {
   void * data;
