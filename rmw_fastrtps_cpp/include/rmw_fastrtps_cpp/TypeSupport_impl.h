@@ -317,12 +317,12 @@ void serialize_array<std::string>(
     // First, cast field to rosidl_generator_c
     // Then convert to a std::string using StringHelper and serialize the std::string
     if (member->array_size_ && !member->is_upper_bound_) {
-      std::string stringseq[member->array_size_];
+      std::vector<std::string> stringseq(member->array_size_);
       auto string_field = (rosidl_generator_c__String *) field;
       for (size_t i = 0; i < member->array_size_; ++i) {
         stringseq[i] = string_field[i].data;
       }
-      ser.serializeArray(stringseq, member->array_size_);
+      ser.serializeArray(&stringseq[0], member->array_size_);
     } else {
         auto & string_array_field = *reinterpret_cast<rosidl_generator_c__String__Array *>(field);
         std::vector<std::string> cpp_string_vector;
@@ -575,8 +575,8 @@ void deserialize_array<std::string>(
     (void)call_new;
     if (member->array_size_ && !member->is_upper_bound_) {
         auto deser_field = (rosidl_generator_c__String*)field;
-        std::string stringseq[member->array_size_];
-        deser.deserializeArray(stringseq, member->array_size_);
+        std::vector<std::string> stringseq(member->array_size_);
+        deser.deserializeArray(&stringseq[0], member->array_size_);
         for (size_t i = 0; i < member->array_size_; ++i) {
           // NOTE: Do we need to call init ?
           // if(!rosidl_generator_c__String__init(&deser_field[i])) {
