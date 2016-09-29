@@ -49,6 +49,55 @@ SPECIALIZE_GENERIC_C_ARRAY(uint32, uint32_t)
 SPECIALIZE_GENERIC_C_ARRAY(int64, int64_t)
 SPECIALIZE_GENERIC_C_ARRAY(uint64, uint64_t)
 
+typedef struct rosidl_generator_c__void__Array
+{
+  void * data;
+  /// The number of valid items in data
+  size_t size;
+  /// The number of allocated items in data
+  size_t capacity;
+} rosidl_generator_c__void__Array;
+
+bool
+rosidl_generator_c__void__Array__init(
+    rosidl_generator_c__void__Array * array, size_t size, size_t member_size)
+{
+  if (!array) {
+    return false;
+  }
+  void * data = NULL;
+  if (size) {
+    data = (void *)calloc(size, member_size);
+    if (!data) {
+      return false;
+    }
+  }
+  array->data = data;
+  array->size = size;
+  array->capacity = size;
+  return true;
+}
+
+void
+rosidl_generator_c__void__Array__fini(rosidl_generator_c__void__Array * array)
+{
+  if (!array) {
+    return;
+  }
+  if (array->data) {
+    // ensure that data and capacity values are consistent
+    assert(array->capacity > 0);
+    // finalize all array elements
+    free(array->data);
+    array->data = NULL;
+    array->size = 0;
+    array->capacity = 0;
+  } else {
+    // ensure that data, size, and capacity values are consistent
+    assert(0 == array->size);
+    assert(0 == array->capacity);
+  }
+}
 
 template <typename MembersType>
 TypeSupport<MembersType>::TypeSupport()
@@ -132,9 +181,12 @@ static size_t calculateMaxAlign(const MembersType *members)
                     alignment = alignof(uint64_t);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-                    // StringHelper exposes rosidl_generator_c__String as std::string
-                    // so we don't need differentiate between C and C++ introspection typesupport
-                    alignment = alignof(std::string);
+                    // Note: specialization needed because calculateMaxAlign is called before
+                    // casting submembers as std::string, returned value is the same on i386
+                    if(std::is_same<MembersType, rosidl_typesupport_introspection_c__MessageMembers>::value)
+                        alignment = alignof(rosidl_generator_c__String);
+                    else
+                        alignment = alignof(std::string);
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
                     {
@@ -203,9 +255,12 @@ static size_t size_of(const MembersType *members)
                 size = sizeof(uint64_t);
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-                // StringHelper exposes rosidl_generator_c__String as std::string
-                // so we don't need differentiate between C and C++ introspection typesupport
-                size = sizeof(std::string);
+                // Note: specialization needed because size_of is called before
+                // casting submembers as std::string
+                if(std::is_same<MembersType, rosidl_typesupport_introspection_c__MessageMembers>::value)
+                    size = sizeof(rosidl_generator_c__String);
+                else
+                    size = sizeof(std::string);
                 break;
             case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
                 {
@@ -221,7 +276,6 @@ static size_t size_of(const MembersType *members)
 
     return last_member.offset_ + size;
 }
-
 
 // C++ specialization
 template<typename T>
@@ -263,13 +317,20 @@ void serialize_array<std::string>(
     // First, cast field to rosidl_generator_c
     // Then convert to a std::string using StringHelper and serialize the std::string
     if (member->array_size_ && !member->is_upper_bound_) {
-        auto string_field = (rosidl_generator_c__String *) field;
-        ser.serializeArray(string_field->data, member->array_size_);
+      // tmpstring is defined here and not below to avoid
+      // memory allocation in every iteration of the for loop
+      std::string tmpstring;
+      auto string_field = (rosidl_generator_c__String *) field;
+      for (size_t i = 0; i < member->array_size_; ++i) {
+          tmpstring = string_field[i].data;
+          ser.serialize(tmpstring);
+      }
     } else {
         auto & string_array_field = *reinterpret_cast<rosidl_generator_c__String__Array *>(field);
         std::vector<std::string> cpp_string_vector;
         for (size_t i = 0; i < string_array_field.size; ++i) {
-          cpp_string_vector.push_back(CStringHelper::convert_to_std_string(string_array_field.data[i]));
+          cpp_string_vector.push_back(
+              CStringHelper::convert_to_std_string(string_array_field.data[i]));
         }
         ser << cpp_string_vector;
     }
@@ -293,16 +354,18 @@ size_t get_array_size_and_assign_field(
     return vsize;
 }
 
-// Hhhhhhhhhhmmmmm We need to know the message type to cast it to the right type and get the size
 size_t get_array_size_and_assign_field(
     const rosidl_typesupport_introspection_c__MessageMember * member,
     void * field,
     void *& subros_message,
     size_t, size_t, size_t)
 {
-    subros_message = field;
-    // TODO
-    return member->array_size_;
+    rosidl_generator_c__void__Array * tmparray = (rosidl_generator_c__void__Array *) field;
+    if (member->is_upper_bound_ &&  tmparray->size > member->array_size_) {
+        throw std::runtime_error("vector overcomes the maximum length");
+    }
+    subros_message = reinterpret_cast<void*>(tmparray->data);
+    return tmparray->size;
 }
 
 template <typename MembersType>
@@ -513,7 +576,16 @@ void deserialize_array<std::string>(
 {
     (void)call_new;
     if (member->array_size_ && !member->is_upper_bound_) {
-        deser.deserializeArray(((rosidl_generator_c__String*)field)->data, member->array_size_);
+        auto deser_field = (rosidl_generator_c__String*)field;
+        // tmpstring is defined here and not below to avoid
+        // memory allocation in every iteration of the for loop
+        std::string tmpstring;
+        for (size_t i = 0; i < member->array_size_; ++i) {
+            deser.deserialize(tmpstring);
+            if(!rosidl_generator_c__String__assign(&deser_field[i], tmpstring.c_str())) {
+                throw std::runtime_error("unable to assign rosidl_generator_c__String");
+            }
+        }
     } else {
         std::vector<std::string> cpp_string_vector;
         deser >> cpp_string_vector;
@@ -559,13 +631,18 @@ size_t get_submessage_array_deserialize(
     eprosima::fastcdr::Cdr & deser,
     void * field,
     void *& subros_message,
-    bool, size_t, size_t, size_t)
+    bool,
+    size_t sub_members_size,
+    size_t, size_t)
 {
-  (void)member;
-  uint32_t size = 0;
-  deser >> size;
-  subros_message = field;
-  return size;
+    (void)member;
+    // Deserialize length
+    uint32_t vsize = 0;
+    deser >> vsize;
+    rosidl_generator_c__void__Array * tmparray = (rosidl_generator_c__void__Array *)field;
+    rosidl_generator_c__void__Array__init(tmparray, vsize, sub_members_size);
+    subros_message = reinterpret_cast<void*>(tmparray->data);
+    return vsize;
 }
 
 template <typename MembersType>
@@ -585,9 +662,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
             switch(member->type_id_)
             {
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-                    {
-                        deser >> *(bool*)field;
-                    }
+                    deser >> *(bool*)field;
                     break;
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
                 case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
