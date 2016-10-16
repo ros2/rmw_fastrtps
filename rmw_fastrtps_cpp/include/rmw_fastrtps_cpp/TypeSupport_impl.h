@@ -430,7 +430,7 @@ bool TypeSupport<MembersType>::serializeROSmessage(
                         auto && str = StringHelper<MembersType>::convert_to_std_string(field);
 
                         // Control maximum length.
-                        if((member->string_upper_bound_ && str.length() > member->string_upper_bound_ + 1) || str.length() > 256)
+                        if(member->string_upper_bound_ && str.length() > member->string_upper_bound_ + 1)
                         {
                             throw std::runtime_error("string overcomes the maximum length");
                         }
