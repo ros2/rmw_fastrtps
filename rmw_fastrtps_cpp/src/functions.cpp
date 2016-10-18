@@ -45,6 +45,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <list>
+#include <sys/time.h>
 
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
@@ -466,7 +467,7 @@ typedef struct CustomParticipantInfo{
 
 extern "C"
 {
-    const char* const eprosima_fastrtps_identifier = "fastrtps";
+    const char* const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
 
     const char* rmw_get_implementation_identifier()
     {
@@ -1017,8 +1018,6 @@ fail:
             return nullptr;
           }
         #endif
-
-        eprosima::Log::setVerbosity(eprosima::VERB_ERROR);
 
         ParticipantAttributes participantParam;
         participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
