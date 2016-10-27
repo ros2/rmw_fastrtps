@@ -17,6 +17,7 @@
 #include "rmw/allocators.h"
 #include <rmw/rmw.h>
 #include <rmw/error_handling.h>
+#include <rmw/sanity_checks.h>
 #include <rmw/impl/cpp/macros.hpp>
 #include <rmw_fastrtps_cpp/MessageTypeSupport.h>
 #include <rmw_fastrtps_cpp/ServiceTypeSupport.h>
@@ -2275,7 +2276,11 @@ fail:
 	if(!node){
 		RMW_SET_ERROR_MSG("null node handle");
 		return RMW_RET_ERROR;
-	}	
+	}
+  if(rmw_check_zero_rmw_topic_names_and_types(topic_names_and_types) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
+
 	//Get participant pointer from node
 	if(node->implementation_identifier != eprosima_fastrtps_identifier)
 	{
