@@ -17,6 +17,7 @@
 #include "rmw/allocators.h"
 #include <rmw/rmw.h>
 #include <rmw/error_handling.h>
+#include <rmw/sanity_checks.h>
 #include <rmw/impl/cpp/macros.hpp>
 #include <rmw_fastrtps_cpp/MessageTypeSupport.h>
 #include <rmw_fastrtps_cpp/ServiceTypeSupport.h>
@@ -2275,28 +2276,16 @@ fail:
 	if(!node){
 		RMW_SET_ERROR_MSG("null node handle");
 		return RMW_RET_ERROR;
-	}	
-	if(!topic_names_and_types){
-		RMW_SET_ERROR_MSG("null topics_names_and_types");
-		return RMW_RET_ERROR;
 	}
+  if(rmw_check_zero_rmw_topic_names_and_types(topic_names_and_types) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
+
 	//Get participant pointer from node
 	if(node->implementation_identifier != eprosima_fastrtps_identifier)
 	{
 	    RMW_SET_ERROR_MSG("node handle not from this implementation");
 	    return RMW_RET_ERROR;
-	}
-	if (topic_names_and_types->topic_count) {
-	  RMW_SET_ERROR_MSG("topic count is not zero");
-	  return RMW_RET_ERROR;
-	}
-	if (topic_names_and_types->topic_names) {
-	  RMW_SET_ERROR_MSG("topic names is not null");
-	  return RMW_RET_ERROR;
-	}
-	if (topic_names_and_types->type_names) {
-	  RMW_SET_ERROR_MSG("type names is not null");
-	  return RMW_RET_ERROR;
 	}
 
 	CustomParticipantInfo* impl = static_cast<CustomParticipantInfo*>(node->data);
