@@ -32,12 +32,12 @@
 #include <fastrtps/subscriber/SubscriberListener.h>
 #include <fastrtps/subscriber/SampleInfo.h>
 #include <fastrtps/attributes/SubscriberAttributes.h>
+#include <fastrtps/participant/ParticipantListener.h>
 
 #include <fastrtps/rtps/RTPSDomain.h>
 #include <fastrtps/rtps/builtin/data/WriterProxyData.h>
 #include <fastrtps/rtps/common/CDRMessage_t.h>
-
-#include <fastrtps/rtps/reader/RTPSReader.h>
+#include <fastrtps/rtps/reader/RTPSReader.h> 
 #include <fastrtps/rtps/reader/StatefulReader.h>
 #include <fastrtps/rtps/reader/ReaderListener.h>
 #include <fastrtps/rtps/builtin/discovery/endpoint/EDPSimple.h>
@@ -46,6 +46,7 @@
 #include <mutex>
 #include <condition_variable>
 #include <list>
+#include <sys/time.h>
 
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
@@ -615,7 +616,7 @@ extern "C"
     {
         return RMW_RET_OK;
     }
-    
+
     rmw_node_t* rmw_create_node(const char *name, size_t domain_id)
     {
         if (!name) {
@@ -677,7 +678,6 @@ extern "C"
 	node_impl->secondarySubListener = tnat_1;
 	node_impl->secondaryPubListener = tnat_2;
 
-
  	std::pair<StatefulReader*, StatefulReader*> EDPReaders = participant->getEDPReaders();
 	
 	if( !( EDPReaders.first->setListener(tnat_1) & EDPReaders.second->setListener(tnat_2) ) ){
@@ -685,13 +685,59 @@ extern "C"
 		goto fail;	
 	}
 
-        return node_handle;
-    	fail:
+    return node_handle;
+fail:
 	delete(tnat_1);
 	delete(tnat_2);
 	delete(node_impl);
 	return NULL;
 
+    }
+
+    rmw_ret_t 
+    rmw_destroy_ros_meta(rmw_ros_meta_t * rosmeta)
+    {
+      if (!rosmeta) {
+        RMW_SET_ERROR_MSG("received null pointer");
+        return RMW_RET_ERROR;
+      }
+
+      for (int i=0;i < rosmeta->count; i++){
+        if (!rosmeta->node_names[i].data) {
+          RMW_SET_ERROR_MSG("received null pointer");
+          return RMW_RET_ERROR;
+        }
+        rmw_free((char*)rosmeta->node_names[i].data);
+        
+        if (!rosmeta->ids[i].implementation_identifier) {
+          RMW_SET_ERROR_MSG("received null pointer");
+          return RMW_RET_ERROR;
+        }
+        rmw_free((char*)rosmeta->ids[i].implementation_identifier);
+      }
+
+      if (!rosmeta->node_names) {
+        RMW_SET_ERROR_MSG("received null pointer");
+        return RMW_RET_ERROR;
+      }
+      rmw_free((rmw_string_t *)rosmeta->node_names);
+
+      if (!rosmeta->ids) {
+        RMW_SET_ERROR_MSG("received null pointer");
+        return RMW_RET_ERROR;
+      }
+      rmw_free((rmw_gid_t *)rosmeta->ids);
+
+      rmw_free((rmw_ros_meta_t *)rosmeta);
+
+      return RMW_RET_OK;
+    }
+
+    rmw_ret_t
+    rmw_get_remote_topic_names_and_types(
+        rmw_topic_names_and_types_t * topic_names_and_types)
+    {
+        
     }
 
     rmw_ret_t rmw_destroy_node(rmw_node_t * node)
@@ -927,6 +973,114 @@ fail:
 
         return returnedValue;
     }
+
+    class ParticipantListenerNodeName:public ParticipantListener
+    {
+    public:
+
+        ParticipantListenerNodeName()
+        {
+
+        }
+
+        std::vector<std::string> get_node_name()
+        {
+          return node_name;
+        }
+
+        void onParticipantDiscovery(Participant* p, ParticipantDiscoveryInfo info){
+           if(info.rtps.m_RTPSParticipantName.size()>2 && info.rtps.m_RTPSParticipantName.compare("get_node_names")!=0){
+               node_name.push_back(info.rtps.m_RTPSParticipantName);
+           }
+        }
+    private:
+        std::vector<std::string> node_name;
+    };
+
+    rmw_ros_meta_t * 
+    rmw_get_node_names(void)
+    {
+        // Use the current ROS_DOMAIN_ID.
+        char * ros_domain_id = nullptr;
+        const char * env_var = "ROS_DOMAIN_ID";
+        #ifndef _WIN32
+          ros_domain_id = getenv(env_var);
+        #else
+          size_t ros_domain_id_size;
+          _dupenv_s(&ros_domain_id, &ros_domain_id_size, env_var);
+        #endif  
+          size_t domain_id = std::stoi(ros_domain_id);
+
+          // On Windows, setting the ROS_DOMAIN_ID does not fix the problem, so error early.
+        #ifdef _WIN32
+          if (!ros_domain_id) {
+            RMW_SET_ERROR_MSG("environment variable ROS_DOMAIN_ID is not set");
+            fprintf(stderr, "[rmw_fastrtps_cpp]: error: %s\n", rmw_get_error_string_safe());
+            return nullptr;
+          }
+        #endif
+
+        ParticipantAttributes participantParam;
+        participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
+        participantParam.rtps.setName("get_node_names");
+
+        ParticipantListenerNodeName* listener_node_name = new ParticipantListenerNodeName();
+
+        Participant *participant = Domain::createParticipant(participantParam, listener_node_name);
+
+        //timer variables
+        struct timeval a, b;
+        long totalb, totala;
+        long diff;
+
+        //get initial time
+        gettimeofday(&a, NULL);
+        totala = a.tv_sec + a.tv_usec/1000000;
+        bool timeout = false;
+
+        while(!timeout){
+            gettimeofday(&b, NULL);
+            totalb = b.tv_sec + b.tv_usec/1000000;
+            diff = (totalb - totala);
+            // wait for 1 millisecond
+            if(diff > 0.001){
+              timeout = true;
+            }
+        }
+
+        rmw_ros_meta_t* ros_meta_data = (rmw_ros_meta_t*)rmw_allocate(sizeof(rmw_ros_meta_t));
+        ros_meta_data->count = 0;
+        ros_meta_data->node_names = NULL;
+        ros_meta_data->ids = NULL;
+        if (!ros_meta_data) {
+            RMW_SET_ERROR_MSG("failed to allocate memory");
+            return NULL;
+        }
+
+        std::vector<std::string> node_name = listener_node_name->get_node_name();
+        ros_meta_data->node_names = (rmw_string_t*) rmw_allocate(sizeof(rmw_string_t)*node_name.size());
+        ros_meta_data->ids = (rmw_gid_t*) rmw_allocate(sizeof(rmw_gid_t)*node_name.size());
+
+        for (int i = 0; i < node_name.size(); i++){
+            char* data_aux = (char*) rmw_allocate(sizeof(char)*strlen(node_name[i].c_str())+1);
+            memcpy(data_aux, node_name[i].c_str(), strlen(node_name[i].c_str())+1);
+            ros_meta_data->node_names[i].data = data_aux;
+
+            char* data_aux2 = (char*) rmw_allocate(sizeof(char)*strlen(eprosima_fastrtps_identifier)+1);
+            memcpy(data_aux2, eprosima_fastrtps_identifier, strlen(eprosima_fastrtps_identifier)+1);
+            ros_meta_data->ids[i].implementation_identifier = data_aux2;
+
+            //memcpy(ros_meta_data->ids[i].data, ros_message.id.data, ros_message.id.size);
+            //std::cout << "/" << node_name[i] << std::endl;
+        }
+        // Assign the size
+        ros_meta_data->count = node_name.size();
+
+        Domain::removeParticipant(participant);
+
+        return ros_meta_data;
+    }
+
 
     class SubListener;
 
@@ -2314,6 +2468,7 @@ fail:
 	}
 	slave_target->mapmutex.unlock();
  	slave_target = impl->secondaryPubListener; 
+
 	slave_target->mapmutex.lock();
 	for(auto it : slave_target->topicNtypes){
 		for(auto & itt: it.second){
@@ -2360,6 +2515,7 @@ fail:
 #endif
 			//Alloc
 			char *topic_name = __local_strdup(it.first.c_str());
+
 			if(!topic_name){
 				RMW_SET_ERROR_MSG("Failed to allocate memory");
 				return RMW_RET_ERROR;
@@ -2556,7 +2712,6 @@ rmw_node_get_graph_guard_condition(const rmw_node_t* node)
     }
     return impl->graph_guard_condition;
 }
-
 
 rmw_ret_t
 rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
