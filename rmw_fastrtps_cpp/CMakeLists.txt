@@ -40,10 +40,10 @@ ament_export_include_directories(include/${PROJECT_NAME}/impl)
 include_directories(include)
 
 add_library(rmw_fastrtps_cpp SHARED
-        src/functions.cpp
+  src/functions.cpp
 )
 target_link_libraries(rmw_fastrtps_cpp
-		fastcdr fastrtps)
+  fastcdr fastrtps)
 
 ament_target_dependencies(rmw_fastrtps_cpp
   "rosidl_typesupport_introspection_c"
@@ -63,20 +63,20 @@ register_rmw_implementation(
   "cpp:rosidl_typesupport_introspection_cpp")
 
 if(BUILD_TESTING)
-    find_package(ament_cmake_cppcheck REQUIRED)
-    ament_cppcheck()
+  find_package(ament_lint_auto REQUIRED)
+  ament_lint_auto_find_test_dependencies()
 endif()
 
 ament_package()
 
 install(
-    DIRECTORY include/
-    DESTINATION include
+  DIRECTORY include/
+  DESTINATION include
 )
 
 install(
-    TARGETS rmw_fastrtps_cpp
-    ARCHIVE DESTINATION lib
-    LIBRARY DESTINATION lib
-    RUNTIME DESTINATION bin
+  TARGETS rmw_fastrtps_cpp
+  ARCHIVE DESTINATION lib
+  LIBRARY DESTINATION lib
+  RUNTIME DESTINATION bin
 )
