@@ -12,36 +12,41 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _RMW_FASTRTPS_CPP_MESSAGETYPESUPPORT_IMPL_H_
-#define _RMW_FASTRTPS_CPP_MESSAGETYPESUPPORT_IMPL_H_
-
-#include "rmw_fastrtps_cpp/MessageTypeSupport.h"
-#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
+#ifndef RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_IMPL_H_
+#define RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_IMPL_H_
 
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
 
 #include <cassert>
 #include <memory>
+#include <string>
 
-using namespace rmw_fastrtps_cpp;
+#include "rmw_fastrtps_cpp/MessageTypeSupport.h"
+#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
-template <typename MembersType>
-MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType *members)
+namespace rmw_fastrtps_cpp
 {
-    assert(members);
-    this->members_ = members;
 
-    std::string name = std::string(members->package_name_) + "::msg::dds_::" + members->message_name_ + "_";
-    this->setName(name.c_str());
+template<typename MembersType>
+MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType * members)
+{
+  assert(members);
+  this->members_ = members;
 
-    // TODO(wjwwood): this could be more intelligent, setting m_typeSize to the
-    // maximum serialized size of the message, when the message is a bonded one.
-    if(members->member_count_ != 0)
-        this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(members, 0));
-    else
-        this->m_typeSize = 4;
+  std::string name = std::string(members->package_name_) + "::msg::dds_::" +
+    members->message_name_ + "_";
+  this->setName(name.c_str());
+
+  // TODO(wjwwood): this could be more intelligent, setting m_typeSize to the
+  // maximum serialized size of the message, when the message is a bonded one.
+  if (members->member_count_ != 0) {
+    this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(members, 0));
+  } else {
+    this->m_typeSize = 4;
+  }
 }
 
+}  // namespace rmw_fastrtps_cpp
 
-#endif // _RMW_FASTRTPS_CPP_MESSAGETYPESUPPORT_IMPL_H_
+#endif  // RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_IMPL_H_

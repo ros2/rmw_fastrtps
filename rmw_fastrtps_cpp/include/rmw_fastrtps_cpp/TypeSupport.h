@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef _RMW_FASTRTPS_CPP_TYPESUPPORT_H_
-#define _RMW_FASTRTPS_CPP_TYPESUPPORT_H_
+#ifndef RMW_FASTRTPS_CPP__TYPESUPPORT_H_
+#define RMW_FASTRTPS_CPP__TYPESUPPORT_H_
 
 #include <rosidl_generator_c/string.h>
 #include <rosidl_generator_c/string_functions.h>
@@ -23,7 +23,7 @@
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
 #include <cassert>
-
+#include <string>
 
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
@@ -40,95 +40,102 @@
 namespace rmw_fastrtps_cpp
 {
 
-    // Helper class that uses template specialization to read/write string types to/from a
-    // eprosima::fastcdr::Cdr
-    template <typename MembersType>
-    struct StringHelper;
+// Helper class that uses template specialization to read/write string types to/from a
+// eprosima::fastcdr::Cdr
+template<typename MembersType>
+struct StringHelper;
 
-    // For C introspection typesupport we create intermediate instances of std::string so that
-    // eprosima::fastcdr::Cdr can handle the string properly.
-    template<>
-    struct StringHelper<rosidl_typesupport_introspection_c__MessageMembers> {
-        using type = rosidl_generator_c__String;
+// For C introspection typesupport we create intermediate instances of std::string so that
+// eprosima::fastcdr::Cdr can handle the string properly.
+template<>
+struct StringHelper<rosidl_typesupport_introspection_c__MessageMembers>
+{
+  using type = rosidl_generator_c__String;
 
-        static std::string convert_to_std_string(void *data) {
-            auto c_string = static_cast<rosidl_generator_c__String *>(data);
-            if (!c_string) {
-              fprintf(stderr, "Failed to cast data as rosidl_generator_c__String\n");
-              return "";
-            }
-            if (!c_string->data) {
-              fprintf(stderr, "rosidl_generator_c_String had invalid data\n");
-              return "";
-            }
-            return std::string(c_string->data);
-        }
+  static std::string convert_to_std_string(void * data)
+  {
+    auto c_string = static_cast<rosidl_generator_c__String *>(data);
+    if (!c_string) {
+      fprintf(stderr, "Failed to cast data as rosidl_generator_c__String\n");
+      return "";
+    }
+    if (!c_string->data) {
+      fprintf(stderr, "rosidl_generator_c_String had invalid data\n");
+      return "";
+    }
+    return std::string(c_string->data);
+  }
 
-        static std::string convert_to_std_string(rosidl_generator_c__String & data) {
-            return std::string(data.data);
-        }
+  static std::string convert_to_std_string(rosidl_generator_c__String & data)
+  {
+    return std::string(data.data);
+  }
 
-        static void assign(eprosima::fastcdr::Cdr &deser, void *field, bool) {
-            std::string str;
-            deser >> str;
-            rosidl_generator_c__String *c_str = static_cast<rosidl_generator_c__String *>(field);
-            rosidl_generator_c__String__assign(c_str, str.c_str());
-        }
-    };
+  static void assign(eprosima::fastcdr::Cdr & deser, void * field, bool)
+  {
+    std::string str;
+    deser >> str;
+    rosidl_generator_c__String * c_str = static_cast<rosidl_generator_c__String *>(field);
+    rosidl_generator_c__String__assign(c_str, str.c_str());
+  }
+};
 
-    // For C++ introspection typesupport we just reuse the same std::string transparently.
-    template<>
-    struct StringHelper<rosidl_typesupport_introspection_cpp::MessageMembers> {
-        using type = std::string;
+// For C++ introspection typesupport we just reuse the same std::string transparently.
+template<>
+struct StringHelper<rosidl_typesupport_introspection_cpp::MessageMembers>
+{
+  using type = std::string;
 
-        static std::string & convert_to_std_string(void *data) {
-            return *(static_cast<std::string *>(data));
-        }
+  static std::string & convert_to_std_string(void * data)
+  {
+    return *(static_cast<std::string *>(data));
+  }
 
-        static void assign(eprosima::fastcdr::Cdr &deser, void *field, bool call_new) {
-            std::string &str = *(std::string*)field;
-            if(call_new)
-                new(&str) std::string;
-            deser >> str;
-        }
-    };
+  static void assign(eprosima::fastcdr::Cdr & deser, void * field, bool call_new)
+  {
+    std::string & str = *(std::string *)field;
+    if (call_new) {
+      new(&str) std::string;
+    }
+    deser >> str;
+  }
+};
 
-    template <typename MembersType>
-    class TypeSupport : public eprosima::fastrtps::TopicDataType
-    {
-        public:
+template<typename MembersType>
+class TypeSupport : public eprosima::fastrtps::TopicDataType
+{
+public:
+  bool serializeROSmessage(const void * ros_message, eprosima::fastcdr::Cdr & ser);
 
-            bool serializeROSmessage(const void *ros_message, eprosima::fastcdr::Cdr& ser);
+  bool deserializeROSmessage(eprosima::fastcdr::FastBuffer * data, void * ros_message);
 
-            bool deserializeROSmessage(eprosima::fastcdr::FastBuffer *data, void *ros_message);
+  bool serialize(void * data, SerializedPayload_t * payload);
 
-            bool serialize(void *data, SerializedPayload_t *payload);
+  bool deserialize(SerializedPayload_t * payload, void * data);
 
-            bool deserialize(SerializedPayload_t *payload, void *data);
+  std::function<uint32_t()> getSerializedSizeProvider(void * data);
 
-            std::function<uint32_t()> getSerializedSizeProvider(void* data);
+  void * createData();
 
-            void* createData();
+  void deleteData(void * data);
 
-            void deleteData(void* data);
+protected:
+  TypeSupport();
 
-        protected:
+  size_t calculateMaxSerializedSize(const MembersType * members, size_t current_alignment);
 
-            TypeSupport();
+  const MembersType * members_;
 
-            size_t calculateMaxSerializedSize(const MembersType *members, size_t current_alignment);
+private:
+  bool serializeROSmessage(eprosima::fastcdr::Cdr & ser, const MembersType * members,
+    const void * ros_message);
 
-            const MembersType *members_;
+  bool deserializeROSmessage(eprosima::fastcdr::Cdr & deser, const MembersType * members,
+    void * ros_message, bool call_new);
+};
 
-        private:
-
-            bool serializeROSmessage(eprosima::fastcdr::Cdr &ser, const MembersType *members, const void *ros_message);
-
-            bool deserializeROSmessage(eprosima::fastcdr::Cdr &deser, const MembersType *members, void *ros_message, bool call_new);
-    };
-}
+}  // namespace rmw_fastrtps_cpp
 
 #include "TypeSupport_impl.h"
 
-#endif // _RMW_FASTRTPS_CPP_TYPESUPPORT_H_
-
+#endif  // RMW_FASTRTPS_CPP__TYPESUPPORT_H_

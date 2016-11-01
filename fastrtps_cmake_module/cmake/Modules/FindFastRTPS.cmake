@@ -26,7 +26,8 @@
 #
 # - FastRTPS_FOUND: flag indicating if the package was found
 # - FastRTPS_INCLUDE_DIR: Paths to the header files
-# - FastRTPS_HOME: Root directory for the eProsima FastRTPS install. Might be not set.
+# - FastRTPS_HOME: Root directory for the eProsima FastRTPS install. Might be
+#   not set.
 # - FastRTPS_LIBRARIES: Name to the C++ libraries including the path
 # - FastRTPS_LIBRARY_DIRS: Paths to the libraries
 # - FastRTPS_LIBRARY_DIR: Path to libraries; guaranteed to be a single path
@@ -39,6 +40,8 @@
 #   # use FastRTPS_* variables
 #
 ###############################################################################
+
+# lint_cmake: -convention/filename, -package/stdargs
 
 set(FastRTPS_FOUND FALSE)
 
@@ -60,3 +63,10 @@ endif()
 
 find_path(FastRTPS_INCLUDE_DIR
     NAMES fastrtps/)
+
+include(FindPackageHandleStandardArgs)
+find_package_handle_standard_args(FastRTPS
+  FOUND_VAR FastRTPS_FOUND
+  REQUIRED_VARS
+    FastRTPS_INCLUDE_DIR
+)
