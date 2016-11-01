@@ -284,7 +284,7 @@ void serialize_array(
   eprosima::fastcdr::Cdr & ser)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
-    ser.serializeArray((T *)field, member->array_size_);
+    ser.serializeArray(static_cast<T *>(field), member->array_size_);
   } else {
     std::vector<T> & data = *reinterpret_cast<std::vector<T> *>(field);
     ser << data;
@@ -299,10 +299,10 @@ void serialize_array(
   eprosima::fastcdr::Cdr & ser)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
-    ser.serializeArray((T *)field, member->array_size_);
+    ser.serializeArray(static_cast<T *>(field), member->array_size_);
   } else {
     auto & data = *reinterpret_cast<typename GenericCArray<T>::type *>(field);
-    ser.serializeSequence((T *)data.data, data.size);
+    ser.serializeSequence(static_cast<T *>(data.data), data.size);
   }
 }
 
@@ -526,7 +526,7 @@ void deserialize_array(
   bool call_new)
 {
   if (member->array_size_ && !member->is_upper_bound_) {
-    deser.deserializeArray((T *)field, member->array_size_);
+    deser.deserializeArray(static_cast<T *>(field), member->array_size_);
   } else {
     std::vector<T> & vector = *reinterpret_cast<std::vector<T> *>(field);
     if (call_new) {
@@ -545,13 +545,13 @@ void deserialize_array(
 {
   (void)call_new;
   if (member->array_size_ && !member->is_upper_bound_) {
-    deser.deserializeArray((T *)field, member->array_size_);
+    deser.deserializeArray(static_cast<T *>(field), member->array_size_);
   } else {
     auto & data = *reinterpret_cast<typename GenericCArray<T>::type *>(field);
     int32_t dsize = 0;
     deser >> dsize;
     GenericCArray<T>::init(&data, dsize);
-    deser.deserializeArray((T *)data.data, dsize);
+    deser.deserializeArray(static_cast<T *>(data.data), dsize);
   }
 }
 
