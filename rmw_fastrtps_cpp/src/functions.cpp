@@ -97,7 +97,7 @@ bool using_introspection_c_typesupport(const char * typesupport_identifier)
 bool using_introspection_cpp_typesupport(const char * typesupport_identifier)
 {
   return typesupport_identifier ==
-         rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier;
+         rosidl_typesupport_introspection_cpp::typesupport_identifier;
 }
 
 template<typename MembersType>
@@ -778,7 +778,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
     strcmp(type_support->typesupport_identifier,
     rosidl_typesupport_introspection_c__identifier) != 0 &&
     strcmp(type_support->typesupport_identifier,
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0
+    rosidl_typesupport_introspection_cpp::typesupport_identifier) != 0
   )
   {
     RMW_SET_ERROR_MSG("type support not from this implementation");
@@ -1035,7 +1035,7 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
     strcmp(type_support->typesupport_identifier,
     rosidl_typesupport_introspection_c__identifier) != 0 &&
     strcmp(type_support->typesupport_identifier,
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0
+    rosidl_typesupport_introspection_cpp::typesupport_identifier) != 0
   )
   {
     RMW_SET_ERROR_MSG("type support not from this implementation");
@@ -1516,7 +1516,7 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
     strcmp(type_support->typesupport_identifier,
     rosidl_typesupport_introspection_c__identifier) != 0 &&
     strcmp(type_support->typesupport_identifier,
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0
+    rosidl_typesupport_introspection_cpp::typesupport_identifier) != 0
   )
   {
     RMW_SET_ERROR_MSG("type support not from this implementation");
@@ -1826,7 +1826,7 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
     strcmp(type_support->typesupport_identifier,
     rosidl_typesupport_introspection_c__identifier) != 0 &&
     strcmp(type_support->typesupport_identifier,
-    rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0
+    rosidl_typesupport_introspection_cpp::typesupport_identifier) != 0
   )
   {
     RMW_SET_ERROR_MSG("type support not from this implementation");
@@ -2252,7 +2252,7 @@ rmw_get_topic_names_and_types(
   Participant * participant = impl->participant;
 
   // if(strcmp(type_support->typesupport_identifier,
-  //   rosidl_typesupport_introspection_cpp::typesupport_introspection_identifier) != 0)
+  //   rosidl_typesupport_introspection_cpp::typesupport_identifier) != 0)
   // {
   //   RMW_SET_ERROR_MSG("type support not from this implementation");
   //   return NULL;
