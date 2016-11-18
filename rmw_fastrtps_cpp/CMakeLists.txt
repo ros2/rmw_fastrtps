@@ -30,11 +30,13 @@ find_package(rmw REQUIRED)
 find_package(rosidl_generator_cpp REQUIRED)
 find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
+find_package(rosidl_typesupport_cpp REQUIRED)
 
 ament_export_dependencies(rmw)
 ament_export_dependencies(rosidl_generator_cpp)
 ament_export_dependencies(rosidl_typesupport_introspection_c)
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
+ament_export_dependencies(rosidl_typesupport_cpp)
 ament_export_include_directories(include/${PROJECT_NAME}/impl)
 
 include_directories(include)
@@ -49,7 +51,8 @@ ament_target_dependencies(rmw_fastrtps_cpp
   "rosidl_typesupport_introspection_c"
   "rosidl_typesupport_introspection_cpp"
   "rmw"
-  "rosidl_generator_cpp")
+  "rosidl_generator_cpp"
+  "rosidl_typesupport_cpp")
 
 configure_rmw_library(rmw_fastrtps_cpp)
 
@@ -60,7 +63,7 @@ endif()
 
 register_rmw_implementation(
   "c:rosidl_typesupport_introspection_c"
-  "cpp:rosidl_typesupport_introspection_cpp")
+  "cpp:rosidl_typesupport_introspection_cpp:rosidl_typesupport_cpp")
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
