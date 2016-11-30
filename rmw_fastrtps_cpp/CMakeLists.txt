@@ -37,7 +37,6 @@ ament_export_dependencies(rosidl_generator_cpp)
 ament_export_dependencies(rosidl_typesupport_introspection_c)
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 ament_export_dependencies(rosidl_typesupport_cpp)
-ament_export_include_directories(include/${PROJECT_NAME}/impl)
 
 include_directories(include)
 
