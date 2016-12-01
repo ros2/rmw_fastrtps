@@ -50,9 +50,6 @@
 #include "fastrtps/rtps/reader/ReaderListener.h"
 #include "fastrtps/rtps/builtin/discovery/endpoint/EDPSimple.h"
 
-#include "rosidl_typesupport_cpp/message_type_support_dispatch.hpp"
-#include "rosidl_typesupport_cpp/service_type_support_dispatch.hpp"
-
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
@@ -776,13 +773,11 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   }
 
   Participant * participant = impl->participant;
-
-  const rosidl_message_type_support_t * type_support =
-    rosidl_typesupport_cpp::dispatch_message_type_support_handle(
-    rosidl_typesupport_introspection_c__identifier, type_supports);
+  const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
+    type_supports, rosidl_typesupport_introspection_c__identifier);
   if (!type_support) {
-    type_support = rosidl_typesupport_cpp::dispatch_message_type_support_handle(
-      rosidl_typesupport_introspection_cpp::typesupport_identifier, type_supports);
+    type_support = get_message_typesupport_handle(
+      type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
     if (!type_support) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return NULL;
@@ -1035,12 +1030,11 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   }
 
   Participant * participant = impl->participant;
-  const rosidl_message_type_support_t * type_support =
-    rosidl_typesupport_cpp::dispatch_message_type_support_handle(
-    rosidl_typesupport_introspection_c__identifier, type_supports);
+  const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
+    type_supports, rosidl_typesupport_introspection_c__identifier);
   if (!type_support) {
-    type_support = rosidl_typesupport_cpp::dispatch_message_type_support_handle(
-      rosidl_typesupport_introspection_cpp::typesupport_identifier, type_supports);
+    type_support = get_message_typesupport_handle(
+      type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
     if (!type_support) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return NULL;
@@ -1517,12 +1511,11 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
 
   Participant * participant = impl->participant;
 
-  const rosidl_service_type_support_t * type_support =
-    rosidl_typesupport_cpp::dispatch_service_type_support_handle(
-    rosidl_typesupport_introspection_c__identifier, type_supports);
+  const rosidl_service_type_support_t * type_support = get_service_typesupport_handle(
+    type_supports, rosidl_typesupport_introspection_c__identifier);
   if (!type_support) {
-    type_support = rosidl_typesupport_cpp::dispatch_service_type_support_handle(
-      rosidl_typesupport_introspection_cpp::typesupport_identifier, type_supports);
+    type_support = get_service_typesupport_handle(
+      type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
     if (!type_support) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return NULL;
@@ -1828,12 +1821,11 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   }
 
   Participant * participant = impl->participant;
-  const rosidl_service_type_support_t * type_support =
-    rosidl_typesupport_cpp::dispatch_service_type_support_handle(
-    rosidl_typesupport_introspection_c__identifier, type_supports);
+  const rosidl_service_type_support_t * type_support = get_service_typesupport_handle(
+    type_supports, rosidl_typesupport_introspection_c__identifier);
   if (!type_support) {
-    type_support = rosidl_typesupport_cpp::dispatch_service_type_support_handle(
-      rosidl_typesupport_introspection_cpp::typesupport_identifier, type_supports);
+    type_support = get_service_typesupport_handle(
+      type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
     if (!type_support) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return NULL;
@@ -2258,12 +2250,11 @@ rmw_get_topic_names_and_types(
   CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
   Participant * participant = impl->participant;
 
-  // const rosidl_message_type_support_t * type_support =
-  //   rosidl_typesupport_cpp::dispatch_message_type_support_handle(
-  //     rosidl_typesupport_introspection_c__identifier, type_supports);
+  // const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
+  //     type_supports, rosidl_typesupport_introspection_c__identifier);
   // if (!type_support) {
-  //   type_support = rosidl_typesupport_cpp::dispatch_message_type_support_handle(
-  //     rosidl_typesupport_introspection_cpp::typesupport_identifier, type_supports);
+  //   type_support = get_message_typesupport_handle(
+  //     type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
   //   if (!type_support) {
   //     RMW_SET_ERROR_MSG("type support not from this implementation");
   //     return NULL;
