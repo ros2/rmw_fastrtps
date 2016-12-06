@@ -1562,6 +1562,8 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   subscriberParam.topic.topicKind = NO_KEY;
   subscriberParam.topic.topicDataType = response_type_name;
   subscriberParam.topic.topicName = std::string(service_name) + "Reply";
+  subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
 
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     goto fail;
@@ -1579,6 +1581,8 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   publisherParam.topic.topicKind = NO_KEY;
   publisherParam.topic.topicDataType = request_type_name;
   publisherParam.topic.topicName = std::string(service_name) + "Request";
+  publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
+  publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
   if (!get_datawriter_qos(*qos_policies, publisherParam)) {
     goto fail;
@@ -1598,7 +1602,7 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   client->data = info;
   client->service_name = reinterpret_cast<const char *>(rmw_allocate(strlen(service_name) + 1));
   if (!client->service_name) {
-    RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+    RMW_SET_ERROR_MSG("failed to allocate memory for client name");
     goto fail;
   }
   memcpy(const_cast<char *>(client->service_name), service_name, strlen(service_name) + 1);
@@ -1872,6 +1876,7 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   subscriberParam.topic.topicKind = NO_KEY;
   subscriberParam.topic.topicDataType = request_type_name;
   subscriberParam.topic.topicName = std::string(service_name) + "Request";
+  subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     goto fail;
@@ -1889,6 +1894,8 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   publisherParam.topic.topicKind = NO_KEY;
   publisherParam.topic.topicDataType = response_type_name;
   publisherParam.topic.topicName = std::string(service_name) + "Reply";
+  publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
+  publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
   if (!get_datawriter_qos(*qos_policies, publisherParam)) {
     goto fail;
@@ -1907,7 +1914,7 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   service->service_name = reinterpret_cast<const char *>(
     rmw_allocate(strlen(service_name) + 1));
   if (!service->service_name) {
-    RMW_SET_ERROR_MSG("failed to allocate memory for node name");
+    RMW_SET_ERROR_MSG("failed to allocate memory for service name");
     goto fail;
   }
   memcpy(const_cast<char *>(service->service_name), service_name, strlen(service_name) + 1);
