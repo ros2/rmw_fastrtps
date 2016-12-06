@@ -1564,7 +1564,6 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   subscriberParam.topic.topicName = std::string(service_name) + "Reply";
   subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
-
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     goto fail;
   }
