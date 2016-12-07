@@ -39,7 +39,7 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType * members)
   this->setName(name.c_str());
 
   // TODO(wjwwood): this could be more intelligent, setting m_typeSize to the
-  // maximum serialized size of the message, when the message is a bonded one.
+  // maximum serialized size of the message, when the message is a bounded one.
   if (members->member_count_ != 0) {
     this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(members, 0));
   } else {
