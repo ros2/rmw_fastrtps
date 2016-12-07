@@ -43,7 +43,7 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
   this->setName(name.c_str());
 
   // TODO(wjwwood): this could be more intelligent, setting m_typeSize to the
-  // maximum serialized size of the message, when the message is a bonded one.
+  // maximum serialized size of the message, when the message is a bounded one.
   if (this->members_->member_count_ != 0) {
     this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 0));
   } else {
@@ -63,7 +63,7 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
   this->setName(name.c_str());
 
   // TODO(wjwwood): this could be more intelligent, setting m_typeSize to the
-  // maximum serialized size of the message, when the message is a bonded one.
+  // maximum serialized size of the message, when the message is a bounded one.
   if (this->members_->member_count_ != 0) {
     this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 0));
   } else {
