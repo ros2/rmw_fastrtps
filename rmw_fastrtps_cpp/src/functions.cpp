@@ -484,10 +484,10 @@ const char * rmw_get_implementation_identifier()
 bool get_datareader_qos(const rmw_qos_profile_t & qos_policies, SubscriberAttributes & sattr)
 {
   switch (qos_policies.history) {
-    case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
+    case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
       sattr.topic.historyQos.kind = KEEP_LAST_HISTORY_QOS;
       break;
-    case RMW_QOS_POLICY_KEEP_ALL_HISTORY:
+    case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
       sattr.topic.historyQos.kind = KEEP_ALL_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
@@ -498,10 +498,10 @@ bool get_datareader_qos(const rmw_qos_profile_t & qos_policies, SubscriberAttrib
   }
 
   switch (qos_policies.reliability) {
-    case RMW_QOS_POLICY_BEST_EFFORT:
+    case RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT:
       sattr.qos.m_reliability.kind = BEST_EFFORT_RELIABILITY_QOS;
       break;
-    case RMW_QOS_POLICY_RELIABLE:
+    case RMW_QOS_POLICY_RELIABILITY_RELIABLE:
       sattr.qos.m_reliability.kind = RELIABLE_RELIABILITY_QOS;
       break;
     case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
@@ -512,10 +512,10 @@ bool get_datareader_qos(const rmw_qos_profile_t & qos_policies, SubscriberAttrib
   }
 
   switch (qos_policies.durability) {
-    case RMW_QOS_POLICY_TRANSIENT_LOCAL_DURABILITY:
+    case RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL:
       sattr.qos.m_durability.kind = TRANSIENT_LOCAL_DURABILITY_QOS;
       break;
-    case RMW_QOS_POLICY_VOLATILE_DURABILITY:
+    case RMW_QOS_POLICY_DURABILITY_VOLATILE:
       sattr.qos.m_durability.kind = VOLATILE_DURABILITY_QOS;
       break;
     case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
@@ -550,10 +550,10 @@ bool get_datareader_qos(const rmw_qos_profile_t & qos_policies, SubscriberAttrib
 bool get_datawriter_qos(const rmw_qos_profile_t & qos_policies, PublisherAttributes & pattr)
 {
   switch (qos_policies.history) {
-    case RMW_QOS_POLICY_KEEP_LAST_HISTORY:
+    case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
       pattr.topic.historyQos.kind = KEEP_LAST_HISTORY_QOS;
       break;
-    case RMW_QOS_POLICY_KEEP_ALL_HISTORY:
+    case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
       pattr.topic.historyQos.kind = KEEP_ALL_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
@@ -564,10 +564,10 @@ bool get_datawriter_qos(const rmw_qos_profile_t & qos_policies, PublisherAttribu
   }
 
   switch (qos_policies.durability) {
-    case RMW_QOS_POLICY_TRANSIENT_LOCAL_DURABILITY:
+    case RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL:
       pattr.qos.m_durability.kind = TRANSIENT_LOCAL_DURABILITY_QOS;
       break;
-    case RMW_QOS_POLICY_VOLATILE_DURABILITY:
+    case RMW_QOS_POLICY_DURABILITY_VOLATILE:
       pattr.qos.m_durability.kind = VOLATILE_DURABILITY_QOS;
       break;
     case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
@@ -578,10 +578,10 @@ bool get_datawriter_qos(const rmw_qos_profile_t & qos_policies, PublisherAttribu
   }
 
   switch (qos_policies.reliability) {
-    case RMW_QOS_POLICY_BEST_EFFORT:
+    case RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT:
       pattr.qos.m_reliability.kind = BEST_EFFORT_RELIABILITY_QOS;
       break;
-    case RMW_QOS_POLICY_RELIABLE:
+    case RMW_QOS_POLICY_RELIABILITY_RELIABLE:
       pattr.qos.m_reliability.kind = RELIABLE_RELIABILITY_QOS;
       break;
     case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
