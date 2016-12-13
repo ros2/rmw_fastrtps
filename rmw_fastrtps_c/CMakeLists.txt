@@ -14,7 +14,7 @@
 
 cmake_minimum_required(VERSION 2.8.3)
 
-project(rmw_fastrtps_cpp)
+project(rmw_fastrtps_c)
 
 if(NOT WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra")
@@ -28,16 +28,14 @@ find_package(fastrtps REQUIRED CONFIG)
 
 find_package(rmw REQUIRED)
 find_package(rmw_fastrtps_common REQUIRED)
-find_package(rmw_fastrtps_c REQUIRED)
-find_package(rosidl_generator_cpp REQUIRED)
-find_package(rosidl_typesupport_introspection_cpp REQUIRED)
-find_package(rosidl_typesupport_cpp REQUIRED)
+find_package(rosidl_generator_c REQUIRED)
+find_package(rosidl_typesupport_introspection_c REQUIRED)
 
 ament_export_dependencies(rmw)
-ament_export_dependencies(rmw_fastrtps_c)
-ament_export_dependencies(rosidl_generator_cpp)
-ament_export_dependencies(rosidl_typesupport_cpp)
-ament_export_dependencies(rosidl_typesupport_introspection_cpp)
+ament_export_dependencies(rosidl_generator_c)
+ament_export_dependencies(rosidl_typesupport_introspection_c)
+
+ament_export_include_directories(include)
 
 include_directories(include)
 
@@ -48,12 +46,10 @@ target_link_libraries(${PROJECT_NAME}
   fastcdr fastrtps ${rmw_fastrtps_common_LIBRARIES})
 
 ament_target_dependencies(${PROJECT_NAME}
-  "rosidl_typesupport_introspection_cpp"
+  "rosidl_typesupport_introspection_c"
   "rmw"
   "rmw_fastrtps_common"
-  "rmw_fastrtps_c"
-  "rosidl_generator_cpp"
-  "rosidl_typesupport_cpp")
+  "rosidl_generator_c")
 
 configure_rmw_library(${PROJECT_NAME})
 
@@ -64,8 +60,7 @@ if(NOT WIN32 AND NOT ANDROID)
 endif()
 
 register_rmw_implementation(
-  "c:rosidl_typesupport_introspection_c"
-  "cpp:rosidl_typesupport_introspection_cpp:rosidl_typesupport_cpp")
+  "c:rosidl_typesupport_introspection_c")
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
