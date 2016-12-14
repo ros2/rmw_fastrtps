@@ -33,6 +33,8 @@ find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 find_package(rosidl_typesupport_cpp REQUIRED)
 
+find_package(Boost REQUIRED)
+
 ament_export_dependencies(rmw)
 ament_export_dependencies(rosidl_generator_c)
 ament_export_dependencies(rosidl_generator_cpp)
@@ -40,13 +42,13 @@ ament_export_dependencies(rosidl_typesupport_cpp)
 ament_export_dependencies(rosidl_typesupport_introspection_c)
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 
-include_directories(include)
+include_directories(include ${Boost_INCLUDE_DIRS})
 
 add_library(rmw_fastrtps_cpp SHARED
   src/functions.cpp
 )
 target_link_libraries(rmw_fastrtps_cpp
-  fastcdr fastrtps)
+  fastcdr fastrtps ${Boost_LIBRARIES})
 
 ament_target_dependencies(rmw_fastrtps_cpp
   "rosidl_typesupport_introspection_c"
