@@ -618,18 +618,13 @@ rmw_ret_t rmw_init()
   return RMW_RET_OK;
 }
 
-rmw_node_t * rmw_create_node(const char * name, size_t domain_id)
+rmw_node_t * create_node(const char * name, ParticipantAttributes participantParam)
 {
+
   if (!name) {
     RMW_SET_ERROR_MSG("name is null");
     return NULL;
   }
-
-  eprosima::fastrtps::Log::SetVerbosity(eprosima::fastrtps::Log::Error);
-
-  ParticipantAttributes participantParam;
-  participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
-  participantParam.rtps.setName(name);
 
   Participant * participant = Domain::createParticipant(participantParam);
   if (!participant) {
@@ -694,6 +689,52 @@ fail:
   delete (tnat_2);
   delete (node_impl);
   return NULL;
+}
+
+rmw_node_t * rmw_create_node(const char * name, size_t domain_id)
+{
+  if (!name) {
+    RMW_SET_ERROR_MSG("name is null");
+    return NULL;
+  }
+
+  eprosima::fastrtps::Log::SetVerbosity(eprosima::fastrtps::Log::Error);
+
+  ParticipantAttributes participantParam;
+  participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
+  participantParam.rtps.setName(name);
+
+  return create_node(name, participantParam);
+
+}
+
+rmw_node_t *
+rmw_create_secure_node(const char * name, size_t domain_id, char ** security_files_paths)
+{
+  if (!name) {
+    RMW_SET_ERROR_MSG("name is null");
+    return NULL;
+  }
+
+  if (!security_files_paths) {
+    RMW_SET_ERROR_MSG("security_files_paths is null");
+    return NULL;
+  }
+
+  ParticipantAttributes participantParam;
+  participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
+  participantParam.rtps.setName(name);
+
+  PropertyPolicy property_policy;
+  property_policy.properties().emplace_back(
+    Property("dds.sec.auth.builtin.PKI-DH.identity_ca", security_files_paths[0]));
+  property_policy.properties().emplace_back(
+    Property("dds.sec.auth.builtin.PKI-DH.identity_certificate", security_files_paths[1]));
+  property_policy.properties().emplace_back(
+    Property("dds.sec.auth.builtin.PKI-DH.private_key", security_files_paths[2]));
+  participantParam.rtps.properties = property_policy;
+
+  return create_node(name, participantParam);
 }
 
 rmw_ret_t rmw_destroy_node(rmw_node_t * node)
