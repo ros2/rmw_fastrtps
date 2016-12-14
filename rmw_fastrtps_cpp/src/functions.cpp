@@ -23,11 +23,11 @@
 #include <set>
 #include <string>
 
-#include <boost/date_time.hpp>
-#include <boost/interprocess/allocators/allocator.hpp>
-#include <boost/interprocess/containers/set.hpp>
-#include <boost/interprocess/managed_shared_memory.hpp>
-#include <boost/interprocess/sync/named_mutex.hpp>
+#include "boost/date_time.hpp"
+#include "boost/interprocess/allocators/allocator.hpp"
+#include "boost/interprocess/containers/set.hpp"
+#include "boost/interprocess/managed_shared_memory.hpp"
+#include "boost/interprocess/sync/named_mutex.hpp"
 
 #include "rmw/allocators.h"
 #include "rmw/rmw.h"
@@ -638,7 +638,7 @@ get_loaned_shared_participant_id()
   using bip::open_or_create;
 
   // Create and acquire the mutex.
-  named_mutex named_mtx{open_or_create, "rmw_fastrtps_cpp_pid_mutex"};
+  named_mutex named_mtx {open_or_create, "rmw_fastrtps_cpp_pid_mutex"};
   while (!named_mtx.timed_lock(bpt::microsec_clock::universal_time() + bpt::seconds(1))) {
     fprintf(stderr, "WARNING: failed to lock the named_mutex while getting participant ID\n");
     fprintf(stderr, "  Note: The lock can get stuck when a previous program crashes.\n");
@@ -648,7 +648,7 @@ get_loaned_shared_participant_id()
   }
 
   // Create or open the shared memory and find an unused participant ID.
-  managed_shared_memory segment{open_or_create, "rmw_fastrtps_cpp", 1024};
+  managed_shared_memory segment {open_or_create, "rmw_fastrtps_cpp", 1024};
   typedef bip::allocator<int32_t, managed_shared_memory::segment_manager> Int32ShmemAllocator;
   typedef bip::set<int32_t, std::less<int32_t>, Int32ShmemAllocator> Int32ShmemSet;
 
@@ -679,7 +679,7 @@ return_loaned_shared_participant_id(int32_t participant_id)
   using bip::shared_memory_object;
 
   // Create and acquire the mutex.
-  named_mutex named_mtx{open_or_create, "rmw_fastrtps_cpp_pid_mutex"};
+  named_mutex named_mtx {open_or_create, "rmw_fastrtps_cpp_pid_mutex"};
   while (!named_mtx.timed_lock(bpt::microsec_clock::universal_time() + bpt::seconds(1))) {
     fprintf(stderr, "WARNING: failed to lock the named_mutex while getting participant ID\n");
     fprintf(stderr, "  Note: The lock can get stuck when a previous program crashes.\n");
@@ -689,7 +689,7 @@ return_loaned_shared_participant_id(int32_t participant_id)
   }
 
   // Create or open the shared memory and return the participant ID.
-  managed_shared_memory segment{open_or_create, "rmw_fastrtps_cpp", 1024};
+  managed_shared_memory segment {open_or_create, "rmw_fastrtps_cpp", 1024};
   typedef bip::allocator<int32_t, managed_shared_memory::segment_manager> Int32ShmemAllocator;
   typedef bip::set<int32_t, std::less<int32_t>, Int32ShmemAllocator> Int32ShmemSet;
 
@@ -756,16 +756,16 @@ rmw_node_t * rmw_create_node(const char * name, size_t domain_id)
       // Disable multicast by explicitly listing only unicast locators.
       LocatorList_t loclist;
       IPFinder::getIP4Address(&loclist);
-      for(auto it = loclist.begin(); it != loclist.end(); ++it) {
-          (*it).port = (
-            participantParam.rtps.port.portBase +
-            participantParam.rtps.port.domainIDGain * participantParam.rtps.builtin.domainId +
-            participantParam.rtps.port.offsetd3 +
-            participantParam.rtps.port.participantIDGain * participantParam.rtps.participantID
+      for (auto it = loclist.begin(); it != loclist.end(); ++it) {
+        (*it).port = (
+          participantParam.rtps.port.portBase +
+          participantParam.rtps.port.domainIDGain * participantParam.rtps.builtin.domainId +
+          participantParam.rtps.port.offsetd3 +
+          participantParam.rtps.port.participantIDGain * participantParam.rtps.participantID
           );
-          (*it).kind = LOCATOR_KIND_UDPv4;
+        (*it).kind = LOCATOR_KIND_UDPv4;
 
-          participantParam.rtps.defaultUnicastLocatorList.push_back((*it));
+        participantParam.rtps.defaultUnicastLocatorList.push_back((*it));
       }
     }
   }
