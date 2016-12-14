@@ -34,6 +34,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/sanity_checks.h"
 #include "rmw/impl/cpp/macros.hpp"
+#include "rmw/impl/getenv.h"
 #include "rmw_fastrtps_cpp/MessageTypeSupport.h"
 #include "rmw_fastrtps_cpp/ServiceTypeSupport.h"
 
@@ -47,6 +48,7 @@
 #include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/subscriber/SampleInfo.h"
 #include "fastrtps/attributes/SubscriberAttributes.h"
+#include "fastrtps/utils/IPFinder.h"
 
 #include "fastrtps/rtps/RTPSDomain.h"
 #include "fastrtps/rtps/builtin/data/WriterProxyData.h"
@@ -729,7 +731,43 @@ rmw_node_t * rmw_create_node(const char * name, size_t domain_id)
     // fast-rtps does not make system wide, unique participant id's,
     // so we ensure one for them.
     // TODO(wjwwood): remove this when Fast-RTPS creates unique participant id's.
+    //   also remove the *_loaned_shared_participant_id() functions and uses
     participantParam.rtps.participantID = get_loaned_shared_participant_id();
+  }
+  {
+    // This code is taken from the RTPSParticipantImpl.cpp file in fastrtps
+    // because there is no other way to get the "default unicast" locators.
+    // By default if the default unicast AND multicast locators are empty, then
+    // they are filled with BOTH the system default unicast and multicast
+    // locators, but what we want is to only have the system default unicast
+    // locators and no multicast locators in order to disable multicast.
+    // So to do that we must fill the default unicast locator list with
+    // something and we get that "something" by copying the code which produces
+    // them in the participant impl.
+    // TODO(wjwwood): remove this once Fast-RTPS can better control multicast
+    //   or can provide the default locators by API calls.
+    const char * disable_multicast_value;
+    rmw_ret_t ret = rmw_impl_getenv("RMW_FASTRTPS_DISABLE_MULTICAST", &disable_multicast_value);
+    if (ret != RMW_RET_OK) {
+      // rmw error already set
+      return NULL;
+    }
+    if (std::string(disable_multicast_value) != "") {
+      // Disable multicast by explicitly listing only unicast locators.
+      LocatorList_t loclist;
+      IPFinder::getIP4Address(&loclist);
+      for(auto it = loclist.begin(); it != loclist.end(); ++it) {
+          (*it).port = (
+            participantParam.rtps.port.portBase +
+            participantParam.rtps.port.domainIDGain * participantParam.rtps.builtin.domainId +
+            participantParam.rtps.port.offsetd3 +
+            participantParam.rtps.port.participantIDGain * participantParam.rtps.participantID
+          );
+          (*it).kind = LOCATOR_KIND_UDPv4;
+
+          participantParam.rtps.defaultUnicastLocatorList.push_back((*it));
+      }
+    }
   }
 
   Participant * participant = Domain::createParticipant(participantParam);
