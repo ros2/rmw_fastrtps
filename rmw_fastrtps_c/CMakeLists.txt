@@ -37,30 +37,32 @@ ament_export_dependencies(rosidl_typesupport_introspection_c)
 
 ament_export_include_directories(include)
 
-include_directories(include)
+if(ENABLE_RMW_FASTRTPS_C)
+  include_directories(include)
 
-add_library(${PROJECT_NAME} SHARED
-  src/functions.cpp
-)
-target_link_libraries(${PROJECT_NAME}
-  fastcdr fastrtps ${rmw_fastrtps_common_LIBRARIES})
+  add_library(${PROJECT_NAME} SHARED
+    src/functions.cpp
+  )
+  target_link_libraries(${PROJECT_NAME}
+    fastcdr fastrtps ${rmw_fastrtps_common_LIBRARIES})
 
-ament_target_dependencies(${PROJECT_NAME}
-  "rosidl_typesupport_introspection_c"
-  "rmw"
-  "rmw_fastrtps_common"
-  "rosidl_generator_c")
+  ament_target_dependencies(${PROJECT_NAME}
+    "rosidl_typesupport_introspection_c"
+    "rmw"
+    "rmw_fastrtps_common"
+    "rosidl_generator_c")
 
-configure_rmw_library(${PROJECT_NAME})
+  configure_rmw_library(${PROJECT_NAME})
 
-ament_export_libraries(${PROJECT_NAME}
-  fastcdr fastrtps ${rmw_fastrtps_common_LIBRARIES})
-if(NOT WIN32 AND NOT ANDROID)
-  ament_export_libraries(pthread)
+  ament_export_libraries(${PROJECT_NAME}
+    fastcdr fastrtps ${rmw_fastrtps_common_LIBRARIES})
+  if(NOT WIN32 AND NOT ANDROID)
+    ament_export_libraries(pthread)
+  endif()
+
+  register_rmw_implementation(
+    "c:rosidl_typesupport_introspection_c")
 endif()
-
-register_rmw_implementation(
-  "c:rosidl_typesupport_introspection_c")
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -74,9 +76,11 @@ install(
   DESTINATION include
 )
 
-install(
-  TARGETS ${PROJECT_NAME}
-  ARCHIVE DESTINATION lib
-  LIBRARY DESTINATION lib
-  RUNTIME DESTINATION bin
-)
+if(ENABLE_RMW_FASTRTPS_C)
+  install(
+    TARGETS ${PROJECT_NAME}
+    ARCHIVE DESTINATION lib
+    LIBRARY DESTINATION lib
+    RUNTIME DESTINATION bin
+  )
+endif()
