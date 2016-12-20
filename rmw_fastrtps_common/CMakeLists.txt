@@ -14,10 +14,10 @@
 
 cmake_minimum_required(VERSION 2.8.3)
 
-project(rmw_fastrtps_cpp)
+project(rmw_fastrtps_common)
 
 if(NOT WIN32)
-  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++14 -Wall -Wextra -fPIC")
 endif()
 
 find_package(ament_cmake REQUIRED)
@@ -25,47 +25,34 @@ find_package(ament_cmake REQUIRED)
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr REQUIRED CONFIG)
 find_package(fastrtps REQUIRED CONFIG)
+find_package(FastRTPS REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
-find_package(rmw_fastrtps_common REQUIRED)
-find_package(rmw_fastrtps_c REQUIRED)
-find_package(rosidl_generator_cpp REQUIRED)
-find_package(rosidl_typesupport_introspection_cpp REQUIRED)
-find_package(rosidl_typesupport_cpp REQUIRED)
+find_package(rosidl_typesupport_introspection_c REQUIRED)
 
 ament_export_dependencies(rmw)
-ament_export_dependencies(rmw_fastrtps_c)
-ament_export_dependencies(rosidl_generator_cpp)
-ament_export_dependencies(rosidl_typesupport_cpp)
-ament_export_dependencies(rosidl_typesupport_introspection_cpp)
+ament_export_dependencies(rosidl_typesupport_introspection_c)
+
+ament_export_include_directories(include)
 
 include_directories(include)
 
-add_library(${PROJECT_NAME} SHARED
-  src/functions.cpp
+add_library(${PROJECT_NAME} STATIC
+  src/common_functions.cpp
 )
 target_link_libraries(${PROJECT_NAME}
-  fastcdr fastrtps ${rmw_fastrtps_common_LIBRARIES})
+  fastcdr fastrtps ${FastRTPS_LIBRARIES})
 
 ament_target_dependencies(${PROJECT_NAME}
-  "rosidl_typesupport_introspection_cpp"
+  "rosidl_typesupport_introspection_c"
   "rmw"
-  "rmw_fastrtps_common"
-  "rmw_fastrtps_c"
-  "rosidl_generator_cpp"
-  "rosidl_typesupport_cpp")
-
-configure_rmw_library(${PROJECT_NAME})
+)
 
 ament_export_libraries(${PROJECT_NAME}
-  fastcdr fastrtps ${rmw_fastrtps_common_LIBRARIES})
+  fastcdr fastrtps ${FastRTPS_LIBRARIES})
 if(NOT WIN32 AND NOT ANDROID)
   ament_export_libraries(pthread)
 endif()
-
-register_rmw_implementation(
-  "c:rosidl_typesupport_introspection_c"
-  "cpp:rosidl_typesupport_introspection_cpp:rosidl_typesupport_cpp")
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

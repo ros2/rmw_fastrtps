@@ -1,9 +1,9 @@
 <?xml version="1.0"?>
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
-  <name>rmw_fastrtps_cpp</name>
+  <name>rmw_fastrtps_common</name>
   <version>0.0.0</version>
-  <description>Implement the ROS middleware interface using eProsima FastRTPS  static code generation in C++.</description>
+  <description>Common code for the FastRTPS RMW implementation.</description>
   <maintainer email="ricardogonzalez@eprosima.com">Ricardo González</maintainer>
   <license>Apache License 2.0</license>
 
@@ -16,18 +16,12 @@
   <build_depend>fastrtps</build_depend>
   <build_depend>fastrtps_cmake_module</build_depend>
   <build_depend>rmw</build_depend>
-  <build_depend>rmw_fastrtps_c</build_depend>
-  <build_depend>rmw_fastrtps_common</build_depend>
-  <build_depend>rosidl_typesupport_cpp</build_depend>
-  <build_depend>rosidl_typesupport_introspection_cpp</build_depend>
+  <build_depend>rosidl_typesupport_introspection_c</build_depend>
 
   <build_export_depend>fastcdr</build_export_depend>
   <build_export_depend>fastrtps</build_export_depend>
   <build_export_depend>rmw</build_export_depend>
-  <build_export_depend>rmw_fastrtps_c</build_export_depend>
-  <build_export_depend>rmw_fastrtps_common</build_export_depend>
-  <build_export_depend>rosidl_typesupport_cpp</build_export_depend>
-  <build_export_depend>rosidl_typesupport_introspection_cpp</build_export_depend>
+  <build_export_depend>rosidl_typesupport_introspection_c</build_export_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

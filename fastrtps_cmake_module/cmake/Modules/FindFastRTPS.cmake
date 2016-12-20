@@ -64,9 +64,20 @@ endif()
 find_path(FastRTPS_INCLUDE_DIR
     NAMES fastrtps/)
 
+find_library(FastRTPS_LIBRARY
+    NAMES fastrtps)
+
+find_library(FastCDR_LIBRARY
+    NAMES fastcdr)
+
+set(FastRTPS_LIBRARIES ${FastRTPS_LIBRARY} ${FastCDR_LIBRARY})
+
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FastRTPS
   FOUND_VAR FastRTPS_FOUND
   REQUIRED_VARS
     FastRTPS_INCLUDE_DIR
+    FastCDR_LIBRARY
+    FastRTPS_LIBRARY
+    FastRTPS_LIBRARIES
 )
