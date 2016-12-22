@@ -22,10 +22,8 @@
 #include <memory>
 
 #include "TypeSupport.h"
-#include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
-#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
-namespace rmw_fastrtps_cpp
+namespace rmw_fastrtps_common
 {
 
 template<typename MembersType>
@@ -35,7 +33,7 @@ public:
   explicit MessageTypeSupport(const MembersType * members);
 };
 
-}  // namespace rmw_fastrtps_cpp
+}  // namespace rmw_fastrtps_common
 
 #include "MessageTypeSupport_impl.h"
 

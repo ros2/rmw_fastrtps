@@ -27,8 +27,6 @@
 #include "rmw/error_handling.h"
 #include "rmw/sanity_checks.h"
 #include "rmw/impl/cpp/macros.hpp"
-#include "rmw_fastrtps_cpp/MessageTypeSupport.h"
-#include "rmw_fastrtps_cpp/ServiceTypeSupport.h"
 
 #include "fastrtps/Domain.h"
 #include "fastrtps/participant/Participant.h"
@@ -50,271 +48,10 @@
 #include "fastrtps/rtps/reader/ReaderListener.h"
 #include "fastrtps/rtps/builtin/discovery/endpoint/EDPSimple.h"
 
-#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
-#include "rosidl_typesupport_introspection_cpp/identifier.hpp"
-#include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
-#include "rosidl_typesupport_introspection_cpp/service_introspection.hpp"
-#include "rosidl_typesupport_introspection_cpp/visibility_control.h"
+#include "rmw_fastrtps_cpp/MessageTypeSupport.h"
+#include "rmw_fastrtps_cpp/ServiceTypeSupport.h"
 
-#include "rosidl_typesupport_introspection_c/field_types.h"
-#include "rosidl_typesupport_introspection_c/identifier.h"
-#include "rosidl_typesupport_introspection_c/message_introspection.h"
-#include "rosidl_typesupport_introspection_c/service_introspection.h"
-#include "rosidl_typesupport_introspection_c/visibility_control.h"
-
-using MessageTypeSupport_c =
-    rmw_fastrtps_cpp::MessageTypeSupport<rosidl_typesupport_introspection_c__MessageMembers>;
-using MessageTypeSupport_cpp =
-    rmw_fastrtps_cpp::MessageTypeSupport<rosidl_typesupport_introspection_cpp::MessageMembers>;
-using TypeSupport_c =
-    rmw_fastrtps_cpp::TypeSupport<rosidl_typesupport_introspection_c__MessageMembers>;
-using TypeSupport_cpp =
-    rmw_fastrtps_cpp::TypeSupport<rosidl_typesupport_introspection_cpp::MessageMembers>;
-
-using RequestTypeSupport_c = rmw_fastrtps_cpp::RequestTypeSupport<
-    rosidl_typesupport_introspection_c__ServiceMembers,
-    rosidl_typesupport_introspection_c__MessageMembers
-    >;
-using RequestTypeSupport_cpp = rmw_fastrtps_cpp::RequestTypeSupport<
-    rosidl_typesupport_introspection_cpp::ServiceMembers,
-    rosidl_typesupport_introspection_cpp::MessageMembers
-    >;
-
-using ResponseTypeSupport_c = rmw_fastrtps_cpp::ResponseTypeSupport<
-    rosidl_typesupport_introspection_c__ServiceMembers,
-    rosidl_typesupport_introspection_c__MessageMembers
-    >;
-using ResponseTypeSupport_cpp = rmw_fastrtps_cpp::ResponseTypeSupport<
-    rosidl_typesupport_introspection_cpp::ServiceMembers,
-    rosidl_typesupport_introspection_cpp::MessageMembers
-    >;
-
-bool using_introspection_c_typesupport(const char * typesupport_identifier)
-{
-  return typesupport_identifier == rosidl_typesupport_introspection_c__identifier;
-}
-
-bool using_introspection_cpp_typesupport(const char * typesupport_identifier)
-{
-  return typesupport_identifier ==
-         rosidl_typesupport_introspection_cpp::typesupport_identifier;
-}
-
-template<typename MembersType>
-ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
-inline std::string
-_create_type_name(
-  const void * untyped_members,
-  const std::string & sep)
-{
-  auto members = static_cast<const MembersType *>(untyped_members);
-  if (!members) {
-    RMW_SET_ERROR_MSG("members handle is null");
-    return "";
-  }
-  return
-    std::string(members->package_name_) + "::" + sep + "::dds_::" + members->message_name_ + "_";
-}
-
-ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
-inline std::string
-_create_type_name(
-  const void * untyped_members,
-  const std::string & sep,
-  const char * typesupport)
-{
-  if (using_introspection_c_typesupport(typesupport)) {
-    return _create_type_name<rosidl_typesupport_introspection_c__MessageMembers>(
-      untyped_members, sep);
-  } else if (using_introspection_cpp_typesupport(typesupport)) {
-    return _create_type_name<rosidl_typesupport_introspection_cpp::MessageMembers>(
-      untyped_members, sep);
-  }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return "";
-}
-
-template<typename ServiceType>
-const void * get_request_ptr(const void * untyped_service_members)
-{
-  auto service_members = static_cast<const ServiceType *>(untyped_service_members);
-  if (!service_members) {
-    RMW_SET_ERROR_MSG("service members handle is null");
-    return NULL;
-  }
-  return service_members->request_members_;
-}
-
-const void * get_request_ptr(const void * untyped_service_members, const char * typesupport)
-{
-  if (using_introspection_c_typesupport(typesupport)) {
-    return get_request_ptr<rosidl_typesupport_introspection_c__ServiceMembers>(
-      untyped_service_members);
-  } else if (using_introspection_cpp_typesupport(typesupport)) {
-    return get_request_ptr<rosidl_typesupport_introspection_cpp::ServiceMembers>(
-      untyped_service_members);
-  }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return NULL;
-}
-
-template<typename ServiceType>
-const void * get_response_ptr(const void * untyped_service_members)
-{
-  auto service_members = static_cast<const ServiceType *>(untyped_service_members);
-  if (!service_members) {
-    RMW_SET_ERROR_MSG("service members handle is null");
-    return NULL;
-  }
-  return service_members->response_members_;
-}
-
-const void * get_response_ptr(const void * untyped_service_members, const char * typesupport)
-{
-  if (using_introspection_c_typesupport(typesupport)) {
-    return get_response_ptr<rosidl_typesupport_introspection_c__ServiceMembers>(
-      untyped_service_members);
-  } else if (using_introspection_cpp_typesupport(typesupport)) {
-    return get_response_ptr<rosidl_typesupport_introspection_cpp::ServiceMembers>(
-      untyped_service_members);
-  }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return NULL;
-}
-
-void *
-_create_message_type_support(const void * untyped_members, const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_c__MessageMembers *>(
-      untyped_members);
-    return new MessageTypeSupport_c(members);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(
-      untyped_members);
-    return new MessageTypeSupport_cpp(members);
-  }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return nullptr;
-}
-
-void *
-_create_request_type_support(const void * untyped_members, const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(
-      untyped_members);
-    return new RequestTypeSupport_c(members);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers *>(
-      untyped_members);
-    return new RequestTypeSupport_cpp(members);
-  }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return nullptr;
-}
-
-void *
-_create_response_type_support(const void * untyped_members, const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(
-      untyped_members);
-    return new ResponseTypeSupport_c(members);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers *>(
-      untyped_members);
-    return new ResponseTypeSupport_cpp(members);
-  }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return nullptr;
-}
-
-void
-_register_type(
-  eprosima::fastrtps::Participant * participant, void * untyped_typesupport,
-  const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<TypeSupport_c *>(untyped_typesupport);
-    Domain::registerType(participant, typed_typesupport);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<TypeSupport_cpp *>(untyped_typesupport);
-    Domain::registerType(participant, typed_typesupport);
-  } else {
-    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  }
-}
-
-void
-_unregister_type(
-  eprosima::fastrtps::Participant * participant, void * untyped_typesupport,
-  const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<TypeSupport_c *>(untyped_typesupport);
-    if (Domain::unregisterType(participant, typed_typesupport->getName())) {
-      delete typed_typesupport;
-    }
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<TypeSupport_cpp *>(untyped_typesupport);
-    if (Domain::unregisterType(participant, typed_typesupport->getName())) {
-      delete typed_typesupport;
-    }
-  } else {
-    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  }
-}
-
-void
-_delete_typesupport(void * untyped_typesupport, const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<MessageTypeSupport_c *>(untyped_typesupport);
-    if (typed_typesupport != nullptr) {
-      delete typed_typesupport;
-    }
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<MessageTypeSupport_cpp *>(untyped_typesupport);
-    if (typed_typesupport != nullptr) {
-      delete typed_typesupport;
-    }
-  } else {
-    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  }
-}
-
-bool
-_serialize_ros_message(
-  const void * ros_message, eprosima::fastcdr::Cdr & ser, void * untyped_typesupport,
-  const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<MessageTypeSupport_c *>(untyped_typesupport);
-    return typed_typesupport->serializeROSmessage(ros_message, ser);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<MessageTypeSupport_cpp *>(untyped_typesupport);
-    return typed_typesupport->serializeROSmessage(ros_message, ser);
-  }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return false;
-}
-
-bool
-_deserialize_ros_message(
-  eprosima::fastcdr::FastBuffer * buffer, void * ros_message, void * untyped_typesupport,
-  const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<TypeSupport_c *>(untyped_typesupport);
-    return typed_typesupport->deserializeROSmessage(buffer, ros_message);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<TypeSupport_cpp *>(untyped_typesupport);
-    return typed_typesupport->deserializeROSmessage(buffer, ros_message);
-  }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return false;
-}
+#include "rmw_fastrtps_cpp/common_functions.hpp"
 
 class ClientListener;
 
@@ -476,7 +213,8 @@ extern "C"
 {
 const char * const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
 
-const char * rmw_get_implementation_identifier()
+const char *
+rmw_get_implementation_identifier()
 {
   return eprosima_fastrtps_identifier;
 }
@@ -657,7 +395,7 @@ rmw_node_t * rmw_create_node(const char * name, size_t domain_id)
     RMW_SET_ERROR_MSG("failed to allocate rmw_node_t");
     return NULL;
   }
-  node_handle->implementation_identifier = eprosima_fastrtps_identifier;
+  node_handle->implementation_identifier = rmw_get_implementation_identifier();
   node_impl->participant = participant;
   node_impl->graph_guard_condition = graph_guard_condition;
   node_handle->data = node_impl;
@@ -703,7 +441,7 @@ rmw_ret_t rmw_destroy_node(rmw_node_t * node)
     return RMW_RET_ERROR;
   }
 
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -761,7 +499,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   assert(topic_name);
   assert(qos_policies);
 
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return NULL;
   }
@@ -773,28 +511,26 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   }
 
   Participant * participant = impl->participant;
-  const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
-    type_supports, rosidl_typesupport_introspection_c__identifier);
+  const rosidl_message_type_support_t * type_support =
+    rmw_fastrtps_impl::_get_message_typesupport_handle(
+    type_supports);
   if (!type_support) {
-    type_support = get_message_typesupport_handle(
-      type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
-    if (!type_support) {
-      RMW_SET_ERROR_MSG("type support not from this implementation");
-      return NULL;
-    }
+    RMW_SET_ERROR_MSG("type support not from this implementation");
+    return NULL;
   }
 
   CustomPublisherInfo * info = new CustomPublisherInfo();
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-  std::string type_name = _create_type_name(type_support->data, "msg",
+  std::string type_name = rmw_fastrtps_impl::_create_type_name(type_support->data, "msg",
       info->typesupport_identifier_);
   if (!Domain::getRegisteredType(participant, type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->type_support_)))
   {
-    info->type_support_ = _create_message_type_support(type_support->data,
+    info->type_support_ = rmw_fastrtps_impl::_create_message_type_support(type_support->data,
         info->typesupport_identifier_);
-    _register_type(participant, info->type_support_, info->typesupport_identifier_);
+    rmw_fastrtps_impl::_register_type(participant, info->type_support_,
+      info->typesupport_identifier_);
   }
 
   PublisherAttributes publisherParam;
@@ -823,10 +559,10 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
     goto fail;
   }
 
-  info->publisher_gid.implementation_identifier = eprosima_fastrtps_identifier;
+  info->publisher_gid.implementation_identifier = rmw_get_implementation_identifier();
   static_assert(
     sizeof(eprosima::fastrtps::rtps::GUID_t) <= RMW_GID_STORAGE_SIZE,
-    "RMW_GID_STORAGE_SIZE insufficient to store the rmw_fastrtps_cpp GID implementation."
+    "RMW_GID_STORAGE_SIZE insufficient to store the rmw_fastrtps_common GID implementation."
   );
 
   memset(info->publisher_gid.data, 0, RMW_GID_STORAGE_SIZE);
@@ -834,7 +570,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   memcpy(info->publisher_gid.data, guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
 
   rmw_publisher = new rmw_publisher_t;
-  rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
+  rmw_publisher->implementation_identifier = rmw_get_implementation_identifier();
   rmw_publisher->data = info;
   rmw_publisher->topic_name = reinterpret_cast<const char *>(new char[strlen(topic_name) + 1]);
   memcpy(const_cast<char *>(rmw_publisher->topic_name), topic_name, strlen(topic_name) + 1);
@@ -842,7 +578,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
 
 fail:
   if (info != nullptr) {
-    _delete_typesupport(info->type_support_, info->typesupport_identifier_);
+    rmw_fastrtps_impl::_delete_typesupport(info->type_support_, info->typesupport_identifier_);
     delete info;
   }
 
@@ -856,7 +592,7 @@ rmw_ret_t rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     return RMW_RET_ERROR;
   }
 
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -866,7 +602,7 @@ rmw_ret_t rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     return RMW_RET_ERROR;
   }
 
-  if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (publisher->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -884,7 +620,8 @@ rmw_ret_t rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       }
 
       Participant * participant = impl->participant;
-      _unregister_type(participant, info->type_support_, info->typesupport_identifier_);
+      rmw_fastrtps_impl::_unregister_type(participant, info->type_support_,
+        info->typesupport_identifier_);
     }
     delete info;
   }
@@ -900,7 +637,7 @@ rmw_ret_t rmw_publish(const rmw_publisher_t * publisher, const void * ros_messag
   assert(ros_message);
   rmw_ret_t returnedValue = RMW_RET_ERROR;
 
-  if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (publisher->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -911,7 +648,7 @@ rmw_ret_t rmw_publish(const rmw_publisher_t * publisher, const void * ros_messag
   eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastcdr::Cdr ser(buffer);
 
-  if (_serialize_ros_message(ros_message, ser, info->type_support_,
+  if (rmw_fastrtps_impl::_serialize_ros_message(ros_message, ser, info->type_support_,
     info->typesupport_identifier_))
   {
     if (info->publisher_->write(&ser)) {
@@ -1018,7 +755,7 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   assert(topic_name);
   assert(qos_policies);
 
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return NULL;
   }
@@ -1030,29 +767,27 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   }
 
   Participant * participant = impl->participant;
-  const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
-    type_supports, rosidl_typesupport_introspection_c__identifier);
+  const rosidl_message_type_support_t * type_support =
+    rmw_fastrtps_impl::_get_message_typesupport_handle(
+    type_supports);
   if (!type_support) {
-    type_support = get_message_typesupport_handle(
-      type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
-    if (!type_support) {
-      RMW_SET_ERROR_MSG("type support not from this implementation");
-      return NULL;
-    }
+    RMW_SET_ERROR_MSG("type support not from this implementation");
+    return NULL;
   }
 
   CustomSubscriberInfo * info = new CustomSubscriberInfo();
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-  std::string type_name = _create_type_name(
+  std::string type_name = rmw_fastrtps_impl::_create_type_name(
     type_support->data, "msg", info->typesupport_identifier_);
 
   if (!Domain::getRegisteredType(participant, type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->type_support_)))
   {
-    info->type_support_ = _create_message_type_support(type_support->data,
+    info->type_support_ = rmw_fastrtps_impl::_create_message_type_support(type_support->data,
         info->typesupport_identifier_);
-    _register_type(participant, info->type_support_, info->typesupport_identifier_);
+    rmw_fastrtps_impl::_register_type(participant, info->type_support_,
+      info->typesupport_identifier_);
   }
 
   SubscriberAttributes subscriberParam;
@@ -1074,7 +809,7 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   }
 
   subscription = new rmw_subscription_t;
-  subscription->implementation_identifier = eprosima_fastrtps_identifier;
+  subscription->implementation_identifier = rmw_get_implementation_identifier();
   subscription->data = info;
   subscription->topic_name = reinterpret_cast<const char *>(new char[strlen(topic_name) + 1]);
   memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name) + 1);
@@ -1084,7 +819,7 @@ fail:
 
   if (info != nullptr) {
     if (info->type_support_ != nullptr) {
-      _delete_typesupport(info->type_support_, info->typesupport_identifier_);
+      rmw_fastrtps_impl::_delete_typesupport(info->type_support_, info->typesupport_identifier_);
     }
     delete info;
   }
@@ -1099,7 +834,7 @@ rmw_ret_t rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subsc
     return RMW_RET_ERROR;
   }
 
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -1109,7 +844,7 @@ rmw_ret_t rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subsc
     return RMW_RET_ERROR;
   }
 
-  if (subscription->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (subscription->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -1131,7 +866,8 @@ rmw_ret_t rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subsc
       }
 
       Participant * participant = impl->participant;
-      _unregister_type(participant, info->type_support_, info->typesupport_identifier_);
+      rmw_fastrtps_impl::_unregister_type(participant, info->type_support_,
+        info->typesupport_identifier_);
     }
     delete info;
   }
@@ -1149,7 +885,7 @@ rmw_ret_t rmw_take(const rmw_subscription_t * subscription, void * ros_message, 
 
   *taken = false;
 
-  if (subscription->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (subscription->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -1164,7 +900,7 @@ rmw_ret_t rmw_take(const rmw_subscription_t * subscription, void * ros_message, 
     info->listener_->data_taken();
 
     if (sinfo.sampleKind == ALIVE) {
-      _deserialize_ros_message(&buffer, ros_message, info->type_support_,
+      rmw_fastrtps_impl::_deserialize_ros_message(&buffer, ros_message, info->type_support_,
         info->typesupport_identifier_);
       *taken = true;
     }
@@ -1190,7 +926,7 @@ rmw_ret_t rmw_take_with_info(
 
   *taken = false;
 
-  if (subscription->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (subscription->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -1205,10 +941,10 @@ rmw_ret_t rmw_take_with_info(
     info->listener_->data_taken();
 
     if (sinfo.sampleKind == ALIVE) {
-      _deserialize_ros_message(&buffer, ros_message, info->type_support_,
+      rmw_fastrtps_impl::_deserialize_ros_message(&buffer, ros_message, info->type_support_,
         info->typesupport_identifier_);
       rmw_gid_t * sender_gid = &message_info->publisher_gid;
-      sender_gid->implementation_identifier = eprosima_fastrtps_identifier;
+      sender_gid->implementation_identifier = rmw_get_implementation_identifier();
       memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
       memcpy(sender_gid->data, &sinfo.sample_identity.writer_guid(),
         sizeof(eprosima::fastrtps::rtps::GUID_t));
@@ -1276,7 +1012,7 @@ private:
 rmw_guard_condition_t * rmw_create_guard_condition()
 {
   rmw_guard_condition_t * guard_condition_handle = new rmw_guard_condition_t;
-  guard_condition_handle->implementation_identifier = eprosima_fastrtps_identifier;
+  guard_condition_handle->implementation_identifier = rmw_get_implementation_identifier();
   guard_condition_handle->data = new GuardCondition();
   return guard_condition_handle;
 }
@@ -1297,7 +1033,7 @@ rmw_ret_t rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condit
 {
   assert(guard_condition_handle);
 
-  if (guard_condition_handle->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (guard_condition_handle->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("guard condition handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -1319,7 +1055,7 @@ rmw_create_waitset(size_t max_conditions)
     RMW_SET_ERROR_MSG("failed to allocate waitset");
     goto fail;
   }
-  waitset->implementation_identifier = eprosima_fastrtps_identifier;
+  waitset->implementation_identifier = rmw_get_implementation_identifier();
   waitset->data = rmw_allocate(sizeof(CustomWaitsetInfo));
   // This should default-construct the fields of CustomWaitsetInfo
   waitset_info = static_cast<CustomWaitsetInfo *>(waitset->data);
@@ -1352,7 +1088,7 @@ rmw_destroy_waitset(rmw_waitset_t * waitset)
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     waitset handle,
-    waitset->implementation_identifier, eprosima_fastrtps_identifier,
+    waitset->implementation_identifier, rmw_get_implementation_identifier(),
     return RMW_RET_ERROR)
 
   auto result = RMW_RET_OK;
@@ -1498,7 +1234,7 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   assert(service_name);
   assert(qos_policies);
 
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return NULL;
   }
@@ -1510,16 +1246,12 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   }
 
   Participant * participant = impl->participant;
-
-  const rosidl_service_type_support_t * type_support = get_service_typesupport_handle(
-    type_supports, rosidl_typesupport_introspection_c__identifier);
+  const rosidl_service_type_support_t * type_support =
+    rmw_fastrtps_impl::_get_service_typesupport_handle(
+    type_supports);
   if (!type_support) {
-    type_support = get_service_typesupport_handle(
-      type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
-    if (!type_support) {
-      RMW_SET_ERROR_MSG("type support not from this implementation");
-      return NULL;
-    }
+    RMW_SET_ERROR_MSG("type support not from this implementation");
+    return NULL;
   }
 
   info = new CustomClientInfo();
@@ -1530,29 +1262,35 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   const void * untyped_response_members;
 
   untyped_request_members =
-    get_request_ptr(type_support->data, info->typesupport_identifier_);
-  untyped_response_members = get_response_ptr(type_support->data,
+    rmw_fastrtps_impl::get_request_ptr(type_support->data, info->typesupport_identifier_);
+  untyped_response_members = rmw_fastrtps_impl::get_response_ptr(type_support->data,
       info->typesupport_identifier_);
 
-  std::string request_type_name = _create_type_name(untyped_request_members, "srv",
+  std::string request_type_name = rmw_fastrtps_impl::_create_type_name(untyped_request_members,
+      "srv",
       info->typesupport_identifier_);
-  std::string response_type_name = _create_type_name(untyped_response_members, "srv",
+  std::string response_type_name = rmw_fastrtps_impl::_create_type_name(untyped_response_members,
+      "srv",
       info->typesupport_identifier_);
 
   if (!Domain::getRegisteredType(participant, request_type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->request_type_support_)))
   {
-    info->request_type_support_ = _create_request_type_support(type_support->data,
-        info->typesupport_identifier_);
-    _register_type(participant, info->request_type_support_, info->typesupport_identifier_);
+    info->request_type_support_ = rmw_fastrtps_impl::_create_request_type_support(
+      type_support->data,
+      info->typesupport_identifier_);
+    rmw_fastrtps_impl::_register_type(participant, info->request_type_support_,
+      info->typesupport_identifier_);
   }
 
   if (!Domain::getRegisteredType(participant, response_type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->response_type_support_)))
   {
-    info->response_type_support_ = _create_response_type_support(type_support->data,
-        info->typesupport_identifier_);
-    _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
+    info->response_type_support_ = rmw_fastrtps_impl::_create_response_type_support(
+      type_support->data,
+      info->typesupport_identifier_);
+    rmw_fastrtps_impl::_register_type(participant, info->response_type_support_,
+      info->typesupport_identifier_);
   }
 
   SubscriberAttributes subscriberParam;
@@ -1596,7 +1334,7 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   info->writer_guid_ = info->request_publisher_->getGuid();
 
   client = new rmw_client_t;
-  client->implementation_identifier = eprosima_fastrtps_identifier;
+  client->implementation_identifier = rmw_get_implementation_identifier();
   client->data = info;
   client->service_name = reinterpret_cast<const char *>(rmw_allocate(strlen(service_name) + 1));
   if (!client->service_name) {
@@ -1624,11 +1362,13 @@ fail:
 
     if (impl) {
       if (info->request_type_support_ != nullptr) {
-        _unregister_type(participant, info->request_type_support_, info->typesupport_identifier_);
+        rmw_fastrtps_impl::_unregister_type(participant, info->request_type_support_,
+          info->typesupport_identifier_);
       }
 
       if (info->response_type_support_ != nullptr) {
-        _unregister_type(participant, info->response_type_support_, info->typesupport_identifier_);
+        rmw_fastrtps_impl::_unregister_type(participant, info->response_type_support_,
+          info->typesupport_identifier_);
       }
     } else {
       fprintf(stderr,
@@ -1651,7 +1391,7 @@ rmw_ret_t rmw_send_request(const rmw_client_t * client,
 
   rmw_ret_t returnedValue = RMW_RET_ERROR;
 
-  if (client->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (client->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -1662,7 +1402,7 @@ rmw_ret_t rmw_send_request(const rmw_client_t * client,
   eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastcdr::Cdr ser(buffer);
 
-  if (_serialize_ros_message(ros_request, ser, info->request_type_support_,
+  if (rmw_fastrtps_impl::_serialize_ros_message(ros_request, ser, info->request_type_support_,
     info->typesupport_identifier_))
   {
     eprosima::fastrtps::rtps::WriteParams wparams;
@@ -1693,7 +1433,7 @@ rmw_ret_t rmw_take_request(const rmw_service_t * service,
 
   *taken = false;
 
-  if (service->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (service->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("service handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -1704,7 +1444,8 @@ rmw_ret_t rmw_take_request(const rmw_service_t * service,
   CustomServiceRequest request = info->listener_->getRequest();
 
   if (request.buffer_ != nullptr) {
-    _deserialize_ros_message(request.buffer_, ros_request, info->request_type_support_,
+    rmw_fastrtps_impl::_deserialize_ros_message(request.buffer_, ros_request,
+      info->request_type_support_,
       info->typesupport_identifier_);
 
     // Get header
@@ -1733,7 +1474,7 @@ rmw_ret_t rmw_take_response(const rmw_client_t * client,
 
   *taken = false;
 
-  if (client->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (client->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("service handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -1744,7 +1485,8 @@ rmw_ret_t rmw_take_response(const rmw_client_t * client,
   CustomClientResponse response = info->listener_->getResponse();
 
   if (response.buffer_ != nullptr) {
-    _deserialize_ros_message(response.buffer_, ros_response, info->response_type_support_,
+    rmw_fastrtps_impl::_deserialize_ros_message(response.buffer_, ros_response,
+      info->response_type_support_,
       info->typesupport_identifier_);
 
     request_header->sequence_number = ((int64_t)response.sample_identity_.sequence_number().high) <<
@@ -1768,7 +1510,7 @@ rmw_ret_t rmw_send_response(const rmw_service_t * service,
 
   rmw_ret_t returnedValue = RMW_RET_ERROR;
 
-  if (service->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (service->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("service handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -1779,7 +1521,7 @@ rmw_ret_t rmw_send_response(const rmw_service_t * service,
   eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastcdr::Cdr ser(buffer);
 
-  _serialize_ros_message(ros_response, ser, info->response_type_support_,
+  rmw_fastrtps_impl::_serialize_ros_message(ros_response, ser, info->response_type_support_,
     info->typesupport_identifier_);
   eprosima::fastrtps::rtps::WriteParams wparams;
   memcpy(&wparams.related_sample_identity().writer_guid(), request_header->writer_guid,
@@ -1810,7 +1552,7 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   assert(service_name);
   assert(qos_policies);
 
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return NULL;
   }
@@ -1822,15 +1564,12 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   }
 
   Participant * participant = impl->participant;
-  const rosidl_service_type_support_t * type_support = get_service_typesupport_handle(
-    type_supports, rosidl_typesupport_introspection_c__identifier);
+  const rosidl_service_type_support_t * type_support =
+    rmw_fastrtps_impl::_get_service_typesupport_handle(
+    type_supports);
   if (!type_support) {
-    type_support = get_service_typesupport_handle(
-      type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
-    if (!type_support) {
-      RMW_SET_ERROR_MSG("type support not from this implementation");
-      return NULL;
-    }
+    RMW_SET_ERROR_MSG("type support not from this implementation");
+    return NULL;
   }
 
   info = new CustomServiceInfo();
@@ -1841,29 +1580,35 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   const void * untyped_response_members;
 
   untyped_request_members =
-    get_request_ptr(type_support->data, info->typesupport_identifier_);
-  untyped_response_members = get_response_ptr(type_support->data,
+    rmw_fastrtps_impl::get_request_ptr(type_support->data, info->typesupport_identifier_);
+  untyped_response_members = rmw_fastrtps_impl::get_response_ptr(type_support->data,
       info->typesupport_identifier_);
 
-  std::string request_type_name = _create_type_name(untyped_request_members, "srv",
+  std::string request_type_name = rmw_fastrtps_impl::_create_type_name(untyped_request_members,
+      "srv",
       info->typesupport_identifier_);
-  std::string response_type_name = _create_type_name(untyped_response_members, "srv",
+  std::string response_type_name = rmw_fastrtps_impl::_create_type_name(untyped_response_members,
+      "srv",
       info->typesupport_identifier_);
 
   if (!Domain::getRegisteredType(participant, request_type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->request_type_support_)))
   {
-    info->request_type_support_ = _create_request_type_support(type_support->data,
-        info->typesupport_identifier_);
-    _register_type(participant, info->request_type_support_, info->typesupport_identifier_);
+    info->request_type_support_ = rmw_fastrtps_impl::_create_request_type_support(
+      type_support->data,
+      info->typesupport_identifier_);
+    rmw_fastrtps_impl::_register_type(participant, info->request_type_support_,
+      info->typesupport_identifier_);
   }
 
   if (!Domain::getRegisteredType(participant, response_type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->response_type_support_)))
   {
-    info->response_type_support_ = _create_response_type_support(type_support->data,
-        info->typesupport_identifier_);
-    _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
+    info->response_type_support_ = rmw_fastrtps_impl::_create_response_type_support(
+      type_support->data,
+      info->typesupport_identifier_);
+    rmw_fastrtps_impl::_register_type(participant, info->response_type_support_,
+      info->typesupport_identifier_);
   }
 
   SubscriberAttributes subscriberParam;
@@ -1905,7 +1650,7 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   }
 
   service = new rmw_service_t;
-  service->implementation_identifier = eprosima_fastrtps_identifier;
+  service->implementation_identifier = rmw_get_implementation_identifier();
   service->data = info;
   service->service_name = reinterpret_cast<const char *>(
     rmw_allocate(strlen(service_name) + 1));
@@ -1933,11 +1678,13 @@ fail:
     }
 
     if (info->request_type_support_ != nullptr) {
-      _unregister_type(participant, info->request_type_support_, info->typesupport_identifier_);
+      rmw_fastrtps_impl::_unregister_type(participant, info->request_type_support_,
+        info->typesupport_identifier_);
     }
 
     if (info->response_type_support_ != nullptr) {
-      _unregister_type(participant, info->response_type_support_, info->typesupport_identifier_);
+      rmw_fastrtps_impl::_unregister_type(participant, info->response_type_support_,
+        info->typesupport_identifier_);
     }
 
     delete info;
@@ -1953,7 +1700,7 @@ rmw_ret_t rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
     RMW_SET_ERROR_MSG("service handle is null");
     return RMW_RET_ERROR;
   }
-  if (service->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (service->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -1971,11 +1718,11 @@ rmw_ret_t rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
     }
 
     if (info->request_type_support_ != nullptr) {
-      _unregister_type(info->participant_, info->request_type_support_,
+      rmw_fastrtps_impl::_unregister_type(info->participant_, info->request_type_support_,
         info->typesupport_identifier_);
     }
     if (info->response_type_support_ != nullptr) {
-      _unregister_type(info->participant_, info->response_type_support_,
+      rmw_fastrtps_impl::_unregister_type(info->participant_, info->response_type_support_,
         info->typesupport_identifier_);
     }
     delete info;
@@ -1992,7 +1739,7 @@ rmw_ret_t rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
     RMW_SET_ERROR_MSG("client handle is null");
     return RMW_RET_ERROR;
   }
-  if (client->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (client->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -2009,11 +1756,11 @@ rmw_ret_t rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
       delete info->listener_;
     }
     if (info->request_type_support_ != nullptr) {
-      _unregister_type(info->participant_, info->request_type_support_,
+      rmw_fastrtps_impl::_unregister_type(info->participant_, info->request_type_support_,
         info->typesupport_identifier_);
     }
     if (info->response_type_support_ != nullptr) {
-      _unregister_type(info->participant_, info->response_type_support_,
+      rmw_fastrtps_impl::_unregister_type(info->participant_, info->response_type_support_,
         info->typesupport_identifier_);
     }
     delete info;
@@ -2246,7 +1993,7 @@ rmw_get_topic_names_and_types(
   }
 
   // Get participant pointer from node
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -2422,7 +2169,7 @@ rmw_count_publishers(
     return RMW_RET_ERROR;
   }
   // Get participant pointer from node
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -2462,7 +2209,7 @@ rmw_count_subscribers(
     return RMW_RET_ERROR;
   }
   // Get participant pointer from node
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -2503,7 +2250,7 @@ rmw_service_server_is_available(
 
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     node handle,
-    node->implementation_identifier, eprosima_fastrtps_identifier,
+    node->implementation_identifier, rmw_get_implementation_identifier(),
     return RMW_RET_ERROR);
 
   if (!client) {
@@ -2577,7 +2324,7 @@ rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
     return RMW_RET_ERROR;
   }
 
-  if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (publisher->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -2606,7 +2353,7 @@ rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * re
     return RMW_RET_ERROR;
   }
 
-  if (gid1->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (gid1->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("guid1 handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -2616,7 +2363,7 @@ rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * re
     return RMW_RET_ERROR;
   }
 
-  if (gid2->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (gid2->implementation_identifier != rmw_get_implementation_identifier()) {
     RMW_SET_ERROR_MSG("gid1 handle not from this implementation");
     return RMW_RET_ERROR;
   }

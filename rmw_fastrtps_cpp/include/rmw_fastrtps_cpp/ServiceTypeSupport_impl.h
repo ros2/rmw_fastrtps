@@ -21,9 +21,8 @@
 #include <string>
 
 #include "rmw_fastrtps_cpp/ServiceTypeSupport.h"
-#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
-namespace rmw_fastrtps_cpp
+namespace rmw_fastrtps_common
 {
 
 template<typename MembersType>
@@ -71,6 +70,6 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
   }
 }
 
-}  // namespace rmw_fastrtps_cpp
+}  // namespace rmw_fastrtps_common
 
 #endif  // RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_IMPL_H_
