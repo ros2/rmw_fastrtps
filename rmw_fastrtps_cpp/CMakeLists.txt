@@ -36,6 +36,7 @@ find_package(rosidl_typesupport_cpp REQUIRED)
 ament_export_dependencies(rmw)
 ament_export_dependencies(rosidl_generator_c)
 ament_export_dependencies(rosidl_generator_cpp)
+ament_export_dependencies(rosidl_typesupport_c)
 ament_export_dependencies(rosidl_typesupport_cpp)
 ament_export_dependencies(rosidl_typesupport_introspection_c)
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
@@ -54,6 +55,7 @@ ament_target_dependencies(rmw_fastrtps_cpp
   "rmw"
   "rosidl_generator_c"
   "rosidl_generator_cpp"
+  "rosidl_typesupport_c"
   "rosidl_typesupport_cpp")
 
 configure_rmw_library(rmw_fastrtps_cpp)
@@ -64,8 +66,8 @@ if(NOT WIN32 AND NOT ANDROID)
 endif()
 
 register_rmw_implementation(
-  "c:rosidl_typesupport_introspection_c"
-  "cpp:rosidl_typesupport_introspection_cpp:rosidl_typesupport_cpp")
+  "c:rosidl_typesupport_c:rosidl_typesupport_introspection_c"
+  "cpp:rosidl_typesupport_cpp:rosidl_typesupport_introspection_cpp")
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
