@@ -1323,7 +1323,7 @@ rmw_create_waitset(size_t max_conditions)
   waitset->data = rmw_allocate(sizeof(CustomWaitsetInfo));
   // This should default-construct the fields of CustomWaitsetInfo
   waitset_info = static_cast<CustomWaitsetInfo *>(waitset->data);
-  RMW_TRY_PLACEMENT_NEW(waitset_info, waitset_info, goto fail, CustomWaitsetInfo,)
+  RMW_TRY_PLACEMENT_NEW(waitset_info, waitset_info, goto fail, CustomWaitsetInfo, )
   if (!waitset_info) {
     RMW_SET_ERROR_MSG("failed to construct waitset info struct");
     goto fail;
