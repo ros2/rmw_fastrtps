@@ -1622,9 +1622,7 @@ fail:
       delete info->listener_;
     }
 
-    CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
     if (impl) {
-      Participant * participant = impl->participant;
       if (info->request_type_support_ != nullptr) {
         _unregister_type(participant, info->request_type_support_, info->typesupport_identifier_);
       }
