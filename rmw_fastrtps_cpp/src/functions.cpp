@@ -725,14 +725,14 @@ rmw_create_secure_node(const char * name, size_t domain_id, const char * securit
   participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
   participantParam.rtps.setName(name);
 
-  PropertyPolicy property_policy;
-  property_policy.properties().emplace_back(
-    Property("dds.sec.auth.builtin.PKI-DH.identity_ca", security_files_paths[0]));
-  property_policy.properties().emplace_back(
-    Property("dds.sec.auth.builtin.PKI-DH.identity_certificate", security_files_paths[1]));
-  property_policy.properties().emplace_back(
-    Property("dds.sec.auth.builtin.PKI-DH.private_key", security_files_paths[2]));
-  participantParam.rtps.properties = property_policy;
+  // PropertyPolicy property_policy;
+  // property_policy.properties().emplace_back(
+  //   Property("dds.sec.auth.builtin.PKI-DH.identity_ca", security_files_paths[0]));
+  // property_policy.properties().emplace_back(
+  //   Property("dds.sec.auth.builtin.PKI-DH.identity_certificate", security_files_paths[1]));
+  // property_policy.properties().emplace_back(
+  //   Property("dds.sec.auth.builtin.PKI-DH.private_key", security_files_paths[2]));
+  // participantParam.rtps.properties = property_policy;
 
   return create_node(name, participantParam);
 }
