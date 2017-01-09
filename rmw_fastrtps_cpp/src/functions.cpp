@@ -709,7 +709,7 @@ rmw_node_t * rmw_create_node(const char * name, size_t domain_id)
 }
 
 rmw_node_t *
-rmw_create_secure_node(const char * name, size_t domain_id, char ** security_files_paths)
+rmw_create_secure_node(const char * name, size_t domain_id, const char * security_files_paths)
 {
   if (!name) {
     RMW_SET_ERROR_MSG("name is null");
