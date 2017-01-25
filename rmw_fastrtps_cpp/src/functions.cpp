@@ -2366,6 +2366,49 @@ rmw_destroy_topic_names_and_types(
 }
 
 rmw_ret_t
+rmw_get_node_names(
+  const rmw_node_t * node,
+  rmw_node_names_t * node_names)
+{
+  if (!node) {
+    RMW_SET_ERROR_MSG("null node handle");
+    return RMW_RET_ERROR;
+  }
+  if (rmw_check_zero_rmw_node_names(node_names) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
+
+  // Get participant pointer from node
+  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+    RMW_SET_ERROR_MSG("node handle not from this implementation");
+    return RMW_RET_ERROR;
+  }
+
+  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  Participant * participant = impl->participant;
+
+  auto participant_names = participant->getParticipantNames();
+  node_names->node_count = participant_names.size();
+  node_names->names = static_cast<char **>(rmw_allocate(node_names->node_count * sizeof(char *)));
+  for (size_t i = 0; i < participant_names.size(); ++i) {
+    node_names->names[i] = __local_strdup(participant_names[i].c_str());
+  }
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+rmw_destroy_node_names(
+  rmw_node_names_t * node_names)
+{
+  size_t name_count = node_names->node_count;
+  for (size_t i = 0; i < name_count; i++) {
+    rmw_free(node_names->names[i]);
+  }
+  rmw_free(node_names->names);
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
 rmw_count_publishers(
   const rmw_node_t * node,
   const char * topic_name,
