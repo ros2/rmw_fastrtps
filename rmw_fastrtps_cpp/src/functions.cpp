@@ -817,6 +817,8 @@ rmw_create_secure_node(const char * name, size_t domain_id, const char * node_se
         security_files_paths[2]));
     property_policy.properties().emplace_back(Property("dds.sec.crypto.plugin",
                 "builtin.AES-GCM-GMAC"));
+    property_policy.properties().emplace_back(
+        Property("rtps.participant.rtps_protection_kind", "ENCRYPT"));
     participantParam.rtps.properties = property_policy;
     fprintf(stderr, "all good creating secured FastRTPS participant!\n");
   } else {
@@ -933,6 +935,19 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   publisherParam.topic.topicName = topic_name;
   publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
   publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+  // see if our participant has a security property set
+  if (eprosima::fastrtps::PropertyPolicyHelper::find_property(
+      participant->getAttributes().rtps.properties,
+      std::string("dds.sec.crypto.plugin")))
+  {
+    // set the encryption property on the publisher
+    PropertyPolicy publisher_property_policy;
+    publisher_property_policy.properties().emplace_back("rtps.endpoint.submessage_protection_kind", "ENCRYPT");
+    publisher_property_policy.properties().emplace_back("rtps.endpoint.payload_protection_kind", "ENCRYPT");
+    publisherParam.properties = publisher_property_policy;
+    printf("publisher security property set\n");
+  }
 
   // 1 Heartbeat every 10ms
   // publisherParam.times.heartbeatPeriod.seconds = 0;
@@ -1190,6 +1205,19 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   subscriberParam.topic.topicDataType = type_name;
   subscriberParam.topic.topicName = topic_name;
   subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+  // see if our subscriber has a security property set
+  if (eprosima::fastrtps::PropertyPolicyHelper::find_property(
+      participant->getAttributes().rtps.properties,
+      std::string("dds.sec.crypto.plugin")))
+  {
+    printf("subscriber security property set\n");
+    // set the encryption property on the publisher
+    PropertyPolicy subscriber_property_policy;
+    subscriber_property_policy.properties().emplace_back("rtps.endpoint.submessage_protection_kind", "ENCRYPT");
+    subscriber_property_policy.properties().emplace_back("rtps.endpoint.payload_protection_kind", "ENCRYPT");
+    subscriberParam.properties = subscriber_property_policy;
+  }
 
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     goto fail;
