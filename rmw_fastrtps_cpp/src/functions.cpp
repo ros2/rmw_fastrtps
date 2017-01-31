@@ -729,12 +729,12 @@ bool file_exist_and_readable(const char * filepath)
   return true;
 }
 
-bool rmw_get_security_file_paths(std::array<std::string, 3> security_files_paths, const char * node_secure_root)
+bool rmw_get_security_file_paths(std::array<std::string, 3> &security_files_paths, const char * node_secure_root)
 {
   std::string ros_secure_root = std::string(node_secure_root);
 
   // here assume only 3 files for security
-  char * file_names[3] = {"ca.cert.pem", "cert.pem", "key.pem"};
+  const char * file_names[3] = {"ca.cert.pem", "cert.pem", "key.pem"};
   size_t num_files = 3;
 
   fprintf(stderr, "entering rmw_get_security_file_paths\n");
@@ -746,7 +746,7 @@ bool rmw_get_security_file_paths(std::array<std::string, 3> security_files_paths
     }
   }
 
-  char * file_prefix = "file://";
+  const char * file_prefix = "file://";
 
   ros_secure_root += "/";
   std::string tmpstr;
