@@ -796,24 +796,12 @@ rmw_create_secure_node(const char * name, size_t domain_id, const char * node_se
                 "builtin.PKI-DH"));
     property_policy.properties().emplace_back(
       Property("dds.sec.auth.builtin.PKI-DH.identity_ca",
-        // working !
-        // std::string("file:///home/mikael/work/ros2/secureros2_ws/sslstuff/maincacert.pem")));
-
-        // testing :S
         security_files_paths[0]));
     property_policy.properties().emplace_back(
       Property("dds.sec.auth.builtin.PKI-DH.identity_certificate",
-        // working !
-        // std::string("file:///home/mikael/work/ros2/secureros2_ws/sslstuff/mainpubcert.pem")));
-
-        // testing :S
         security_files_paths[1]));
     property_policy.properties().emplace_back(
       Property("dds.sec.auth.builtin.PKI-DH.private_key",
-        // working !
-        // std::string("file:///home/mikael/work/ros2/secureros2_ws/sslstuff/mainpubkey.pem")));
-
-        // testing :S
         security_files_paths[2]));
     property_policy.properties().emplace_back(Property("dds.sec.crypto.plugin",
                 "builtin.AES-GCM-GMAC"));
