@@ -784,6 +784,9 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
 
   size_t initial_alignment = current_alignment;
 
+  // Encapsulation
+  current_alignment += 4;
+
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     const auto * member = members->members_ + i;
 
@@ -891,6 +894,9 @@ bool TypeSupport<MembersType>::serializeROSmessage(
 {
   assert(ros_message);
 
+  // Serialize encapsulation
+  ser.serialize_encapsulation();
+
   if (members_->member_count_ != 0) {
     TypeSupport::serializeROSmessage(ser, members_, ros_message);
   } else {
@@ -907,7 +913,11 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
   assert(buffer);
   assert(ros_message);
 
-  eprosima::fastcdr::Cdr deser(*buffer);
+  eprosima::fastcdr::Cdr deser(*buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
+    eprosima::fastcdr::Cdr::DDS_CDR);
+
+  // Deserialize encapsulation.
+  deser.read_encapsulation();
 
   if (members_->member_count_ != 0) {
     TypeSupport::deserializeROSmessage(deser, members_, ros_message, false);
@@ -936,7 +946,7 @@ bool TypeSupport<MembersType>::serialize(
   eprosima::fastcdr::Cdr * ser = static_cast<eprosima::fastcdr::Cdr *>(data);
   if (payload->max_size >= ser->getSerializedDataLength()) {
     payload->length = static_cast<uint32_t>(ser->getSerializedDataLength());
-    payload->encapsulation = CDR_LE;
+    payload->encapsulation = ser->endianness() == eprosima::fastcdr::Cdr::BIG_ENDIANNESS ? CDR_BE : CDR_LE;
     memcpy(payload->data, ser->getBufferPointer(), ser->getSerializedDataLength());
     return true;
   }
