@@ -20,11 +20,10 @@
 #include <cassert>
 
 #include "TypeSupport.h"
-#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
 struct CustomServiceInfo;
 
-namespace rmw_fastrtps_cpp
+namespace rmw_fastrtps_common
 {
 
 template<typename MembersType>
@@ -48,7 +47,7 @@ public:
   explicit ResponseTypeSupport(const ServiceMembersType * members);
 };
 
-}  // namespace rmw_fastrtps_cpp
+}  // namespace rmw_fastrtps_common
 
 #include "ServiceTypeSupport_impl.h"
 

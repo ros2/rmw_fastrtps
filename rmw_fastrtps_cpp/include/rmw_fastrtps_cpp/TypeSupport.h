@@ -25,81 +25,13 @@
 #include <cassert>
 #include <string>
 
-#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
-#include "rosidl_typesupport_introspection_cpp/identifier.hpp"
-#include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
-#include "rosidl_typesupport_introspection_cpp/service_introspection.hpp"
-#include "rosidl_typesupport_introspection_cpp/visibility_control.h"
-
-#include "rosidl_typesupport_introspection_c/field_types.h"
-#include "rosidl_typesupport_introspection_c/identifier.h"
-#include "rosidl_typesupport_introspection_c/message_introspection.h"
-#include "rosidl_typesupport_introspection_c/service_introspection.h"
-#include "rosidl_typesupport_introspection_c/visibility_control.h"
-
-namespace rmw_fastrtps_cpp
+namespace rmw_fastrtps_common
 {
 
 // Helper class that uses template specialization to read/write string types to/from a
 // eprosima::fastcdr::Cdr
 template<typename MembersType>
-struct StringHelper;
-
-// For C introspection typesupport we create intermediate instances of std::string so that
-// eprosima::fastcdr::Cdr can handle the string properly.
-template<>
-struct StringHelper<rosidl_typesupport_introspection_c__MessageMembers>
-{
-  using type = rosidl_generator_c__String;
-
-  static std::string convert_to_std_string(void * data)
-  {
-    auto c_string = static_cast<rosidl_generator_c__String *>(data);
-    if (!c_string) {
-      fprintf(stderr, "Failed to cast data as rosidl_generator_c__String\n");
-      return "";
-    }
-    if (!c_string->data) {
-      fprintf(stderr, "rosidl_generator_c_String had invalid data\n");
-      return "";
-    }
-    return std::string(c_string->data);
-  }
-
-  static std::string convert_to_std_string(rosidl_generator_c__String & data)
-  {
-    return std::string(data.data);
-  }
-
-  static void assign(eprosima::fastcdr::Cdr & deser, void * field, bool)
-  {
-    std::string str;
-    deser >> str;
-    rosidl_generator_c__String * c_str = static_cast<rosidl_generator_c__String *>(field);
-    rosidl_generator_c__String__assign(c_str, str.c_str());
-  }
-};
-
-// For C++ introspection typesupport we just reuse the same std::string transparently.
-template<>
-struct StringHelper<rosidl_typesupport_introspection_cpp::MessageMembers>
-{
-  using type = std::string;
-
-  static std::string & convert_to_std_string(void * data)
-  {
-    return *(static_cast<std::string *>(data));
-  }
-
-  static void assign(eprosima::fastcdr::Cdr & deser, void * field, bool call_new)
-  {
-    std::string & str = *(std::string *)field;
-    if (call_new) {
-      new(&str) std::string;
-    }
-    deser >> str;
-  }
-};
+struct TypeSupportHelper;
 
 template<typename MembersType>
 class TypeSupport : public eprosima::fastrtps::TopicDataType
@@ -134,8 +66,6 @@ private:
     void * ros_message, bool call_new);
 };
 
-}  // namespace rmw_fastrtps_cpp
-
-#include "TypeSupport_impl.h"
+}  // namespace rmw_fastrtps_common
 
 #endif  // RMW_FASTRTPS_CPP__TYPESUPPORT_H_
