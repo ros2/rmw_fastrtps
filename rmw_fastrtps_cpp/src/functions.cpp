@@ -618,15 +618,15 @@ rmw_ret_t rmw_init()
   return RMW_RET_OK;
 }
 
-rmw_node_t * rmw_create_node(const char * name, const char * name_space, size_t domain_id)
+rmw_node_t * rmw_create_node(const char * name, const char * namespace_, size_t domain_id)
 {
   if (!name) {
     RMW_SET_ERROR_MSG("name is null");
     return NULL;
   }
 
-  if (!name_space) {
-    RMW_SET_ERROR_MSG("name_space is null");
+  if (!namespace_) {
+    RMW_SET_ERROR_MSG("namespace_ is null");
     return NULL;
   }
 
@@ -677,15 +677,15 @@ rmw_node_t * rmw_create_node(const char * name, const char * name_space, size_t 
   }
   memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
 
-  node_handle->name_space =
-    static_cast<const char *>(malloc(sizeof(char) * strlen(name_space) + 1));
-  if (!node_handle->name_space) {
+  node_handle->namespace_ =
+    static_cast<const char *>(malloc(sizeof(char) * strlen(namespace_) + 1));
+  if (!node_handle->namespace_) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
     free(const_cast<char *>(node_handle->name));
     free(static_cast<void *>(node_handle));
     return NULL;
   }
-  memcpy(const_cast<char *>(node_handle->name_space), name_space, strlen(name_space) + 1);
+  memcpy(const_cast<char *>(node_handle->namespace_), namespace_, strlen(namespace_) + 1);
 
   topicnamesandtypesReaderListener * tnat_1 = new topicnamesandtypesReaderListener(
     graph_guard_condition);
@@ -751,9 +751,9 @@ rmw_ret_t rmw_destroy_node(rmw_node_t * node)
     node->name = nullptr;
   }
 
-  if (node->name_space) {
-    free(const_cast<char *>(node->name_space));
-    node->name_space = nullptr;
+  if (node->namespace_) {
+    free(const_cast<char *>(node->namespace_));
+    node->namespace_ = nullptr;
   }
 
   free(static_cast<void *>(node));
