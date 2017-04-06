@@ -302,7 +302,7 @@ void serialize_array(
     ser.serializeArray(static_cast<T *>(field), member->array_size_);
   } else {
     auto & data = *reinterpret_cast<typename GenericCArray<T>::type *>(field);
-    ser.serializeSequence(static_cast<T *>(data.data), data.size);
+    ser.serializeSequence(reinterpret_cast<T *>(data.data), data.size);
   }
 }
 
@@ -551,7 +551,7 @@ void deserialize_array(
     int32_t dsize = 0;
     deser >> dsize;
     GenericCArray<T>::init(&data, dsize);
-    deser.deserializeArray(static_cast<T *>(data.data), dsize);
+    deser.deserializeArray(reinterpret_cast<T *>(data.data), dsize);
   }
 }
 
