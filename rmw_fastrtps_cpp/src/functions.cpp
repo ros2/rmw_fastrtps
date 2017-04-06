@@ -14,6 +14,7 @@
 
 #include <cassert>
 #include <condition_variable>
+#include <functional>
 #include <limits>
 #include <list>
 #include <map>
@@ -22,11 +23,18 @@
 #include <set>
 #include <string>
 
+#include "boost/date_time.hpp"
+#include "boost/interprocess/allocators/allocator.hpp"
+#include "boost/interprocess/containers/set.hpp"
+#include "boost/interprocess/managed_shared_memory.hpp"
+#include "boost/interprocess/sync/named_mutex.hpp"
+
 #include "rmw/allocators.h"
 #include "rmw/rmw.h"
 #include "rmw/error_handling.h"
 #include "rmw/sanity_checks.h"
 #include "rmw/impl/cpp/macros.hpp"
+#include "rmw/impl/getenv.h"
 #include "rmw_fastrtps_cpp/MessageTypeSupport.h"
 #include "rmw_fastrtps_cpp/ServiceTypeSupport.h"
 
@@ -40,6 +48,7 @@
 #include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/subscriber/SampleInfo.h"
 #include "fastrtps/attributes/SubscriberAttributes.h"
+#include "fastrtps/utils/IPFinder.h"
 
 #include "fastrtps/rtps/RTPSDomain.h"
 #include "fastrtps/rtps/builtin/data/WriterProxyData.h"
@@ -618,6 +627,93 @@ rmw_ret_t rmw_init()
   return RMW_RET_OK;
 }
 
+inline
+int32_t
+get_loaned_shared_participant_id()
+{
+  namespace bip = boost::interprocess;
+  namespace bpt = boost::posix_time;
+  using bip::managed_shared_memory;
+  using bip::named_mutex;
+  using bip::open_or_create;
+
+  // Create and acquire the mutex.
+  named_mutex named_mtx {open_or_create, "rmw_fastrtps_cpp_pid_mutex"};
+  while (!named_mtx.timed_lock(bpt::microsec_clock::universal_time() + bpt::seconds(1))) {
+    fprintf(stderr, "WARNING: failed to lock the named_mutex while getting participant ID\n");
+    fprintf(stderr, "  Note: The lock can get stuck when a previous program crashes.\n");
+    fprintf(stderr, "  Note: If this message appears repeatedly, something else is wrong.\n");
+    fprintf(stderr, "  Could not get the lock after waiting 1 second, unlocking to retry.\n");
+    named_mtx.unlock();
+  }
+
+  // Create or open the shared memory and find an unused participant ID.
+  managed_shared_memory segment {open_or_create, "rmw_fastrtps_cpp", 1024};
+  typedef bip::allocator<int32_t, managed_shared_memory::segment_manager> Int32ShmemAllocator;
+  typedef bip::set<int32_t, std::less<int32_t>, Int32ShmemAllocator> Int32ShmemSet;
+
+  const Int32ShmemAllocator alloc_inst(segment.get_segment_manager());
+  Int32ShmemSet * participant_ids =
+    segment.find_or_construct<Int32ShmemSet>("participant_ids")(alloc_inst);
+
+  int32_t candidate_participant_id = 0;
+  while (participant_ids->find(candidate_participant_id) != participant_ids->end()) {
+    candidate_participant_id += 1;
+  }
+  participant_ids->insert(candidate_participant_id);
+
+  // Release the mutex.
+  named_mtx.unlock();
+  return candidate_participant_id;
+}
+
+inline
+void
+return_loaned_shared_participant_id(int32_t participant_id)
+{
+  namespace bip = boost::interprocess;
+  namespace bpt = boost::posix_time;
+  using bip::managed_shared_memory;
+  using bip::named_mutex;
+  using bip::open_or_create;
+  using bip::shared_memory_object;
+
+  // Create and acquire the mutex.
+  named_mutex named_mtx {open_or_create, "rmw_fastrtps_cpp_pid_mutex"};
+  while (!named_mtx.timed_lock(bpt::microsec_clock::universal_time() + bpt::seconds(1))) {
+    fprintf(stderr, "WARNING: failed to lock the named_mutex while getting participant ID\n");
+    fprintf(stderr, "  Note: The lock can get stuck when a previous program crashes.\n");
+    fprintf(stderr, "  Note: If this message appears repeatedly, something else is wrong.\n");
+    fprintf(stderr, "  Could not get the lock after waiting 1 second, unlocking to retry.\n");
+    named_mtx.unlock();
+  }
+
+  // Create or open the shared memory and return the participant ID.
+  managed_shared_memory segment {open_or_create, "rmw_fastrtps_cpp", 1024};
+  typedef bip::allocator<int32_t, managed_shared_memory::segment_manager> Int32ShmemAllocator;
+  typedef bip::set<int32_t, std::less<int32_t>, Int32ShmemAllocator> Int32ShmemSet;
+
+  const Int32ShmemAllocator alloc_inst(segment.get_segment_manager());
+  Int32ShmemSet * participant_ids =
+    segment.find_or_construct<Int32ShmemSet>("participant_ids")(alloc_inst);
+
+  if (participant_ids->find(participant_id) == participant_ids->end()) {
+    fprintf(stderr,
+      "Trying to return a participant id (%d) which is not currently loaned.\n", participant_id);
+    return;
+  }
+  participant_ids->erase(participant_id);
+
+  // If the loaned participant ids is empty, no one else is using it, remove it.
+  if (participant_ids->empty()) {
+    // Nobody is using it anymore, remove the memory object.
+    shared_memory_object::remove("rmw_fastrtps_cpp");
+  }
+
+  // Release the mutex.
+  named_mtx.unlock();
+}
+
 rmw_node_t * rmw_create_node(const char * name, size_t domain_id)
 {
   if (!name) {
@@ -630,6 +726,49 @@ rmw_node_t * rmw_create_node(const char * name, size_t domain_id)
   ParticipantAttributes participantParam;
   participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
   participantParam.rtps.setName(name);
+
+  {
+    // fast-rtps does not make system wide, unique participant id's,
+    // so we ensure one for them.
+    // TODO(wjwwood): remove this when Fast-RTPS creates unique participant id's.
+    //   also remove the *_loaned_shared_participant_id() functions and uses
+    participantParam.rtps.participantID = get_loaned_shared_participant_id();
+  }
+  {
+    // This code is taken from the RTPSParticipantImpl.cpp file in fastrtps
+    // because there is no other way to get the "default unicast" locators.
+    // By default if the default unicast AND multicast locators are empty, then
+    // they are filled with BOTH the system default unicast and multicast
+    // locators, but what we want is to only have the system default unicast
+    // locators and no multicast locators in order to disable multicast.
+    // So to do that we must fill the default unicast locator list with
+    // something and we get that "something" by copying the code which produces
+    // them in the participant impl.
+    // TODO(wjwwood): remove this once Fast-RTPS can better control multicast
+    //   or can provide the default locators by API calls.
+    const char * disable_multicast_value;
+    rmw_ret_t ret = rmw_impl_getenv("RMW_FASTRTPS_DISABLE_MULTICAST", &disable_multicast_value);
+    if (ret != RMW_RET_OK) {
+      // rmw error already set
+      return NULL;
+    }
+    if (std::string(disable_multicast_value) != "") {
+      // Disable multicast by explicitly listing only unicast locators.
+      LocatorList_t loclist;
+      IPFinder::getIP4Address(&loclist);
+      for (auto it = loclist.begin(); it != loclist.end(); ++it) {
+        (*it).port = (
+          participantParam.rtps.port.portBase +
+          participantParam.rtps.port.domainIDGain * participantParam.rtps.builtin.domainId +
+          participantParam.rtps.port.offsetd3 +
+          participantParam.rtps.port.participantIDGain * participantParam.rtps.participantID
+          );
+        (*it).kind = LOCATOR_KIND_UDPv4;
+
+        participantParam.rtps.defaultUnicastLocatorList.push_back((*it));
+      }
+    }
+  }
 
   Participant * participant = Domain::createParticipant(participantParam);
   if (!participant) {
@@ -715,6 +854,7 @@ rmw_ret_t rmw_destroy_node(rmw_node_t * node)
   }
 
   Participant * participant = impl->participant;
+  int32_t participant_id = participant->getAttributes().rtps.participantID;
 
   std::pair<StatefulReader *, StatefulReader *> EDPReaders = participant->getEDPReaders();
   EDPReaders.first->setListener(nullptr);
@@ -729,6 +869,7 @@ rmw_ret_t rmw_destroy_node(rmw_node_t * node)
   }
 
   Domain::removeParticipant(participant);
+  return_loaned_shared_participant_id(participant_id);
 
   delete (impl);
   if (node->name) {
