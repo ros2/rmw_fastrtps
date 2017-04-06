@@ -14,9 +14,11 @@
 
 #include <cassert>
 #include <condition_variable>
+#include <cstdlib>
 #include <limits>
 #include <list>
 #include <map>
+#include <memory>
 #include <mutex>
 #include <utility>
 #include <set>
@@ -27,6 +29,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/sanity_checks.h"
 #include "rmw/impl/cpp/macros.hpp"
+#include "rmw/impl/getenv.h"
 #include "rmw_fastrtps_cpp/MessageTypeSupport.h"
 #include "rmw_fastrtps_cpp/ServiceTypeSupport.h"
 
@@ -40,6 +43,8 @@
 #include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/subscriber/SampleInfo.h"
 #include "fastrtps/attributes/SubscriberAttributes.h"
+#include "fastrtps/transport/UDPv4TransportDescriptor.h"
+#include "fastrtps/transport/UDPv6TransportDescriptor.h"
 
 #include "fastrtps/rtps/RTPSDomain.h"
 #include "fastrtps/rtps/builtin/data/WriterProxyData.h"
@@ -630,6 +635,35 @@ rmw_node_t * rmw_create_node(const char * name, size_t domain_id)
   ParticipantAttributes participantParam;
   participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
   participantParam.rtps.setName(name);
+
+#ifdef RMW_FASTRTPS_FAST_RTPS_HAS_TTL_IN_UDP_DESC
+  // Disable the built in transport configurations.
+  participantParam.rtps.useBuiltinTransports = false;
+
+  // Get the TTL level from the RMW_FASTRTPS_TTL_LEVEL env variable if set.
+  const char * rmw_fastrtps_ttl_level_env_value = nullptr;
+  rmw_ret_t rmw_ret = rmw_impl_getenv("RMW_FASTRTPS_TTL_LEVEL", &rmw_fastrtps_ttl_level_env_value);
+  if (rmw_ret != RMW_RET_OK) {
+    return NULL;
+  }
+  auto ttl = 0;  // default to 0
+  std::string rmw_fastrtps_ttl_level_str(rmw_fastrtps_ttl_level_env_value);
+  if (rmw_fastrtps_ttl_level_str != "" && rmw_fastrtps_ttl_level_str != "0") {
+    ttl = std::atoi(rmw_fastrtps_ttl_level_str.c_str());
+  }
+
+  // Create a UDPv4 tranport descriptor and explcitly set the TTL.
+  // Then add it to the list of user transports.
+  auto udpv4_transport_desc = std::make_shared<UDPv4TransportDescriptor>();
+  udpv4_transport_desc->TTL = ttl;
+  participantParam.rtps.userTransports.push_back(udpv4_transport_desc);
+
+  // Create a UDPv6 tranport descriptor and explcitly set the TTL.
+  // Then add it to the list of user transports.
+  auto udpv6_transport_desc = std::make_shared<UDPv6TransportDescriptor>();
+  udpv6_transport_desc->TTL = ttl;
+  participantParam.rtps.userTransports.push_back(udpv6_transport_desc);
+#endif
 
   Participant * participant = Domain::createParticipant(participantParam);
   if (!participant) {

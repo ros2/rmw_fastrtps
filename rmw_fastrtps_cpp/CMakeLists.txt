@@ -40,6 +40,29 @@ ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 
 include_directories(include)
 
+# try to compile some test code which uses the TTL field in the UDP
+# transport descriptions so that we can know if we can use it in this package
+try_compile(FAST_RTPS_HAS_TTL_IN_UDP_DESC
+  "${CMAKE_BINARY_DIR}/temp"
+  "${CMAKE_SOURCE_DIR}/compile_tests/test_for_ttl_in_udp_desc.cpp"
+  OUTPUT_VARIABLE FAST_RTPS_HAS_TTL_IN_UDP_DESC__STDOUT
+  LINK_LIBRARIES
+    fastrtps
+  CMAKE_FLAGS
+    "-DINCLUDE_DIRECTORIES=${fastrtps_INCLUDE_DIR}")
+
+if(FAST_RTPS_HAS_TTL_IN_UDP_DESC)
+  message(STATUS "Fast-RTPS has the feature required to default the multicast TTL to 0.")
+  add_definitions(-DRMW_FASTRTPS_FAST_RTPS_HAS_TTL_IN_UDP_DESC)
+else()
+  message(WARNING "Fast-RTPS does not have the feature required to default "
+                  "the multicast TTL to 0, the multicast TTL will default to 1.")
+  # uncomment lines below for debugging the try compile
+  # message(STATUS "\n>>>>>> Begin output from try_compile:")
+  # message(${FAST_RTPS_HAS_TTL_IN_UDP_DESC__STDOUT})
+  # message(STATUS "\n>>>>>> End output from try_compile.")
+endif()
+
 add_library(rmw_fastrtps_cpp SHARED
   src/functions.cpp
 )
