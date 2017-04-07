@@ -34,6 +34,7 @@ find_package(rosidl_generator_cpp REQUIRED)
 find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 
+ament_export_dependencies(c_utilities)
 ament_export_dependencies(rmw)
 ament_export_dependencies(rosidl_generator_c)
 ament_export_dependencies(rosidl_generator_cpp)
