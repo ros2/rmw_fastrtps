@@ -639,7 +639,7 @@ rmw_node_t * rmw_create_node(const char * name, const char * namespace_, size_t 
   rmw_node_t * node_handle = nullptr;
   topicnamesandtypesReaderListener * tnat_1 = nullptr;
   topicnamesandtypesReaderListener * tnat_2 = nullptr;
-  std::pair<StatefulReader *, StatefulReader *> EDPReaders;
+  std::pair<StatefulReader *, StatefulReader *> edp_readers;
 
   ParticipantAttributes participantParam;
   participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
@@ -697,8 +697,8 @@ rmw_node_t * rmw_create_node(const char * name, const char * namespace_, size_t 
   node_impl->secondarySubListener = tnat_1;
   node_impl->secondaryPubListener = tnat_2;
 
-  EDPReaders = participant->getEDPReaders();
-  if (!(EDPReaders.first->setListener(tnat_1) & EDPReaders.second->setListener(tnat_2))) {
+  edp_readers = participant->getEDPReaders();
+  if (!(edp_readers.first->setListener(tnat_1) & edp_readers.second->setListener(tnat_2))) {
     RMW_SET_ERROR_MSG("Failed to attach ROS related logic to the Participant");
     goto fail;
   }
