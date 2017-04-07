@@ -709,7 +709,9 @@ fail:
   delete tnat_1;
   if (node_handle) {
     free(const_cast<char *>(node_handle->namespace_));
+    node_handle->namespace_ = nullptr;
     free(const_cast<char *>(node_handle->name));
+    node_handle->name = nullptr;
   }
   free(node_handle);
   delete node_impl;
@@ -759,10 +761,10 @@ rmw_ret_t rmw_destroy_node(rmw_node_t * node)
   }
   delete impl->secondaryPubListener;
 
-  if (node) {
-    free(const_cast<char *>(node->name));
-    free(const_cast<char *>(node->namespace_));
-  }
+  free(const_cast<char *>(node->name));
+  node->name = nullptr;
+  free(const_cast<char *>(node->namespace_));
+  node->namespace_ = nullptr;
   free(static_cast<void *>(node));
 
   delete impl;
