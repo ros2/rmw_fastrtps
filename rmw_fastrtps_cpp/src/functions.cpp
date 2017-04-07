@@ -799,27 +799,37 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name, const rmw_qos_profile_t * qos_policies)
 {
-  rmw_publisher_t * rmw_publisher = nullptr;
-  const GUID_t * guid = nullptr;
-  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
-
-  assert(node);
-  assert(type_supports);
-  assert(topic_name);
-  assert(qos_policies);
+  if (!node) {
+    RMW_SET_ERROR_MSG("node handle is null");
+    return NULL;
+  }
 
   if (node->implementation_identifier != eprosima_fastrtps_identifier) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return NULL;
   }
 
-  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  if (!topic_name || strlen(topic_name) == 0) {
+    RMW_SET_ERROR_MSG("publisher topic is null or empty string");
+  }
+
+  if (!qos_policies) {
+    RMW_SET_ERROR_MSG("qos_profile is null");
+    return NULL;
+  }
+
+  const CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
   if (!impl) {
     RMW_SET_ERROR_MSG("node impl is null");
     return NULL;
   }
 
   Participant * participant = impl->participant;
+  if (!participant) {
+    RMW_SET_ERROR_MSG("participant handle is null");
+    return NULL;
+  }
+
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
   if (!type_support) {
@@ -831,11 +841,18 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
     }
   }
 
-  CustomPublisherInfo * info = new CustomPublisherInfo();
+  CustomPublisherInfo * info = nullptr;
+  rmw_publisher_t * rmw_publisher = nullptr;
+  PublisherAttributes publisherParam;
+  const GUID_t * guid = nullptr;
+  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+
+  // TODO(karsten1987) Verify consequences for std::unique_ptr?
+  info = new CustomPublisherInfo();
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-  std::string type_name = _create_type_name(type_support->data, "msg",
-      info->typesupport_identifier_);
+  std::string type_name = _create_type_name(
+    type_support->data, "msg", info->typesupport_identifier_);
   if (!Domain::getRegisteredType(participant, type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->type_support_)))
   {
@@ -844,7 +861,6 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
     _register_type(participant, info->type_support_, info->typesupport_identifier_);
   }
 
-  PublisherAttributes publisherParam;
   publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
   publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   publisherParam.topic.topicKind = NO_KEY;
@@ -877,6 +893,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   // publisherParam.throughputController = throughputController;
 
   if (!get_datawriter_qos(*qos_policies, publisherParam)) {
+    RMW_SET_ERROR_MSG("failed to get datawriter qos");
     goto fail;
   }
 
@@ -895,9 +912,17 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
 
   memset(info->publisher_gid.data, 0, RMW_GID_STORAGE_SIZE);
   guid = &info->publisher_->getGuid();
+  if (!guid) {
+    RMW_SET_ERROR_MSG("no guid found for publisher");
+    goto fail;
+  }
   memcpy(info->publisher_gid.data, guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
 
-  rmw_publisher = new rmw_publisher_t;
+  rmw_publisher = rmw_publisher_allocate();
+  if (!rmw_publisher) {
+    RMW_SET_ERROR_MSG("failed to allocate publisher");
+    goto fail;
+  }
   rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_publisher->data = info;
   rmw_publisher->topic_name = reinterpret_cast<const char *>(new char[strlen(topic_name) + 1]);
@@ -905,9 +930,13 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   return rmw_publisher;
 
 fail:
-  if (info != nullptr) {
+  if (info) {
     _delete_typesupport(info->type_support_, info->typesupport_identifier_);
     delete info;
+  }
+
+  if (rmw_publisher) {
+    rmw_publisher_free(rmw_publisher);
   }
 
   utilities_string_array_fini(&name_tokens);
@@ -1077,27 +1106,37 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name, const rmw_qos_profile_t * qos_policies, bool ignore_local_publications)
 {
-  (void)ignore_local_publications;
-  rmw_subscription_t * subscription = nullptr;
-  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
-
-  assert(node);
-  assert(type_supports);
-  assert(topic_name);
-  assert(qos_policies);
+  if (!node) {
+    RMW_SET_ERROR_MSG("node handle is null");
+    return NULL;
+  }
 
   if (node->implementation_identifier != eprosima_fastrtps_identifier) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return NULL;
   }
 
-  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  if (!topic_name || strlen(topic_name) == 0) {
+    RMW_SET_ERROR_MSG("publisher topic is null or empty string");
+  }
+
+  if (!qos_policies) {
+    RMW_SET_ERROR_MSG("qos_profile is null");
+    return NULL;
+  }
+
+  const CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
   if (!impl) {
     RMW_SET_ERROR_MSG("node impl is null");
     return NULL;
   }
 
   Participant * participant = impl->participant;
+  if (!participant) {
+    RMW_SET_ERROR_MSG("participant handle is null");
+    return NULL;
+  }
+
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
   if (!type_support) {
@@ -1109,12 +1148,17 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
     }
   }
 
-  CustomSubscriberInfo * info = new CustomSubscriberInfo();
+  (void)ignore_local_publications;
+  CustomSubscriberInfo * info = nullptr;
+  rmw_subscription_t * rmw_subscription = nullptr;
+  SubscriberAttributes subscriberParam;
+  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+
+  info = new CustomSubscriberInfo();
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
   std::string type_name = _create_type_name(
     type_support->data, "msg", info->typesupport_identifier_);
-
   if (!Domain::getRegisteredType(participant, type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->type_support_)))
   {
@@ -1123,7 +1167,6 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
     _register_type(participant, info->type_support_, info->typesupport_identifier_);
   }
 
-  SubscriberAttributes subscriberParam;
   subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   subscriberParam.topic.topicKind = NO_KEY;
   subscriberParam.topic.topicDataType = type_name;
@@ -1147,6 +1190,7 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   fprintf(stderr, "New topic: %s\n", subscriberParam.topic.topicName.c_str());
 
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
+    RMW_SET_ERROR_MSG("failed to get datareader qos");
     goto fail;
   }
 
@@ -1158,13 +1202,17 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
     goto fail;
   }
 
-  subscription = new rmw_subscription_t;
-  subscription->implementation_identifier = eprosima_fastrtps_identifier;
-  subscription->data = info;
-  subscription->topic_name = reinterpret_cast<const char *>(new char[strlen(topic_name) + 1]);
-  memcpy(const_cast<char *>(subscription->topic_name), topic_name, strlen(topic_name) + 1);
+  rmw_subscription = rmw_subscription_allocate();
+  if (!rmw_subscription) {
+    RMW_SET_ERROR_MSG("failed to allocate subscription");
+    goto fail;
+  }
+  rmw_subscription->implementation_identifier = eprosima_fastrtps_identifier;
+  rmw_subscription->data = info;
+  rmw_subscription->topic_name = reinterpret_cast<const char *>(new char[strlen(topic_name) + 1]);
+  memcpy(const_cast<char *>(rmw_subscription->topic_name), topic_name, strlen(topic_name) + 1);
+  return rmw_subscription;
 
-  return subscription;
 fail:
 
   if (info != nullptr) {
@@ -1172,6 +1220,10 @@ fail:
       _delete_typesupport(info->type_support_, info->typesupport_identifier_);
     }
     delete info;
+  }
+
+  if (rmw_subscription) {
+    rmw_subscription_free(rmw_subscription);
   }
 
   utilities_string_array_fini(&name_tokens);
@@ -1577,27 +1629,36 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   const rosidl_service_type_support_t * type_supports,
   const char * service_name, const rmw_qos_profile_t * qos_policies)
 {
-  CustomClientInfo * info = nullptr;
-  rmw_client_t * client = nullptr;
-  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
-
-  assert(node);
-  assert(type_supports);
-  assert(service_name);
-  assert(qos_policies);
+  if (!node) {
+    RMW_SET_ERROR_MSG("node handle is null");
+    return NULL;
+  }
 
   if (node->implementation_identifier != eprosima_fastrtps_identifier) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return NULL;
   }
 
-  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  if (!service_name || strlen(service_name) == 0) {
+    RMW_SET_ERROR_MSG("publisher topic is null or empty string");
+  }
+
+  if (!qos_policies) {
+    RMW_SET_ERROR_MSG("qos_profile is null");
+    return NULL;
+  }
+
+  const CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
   if (!impl) {
     RMW_SET_ERROR_MSG("node impl is null");
     return NULL;
   }
 
   Participant * participant = impl->participant;
+  if (!participant) {
+    RMW_SET_ERROR_MSG("participant handle is null");
+    return NULL;
+  }
 
   const rosidl_service_type_support_t * type_support = get_service_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
@@ -1609,6 +1670,12 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
       return NULL;
     }
   }
+
+  CustomClientInfo * info = nullptr;
+  SubscriberAttributes subscriberParam;
+  PublisherAttributes publisherParam;
+  rmw_client_t * rmw_client = nullptr;
+  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
 
   info = new CustomClientInfo();
   info->participant_ = participant;
@@ -1643,12 +1710,10 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
     _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
   }
 
-  SubscriberAttributes subscriberParam;
   subscriberParam.topic.topicKind = NO_KEY;
   subscriberParam.topic.topicDataType = response_type_name;
   subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
-  PublisherAttributes publisherParam;
   publisherParam.topic.topicKind = NO_KEY;
   publisherParam.topic.topicDataType = request_type_name;
   publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
@@ -1677,30 +1742,33 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   utilities_string_array_fini(&name_tokens);
 
   fprintf(stderr, "Original topic: %s\n", service_name);
-  fprintf(stderr, "Pub Partition name: %s\n", publisherParam.qos.m_partition.getNames()[0].c_str());
-  fprintf(stderr, "Sub Partition name: %s\n", subscriberParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "Pub Partition name: %s\n",
+    publisherParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "Sub Partition name: %s\n",
+    subscriberParam.qos.m_partition.getNames()[0].c_str());
   fprintf(stderr, "Pub New topic: %s\n", publisherParam.topic.topicName.c_str());
   fprintf(stderr, "Sub New topic: %s\n", subscriberParam.topic.topicName.c_str());
-  
+
+  // Create Client Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
+    RMW_SET_ERROR_MSG("failed to get datareader qos");
     goto fail;
   }
-
   info->listener_ = new ClientListener(info);
-  info->response_subscriber_ = Domain::createSubscriber(participant, subscriberParam,
-      info->listener_);
-
+  info->response_subscriber_ =
+    Domain::createSubscriber(participant, subscriberParam, info->listener_);
   if (!info->response_subscriber_) {
     RMW_SET_ERROR_MSG("create_client() could not create subscriber");
     goto fail;
   }
 
+  // Create Client Subscriber and set QoS
   if (!get_datawriter_qos(*qos_policies, publisherParam)) {
+    RMW_SET_ERROR_MSG("failed to get datawriter qos");
     goto fail;
   }
-
-  info->request_publisher_ = Domain::createPublisher(participant, publisherParam, NULL);
-
+  info->request_publisher_ =
+    Domain::createPublisher(participant, publisherParam, NULL);
   if (!info->request_publisher_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
     goto fail;
@@ -1708,17 +1776,18 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
 
   info->writer_guid_ = info->request_publisher_->getGuid();
 
-  client = new rmw_client_t;
-  client->implementation_identifier = eprosima_fastrtps_identifier;
-  client->data = info;
-  client->service_name = reinterpret_cast<const char *>(rmw_allocate(strlen(service_name) + 1));
-  if (!client->service_name) {
+  rmw_client = rmw_client_allocate();
+  rmw_client->implementation_identifier = eprosima_fastrtps_identifier;
+  rmw_client->data = info;
+  rmw_client->service_name = reinterpret_cast<const char *>(
+    rmw_allocate(strlen(service_name) + 1));
+  if (!rmw_client->service_name) {
     RMW_SET_ERROR_MSG("failed to allocate memory for client name");
     goto fail;
   }
-  memcpy(const_cast<char *>(client->service_name), service_name, strlen(service_name) + 1);
+  memcpy(const_cast<char *>(rmw_client->service_name), service_name, strlen(service_name) + 1);
 
-  return client;
+  return rmw_client;
 
 fail:
 
@@ -1750,6 +1819,8 @@ fail:
 
     delete info;
   }
+
+  rmw_free(rmw_client);
 
   utilities_string_array_fini(&name_tokens);
 
@@ -1919,27 +1990,37 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   const rosidl_service_type_support_t * type_supports,
   const char * service_name, const rmw_qos_profile_t * qos_policies)
 {
-  CustomServiceInfo * info = nullptr;
-  rmw_service_t * service = nullptr;
-  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
-
-  assert(node);
-  assert(type_supports);
-  assert(service_name);
-  assert(qos_policies);
+  if (!node) {
+    RMW_SET_ERROR_MSG("node handle is null");
+    return NULL;
+  }
 
   if (node->implementation_identifier != eprosima_fastrtps_identifier) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return NULL;
   }
 
-  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  if (!service_name || strlen(service_name) == 0) {
+    RMW_SET_ERROR_MSG("publisher topic is null or empty string");
+  }
+
+  if (!qos_policies) {
+    RMW_SET_ERROR_MSG("qos_profile is null");
+    return NULL;
+  }
+
+  const CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
   if (!impl) {
     RMW_SET_ERROR_MSG("node impl is null");
     return NULL;
   }
 
   Participant * participant = impl->participant;
+  if (!participant) {
+    RMW_SET_ERROR_MSG("participant handle is null");
+    return NULL;
+  }
+
   const rosidl_service_type_support_t * type_support = get_service_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
   if (!type_support) {
@@ -1950,6 +2031,12 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
       return NULL;
     }
   }
+
+  CustomServiceInfo * info = nullptr;
+  SubscriberAttributes subscriberParam;
+  PublisherAttributes publisherParam;
+  rmw_service_t * rmw_service = nullptr;
+  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
 
   info = new CustomServiceInfo();
   info->participant_ = participant;
@@ -1984,12 +2071,10 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
     _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
   }
 
-  SubscriberAttributes subscriberParam;
   subscriberParam.topic.topicKind = NO_KEY;
   subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   subscriberParam.topic.topicDataType = request_type_name;
 
-  PublisherAttributes publisherParam;
   publisherParam.topic.topicKind = NO_KEY;
   publisherParam.topic.topicDataType = response_type_name;
   publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
@@ -2018,73 +2103,78 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   utilities_string_array_fini(&name_tokens);
 
   fprintf(stderr, "Original topic: %s\n", service_name);
-  fprintf(stderr, "Pub Partition name: %s\n", publisherParam.qos.m_partition.getNames()[0].c_str());
-  fprintf(stderr, "Sub Partition name: %s\n", subscriberParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "Pub Partition name: %s\n",
+    publisherParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "Sub Partition name: %s\n",
+    subscriberParam.qos.m_partition.getNames()[0].c_str());
   fprintf(stderr, "Pub New topic: %s\n", publisherParam.topic.topicName.c_str());
   fprintf(stderr, "Sub New topic: %s\n", subscriberParam.topic.topicName.c_str());
-  
+
+  // Create Service Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
+    RMW_SET_ERROR_MSG("failed to get datareader qos");
     goto fail;
   }
-
   info->listener_ = new ServiceListener(info);
   info->request_subscriber_ =
     Domain::createSubscriber(participant, subscriberParam, info->listener_);
-
   if (!info->request_subscriber_) {
     RMW_SET_ERROR_MSG("create_client() could not create subscriber");
     goto fail;
   }
 
+  // Create Service Publisher and set QoS
   if (!get_datawriter_qos(*qos_policies, publisherParam)) {
+    RMW_SET_ERROR_MSG("failed to get datawriter qos");
     goto fail;
   }
-
-  info->response_publisher_ = Domain::createPublisher(participant, publisherParam, NULL);
-
+  info->response_publisher_ =
+    Domain::createPublisher(participant, publisherParam, NULL);
   if (!info->response_publisher_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
     goto fail;
   }
 
-  service = new rmw_service_t;
-  service->implementation_identifier = eprosima_fastrtps_identifier;
-  service->data = info;
-  service->service_name = reinterpret_cast<const char *>(
+  rmw_service = rmw_service_allocate();
+  rmw_service->implementation_identifier = eprosima_fastrtps_identifier;
+  rmw_service->data = info;
+  rmw_service->service_name = reinterpret_cast<const char *>(
     rmw_allocate(strlen(service_name) + 1));
-  if (!service->service_name) {
+  if (!rmw_service->service_name) {
     RMW_SET_ERROR_MSG("failed to allocate memory for service name");
     goto fail;
   }
-  memcpy(const_cast<char *>(service->service_name), service_name, strlen(service_name) + 1);
+  memcpy(const_cast<char *>(rmw_service->service_name), service_name, strlen(service_name) + 1);
 
-  return service;
+  return rmw_service;
 
 fail:
 
-  if (info != nullptr) {
-    if (info->response_publisher_ != nullptr) {
+  if (info) {
+    if (info->response_publisher_) {
       Domain::removePublisher(info->response_publisher_);
     }
 
-    if (info->request_subscriber_ != nullptr) {
+    if (info->request_subscriber_) {
       Domain::removeSubscriber(info->request_subscriber_);
     }
 
-    if (info->listener_ != nullptr) {
+    if (info->listener_) {
       delete info->listener_;
     }
 
-    if (info->request_type_support_ != nullptr) {
+    if (info->request_type_support_) {
       _unregister_type(participant, info->request_type_support_, info->typesupport_identifier_);
     }
 
-    if (info->response_type_support_ != nullptr) {
+    if (info->response_type_support_) {
       _unregister_type(participant, info->response_type_support_, info->typesupport_identifier_);
     }
 
     delete info;
   }
+
+  rmw_free(rmw_service);
 
   utilities_string_array_fini(&name_tokens);
 
