@@ -22,7 +22,9 @@
 #include <set>
 #include <string>
 
-#include "rcutils/types/string_array.h"
+#include "rcutils/split.h"
+#include "rcutils/types.h"
+
 #include "rmw/allocators.h"
 #include "rmw/rmw.h"
 #include "rmw/error_handling.h"
@@ -475,7 +477,11 @@ typedef struct CustomParticipantInfo
 
 extern "C"
 {
-const char * const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
+// static for internal linkage
+static const char * const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
+static const char * const ros_topics_prefix = "rt";
+static const char * const ros_service_requester_prefix = "rq";
+static const char * const ros_service_response_prefix = "rr";
 
 const char * rmw_get_implementation_identifier()
 {
@@ -795,6 +801,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
 {
   rmw_publisher_t * rmw_publisher = nullptr;
   const GUID_t * guid = nullptr;
+  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
 
   assert(node);
   assert(type_supports);
@@ -838,11 +845,28 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   }
 
   PublisherAttributes publisherParam;
-  publisherParam.topic.topicKind = NO_KEY;
-  publisherParam.topic.topicDataType = type_name;
-  publisherParam.topic.topicName = topic_name;
   publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
   publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  publisherParam.topic.topicKind = NO_KEY;
+  publisherParam.topic.topicDataType = type_name;
+  // set topic and partitions
+  name_tokens = utilities_split_last(topic_name, '/');
+  if (name_tokens.size == 1) {
+    publisherParam.qos.m_partition.push_back(ros_topics_prefix);
+    publisherParam.topic.topicName = name_tokens.data[0];
+  } else if (name_tokens.size == 2) {
+    publisherParam.qos.m_partition.push_back(
+      (std::string(ros_topics_prefix) + "/" + name_tokens.data[0]).c_str());
+    publisherParam.topic.topicName = name_tokens.data[1];
+  } else {
+    RMW_SET_ERROR_MSG("Illformated topic name");
+    goto fail;
+  }
+  utilities_string_array_fini(&name_tokens);
+
+  fprintf(stderr, "Original topic: %s\n", topic_name);
+  fprintf(stderr, "Partition name: %s\n", publisherParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "New topic: %s\n", publisherParam.topic.topicName.c_str());
 
   // 1 Heartbeat every 10ms
   // publisherParam.times.heartbeatPeriod.seconds = 0;
@@ -885,6 +909,8 @@ fail:
     _delete_typesupport(info->type_support_, info->typesupport_identifier_);
     delete info;
   }
+
+  utilities_string_array_fini(&name_tokens);
 
   return NULL;
 }
@@ -1053,6 +1079,7 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
 {
   (void)ignore_local_publications;
   rmw_subscription_t * subscription = nullptr;
+  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
 
   assert(node);
   assert(type_supports);
@@ -1097,10 +1124,27 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   }
 
   SubscriberAttributes subscriberParam;
+  subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   subscriberParam.topic.topicKind = NO_KEY;
   subscriberParam.topic.topicDataType = type_name;
-  subscriberParam.topic.topicName = topic_name;
-  subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  // set topic and partitions
+  name_tokens = utilities_split_last(topic_name, '/');
+  if (name_tokens.size == 1) {
+    subscriberParam.qos.m_partition.push_back(ros_topics_prefix);
+    subscriberParam.topic.topicName = name_tokens.data[0];
+  } else if (name_tokens.size == 2) {
+    subscriberParam.qos.m_partition.push_back(
+      (std::string(ros_topics_prefix) + "/" + name_tokens.data[0]).c_str());
+    subscriberParam.topic.topicName = name_tokens.data[1];
+  } else {
+    RMW_SET_ERROR_MSG("Illformated topic name");
+    goto fail;
+  }
+  utilities_string_array_fini(&name_tokens);
+
+  fprintf(stderr, "Original topic: %s\n", topic_name);
+  fprintf(stderr, "Partition name: %s\n", subscriberParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "New topic: %s\n", subscriberParam.topic.topicName.c_str());
 
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     goto fail;
@@ -1129,6 +1173,8 @@ fail:
     }
     delete info;
   }
+
+  utilities_string_array_fini(&name_tokens);
 
   return NULL;
 }
@@ -1533,6 +1579,7 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
 {
   CustomClientInfo * info = nullptr;
   rmw_client_t * client = nullptr;
+  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
 
   assert(node);
   assert(type_supports);
@@ -1597,13 +1644,44 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   }
 
   SubscriberAttributes subscriberParam;
-  PublisherAttributes publisherParam;
-
   subscriberParam.topic.topicKind = NO_KEY;
   subscriberParam.topic.topicDataType = response_type_name;
-  subscriberParam.topic.topicName = std::string(service_name) + "Reply";
   subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
+  PublisherAttributes publisherParam;
+  publisherParam.topic.topicKind = NO_KEY;
+  publisherParam.topic.topicDataType = request_type_name;
+  publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
+  publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+  // set topic and partitions
+  name_tokens = utilities_split_last(service_name, '/');
+  if (name_tokens.size == 1) {
+    subscriberParam.qos.m_partition.push_back(ros_service_response_prefix);
+    subscriberParam.topic.topicName = name_tokens.data[0];
+    publisherParam.qos.m_partition.push_back(ros_service_requester_prefix);
+    publisherParam.topic.topicName = name_tokens.data[0];
+  } else if (name_tokens.size == 2) {
+    subscriberParam.qos.m_partition.push_back(
+      (std::string(ros_service_response_prefix) + "/" + name_tokens.data[0]).c_str());
+    subscriberParam.topic.topicName = name_tokens.data[1];
+    publisherParam.qos.m_partition.push_back(
+      (std::string(ros_service_requester_prefix) + "/" + name_tokens.data[0]).c_str());
+    publisherParam.topic.topicName = name_tokens.data[1];
+  } else {
+    RMW_SET_ERROR_MSG("Illformated service name");
+    goto fail;
+  }
+  subscriberParam.topic.topicName += "Reply";
+  publisherParam.topic.topicName += "Request";
+  utilities_string_array_fini(&name_tokens);
+
+  fprintf(stderr, "Original topic: %s\n", service_name);
+  fprintf(stderr, "Pub Partition name: %s\n", publisherParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "Sub Partition name: %s\n", subscriberParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "Pub New topic: %s\n", publisherParam.topic.topicName.c_str());
+  fprintf(stderr, "Sub New topic: %s\n", subscriberParam.topic.topicName.c_str());
+  
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     goto fail;
   }
@@ -1616,12 +1694,6 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
     RMW_SET_ERROR_MSG("create_client() could not create subscriber");
     goto fail;
   }
-
-  publisherParam.topic.topicKind = NO_KEY;
-  publisherParam.topic.topicDataType = request_type_name;
-  publisherParam.topic.topicName = std::string(service_name) + "Request";
-  publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
-  publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
   if (!get_datawriter_qos(*qos_policies, publisherParam)) {
     goto fail;
@@ -1678,6 +1750,8 @@ fail:
 
     delete info;
   }
+
+  utilities_string_array_fini(&name_tokens);
 
   return NULL;
 }
@@ -1847,6 +1921,7 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
 {
   CustomServiceInfo * info = nullptr;
   rmw_service_t * service = nullptr;
+  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
 
   assert(node);
   assert(type_supports);
@@ -1910,13 +1985,44 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   }
 
   SubscriberAttributes subscriberParam;
-  PublisherAttributes publisherParam;
-
   subscriberParam.topic.topicKind = NO_KEY;
-  subscriberParam.topic.topicDataType = request_type_name;
-  subscriberParam.topic.topicName = std::string(service_name) + "Request";
   subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  subscriberParam.topic.topicDataType = request_type_name;
 
+  PublisherAttributes publisherParam;
+  publisherParam.topic.topicKind = NO_KEY;
+  publisherParam.topic.topicDataType = response_type_name;
+  publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
+  publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+  // set topic and partitions
+  name_tokens = utilities_split_last(service_name, '/');
+  if (name_tokens.size == 1) {
+    subscriberParam.qos.m_partition.push_back(ros_service_requester_prefix);
+    subscriberParam.topic.topicName = name_tokens.data[0];
+    publisherParam.qos.m_partition.push_back(ros_service_response_prefix);
+    publisherParam.topic.topicName = name_tokens.data[0];
+  } else if (name_tokens.size == 2) {
+    subscriberParam.qos.m_partition.push_back(
+      (std::string(ros_service_requester_prefix) + "/" + name_tokens.data[0]).c_str());
+    subscriberParam.topic.topicName = name_tokens.data[1];
+    publisherParam.qos.m_partition.push_back(
+      (std::string(ros_service_response_prefix) + "/" + name_tokens.data[0]).c_str());
+    publisherParam.topic.topicName = name_tokens.data[1];
+  } else {
+    RMW_SET_ERROR_MSG("Illformated service name");
+    goto fail;
+  }
+  subscriberParam.topic.topicName += "Request";
+  publisherParam.topic.topicName += "Reply";
+  utilities_string_array_fini(&name_tokens);
+
+  fprintf(stderr, "Original topic: %s\n", service_name);
+  fprintf(stderr, "Pub Partition name: %s\n", publisherParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "Sub Partition name: %s\n", subscriberParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "Pub New topic: %s\n", publisherParam.topic.topicName.c_str());
+  fprintf(stderr, "Sub New topic: %s\n", subscriberParam.topic.topicName.c_str());
+  
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     goto fail;
   }
@@ -1929,12 +2035,6 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
     RMW_SET_ERROR_MSG("create_client() could not create subscriber");
     goto fail;
   }
-
-  publisherParam.topic.topicKind = NO_KEY;
-  publisherParam.topic.topicDataType = response_type_name;
-  publisherParam.topic.topicName = std::string(service_name) + "Reply";
-  publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
-  publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
   if (!get_datawriter_qos(*qos_policies, publisherParam)) {
     goto fail;
@@ -1985,6 +2085,8 @@ fail:
 
     delete info;
   }
+
+  utilities_string_array_fini(&name_tokens);
 
   return NULL;
 }
