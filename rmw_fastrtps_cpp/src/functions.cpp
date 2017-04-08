@@ -730,6 +730,7 @@ fail:
 
 rmw_ret_t rmw_destroy_node(rmw_node_t * node)
 {
+  rmw_ret_t result_ret = RMW_RET_OK;
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
     return RMW_RET_ERROR;
@@ -752,12 +753,12 @@ rmw_ret_t rmw_destroy_node(rmw_node_t * node)
   std::pair<StatefulReader *, StatefulReader *> EDPReaders = participant->getEDPReaders();
   if (!EDPReaders.first->setListener(nullptr)) {
     RMW_SET_ERROR_MSG("failed to unset EDPReader listener");
-    return RMW_RET_ERROR;
+    result_ret = RMW_RET_ERROR;
   }
   delete impl->secondarySubListener;
   if (!EDPReaders.second->setListener(nullptr)) {
     RMW_SET_ERROR_MSG("failed to unset EDPReader listener");
-    return RMW_RET_ERROR;
+    result_ret = RMW_RET_ERROR;
   }
   delete impl->secondaryPubListener;
 
@@ -771,12 +772,12 @@ rmw_ret_t rmw_destroy_node(rmw_node_t * node)
 
   if (RMW_RET_OK != rmw_destroy_guard_condition(impl->graph_guard_condition)) {
     RMW_SET_ERROR_MSG("failed to destroy graph guard condition");
-    return RMW_RET_ERROR;
+    result_ret = RMW_RET_ERROR;
   }
 
   Domain::removeParticipant(participant);
 
-  return RMW_RET_OK;
+  return result_ret;
 }
 
 typedef struct CustomPublisherInfo
