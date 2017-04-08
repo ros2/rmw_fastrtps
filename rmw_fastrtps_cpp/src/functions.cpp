@@ -618,86 +618,119 @@ rmw_ret_t rmw_init()
   return RMW_RET_OK;
 }
 
-rmw_node_t * rmw_create_node(const char * name, size_t domain_id)
+rmw_node_t * rmw_create_node(const char * name, const char * namespace_, size_t domain_id)
 {
   if (!name) {
     RMW_SET_ERROR_MSG("name is null");
     return NULL;
   }
 
+  if (!namespace_) {
+    RMW_SET_ERROR_MSG("namespace_ is null");
+    return NULL;
+  }
+
   eprosima::fastrtps::Log::SetVerbosity(eprosima::fastrtps::Log::Error);
+
+  // Declare everything before beginning to create things.
+  Participant * participant = nullptr;
+  rmw_guard_condition_t * graph_guard_condition = nullptr;
+  CustomParticipantInfo * node_impl = nullptr;
+  rmw_node_t * node_handle = nullptr;
+  topicnamesandtypesReaderListener * tnat_1 = nullptr;
+  topicnamesandtypesReaderListener * tnat_2 = nullptr;
+  std::pair<StatefulReader *, StatefulReader *> edp_readers;
 
   ParticipantAttributes participantParam;
   participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
   participantParam.rtps.setName(name);
 
-  Participant * participant = Domain::createParticipant(participantParam);
+  participant = Domain::createParticipant(participantParam);
   if (!participant) {
     RMW_SET_ERROR_MSG("create_node() could not create participant");
     return NULL;
   }
 
-  rmw_guard_condition_t * graph_guard_condition = rmw_create_guard_condition();
+  graph_guard_condition = rmw_create_guard_condition();
   if (!graph_guard_condition) {
     // error already set
-    return NULL;
+    goto fail;
   }
 
-  CustomParticipantInfo * node_impl = nullptr;
   try {
     node_impl = new CustomParticipantInfo();
   } catch (std::bad_alloc) {
     RMW_SET_ERROR_MSG("failed to allocate node impl struct");
-    return NULL;
+    goto fail;
   }
 
-  rmw_node_t * node_handle =
-    static_cast<rmw_node_t *>(malloc(sizeof(rmw_node_t)));
+  node_handle = static_cast<rmw_node_t *>(malloc(sizeof(rmw_node_t)));
   if (!node_handle) {
     RMW_SET_ERROR_MSG("failed to allocate rmw_node_t");
-    return NULL;
+    goto fail;
   }
   node_handle->implementation_identifier = eprosima_fastrtps_identifier;
   node_impl->participant = participant;
   node_impl->graph_guard_condition = graph_guard_condition;
   node_handle->data = node_impl;
 
-
   node_handle->name =
     static_cast<const char *>(malloc(sizeof(char) * strlen(name) + 1));
   if (!node_handle->name) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
-    free(static_cast<void *>(node_handle));
-    return NULL;
+    node_handle->namespace_ = nullptr;  // to avoid free on uninitialized memory
+    goto fail;
   }
   memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
 
-  topicnamesandtypesReaderListener * tnat_1 = new topicnamesandtypesReaderListener(
-    graph_guard_condition);
-  topicnamesandtypesReaderListener * tnat_2 = new topicnamesandtypesReaderListener(
-    graph_guard_condition);
+  node_handle->namespace_ =
+    static_cast<const char *>(malloc(sizeof(char) * strlen(namespace_) + 1));
+  if (!node_handle->namespace_) {
+    RMW_SET_ERROR_MSG("failed to allocate memory");
+    goto fail;
+  }
+  memcpy(const_cast<char *>(node_handle->namespace_), namespace_, strlen(namespace_) + 1);
+
+  tnat_1 = new topicnamesandtypesReaderListener(graph_guard_condition);
+  tnat_2 = new topicnamesandtypesReaderListener(graph_guard_condition);
 
   node_impl->secondarySubListener = tnat_1;
   node_impl->secondaryPubListener = tnat_2;
 
-
-  std::pair<StatefulReader *, StatefulReader *> EDPReaders = participant->getEDPReaders();
-
-  if (!( EDPReaders.first->setListener(tnat_1) & EDPReaders.second->setListener(tnat_2) ) ) {
+  edp_readers = participant->getEDPReaders();
+  if (!(edp_readers.first->setListener(tnat_1) & edp_readers.second->setListener(tnat_2))) {
     RMW_SET_ERROR_MSG("Failed to attach ROS related logic to the Participant");
     goto fail;
   }
 
   return node_handle;
 fail:
-  delete (tnat_1);
-  delete (tnat_2);
-  delete (node_impl);
+  delete tnat_2;
+  delete tnat_1;
+  if (node_handle) {
+    free(const_cast<char *>(node_handle->namespace_));
+    node_handle->namespace_ = nullptr;
+    free(const_cast<char *>(node_handle->name));
+    node_handle->name = nullptr;
+  }
+  free(node_handle);
+  delete node_impl;
+  if (graph_guard_condition) {
+    rmw_ret_t ret = rmw_destroy_guard_condition(graph_guard_condition);
+    if (ret != RMW_RET_OK) {
+      fprintf(stderr,
+        "[rmw_fastrtps]: failed to destroy guard condition during error handling\n");
+    }
+  }
+  if (participant) {
+    Domain::removeParticipant(participant);
+  }
   return NULL;
 }
 
 rmw_ret_t rmw_destroy_node(rmw_node_t * node)
 {
+  rmw_ret_t result_ret = RMW_RET_OK;
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
     return RMW_RET_ERROR;
@@ -716,29 +749,35 @@ rmw_ret_t rmw_destroy_node(rmw_node_t * node)
 
   Participant * participant = impl->participant;
 
-  std::pair<StatefulReader *, StatefulReader *> EDPReaders = participant->getEDPReaders();
-  EDPReaders.first->setListener(nullptr);
-  delete (impl->secondarySubListener);
-  EDPReaders.second->setListener(nullptr);
-  delete (impl->secondaryPubListener);
+  // Begin deleting things in the same order they were created in rmw_create_node().
+  std::pair<StatefulReader *, StatefulReader *> edp_readers = participant->getEDPReaders();
+  if (!edp_readers.first->setListener(nullptr)) {
+    RMW_SET_ERROR_MSG("failed to unset EDPReader listener");
+    result_ret = RMW_RET_ERROR;
+  }
+  delete impl->secondarySubListener;
+  if (!edp_readers.second->setListener(nullptr)) {
+    RMW_SET_ERROR_MSG("failed to unset EDPReader listener");
+    result_ret = RMW_RET_ERROR;
+  }
+  delete impl->secondaryPubListener;
 
+  free(const_cast<char *>(node->name));
+  node->name = nullptr;
+  free(const_cast<char *>(node->namespace_));
+  node->namespace_ = nullptr;
+  free(static_cast<void *>(node));
+
+  delete impl;
 
   if (RMW_RET_OK != rmw_destroy_guard_condition(impl->graph_guard_condition)) {
     RMW_SET_ERROR_MSG("failed to destroy graph guard condition");
-    return RMW_RET_ERROR;
+    result_ret = RMW_RET_ERROR;
   }
 
   Domain::removeParticipant(participant);
 
-  delete (impl);
-  if (node->name) {
-    free(const_cast<char *>(node->name));
-    node->name = nullptr;
-  }
-
-  free(static_cast<void *>(node));
-
-  return RMW_RET_OK;
+  return result_ret;
 }
 
 typedef struct CustomPublisherInfo
