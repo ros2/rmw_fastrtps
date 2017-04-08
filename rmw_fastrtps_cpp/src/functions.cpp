@@ -750,13 +750,13 @@ rmw_ret_t rmw_destroy_node(rmw_node_t * node)
   Participant * participant = impl->participant;
 
   // Begin deleting things in the same order they were created in rmw_create_node().
-  std::pair<StatefulReader *, StatefulReader *> EDPReaders = participant->getEDPReaders();
-  if (!EDPReaders.first->setListener(nullptr)) {
+  std::pair<StatefulReader *, StatefulReader *> edp_readers = participant->getEDPReaders();
+  if (!edp_readers.first->setListener(nullptr)) {
     RMW_SET_ERROR_MSG("failed to unset EDPReader listener");
     result_ret = RMW_RET_ERROR;
   }
   delete impl->secondarySubListener;
-  if (!EDPReaders.second->setListener(nullptr)) {
+  if (!edp_readers.second->setListener(nullptr)) {
     RMW_SET_ERROR_MSG("failed to unset EDPReader listener");
     result_ret = RMW_RET_ERROR;
   }
