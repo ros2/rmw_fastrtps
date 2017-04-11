@@ -946,7 +946,8 @@ bool TypeSupport<MembersType>::serialize(
   eprosima::fastcdr::Cdr * ser = static_cast<eprosima::fastcdr::Cdr *>(data);
   if (payload->max_size >= ser->getSerializedDataLength()) {
     payload->length = static_cast<uint32_t>(ser->getSerializedDataLength());
-    payload->encapsulation = ser->endianness() == eprosima::fastcdr::Cdr::BIG_ENDIANNESS ? CDR_BE : CDR_LE;
+    payload->encapsulation = ser->endianness() ==
+      eprosima::fastcdr::Cdr::BIG_ENDIANNESS ? CDR_BE : CDR_LE;
     memcpy(payload->data, ser->getBufferPointer(), ser->getSerializedDataLength());
     return true;
   }
