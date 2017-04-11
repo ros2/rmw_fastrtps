@@ -2408,7 +2408,7 @@ rmw_destroy_topic_names_and_types(
 rmw_ret_t
 rmw_get_node_names(
   const rmw_node_t * node,
-  rmw_string_array_t * node_names)
+  utilities_string_array_t * node_names)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("null node handle");
@@ -2435,19 +2435,6 @@ rmw_get_node_names(
     node_names->data[i] = static_cast<char *>(rmw_allocate(name_length * sizeof(char)));
     snprintf(node_names->data[i], name_length, "%s", participant_names[i].c_str());
   }
-  return RMW_RET_OK;
-}
-
-rmw_ret_t
-rmw_destroy_node_names(
-  rmw_string_array_t * node_names)
-{
-  for (size_t i = 0; i < node_names->size; ++i) {
-    rmw_free(node_names->data[i]);
-    node_names->data[i] = nullptr;
-  }
-  rmw_free(node_names->data);
-  node_names->data = nullptr;
   return RMW_RET_OK;
 }
 
