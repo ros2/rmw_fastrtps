@@ -22,6 +22,8 @@ endif()
 
 find_package(ament_cmake REQUIRED)
 
+find_package(c_utilities REQUIRED)
+
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr REQUIRED CONFIG)
 find_package(fastrtps REQUIRED CONFIG)
@@ -47,6 +49,7 @@ target_link_libraries(rmw_fastrtps_cpp
   fastcdr fastrtps)
 
 ament_target_dependencies(rmw_fastrtps_cpp
+  "c_utilities"
   "rosidl_typesupport_introspection_c"
   "rosidl_typesupport_introspection_cpp"
   "rmw"
