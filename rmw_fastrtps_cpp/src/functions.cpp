@@ -845,7 +845,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   rmw_publisher_t * rmw_publisher = nullptr;
   PublisherAttributes publisherParam;
   const GUID_t * guid = nullptr;
-  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  utilities_string_array_t name_tokens = utilities_get_zero_initialized_string_array();
 
   // TODO(karsten1987) Verify consequences for std::unique_ptr?
   info = new CustomPublisherInfo();
@@ -1152,7 +1152,7 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   CustomSubscriberInfo * info = nullptr;
   rmw_subscription_t * rmw_subscription = nullptr;
   SubscriberAttributes subscriberParam;
-  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  utilities_string_array_t name_tokens = utilities_get_zero_initialized_string_array();
 
   info = new CustomSubscriberInfo();
   info->typesupport_identifier_ = type_support->typesupport_identifier;
@@ -1675,7 +1675,7 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   SubscriberAttributes subscriberParam;
   PublisherAttributes publisherParam;
   rmw_client_t * rmw_client = nullptr;
-  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  utilities_string_array_t name_tokens = utilities_get_zero_initialized_string_array();
 
   info = new CustomClientInfo();
   info->participant_ = participant;
@@ -2036,7 +2036,7 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   SubscriberAttributes subscriberParam;
   PublisherAttributes publisherParam;
   rmw_service_t * rmw_service = nullptr;
-  string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  utilities_string_array_t name_tokens = utilities_get_zero_initialized_string_array();
 
   info = new CustomServiceInfo();
   info->participant_ = participant;
