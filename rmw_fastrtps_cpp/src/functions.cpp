@@ -878,11 +878,14 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
     RMW_SET_ERROR_MSG("Illformated topic name");
     goto fail;
   }
-  utilities_string_array_fini(&name_tokens);
 
-  fprintf(stderr, "ros topic: %s\n", topic_name);
-  fprintf(stderr, "partition name: %s\n", publisherParam.qos.m_partition.getNames()[0].c_str());
-  fprintf(stderr, "dds topic: %s\n", publisherParam.topic.topicName.c_str());
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
+
+  // fprintf(stderr, "ros topic: %s\n", topic_name);
+  // fprintf(stderr, "partition name: %s\n", publisherParam.qos.m_partition.getNames()[0].c_str());
+  // fprintf(stderr, "dds topic: %s\n", publisherParam.topic.topicName.c_str());
 
   // 1 Heartbeat every 10ms
   // publisherParam.times.heartbeatPeriod.seconds = 0;
@@ -939,7 +942,9 @@ fail:
     rmw_publisher_free(rmw_publisher);
   }
 
-  utilities_string_array_fini(&name_tokens);
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
 
   return NULL;
 }
@@ -1183,11 +1188,13 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
     RMW_SET_ERROR_MSG("Illformated topic name");
     goto fail;
   }
-  utilities_string_array_fini(&name_tokens);
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
 
-  fprintf(stderr, "ros topic: %s\n", topic_name);
-  fprintf(stderr, "partition name: %s\n", subscriberParam.qos.m_partition.getNames()[0].c_str());
-  fprintf(stderr, "dds topic: %s\n", subscriberParam.topic.topicName.c_str());
+  // fprintf(stderr, "ros topic: %s\n", topic_name);
+  // fprintf(stderr, "partition name: %s\n", subscriberParam.qos.m_partition.getNames()[0].c_str());
+  // fprintf(stderr, "dds topic: %s\n", subscriberParam.topic.topicName.c_str());
 
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     RMW_SET_ERROR_MSG("failed to get datareader qos");
@@ -1226,7 +1233,9 @@ fail:
     rmw_subscription_free(rmw_subscription);
   }
 
-  utilities_string_array_fini(&name_tokens);
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
 
   return NULL;
 }
@@ -1739,15 +1748,17 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   }
   subscriberParam.topic.topicName += "Reply";
   publisherParam.topic.topicName += "Request";
-  utilities_string_array_fini(&name_tokens);
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
 
-  fprintf(stderr, "Original topic: %s\n", service_name);
-  fprintf(stderr, "Pub Partition name: %s\n",
-    publisherParam.qos.m_partition.getNames()[0].c_str());
-  fprintf(stderr, "Sub Partition name: %s\n",
-    subscriberParam.qos.m_partition.getNames()[0].c_str());
-  fprintf(stderr, "Pub New topic: %s\n", publisherParam.topic.topicName.c_str());
-  fprintf(stderr, "Sub New topic: %s\n", subscriberParam.topic.topicName.c_str());
+  // fprintf(stderr, "Original topic: %s\n", service_name);
+  // fprintf(stderr, "Pub Partition name: %s\n",
+  //   publisherParam.qos.m_partition.getNames()[0].c_str());
+  // fprintf(stderr, "Sub Partition name: %s\n",
+  //   subscriberParam.qos.m_partition.getNames()[0].c_str());
+  // fprintf(stderr, "Pub New topic: %s\n", publisherParam.topic.topicName.c_str());
+  // fprintf(stderr, "Sub New topic: %s\n", subscriberParam.topic.topicName.c_str());
 
   // Create Client Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
@@ -1822,7 +1833,9 @@ fail:
 
   rmw_free(rmw_client);
 
-  utilities_string_array_fini(&name_tokens);
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
 
   return NULL;
 }
@@ -2100,15 +2113,17 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   }
   subscriberParam.topic.topicName += "Request";
   publisherParam.topic.topicName += "Reply";
-  utilities_string_array_fini(&name_tokens);
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
 
-  fprintf(stderr, "Original topic: %s\n", service_name);
-  fprintf(stderr, "Pub Partition name: %s\n",
-    publisherParam.qos.m_partition.getNames()[0].c_str());
-  fprintf(stderr, "Sub Partition name: %s\n",
-    subscriberParam.qos.m_partition.getNames()[0].c_str());
-  fprintf(stderr, "Pub New topic: %s\n", publisherParam.topic.topicName.c_str());
-  fprintf(stderr, "Sub New topic: %s\n", subscriberParam.topic.topicName.c_str());
+  // fprintf(stderr, "Original topic: %s\n", service_name);
+  // fprintf(stderr, "Pub Partition name: %s\n",
+  //   publisherParam.qos.m_partition.getNames()[0].c_str());
+  // fprintf(stderr, "Sub Partition name: %s\n",
+  //   subscriberParam.qos.m_partition.getNames()[0].c_str());
+  // fprintf(stderr, "Pub New topic: %s\n", publisherParam.topic.topicName.c_str());
+  // fprintf(stderr, "Sub New topic: %s\n", subscriberParam.topic.topicName.c_str());
 
   // Create Service Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
@@ -2176,7 +2191,9 @@ fail:
 
   rmw_free(rmw_service);
 
-  utilities_string_array_fini(&name_tokens);
+  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+  }
 
   return NULL;
 }
