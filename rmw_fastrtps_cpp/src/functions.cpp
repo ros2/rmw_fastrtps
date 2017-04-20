@@ -22,6 +22,7 @@
 #include <set>
 #include <string>
 
+#include "rcutils/types/string_array.h"
 #include "rmw/allocators.h"
 #include "rmw/rmw.h"
 #include "rmw/error_handling.h"
@@ -2408,7 +2409,7 @@ rmw_destroy_topic_names_and_types(
 rmw_ret_t
 rmw_get_node_names(
   const rmw_node_t * node,
-  utilities_string_array_t * node_names)
+  rcutils_string_array_t * node_names)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("null node handle");
