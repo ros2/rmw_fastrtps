@@ -845,7 +845,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   rmw_publisher_t * rmw_publisher = nullptr;
   PublisherAttributes publisherParam;
   const GUID_t * guid = nullptr;
-  utilities_string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
 
   // TODO(karsten1987) Verify consequences for std::unique_ptr?
   info = new CustomPublisherInfo();
@@ -866,7 +866,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   publisherParam.topic.topicKind = NO_KEY;
   publisherParam.topic.topicDataType = type_name;
   // set topic and partitions
-  name_tokens = utilities_split_last(topic_name, '/');
+  name_tokens = rcutils_split_last(topic_name, '/');
   if (name_tokens.size == 1) {
     publisherParam.qos.m_partition.push_back(ros_topics_prefix);
     publisherParam.topic.topicName = name_tokens.data[0];
@@ -879,7 +879,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
     goto fail;
   }
 
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -942,7 +942,7 @@ fail:
     rmw_publisher_free(rmw_publisher);
   }
 
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -1157,7 +1157,7 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   CustomSubscriberInfo * info = nullptr;
   rmw_subscription_t * rmw_subscription = nullptr;
   SubscriberAttributes subscriberParam;
-  utilities_string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
 
   info = new CustomSubscriberInfo();
   info->typesupport_identifier_ = type_support->typesupport_identifier;
@@ -1176,7 +1176,7 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   subscriberParam.topic.topicKind = NO_KEY;
   subscriberParam.topic.topicDataType = type_name;
   // set topic and partitions
-  name_tokens = utilities_split_last(topic_name, '/');
+  name_tokens = rcutils_split_last(topic_name, '/');
   if (name_tokens.size == 1) {
     subscriberParam.qos.m_partition.push_back(ros_topics_prefix);
     subscriberParam.topic.topicName = name_tokens.data[0];
@@ -1188,7 +1188,7 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
     RMW_SET_ERROR_MSG("Illformated topic name");
     goto fail;
   }
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -1233,7 +1233,7 @@ fail:
     rmw_subscription_free(rmw_subscription);
   }
 
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -1684,7 +1684,7 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   SubscriberAttributes subscriberParam;
   PublisherAttributes publisherParam;
   rmw_client_t * rmw_client = nullptr;
-  utilities_string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
 
   info = new CustomClientInfo();
   info->participant_ = participant;
@@ -1729,7 +1729,7 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
   // set topic and partitions
-  name_tokens = utilities_split_last(service_name, '/');
+  name_tokens = rcutils_split_last(service_name, '/');
   if (name_tokens.size == 1) {
     subscriberParam.qos.m_partition.push_back(ros_service_response_prefix);
     subscriberParam.topic.topicName = name_tokens.data[0];
@@ -1748,7 +1748,7 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   }
   subscriberParam.topic.topicName += "Reply";
   publisherParam.topic.topicName += "Request";
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -1833,7 +1833,7 @@ fail:
 
   rmw_free(rmw_client);
 
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -2049,7 +2049,7 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   SubscriberAttributes subscriberParam;
   PublisherAttributes publisherParam;
   rmw_service_t * rmw_service = nullptr;
-  utilities_string_array_t name_tokens = utilities_get_zero_initialized_string_array();
+  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
 
   info = new CustomServiceInfo();
   info->participant_ = participant;
@@ -2094,7 +2094,7 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
   // set topic and partitions
-  name_tokens = utilities_split_last(service_name, '/');
+  name_tokens = rcutils_split_last(service_name, '/');
   if (name_tokens.size == 1) {
     subscriberParam.qos.m_partition.push_back(ros_service_requester_prefix);
     subscriberParam.topic.topicName = name_tokens.data[0];
@@ -2113,7 +2113,7 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   }
   subscriberParam.topic.topicName += "Request";
   publisherParam.topic.topicName += "Reply";
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
@@ -2191,7 +2191,7 @@ fail:
 
   rmw_free(rmw_service);
 
-  if (utilities_string_array_fini(&name_tokens) != UTILITIES_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
