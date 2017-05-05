@@ -769,12 +769,12 @@ rmw_ret_t rmw_destroy_node(rmw_node_t * node)
   node->namespace_ = nullptr;
   free(static_cast<void *>(node));
 
-  delete impl;
-
   if (RMW_RET_OK != rmw_destroy_guard_condition(impl->graph_guard_condition)) {
     RMW_SET_ERROR_MSG("failed to destroy graph guard condition");
     result_ret = RMW_RET_ERROR;
   }
+
+  delete impl;
 
   Domain::removeParticipant(participant);
 
