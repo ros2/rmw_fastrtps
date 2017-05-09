@@ -875,7 +875,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
       (std::string(ros_topics_prefix) + "/" + name_tokens.data[0]).c_str());
     publisherParam.topic.topicName = name_tokens.data[1];
   } else {
-    RMW_SET_ERROR_MSG("Illformated topic name");
+    RMW_SET_ERROR_MSG("Malformed topic name");
     goto fail;
   }
 
@@ -1185,7 +1185,7 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
       (std::string(ros_topics_prefix) + "/" + name_tokens.data[0]).c_str());
     subscriberParam.topic.topicName = name_tokens.data[1];
   } else {
-    RMW_SET_ERROR_MSG("Illformated topic name");
+    RMW_SET_ERROR_MSG("Malformed topic name");
     goto fail;
   }
   if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
@@ -1743,7 +1743,7 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
       (std::string(ros_service_requester_prefix) + "/" + name_tokens.data[0]).c_str());
     publisherParam.topic.topicName = name_tokens.data[1];
   } else {
-    RMW_SET_ERROR_MSG("Illformated service name");
+    RMW_SET_ERROR_MSG("Malformed service name");
     goto fail;
   }
   subscriberParam.topic.topicName += "Reply";
@@ -2108,7 +2108,7 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
       (std::string(ros_service_response_prefix) + "/" + name_tokens.data[0]).c_str());
     publisherParam.topic.topicName = name_tokens.data[1];
   } else {
-    RMW_SET_ERROR_MSG("Illformated service name");
+    RMW_SET_ERROR_MSG("Malformed service name");
     goto fail;
   }
   subscriberParam.topic.topicName += "Request";
