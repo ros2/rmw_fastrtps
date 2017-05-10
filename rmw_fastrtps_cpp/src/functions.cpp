@@ -319,6 +319,36 @@ _deserialize_ros_message(
   return false;
 }
 
+template<typename AttributeT>
+inline
+rcutils_ret_t
+_assign_partitions_to_attributes(
+  const char * const topic_name, const char * const prefix, AttributeT * attributes)
+{
+  rcutils_ret_t ret = RCUTILS_RET_ERROR;
+  // set topic and partitions
+  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
+  name_tokens = rcutils_split_last(topic_name, '/');
+  if (name_tokens.size == 1) {
+    attributes->qos.m_partition.push_back(prefix);
+    attributes->topic.topicName = name_tokens.data[0];
+    ret = RCUTILS_RET_OK;
+  } else if (name_tokens.size == 2) {
+    attributes->qos.m_partition.push_back(
+      (std::string(prefix) + "/" + name_tokens.data[0]).c_str());
+    attributes->topic.topicName = name_tokens.data[1];
+    ret = RCUTILS_RET_OK;
+  } else {
+    RMW_SET_ERROR_MSG("Malformed topic name");
+    ret = RCUTILS_RET_ERROR;
+  }
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
+    fprintf(stderr, "Failed to destroy the token string array\n");
+    ret = RCUTILS_RET_ERROR;
+  }
+  return ret;
+}
+
 class ClientListener;
 
 typedef struct CustomWaitsetInfo
@@ -479,7 +509,7 @@ extern "C"
 {
 // static for internal linkage
 static const char * const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
-static const char * const ros_topics_prefix = "rt";
+static const char * const ros_topic_prefix = "rt";
 static const char * const ros_service_requester_prefix = "rq";
 static const char * const ros_service_response_prefix = "rr";
 
@@ -845,7 +875,6 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   rmw_publisher_t * rmw_publisher = nullptr;
   PublisherAttributes publisherParam;
   const GUID_t * guid = nullptr;
-  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
 
   // TODO(karsten1987) Verify consequences for std::unique_ptr?
   info = new CustomPublisherInfo();
@@ -865,27 +894,12 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   publisherParam.topic.topicKind = NO_KEY;
   publisherParam.topic.topicDataType = type_name;
-  // set topic and partitions
-  name_tokens = rcutils_split_last(topic_name, '/');
-  if (name_tokens.size == 1) {
-    publisherParam.qos.m_partition.push_back(ros_topics_prefix);
-    publisherParam.topic.topicName = name_tokens.data[0];
-  } else if (name_tokens.size == 2) {
-    publisherParam.qos.m_partition.push_back(
-      (std::string(ros_topics_prefix) + "/" + name_tokens.data[0]).c_str());
-    publisherParam.topic.topicName = name_tokens.data[1];
-  } else {
-    RMW_SET_ERROR_MSG("Malformed topic name");
+  rcutils_ret_t ret = _assign_partitions_to_attributes(
+    topic_name, ros_topic_prefix, &publisherParam);
+  if (ret != RCUTILS_RET_OK) {
+    // error msg already set
     goto fail;
   }
-
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
-  }
-
-  // fprintf(stderr, "ros topic: %s\n", topic_name);
-  // fprintf(stderr, "partition name: %s\n", publisherParam.qos.m_partition.getNames()[0].c_str());
-  // fprintf(stderr, "dds topic: %s\n", publisherParam.topic.topicName.c_str());
 
   // 1 Heartbeat every 10ms
   // publisherParam.times.heartbeatPeriod.seconds = 0;
@@ -940,10 +954,6 @@ fail:
 
   if (rmw_publisher) {
     rmw_publisher_free(rmw_publisher);
-  }
-
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
   return NULL;
@@ -1157,7 +1167,6 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   CustomSubscriberInfo * info = nullptr;
   rmw_subscription_t * rmw_subscription = nullptr;
   SubscriberAttributes subscriberParam;
-  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
 
   info = new CustomSubscriberInfo();
   info->typesupport_identifier_ = type_support->typesupport_identifier;
@@ -1175,26 +1184,12 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   subscriberParam.topic.topicKind = NO_KEY;
   subscriberParam.topic.topicDataType = type_name;
-  // set topic and partitions
-  name_tokens = rcutils_split_last(topic_name, '/');
-  if (name_tokens.size == 1) {
-    subscriberParam.qos.m_partition.push_back(ros_topics_prefix);
-    subscriberParam.topic.topicName = name_tokens.data[0];
-  } else if (name_tokens.size == 2) {
-    subscriberParam.qos.m_partition.push_back(
-      (std::string(ros_topics_prefix) + "/" + name_tokens.data[0]).c_str());
-    subscriberParam.topic.topicName = name_tokens.data[1];
-  } else {
-    RMW_SET_ERROR_MSG("Malformed topic name");
+  rcutils_ret_t ret = _assign_partitions_to_attributes(
+    topic_name, ros_topic_prefix, &subscriberParam);
+  if (ret != RCUTILS_RET_OK) {
+    // error msg already set
     goto fail;
   }
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
-  }
-
-  // fprintf(stderr, "ros topic: %s\n", topic_name);
-  // fprintf(stderr, "partition name: %s\n", subscriberParam.qos.m_partition.getNames()[0].c_str());
-  // fprintf(stderr, "dds topic: %s\n", subscriberParam.topic.topicName.c_str());
 
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     RMW_SET_ERROR_MSG("failed to get datareader qos");
@@ -1231,10 +1226,6 @@ fail:
 
   if (rmw_subscription) {
     rmw_subscription_free(rmw_subscription);
-  }
-
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
   }
 
   return NULL;
@@ -1684,7 +1675,6 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   SubscriberAttributes subscriberParam;
   PublisherAttributes publisherParam;
   rmw_client_t * rmw_client = nullptr;
-  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
 
   info = new CustomClientInfo();
   info->participant_ = participant;
@@ -1722,43 +1712,25 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   subscriberParam.topic.topicKind = NO_KEY;
   subscriberParam.topic.topicDataType = response_type_name;
   subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  rcutils_ret_t ret = _assign_partitions_to_attributes(
+    service_name, ros_service_response_prefix, &subscriberParam);
+  if (ret != RCUTILS_RET_OK) {
+    // error msg already set
+    goto fail;
+  }
+  subscriberParam.topic.topicName += "Reply";
 
   publisherParam.topic.topicKind = NO_KEY;
   publisherParam.topic.topicDataType = request_type_name;
   publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
   publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-
-  // set topic and partitions
-  name_tokens = rcutils_split_last(service_name, '/');
-  if (name_tokens.size == 1) {
-    subscriberParam.qos.m_partition.push_back(ros_service_response_prefix);
-    subscriberParam.topic.topicName = name_tokens.data[0];
-    publisherParam.qos.m_partition.push_back(ros_service_requester_prefix);
-    publisherParam.topic.topicName = name_tokens.data[0];
-  } else if (name_tokens.size == 2) {
-    subscriberParam.qos.m_partition.push_back(
-      (std::string(ros_service_response_prefix) + "/" + name_tokens.data[0]).c_str());
-    subscriberParam.topic.topicName = name_tokens.data[1];
-    publisherParam.qos.m_partition.push_back(
-      (std::string(ros_service_requester_prefix) + "/" + name_tokens.data[0]).c_str());
-    publisherParam.topic.topicName = name_tokens.data[1];
-  } else {
-    RMW_SET_ERROR_MSG("Malformed service name");
+  ret = _assign_partitions_to_attributes(
+    service_name, ros_service_requester_prefix, &publisherParam);
+  if (ret != RCUTILS_RET_OK) {
+    // error msg already set
     goto fail;
   }
-  subscriberParam.topic.topicName += "Reply";
   publisherParam.topic.topicName += "Request";
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
-  }
-
-  // fprintf(stderr, "Original topic: %s\n", service_name);
-  // fprintf(stderr, "Pub Partition name: %s\n",
-  //   publisherParam.qos.m_partition.getNames()[0].c_str());
-  // fprintf(stderr, "Sub Partition name: %s\n",
-  //   subscriberParam.qos.m_partition.getNames()[0].c_str());
-  // fprintf(stderr, "Pub New topic: %s\n", publisherParam.topic.topicName.c_str());
-  // fprintf(stderr, "Sub New topic: %s\n", subscriberParam.topic.topicName.c_str());
 
   // Create Client Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
@@ -1832,10 +1804,6 @@ fail:
   }
 
   rmw_free(rmw_client);
-
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
-  }
 
   return NULL;
 }
@@ -2049,7 +2017,6 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   SubscriberAttributes subscriberParam;
   PublisherAttributes publisherParam;
   rmw_service_t * rmw_service = nullptr;
-  rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
 
   info = new CustomServiceInfo();
   info->participant_ = participant;
@@ -2087,43 +2054,25 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   subscriberParam.topic.topicKind = NO_KEY;
   subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   subscriberParam.topic.topicDataType = request_type_name;
+  rcutils_ret_t ret = _assign_partitions_to_attributes(
+    service_name, ros_service_requester_prefix, &subscriberParam);
+  if (ret != RCUTILS_RET_OK) {
+    // error msg already set
+    goto fail;
+  }
+  subscriberParam.topic.topicName += "Request";
 
   publisherParam.topic.topicKind = NO_KEY;
   publisherParam.topic.topicDataType = response_type_name;
   publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
   publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-
-  // set topic and partitions
-  name_tokens = rcutils_split_last(service_name, '/');
-  if (name_tokens.size == 1) {
-    subscriberParam.qos.m_partition.push_back(ros_service_requester_prefix);
-    subscriberParam.topic.topicName = name_tokens.data[0];
-    publisherParam.qos.m_partition.push_back(ros_service_response_prefix);
-    publisherParam.topic.topicName = name_tokens.data[0];
-  } else if (name_tokens.size == 2) {
-    subscriberParam.qos.m_partition.push_back(
-      (std::string(ros_service_requester_prefix) + "/" + name_tokens.data[0]).c_str());
-    subscriberParam.topic.topicName = name_tokens.data[1];
-    publisherParam.qos.m_partition.push_back(
-      (std::string(ros_service_response_prefix) + "/" + name_tokens.data[0]).c_str());
-    publisherParam.topic.topicName = name_tokens.data[1];
-  } else {
-    RMW_SET_ERROR_MSG("Malformed service name");
+  ret = _assign_partitions_to_attributes(
+    service_name, ros_service_response_prefix, &publisherParam);
+  if (ret != RCUTILS_RET_OK) {
+    // error msg already set
     goto fail;
   }
-  subscriberParam.topic.topicName += "Request";
   publisherParam.topic.topicName += "Reply";
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
-  }
-
-  // fprintf(stderr, "Original topic: %s\n", service_name);
-  // fprintf(stderr, "Pub Partition name: %s\n",
-  //   publisherParam.qos.m_partition.getNames()[0].c_str());
-  // fprintf(stderr, "Sub Partition name: %s\n",
-  //   subscriberParam.qos.m_partition.getNames()[0].c_str());
-  // fprintf(stderr, "Pub New topic: %s\n", publisherParam.topic.topicName.c_str());
-  // fprintf(stderr, "Sub New topic: %s\n", subscriberParam.topic.topicName.c_str());
 
   // Create Service Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
@@ -2190,10 +2139,6 @@ fail:
   }
 
   rmw_free(rmw_service);
-
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
-  }
 
   return NULL;
 }
