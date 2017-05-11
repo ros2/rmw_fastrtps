@@ -65,6 +65,9 @@
 #include "rosidl_typesupport_introspection_c/service_introspection.h"
 #include "rosidl_typesupport_introspection_c/visibility_control.h"
 
+// uncomment the next line to enable debug prints
+ #define DEBUG_LOGGING 1
+
 using MessageTypeSupport_c =
     rmw_fastrtps_cpp::MessageTypeSupport<rosidl_typesupport_introspection_c__MessageMembers>;
 using MessageTypeSupport_cpp =
@@ -397,8 +400,14 @@ public:
       tempMsg.length = change->serializedPayload.length;
       memcpy(tempMsg.buffer, change->serializedPayload.data, tempMsg.length);
       if (proxyData.readFromCDRMessage(&tempMsg)) {
+        auto partition_str = std::string("");
+        // don't use std::accumulate - schlemiel O(n2)
+        for (const auto & partition : proxyData.m_qos.m_partition.getNames()) {
+          fprintf(stderr, "WriterproxyData partitions %s\n", partition.c_str());
+          partition_str += partition;
+        }
         mapmutex.lock();
-        topicNtypes[proxyData.topicName()].insert(proxyData.typeName());
+        topicNtypes[partition_str + "/" + proxyData.topicName()].insert(proxyData.typeName());
         rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
         if (ret != RMW_RET_OK) {
           fprintf(stderr, "failed to trigger graph guard condition: %s\n",
@@ -1732,6 +1741,15 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   }
   publisherParam.topic.topicName += "Request";
 
+#ifdef DEBUG_LOGGING
+  fprintf(stderr, "************ Client Details *********\n");
+  fprintf(stderr, "Sub Topic %s\n", subscriberParam.topic.topicName.c_str());
+  fprintf(stderr, "Sub Partition %s\n", subscriberParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "Pub Topic %s\n", publisherParam.topic.topicName.c_str());
+  fprintf(stderr, "Pub Partition %s\n", publisherParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "***********\n");
+#endif
+
   // Create Client Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     RMW_SET_ERROR_MSG("failed to get datareader qos");
@@ -2073,6 +2091,15 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
     goto fail;
   }
   publisherParam.topic.topicName += "Reply";
+
+#ifdef DEBUG_LOGGING
+  fprintf(stderr, "************ Service Details *********\n");
+  fprintf(stderr, "Sub Topic %s\n", subscriberParam.topic.topicName.c_str());
+  fprintf(stderr, "Sub Partition %s\n", subscriberParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "Pub Topic %s\n", publisherParam.topic.topicName.c_str());
+  fprintf(stderr, "Pub Partition %s\n", publisherParam.qos.m_partition.getNames()[0].c_str());
+  fprintf(stderr, "***********\n");
+#endif
 
   // Create Service Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
@@ -2706,12 +2733,15 @@ rmw_service_server_is_available(
     return RMW_RET_ERROR;
   }
 
+  auto pub_fqdn = client_info->request_publisher_->getAttributes().qos.m_partition.getNames()[0] + "/" + client_info->request_publisher_->getAttributes().topic.getTopicName();
+  fprintf(stderr, "Looking for publisher fqdn: %s\n", pub_fqdn.c_str());
+
   *is_available = false;
 
   size_t number_of_request_subscribers = 0;
   rmw_ret_t ret = rmw_count_subscribers(
     node,
-    client_info->request_publisher_->getAttributes().topic.getTopicName().c_str(),
+    pub_fqdn.c_str(),
     &number_of_request_subscribers);
   if (ret != RMW_RET_OK) {
     // error string already set
@@ -2722,10 +2752,12 @@ rmw_service_server_is_available(
     return RMW_RET_OK;
   }
 
+  auto sub_fqdn = client_info->response_subscriber_->getAttributes().qos.m_partition.getNames()[0] + "/" + client_info->response_subscriber_->getAttributes().topic.getTopicName();
+  fprintf(stderr, "Looking for subscriber fqdn: %s\n", pub_fqdn.c_str());
   size_t number_of_response_publishers = 0;
   ret = rmw_count_publishers(
     node,
-    client_info->response_subscriber_->getAttributes().topic.getTopicName().c_str(),
+    sub_fqdn.c_str(),
     &number_of_response_publishers);
   if (ret != RMW_RET_OK) {
     // error string already set
