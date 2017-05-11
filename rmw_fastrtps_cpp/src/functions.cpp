@@ -66,7 +66,7 @@
 #include "rosidl_typesupport_introspection_c/visibility_control.h"
 
 // uncomment the next line to enable debug prints
- #define DEBUG_LOGGING 1
+// #define DEBUG_LOGGING 1
 
 using MessageTypeSupport_c =
     rmw_fastrtps_cpp::MessageTypeSupport<rosidl_typesupport_introspection_c__MessageMembers>;
@@ -403,7 +403,6 @@ public:
         auto partition_str = std::string("");
         // don't use std::accumulate - schlemiel O(n2)
         for (const auto & partition : proxyData.m_qos.m_partition.getNames()) {
-          fprintf(stderr, "WriterproxyData partitions %s\n", partition.c_str());
           partition_str += partition;
         }
         mapmutex.lock();
@@ -2733,11 +2732,29 @@ rmw_service_server_is_available(
     return RMW_RET_ERROR;
   }
 
-  auto pub_fqdn = client_info->request_publisher_->getAttributes().qos.m_partition.getNames()[0] + "/" + client_info->request_publisher_->getAttributes().topic.getTopicName();
-  fprintf(stderr, "Looking for publisher fqdn: %s\n", pub_fqdn.c_str());
+  const auto & pub_topic_name =
+    client_info->request_publisher_->getAttributes().topic.getTopicName();
+  const auto & pub_partitions =
+    client_info->request_publisher_->getAttributes().qos.m_partition.getNames();
+  // every rostopic has exactly 1 partition field set
+  if (pub_partitions.size() != 1) {
+    RMW_SET_ERROR_MSG((std::string(pub_topic_name) + " is a non-ros topic\n").c_str());
+    return RMW_RET_ERROR;
+  }
+  auto pub_fqdn = pub_partitions[0] + "/" + pub_topic_name;
+
+  const auto & sub_topic_name =
+    client_info->response_subscriber_->getAttributes().topic.getTopicName();
+  const auto & sub_partitions =
+    client_info->response_subscriber_->getAttributes().qos.m_partition.getNames();
+  // every rostopic has exactly 1 partition field set
+  if (sub_partitions.size() != 1) {
+    RMW_SET_ERROR_MSG((std::string(sub_topic_name) + " is a non-ros topic\n").c_str());
+    return RMW_RET_ERROR;
+  }
+  auto sub_fqdn = sub_partitions[0] + "/" + sub_topic_name;
 
   *is_available = false;
-
   size_t number_of_request_subscribers = 0;
   rmw_ret_t ret = rmw_count_subscribers(
     node,
@@ -2752,8 +2769,6 @@ rmw_service_server_is_available(
     return RMW_RET_OK;
   }
 
-  auto sub_fqdn = client_info->response_subscriber_->getAttributes().qos.m_partition.getNames()[0] + "/" + client_info->response_subscriber_->getAttributes().topic.getTopicName();
-  fprintf(stderr, "Looking for subscriber fqdn: %s\n", pub_fqdn.c_str());
   size_t number_of_response_publishers = 0;
   ret = rmw_count_publishers(
     node,
