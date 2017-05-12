@@ -406,7 +406,8 @@ public:
           partition_str += partition;
         }
         mapmutex.lock();
-        topicNtypes[partition_str + "/" + proxyData.topicName()].insert(proxyData.typeName());
+        auto fqdn = partition_str + "/" + proxyData.topicName();
+        topicNtypes[fqdn].insert(proxyData.typeName());
         rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
         if (ret != RMW_RET_OK) {
           fprintf(stderr, "failed to trigger graph guard condition: %s\n",
@@ -2656,6 +2657,15 @@ rmw_count_publishers(
   } else {
     *count = it->second.size();
   }
+
+#ifdef DEBUG_LOGGING
+  fprintf(stderr, "looking for subscriber topic: %s\n", topic_name);
+  for (auto it : unfiltered_topics) {
+    fprintf(stderr, "available topic: %s\n", it.first.c_str());
+  }
+  fprintf(stderr, "number of matches: %zu\n", *count);
+#endif
+
   return RMW_RET_OK;
 }
 
@@ -2697,6 +2707,14 @@ rmw_count_subscribers(
     *count = it->second.size();
   }
 
+#ifdef DEBUG_LOGGING
+  fprintf(stderr, "looking for subscriber topic: %s\n", topic_name);
+  for (auto it : unfiltered_topics) {
+    fprintf(stderr, "available topic: %s\n", it.first.c_str());
+  }
+  fprintf(stderr, "number of matches: %zu\n", *count);
+#endif
+
   return RMW_RET_OK;
 }
 
@@ -2732,23 +2750,25 @@ rmw_service_server_is_available(
     return RMW_RET_ERROR;
   }
 
-  const auto & pub_topic_name =
+  auto pub_topic_name =
     client_info->request_publisher_->getAttributes().topic.getTopicName();
-  const auto & pub_partitions =
+  auto pub_partitions =
     client_info->request_publisher_->getAttributes().qos.m_partition.getNames();
   // every rostopic has exactly 1 partition field set
   if (pub_partitions.size() != 1) {
+    fprintf(stderr, "Topic %s is not a ros topic\n", pub_topic_name.c_str());
     RMW_SET_ERROR_MSG((std::string(pub_topic_name) + " is a non-ros topic\n").c_str());
     return RMW_RET_ERROR;
   }
   auto pub_fqdn = pub_partitions[0] + "/" + pub_topic_name;
 
-  const auto & sub_topic_name =
+  auto sub_topic_name =
     client_info->response_subscriber_->getAttributes().topic.getTopicName();
-  const auto & sub_partitions =
+  auto sub_partitions =
     client_info->response_subscriber_->getAttributes().qos.m_partition.getNames();
   // every rostopic has exactly 1 partition field set
   if (sub_partitions.size() != 1) {
+    fprintf(stderr, "Topic %s is not a ros topic\n", sub_topic_name.c_str());
     RMW_SET_ERROR_MSG((std::string(sub_topic_name) + " is a non-ros topic\n").c_str());
     return RMW_RET_ERROR;
   }
