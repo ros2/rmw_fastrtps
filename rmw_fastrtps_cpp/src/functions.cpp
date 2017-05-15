@@ -366,11 +366,17 @@ public:
       memcpy(tempMsg.buffer, change->serializedPayload.data, tempMsg.length);
       if (proxyData.readFromCDRMessage(&tempMsg)) {
         mapmutex.lock();
-        topicNtypes[proxyData.topicName()].insert(proxyData.typeName());
-        rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
-        if (ret != RMW_RET_OK) {
-          fprintf(stderr, "failed to trigger graph guard condition: %s\n",
-            rmw_get_error_string_safe());
+        auto it = topicNtypes.find(proxyData.topicName());
+        if (
+          it == topicNtypes.end() ||
+          it->second.find(proxyData.typeName()) == it->second.end())
+        {
+          topicNtypes[proxyData.topicName()].insert(proxyData.typeName());
+          rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
+          if (ret != RMW_RET_OK) {
+            fprintf(stderr, "failed to trigger graph guard condition: %s\n",
+              rmw_get_error_string_safe());
+          }
         }
         mapmutex.unlock();
       }
