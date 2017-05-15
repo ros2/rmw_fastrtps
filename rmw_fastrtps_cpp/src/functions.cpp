@@ -357,29 +357,41 @@ public:
   void onNewCacheChangeAdded(RTPSReader * reader, const CacheChange_t * const change)
   {
     (void)reader;
-    if (change->kind == ALIVE) {
-      WriterProxyData proxyData;
-      CDRMessage_t tempMsg;
-      tempMsg.msg_endian = change->serializedPayload.encapsulation ==
-        PL_CDR_BE ? BIGEND : LITTLEEND;
-      tempMsg.length = change->serializedPayload.length;
-      memcpy(tempMsg.buffer, change->serializedPayload.data, tempMsg.length);
-      if (proxyData.readFromCDRMessage(&tempMsg)) {
-        mapmutex.lock();
-        auto it = topicNtypes.find(proxyData.topicName());
+    WriterProxyData proxyData;
+    CDRMessage_t tempMsg;
+    tempMsg.msg_endian = change->serializedPayload.encapsulation ==
+      PL_CDR_BE ? BIGEND : LITTLEEND;
+    tempMsg.length = change->serializedPayload.length;
+    memcpy(tempMsg.buffer, change->serializedPayload.data, tempMsg.length);
+    if (proxyData.readFromCDRMessage(&tempMsg)) {
+      bool mapModified = false;
+      mapmutex.lock();
+      auto it = topicNtypes.find(proxyData.topicName());
+      if (change->kind == ALIVE) {
         if (
           it == topicNtypes.end() ||
           it->second.find(proxyData.typeName()) == it->second.end())
         {
           topicNtypes[proxyData.topicName()].insert(proxyData.typeName());
-          rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
-          if (ret != RMW_RET_OK) {
-            fprintf(stderr, "failed to trigger graph guard condition: %s\n",
-              rmw_get_error_string_safe());
-          }
+          mapModified = true;
         }
-        mapmutex.unlock();
+      } else {
+        if (
+          it != topicNtypes.end() &&
+          it->second.find(proxyData.typeName()) != it->second.end())
+        {
+          topicNtypes[proxyData.topicName()].erase(proxyData.typeName());
+          mapModified = true;
+        }
       }
+      if (mapModified) {
+        rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
+        if (ret != RMW_RET_OK) {
+          fprintf(stderr, "failed to trigger graph guard condition: %s\n",
+            rmw_get_error_string_safe());
+        }
+      }
+      mapmutex.unlock();
     }
   }
   std::map<std::string, std::set<std::string>> topicNtypes;
