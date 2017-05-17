@@ -76,6 +76,7 @@ struct StringHelper<rosidl_typesupport_introspection_c__MessageMembers>
     std::string str;
     deser >> str;
     rosidl_generator_c__String * c_str = static_cast<rosidl_generator_c__String *>(field);
+    rosidl_generator_c__String__init(c_str);
     rosidl_generator_c__String__assign(c_str, str.c_str());
   }
 };
