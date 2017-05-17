@@ -48,8 +48,8 @@ set(FastRTPS_FOUND FALSE)
 # -----------------------------------------
 # Detect environment variable
 # -----------------------------------------
-if($ENV{FASTRPCHOME})
-    set(FastRTPS_HOME $ENV{FASTRPCHOME})
+if($ENV{FASTRTPSHOME})
+    set(FastRTPS_HOME $ENV{FASTRTPSHOME})
 endif()
 
 # -----------------------------------------
