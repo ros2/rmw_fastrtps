@@ -392,29 +392,51 @@ public:
   void onNewCacheChangeAdded(RTPSReader * reader, const CacheChange_t * const change)
   {
     (void)reader;
-    if (change->kind == ALIVE) {
-      WriterProxyData proxyData;
-      CDRMessage_t tempMsg;
-      tempMsg.msg_endian = change->serializedPayload.encapsulation ==
-        PL_CDR_BE ? BIGEND : LITTLEEND;
-      tempMsg.length = change->serializedPayload.length;
-      memcpy(tempMsg.buffer, change->serializedPayload.data, tempMsg.length);
-      if (proxyData.readFromCDRMessage(&tempMsg)) {
-        auto partition_str = std::string("");
-        // don't use std::accumulate - schlemiel O(n2)
-        for (const auto & partition : proxyData.m_qos.m_partition.getNames()) {
-          partition_str += partition;
+
+    WriterProxyData proxyData;
+    CDRMessage_t tempMsg;
+    tempMsg.msg_endian = change->serializedPayload.encapsulation ==
+      PL_CDR_BE ? BIGEND : LITTLEEND;
+    tempMsg.length = change->serializedPayload.length;
+    memcpy(tempMsg.buffer, change->serializedPayload.data, tempMsg.length);
+    if (proxyData.readFromCDRMessage(&tempMsg)) {
+      bool mapModified = false;
+      // TODO(wjwwood): remove this logic and replace with check for
+      // a single partition which is prefixed with the ROS specific
+      // prefix.
+      auto partition_str = std::string("");
+      // don't use std::accumulate - schlemiel O(n2)
+      for (const auto & partition : proxyData.m_qos.m_partition.getNames()) {
+        partition_str += partition;
+      }
+      mapmutex.lock();
+      auto fqdn = partition_str + "/" + proxyData.topicName();
+      auto it = topicNtypes.find(fqdn);
+      if (change->kind == ALIVE) {
+        if (
+          it == topicNtypes.end() ||
+          it->second.find(proxyData.typeName()) == it->second.end())
+        {
+          topicNtypes[fqdn].insert(proxyData.typeName());
+          mapModified = true;
         }
-        mapmutex.lock();
-        auto fqdn = partition_str + "/" + proxyData.topicName();
-        topicNtypes[fqdn].insert(proxyData.typeName());
+      } else {
+        if (
+          it != topicNtypes.end() &&
+          it->second.find(proxyData.typeName()) != it->second.end())
+        {
+          topicNtypes[fqdn].erase(proxyData.typeName());
+          mapModified = true;
+        }
+      }
+      if (mapModified) {
         rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
         if (ret != RMW_RET_OK) {
           fprintf(stderr, "failed to trigger graph guard condition: %s\n",
             rmw_get_error_string_safe());
         }
-        mapmutex.unlock();
       }
+      mapmutex.unlock();
     }
   }
   std::map<std::string, std::set<std::string>> topicNtypes;
@@ -486,7 +508,7 @@ public:
     conditionVariable_ = conditionVariable;
   }
 
-  void dettachCondition()
+  void detachCondition()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
     conditionMutex_ = NULL;
@@ -1095,7 +1117,7 @@ public:
     conditionVariable_ = conditionVariable;
   }
 
-  void dettachCondition()
+  void detachCondition()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
     conditionMutex_ = NULL;
@@ -1395,7 +1417,7 @@ public:
     conditionVariable_ = conditionVariable;
   }
 
-  void dettachCondition()
+  void detachCondition()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
     conditionMutex_ = NULL;
@@ -1614,7 +1636,7 @@ public:
     conditionVariable_ = conditionVariable;
   }
 
-  void dettachCondition()
+  void detachCondition()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
     conditionMutex_ = NULL;
@@ -2408,7 +2430,7 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t * subscriptions,
       subscriptions->subscribers[i] = 0;
     }
     lock.unlock();
-    custom_subscriber_info->listener_->dettachCondition();
+    custom_subscriber_info->listener_->detachCondition();
     lock.lock();
   }
 
@@ -2419,7 +2441,7 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t * subscriptions,
       clients->clients[i] = 0;
     }
     lock.unlock();
-    custom_client_info->listener_->dettachCondition();
+    custom_client_info->listener_->detachCondition();
     lock.lock();
   }
 
@@ -2430,7 +2452,7 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t * subscriptions,
       services->services[i] = 0;
     }
     lock.unlock();
-    custom_service_info->listener_->dettachCondition();
+    custom_service_info->listener_->detachCondition();
     lock.lock();
   }
 
@@ -2442,7 +2464,7 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t * subscriptions,
         guard_conditions->guard_conditions[i] = 0;
       }
       lock.unlock();
-      guard_condition->dettachCondition();
+      guard_condition->detachCondition();
       lock.lock();
     }
   }
