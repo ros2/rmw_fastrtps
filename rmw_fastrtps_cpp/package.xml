@@ -24,6 +24,7 @@
 
   <build_export_depend>fastcdr</build_export_depend>
   <build_export_depend>fastrtps</build_export_depend>
+  <build_export_depend>rcutils</build_export_depend>
   <build_export_depend>rmw</build_export_depend>
   <build_export_depend>rosidl_generator_c</build_export_depend>
   <build_export_depend>rosidl_generator_cpp</build_export_depend>
