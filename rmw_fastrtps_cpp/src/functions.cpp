@@ -553,17 +553,16 @@ _filter_ros_prefix(const std::string & topic_name)
 {
   if (topic_name.find(std::string(ros_topic_prefix) + "/") == 0) {
     return topic_name.substr(
-        strlen(ros_topic_prefix),
-        topic_name.size() - strlen(ros_topic_prefix));
-  }
-  else if (topic_name.find(std::string(ros_service_requester_prefix) + "/") == 0) {
+      strlen(ros_topic_prefix),
+      topic_name.size() - strlen(ros_topic_prefix));
+  } else if (topic_name.find(std::string(ros_service_requester_prefix) + "/") == 0) {
     return topic_name.substr(
-        strlen(ros_service_requester_prefix),
-        topic_name.size() - strlen(ros_service_requester_prefix));
+      strlen(ros_service_requester_prefix),
+      topic_name.size() - strlen(ros_service_requester_prefix));
   } else if (topic_name.find(std::string(ros_service_response_prefix) + "/") == 0) {
     return topic_name.substr(
-        strlen(ros_service_response_prefix),
-        topic_name.size() - strlen(ros_service_response_prefix));
+      strlen(ros_service_response_prefix),
+      topic_name.size() - strlen(ros_service_response_prefix));
   } else {
     return topic_name;
   }
