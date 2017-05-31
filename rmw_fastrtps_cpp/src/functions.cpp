@@ -2522,7 +2522,15 @@ rmw_get_topic_names_and_types(
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
-      unfiltered_topics[it.first].insert(itt);
+      // truncate the ROS specific prefix
+      auto topic_fqdn = it.first;
+      if ( (it.first.find(std::string(ros_topic_prefix) + "/") == 0)
+        || (it.first.find(std::string(ros_service_requester_prefix) + "/") == 0)
+        || (it.first.find(std::string(ros_service_response_prefix) + "/") == 0)) {
+        topic_fqdn = it.first.substr(2, it.first.size() - 2);
+      }
+      //topics[topic_fqdn] = *it.second.begin();}
+      unfiltered_topics[topic_fqdn].insert(itt);
     }
   }
   slave_target->mapmutex.unlock();
@@ -2537,7 +2545,8 @@ rmw_get_topic_names_and_types(
   // Filter duplicates
   std::map<std::string, std::string> topics;
   for (auto & it : unfiltered_topics) {
-    if (it.second.size() == 1) {topics[it.first] = *it.second.begin();}
+    if (it.second.size() == 1) {
+      topics[it.first] = *it.second.begin();}
   }
   std::string substring = "::msg::dds_::";
   for (auto & it : topics) {
@@ -2667,7 +2676,16 @@ rmw_count_publishers(
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
-      unfiltered_topics[it.first].insert(itt);
+      // truncate the ROS specific prefix
+      auto topic_fqdn = it.first;
+      if ( (it.first.find(std::string(ros_topic_prefix) + "/") == 0)
+        || (it.first.find(std::string(ros_service_requester_prefix) + "/") == 0)
+        || (it.first.find(std::string(ros_service_response_prefix) + "/") == 0)) {
+        topic_fqdn = it.first.substr(2, it.first.size() - 2);
+      }
+      //topics[topic_fqdn] = *it.second.begin();}
+      unfiltered_topics[topic_fqdn].insert(itt);
+      //unfiltered_topics[it.first].insert(itt);
     }
   }
   slave_target->mapmutex.unlock();
@@ -2716,7 +2734,16 @@ rmw_count_subscribers(
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
-      unfiltered_topics[it.first].insert(itt);
+      // truncate the ROS specific prefix
+      auto topic_fqdn = it.first;
+      if ( (it.first.find(std::string(ros_topic_prefix) + "/") == 0)
+        || (it.first.find(std::string(ros_service_requester_prefix) + "/") == 0)
+        || (it.first.find(std::string(ros_service_response_prefix) + "/") == 0)) {
+        topic_fqdn = it.first.substr(2, it.first.size() - 2);
+      }
+      //topics[topic_fqdn] = *it.second.begin();}
+      unfiltered_topics[topic_fqdn].insert(itt);
+      //unfiltered_topics[it.first].insert(itt);
     }
   }
   slave_target->mapmutex.unlock();
