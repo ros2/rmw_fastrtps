@@ -68,6 +68,17 @@
 // uncomment the next line to enable debug prints
 // #define DEBUG_LOGGING 1
 
+extern "C"
+{
+
+// static for internal linkage
+static const char * const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
+static const char * const ros_topic_prefix = "rt";
+static const char * const ros_service_requester_prefix = "rq";
+static const char * const ros_service_response_prefix = "rr";
+
+}  // extern "C"
+
 using MessageTypeSupport_c =
     rmw_fastrtps_cpp::MessageTypeSupport<rosidl_typesupport_introspection_c__MessageMembers>;
 using MessageTypeSupport_cpp =
@@ -536,14 +547,30 @@ typedef struct CustomParticipantInfo
   rmw_guard_condition_t * graph_guard_condition;
 } CustomParticipantInfo;
 
+inline
+std::string
+_filter_ros_prefix(const std::string & topic_name)
+{
+  if (topic_name.find(std::string(ros_topic_prefix) + "/") == 0) {
+    return topic_name.substr(
+        strlen(ros_topic_prefix),
+        topic_name.size() - strlen(ros_topic_prefix));
+  }
+  else if (topic_name.find(std::string(ros_service_requester_prefix) + "/") == 0) {
+    return topic_name.substr(
+        strlen(ros_service_requester_prefix),
+        topic_name.size() - strlen(ros_service_requester_prefix));
+  } else if (topic_name.find(std::string(ros_service_response_prefix) + "/") == 0) {
+    return topic_name.substr(
+        strlen(ros_service_response_prefix),
+        topic_name.size() - strlen(ros_service_response_prefix));
+  } else {
+    return topic_name;
+  }
+}
+
 extern "C"
 {
-// static for internal linkage
-static const char * const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
-static const char * const ros_topic_prefix = "rt";
-static const char * const ros_service_requester_prefix = "rq";
-static const char * const ros_service_response_prefix = "rr";
-
 const char * rmw_get_implementation_identifier()
 {
   return eprosima_fastrtps_identifier;
@@ -2477,7 +2504,6 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t * subscriptions,
   return timeout ? RMW_RET_TIMEOUT : RMW_RET_OK;
 }
 
-
 rmw_ret_t
 rmw_get_topic_names_and_types(
   const rmw_node_t * node,
@@ -2523,22 +2549,19 @@ rmw_get_topic_names_and_types(
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
       // truncate the ROS specific prefix
-      auto topic_fqdn = it.first;
-      if ( (it.first.find(std::string(ros_topic_prefix) + "/") == 0)
-        || (it.first.find(std::string(ros_service_requester_prefix) + "/") == 0)
-        || (it.first.find(std::string(ros_service_response_prefix) + "/") == 0)) {
-        topic_fqdn = it.first.substr(2, it.first.size() - 2);
-      }
-      //topics[topic_fqdn] = *it.second.begin();}
+      auto topic_fqdn = _filter_ros_prefix(it.first);
       unfiltered_topics[topic_fqdn].insert(itt);
     }
   }
+
   slave_target->mapmutex.unlock();
   slave_target = impl->secondaryPubListener;
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
-      unfiltered_topics[it.first].insert(itt);
+      // truncate the ROS specific prefix
+      auto topic_fqdn = _filter_ros_prefix(it.first);
+      unfiltered_topics[topic_fqdn].insert(itt);
     }
   }
   slave_target->mapmutex.unlock();
@@ -2546,7 +2569,8 @@ rmw_get_topic_names_and_types(
   std::map<std::string, std::string> topics;
   for (auto & it : unfiltered_topics) {
     if (it.second.size() == 1) {
-      topics[it.first] = *it.second.begin();}
+      topics[it.first] = *it.second.begin();
+    }
   }
   std::string substring = "::msg::dds_::";
   for (auto & it : topics) {
@@ -2677,15 +2701,8 @@ rmw_count_publishers(
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
       // truncate the ROS specific prefix
-      auto topic_fqdn = it.first;
-      if ( (it.first.find(std::string(ros_topic_prefix) + "/") == 0)
-        || (it.first.find(std::string(ros_service_requester_prefix) + "/") == 0)
-        || (it.first.find(std::string(ros_service_response_prefix) + "/") == 0)) {
-        topic_fqdn = it.first.substr(2, it.first.size() - 2);
-      }
-      //topics[topic_fqdn] = *it.second.begin();}
+      auto topic_fqdn = _filter_ros_prefix(it.first);
       unfiltered_topics[topic_fqdn].insert(itt);
-      //unfiltered_topics[it.first].insert(itt);
     }
   }
   slave_target->mapmutex.unlock();
@@ -2735,15 +2752,8 @@ rmw_count_subscribers(
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
       // truncate the ROS specific prefix
-      auto topic_fqdn = it.first;
-      if ( (it.first.find(std::string(ros_topic_prefix) + "/") == 0)
-        || (it.first.find(std::string(ros_service_requester_prefix) + "/") == 0)
-        || (it.first.find(std::string(ros_service_response_prefix) + "/") == 0)) {
-        topic_fqdn = it.first.substr(2, it.first.size() - 2);
-      }
-      //topics[topic_fqdn] = *it.second.begin();}
+      auto topic_fqdn = _filter_ros_prefix(it.first);
       unfiltered_topics[topic_fqdn].insert(itt);
-      //unfiltered_topics[it.first].insert(itt);
     }
   }
   slave_target->mapmutex.unlock();
