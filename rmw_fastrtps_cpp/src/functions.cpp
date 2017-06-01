@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <array>
 #include <cassert>
 #include <condition_variable>
 #include <limits>
@@ -67,6 +68,15 @@
 
 // uncomment the next line to enable debug prints
 // #define DEBUG_LOGGING 1
+
+extern "C"
+{
+// static for internal linkage
+static const char * const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
+static const char * const ros_topic_prefix = "rt";
+static const char * const ros_service_requester_prefix = "rq";
+static const char * const ros_service_response_prefix = "rr";
+}  // extern "C"
 
 using MessageTypeSupport_c =
     rmw_fastrtps_cpp::MessageTypeSupport<rosidl_typesupport_introspection_c__MessageMembers>;
@@ -536,14 +546,21 @@ typedef struct CustomParticipantInfo
   rmw_guard_condition_t * graph_guard_condition;
 } CustomParticipantInfo;
 
+inline
+std::string
+_filter_ros_prefix(const std::string & topic_name)
+{
+  auto prefixes = {ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix};
+  for (auto prefix : prefixes) {
+    if (topic_name.rfind(std::string(prefix) + "/", 0) == 0) {
+      return topic_name.substr(strlen(ros_topic_prefix));
+    }
+  }
+  return topic_name;
+}
+
 extern "C"
 {
-// static for internal linkage
-static const char * const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
-static const char * const ros_topic_prefix = "rt";
-static const char * const ros_service_requester_prefix = "rq";
-static const char * const ros_service_response_prefix = "rr";
-
 const char * rmw_get_implementation_identifier()
 {
   return eprosima_fastrtps_identifier;
@@ -2477,7 +2494,6 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t * subscriptions,
   return timeout ? RMW_RET_TIMEOUT : RMW_RET_OK;
 }
 
-
 rmw_ret_t
 rmw_get_topic_names_and_types(
   const rmw_node_t * node,
@@ -2522,22 +2538,29 @@ rmw_get_topic_names_and_types(
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
-      unfiltered_topics[it.first].insert(itt);
+      // truncate the ROS specific prefix
+      auto topic_fqdn = _filter_ros_prefix(it.first);
+      unfiltered_topics[topic_fqdn].insert(itt);
     }
   }
+
   slave_target->mapmutex.unlock();
   slave_target = impl->secondaryPubListener;
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
-      unfiltered_topics[it.first].insert(itt);
+      // truncate the ROS specific prefix
+      auto topic_fqdn = _filter_ros_prefix(it.first);
+      unfiltered_topics[topic_fqdn].insert(itt);
     }
   }
   slave_target->mapmutex.unlock();
   // Filter duplicates
   std::map<std::string, std::string> topics;
   for (auto & it : unfiltered_topics) {
-    if (it.second.size() == 1) {topics[it.first] = *it.second.begin();}
+    if (it.second.size() == 1) {
+      topics[it.first] = *it.second.begin();
+    }
   }
   std::string substring = "::msg::dds_::";
   for (auto & it : topics) {
@@ -2667,7 +2690,9 @@ rmw_count_publishers(
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
-      unfiltered_topics[it.first].insert(itt);
+      // truncate the ROS specific prefix
+      auto topic_fqdn = _filter_ros_prefix(it.first);
+      unfiltered_topics[topic_fqdn].insert(itt);
     }
   }
   slave_target->mapmutex.unlock();
@@ -2716,7 +2741,9 @@ rmw_count_subscribers(
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
-      unfiltered_topics[it.first].insert(itt);
+      // truncate the ROS specific prefix
+      auto topic_fqdn = _filter_ros_prefix(it.first);
+      unfiltered_topics[topic_fqdn].insert(itt);
     }
   }
   slave_target->mapmutex.unlock();
@@ -2783,6 +2810,7 @@ rmw_service_server_is_available(
     return RMW_RET_ERROR;
   }
   auto pub_fqdn = pub_partitions[0] + "/" + pub_topic_name;
+  pub_fqdn = _filter_ros_prefix(pub_fqdn);
 
   auto sub_topic_name =
     client_info->response_subscriber_->getAttributes().topic.getTopicName();
@@ -2795,6 +2823,7 @@ rmw_service_server_is_available(
     return RMW_RET_ERROR;
   }
   auto sub_fqdn = sub_partitions[0] + "/" + sub_topic_name;
+  sub_fqdn = _filter_ros_prefix(sub_fqdn);
 
   *is_available = false;
   size_t number_of_request_subscribers = 0;
@@ -2840,7 +2869,6 @@ rmw_node_get_graph_guard_condition(const rmw_node_t * node)
   }
   return impl->graph_guard_condition;
 }
-
 
 rmw_ret_t
 rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
