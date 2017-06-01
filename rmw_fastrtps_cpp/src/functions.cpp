@@ -1816,7 +1816,6 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
 
   info->writer_guid_ = info->request_publisher_->getGuid();
 
-  fprintf(stderr, "Original service lcient topic %s\n", service_name);
   rmw_client = rmw_client_allocate();
   rmw_client->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_client->data = info;
@@ -2166,7 +2165,6 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
     goto fail;
   }
 
-  fprintf(stderr, "Original service server topic %s\n", service_name);
   rmw_service = rmw_service_allocate();
   rmw_service->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_service->data = info;
