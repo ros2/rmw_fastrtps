@@ -71,13 +71,11 @@
 
 extern "C"
 {
-
 // static for internal linkage
 static const char * const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
 static const char * const ros_topic_prefix = "rt";
 static const char * const ros_service_requester_prefix = "rq";
 static const char * const ros_service_response_prefix = "rr";
-
 }  // extern "C"
 
 using MessageTypeSupport_c =
@@ -1818,6 +1816,7 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
 
   info->writer_guid_ = info->request_publisher_->getGuid();
 
+  fprintf(stderr, "Original service lcient topic %s\n", service_name);
   rmw_client = rmw_client_allocate();
   rmw_client->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_client->data = info;
@@ -2167,6 +2166,7 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
     goto fail;
   }
 
+  fprintf(stderr, "Original service server topic %s\n", service_name);
   rmw_service = rmw_service_allocate();
   rmw_service->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_service->data = info;
@@ -2812,6 +2812,7 @@ rmw_service_server_is_available(
     return RMW_RET_ERROR;
   }
   auto pub_fqdn = pub_partitions[0] + "/" + pub_topic_name;
+  pub_fqdn = _filter_ros_prefix(pub_fqdn);
 
   auto sub_topic_name =
     client_info->response_subscriber_->getAttributes().topic.getTopicName();
@@ -2824,6 +2825,7 @@ rmw_service_server_is_available(
     return RMW_RET_ERROR;
   }
   auto sub_fqdn = sub_partitions[0] + "/" + sub_topic_name;
+  sub_fqdn = _filter_ros_prefix(sub_fqdn);
 
   *is_available = false;
   size_t number_of_request_subscribers = 0;
@@ -2869,7 +2871,6 @@ rmw_node_get_graph_guard_condition(const rmw_node_t * node)
   }
   return impl->graph_guard_condition;
 }
-
 
 rmw_ret_t
 rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
