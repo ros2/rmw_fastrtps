@@ -46,6 +46,7 @@
 #include "fastrtps/attributes/SubscriberAttributes.h"
 
 #include "fastrtps/rtps/RTPSDomain.h"
+#include "fastrtps/rtps/builtin/data/ReaderProxyData.h"
 #include "fastrtps/rtps/builtin/data/WriterProxyData.h"
 #include "fastrtps/rtps/common/CDRMessage_t.h"
 
@@ -391,66 +392,159 @@ typedef struct CustomClientResponse
   : buffer_(nullptr) {}
 } CustomClientResponse;
 
-class topicnamesandtypesReaderListener : public ReaderListener
+class ReaderInfo : public ReaderListener
 {
 public:
-  explicit topicnamesandtypesReaderListener(
+  ReaderInfo(
+    Participant * participant,
     rmw_guard_condition_t * graph_guard_condition)
-  : graph_guard_condition_(graph_guard_condition)
+  : participant_(participant),
+    graph_guard_condition_(graph_guard_condition)
   {}
 
-  void onNewCacheChangeAdded(RTPSReader * reader, const CacheChange_t * const change)
+  void onNewCacheChangeAdded(RTPSReader *, const CacheChange_t * const change)
   {
-    (void)reader;
+    ReaderProxyData proxyData;
+    if (change->kind == ALIVE) {
+      CDRMessage_t tempMsg;
+      tempMsg.wraps = true;
+      tempMsg.msg_endian = change->serializedPayload.encapsulation ==
+        PL_CDR_BE ? BIGEND : LITTLEEND;
+      tempMsg.length = change->serializedPayload.length;
+      tempMsg.max_size = change->serializedPayload.max_size;
+      tempMsg.buffer = change->serializedPayload.data;
+      if (!proxyData.readFromCDRMessage(&tempMsg)) {
+        return;
+      }
+    } else {
+      GUID_t readerGuid;
+      iHandle2GUID(readerGuid, change->instanceHandle);
+      if (!participant_->get_remote_reader_info(readerGuid, proxyData)) {
+        return;
+      }
+    }
 
-    WriterProxyData proxyData;
-    CDRMessage_t tempMsg;
-    tempMsg.msg_endian = change->serializedPayload.encapsulation ==
-      PL_CDR_BE ? BIGEND : LITTLEEND;
-    tempMsg.length = change->serializedPayload.length;
-    memcpy(tempMsg.buffer, change->serializedPayload.data, tempMsg.length);
-    if (proxyData.readFromCDRMessage(&tempMsg)) {
-      bool mapModified = false;
-      // TODO(wjwwood): remove this logic and replace with check for
-      // a single partition which is prefixed with the ROS specific
-      // prefix.
-      auto partition_str = std::string("");
-      // don't use std::accumulate - schlemiel O(n2)
-      for (const auto & partition : proxyData.m_qos.m_partition.getNames()) {
-        partition_str += partition;
+    // TODO(wjwwood): remove this logic and replace with check for
+    // a single partition which is prefixed with the ROS specific
+    // prefix.
+    auto partition_str = std::string("");
+    // don't use std::accumulate - schlemiel O(n2)
+    for (const auto & partition : proxyData.m_qos.m_partition.getNames()) {
+      partition_str += partition;
+    }
+    auto fqdn = partition_str + "/" + proxyData.topicName();
+
+    bool trigger = false;
+    mapmutex.lock();
+    auto it = topicNtypes.find(fqdn);
+    if (change->kind == ALIVE) {
+      if (
+        it == topicNtypes.end() ||
+        it->second.find(proxyData.typeName()) == it->second.end())
+      {
+        topicNtypes[fqdn].insert(proxyData.typeName());
+        trigger = true;
       }
-      mapmutex.lock();
-      auto fqdn = partition_str + "/" + proxyData.topicName();
-      auto it = topicNtypes.find(fqdn);
-      if (change->kind == ALIVE) {
-        if (
-          it == topicNtypes.end() ||
-          it->second.find(proxyData.typeName()) == it->second.end())
-        {
-          topicNtypes[fqdn].insert(proxyData.typeName());
-          mapModified = true;
-        }
-      } else {
-        if (
-          it != topicNtypes.end() &&
-          it->second.find(proxyData.typeName()) != it->second.end())
-        {
-          topicNtypes[fqdn].erase(proxyData.typeName());
-          mapModified = true;
-        }
+    } else {
+      if (
+        it != topicNtypes.end() &&
+        it->second.find(proxyData.typeName()) != it->second.end())
+      {
+        topicNtypes[fqdn].erase(proxyData.typeName());
+        trigger = true;
       }
-      if (mapModified) {
-        rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
-        if (ret != RMW_RET_OK) {
-          fprintf(stderr, "failed to trigger graph guard condition: %s\n",
-            rmw_get_error_string_safe());
-        }
+    }
+    mapmutex.unlock();
+
+    if (trigger) {
+      rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
+      if (ret != RMW_RET_OK) {
+        fprintf(stderr, "failed to trigger graph guard condition: %s\n",
+          rmw_get_error_string_safe());
       }
-      mapmutex.unlock();
     }
   }
   std::map<std::string, std::set<std::string>> topicNtypes;
   std::mutex mapmutex;
+  Participant * participant_;
+  rmw_guard_condition_t * graph_guard_condition_;
+};
+
+class WriterInfo : public ReaderListener
+{
+public:
+  WriterInfo(
+    Participant * participant,
+    rmw_guard_condition_t * graph_guard_condition)
+  : participant_(participant),
+    graph_guard_condition_(graph_guard_condition)
+  {}
+
+  void onNewCacheChangeAdded(RTPSReader *, const CacheChange_t * const change)
+  {
+    WriterProxyData proxyData;
+    if (change->kind == ALIVE) {
+      CDRMessage_t tempMsg;
+      tempMsg.wraps = true;
+      tempMsg.msg_endian = change->serializedPayload.encapsulation ==
+        PL_CDR_BE ? BIGEND : LITTLEEND;
+      tempMsg.length = change->serializedPayload.length;
+      tempMsg.max_size = change->serializedPayload.max_size;
+      tempMsg.buffer = change->serializedPayload.data;
+      if (!proxyData.readFromCDRMessage(&tempMsg)) {
+        return;
+      }
+    } else {
+      GUID_t writerGuid;
+      iHandle2GUID(writerGuid, change->instanceHandle);
+      if (!participant_->get_remote_writer_info(writerGuid, proxyData)) {
+        return;
+      }
+    }
+
+    // TODO(wjwwood): remove this logic and replace with check for
+    // a single partition which is prefixed with the ROS specific
+    // prefix.
+    auto partition_str = std::string("");
+    // don't use std::accumulate - schlemiel O(n2)
+    for (const auto & partition : proxyData.m_qos.m_partition.getNames()) {
+      partition_str += partition;
+    }
+    auto fqdn = partition_str + "/" + proxyData.topicName();
+
+    bool trigger = false;
+    mapmutex.lock();
+    auto it = topicNtypes.find(fqdn);
+    if (change->kind == ALIVE) {
+      if (
+        it == topicNtypes.end() ||
+        it->second.find(proxyData.typeName()) == it->second.end())
+      {
+        topicNtypes[fqdn].insert(proxyData.typeName());
+        trigger = true;
+      }
+    } else {
+      if (
+        it != topicNtypes.end() &&
+        it->second.find(proxyData.typeName()) != it->second.end())
+      {
+        topicNtypes[fqdn].erase(proxyData.typeName());
+        trigger = true;
+      }
+    }
+    mapmutex.unlock();
+
+    if (trigger) {
+      rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
+      if (ret != RMW_RET_OK) {
+        fprintf(stderr, "failed to trigger graph guard condition: %s\n",
+          rmw_get_error_string_safe());
+      }
+    }
+  }
+  std::map<std::string, std::set<std::string>> topicNtypes;
+  std::mutex mapmutex;
+  Participant * participant_;
   rmw_guard_condition_t * graph_guard_condition_;
 };
 
@@ -541,8 +635,8 @@ private:
 typedef struct CustomParticipantInfo
 {
   Participant * participant;
-  topicnamesandtypesReaderListener * secondarySubListener;
-  topicnamesandtypesReaderListener * secondaryPubListener;
+  ReaderInfo * secondarySubListener;
+  WriterInfo * secondaryPubListener;
   rmw_guard_condition_t * graph_guard_condition;
 } CustomParticipantInfo;
 
@@ -722,8 +816,8 @@ rmw_node_t * rmw_create_node(const char * name, const char * namespace_, size_t 
   rmw_guard_condition_t * graph_guard_condition = nullptr;
   CustomParticipantInfo * node_impl = nullptr;
   rmw_node_t * node_handle = nullptr;
-  topicnamesandtypesReaderListener * tnat_1 = nullptr;
-  topicnamesandtypesReaderListener * tnat_2 = nullptr;
+  ReaderInfo * tnat_1 = nullptr;
+  WriterInfo * tnat_2 = nullptr;
   std::pair<StatefulReader *, StatefulReader *> edp_readers;
 
   ParticipantAttributes participantParam;
@@ -776,8 +870,8 @@ rmw_node_t * rmw_create_node(const char * name, const char * namespace_, size_t 
   }
   memcpy(const_cast<char *>(node_handle->namespace_), namespace_, strlen(namespace_) + 1);
 
-  tnat_1 = new topicnamesandtypesReaderListener(graph_guard_condition);
-  tnat_2 = new topicnamesandtypesReaderListener(graph_guard_condition);
+  tnat_1 = new ReaderInfo(participant, graph_guard_condition);
+  tnat_2 = new WriterInfo(participant, graph_guard_condition);
 
   node_impl->secondarySubListener = tnat_1;
   node_impl->secondaryPubListener = tnat_2;
@@ -2514,7 +2608,6 @@ rmw_get_topic_names_and_types(
   }
 
   CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
-  Participant * participant = impl->participant;
 
   // const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
   //     type_supports, rosidl_typesupport_introspection_c__identifier);
@@ -2527,34 +2620,34 @@ rmw_get_topic_names_and_types(
   //   }
   // }
 
-  // Get and combine info from both Pub and Sub
-  std::pair<StatefulReader *, StatefulReader *> EDPReaders = participant->getEDPReaders();
-  (void)EDPReaders;
   // Access the slave Listeners, which are the ones that have the topicnamesandtypes member
   // Get info from publisher and subscriber
   // Combined results from the two lists
   std::map<std::string, std::set<std::string>> unfiltered_topics;
-  topicnamesandtypesReaderListener * slave_target = impl->secondarySubListener;
-  slave_target->mapmutex.lock();
-  for (auto it : slave_target->topicNtypes) {
-    for (auto & itt : it.second) {
-      // truncate the ROS specific prefix
-      auto topic_fqdn = _filter_ros_prefix(it.first);
-      unfiltered_topics[topic_fqdn].insert(itt);
+  {
+    ReaderInfo * slave_target = impl->secondarySubListener;
+    slave_target->mapmutex.lock();
+    for (auto it : slave_target->topicNtypes) {
+      for (auto & itt : it.second) {
+        // truncate the ROS specific prefix
+        auto topic_fqdn = _filter_ros_prefix(it.first);
+        unfiltered_topics[topic_fqdn].insert(itt);
+      }
     }
+    slave_target->mapmutex.unlock();
   }
-
-  slave_target->mapmutex.unlock();
-  slave_target = impl->secondaryPubListener;
-  slave_target->mapmutex.lock();
-  for (auto it : slave_target->topicNtypes) {
-    for (auto & itt : it.second) {
-      // truncate the ROS specific prefix
-      auto topic_fqdn = _filter_ros_prefix(it.first);
-      unfiltered_topics[topic_fqdn].insert(itt);
+  {
+    WriterInfo * slave_target = impl->secondaryPubListener;
+    slave_target->mapmutex.lock();
+    for (auto it : slave_target->topicNtypes) {
+      for (auto & itt : it.second) {
+        // truncate the ROS specific prefix
+        auto topic_fqdn = _filter_ros_prefix(it.first);
+        unfiltered_topics[topic_fqdn].insert(itt);
+      }
     }
+    slave_target->mapmutex.unlock();
   }
-  slave_target->mapmutex.unlock();
   // Filter duplicates
   std::map<std::string, std::string> topics;
   for (auto & it : unfiltered_topics) {
@@ -2686,7 +2779,7 @@ rmw_count_publishers(
   CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
 
   std::map<std::string, std::set<std::string>> unfiltered_topics;
-  topicnamesandtypesReaderListener * slave_target = impl->secondaryPubListener;
+  WriterInfo * slave_target = impl->secondaryPubListener;
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
@@ -2737,7 +2830,7 @@ rmw_count_subscribers(
   CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
 
   std::map<std::string, std::set<std::string>> unfiltered_topics;
-  topicnamesandtypesReaderListener * slave_target = impl->secondarySubListener;
+  ReaderInfo * slave_target = impl->secondarySubListener;
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
