@@ -823,7 +823,7 @@ rmw_ret_t rmw_init()
 rmw_node_t * create_node(
   const char * name,
   const char * namespace_,
-  ParticipantAttributes participantParam)
+  ParticipantAttributes participantAttrs)
 {
   if (!name) {
     RMW_SET_ERROR_MSG("name is null");
@@ -843,7 +843,7 @@ rmw_node_t * create_node(
   WriterInfo * tnat_2 = nullptr;
   std::pair<StatefulReader *, StatefulReader *> edp_readers;
 
-  Participant * participant = Domain::createParticipant(participantParam);
+  Participant * participant = Domain::createParticipant(participantAttrs);
   if (!participant) {
     RMW_SET_ERROR_MSG("create_node() could not create participant");
     return NULL;
@@ -958,9 +958,9 @@ rmw_create_node(
     return NULL;
   }
 
-  ParticipantAttributes participantParam;
-  participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
-  participantParam.rtps.setName(name);
+  ParticipantAttributes participantAttrs;
+  participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
+  participantAttrs.rtps.setName(name);
 
   if (options->security_root_path) {
     // if security_root_path provided, try to find the key and certificate files
@@ -984,7 +984,7 @@ rmw_create_node(
         Property("dds.sec.crypto.plugin", "builtin.AES-GCM-GMAC"));
       property_policy.properties().emplace_back(
         Property("rtps.participant.rtps_protection_kind", "ENCRYPT"));
-      participantParam.rtps.properties = property_policy;
+      participantAttrs.rtps.properties = property_policy;
     } else {
       if (options->enforce_security) {
         RMW_SET_ERROR_MSG("couldn't find all security files!");
@@ -998,7 +998,7 @@ rmw_create_node(
     return NULL;
 #endif
   }
-  return create_node(name, namespace_, participantParam);
+  return create_node(name, namespace_, participantAttrs);
 }
 
 rmw_ret_t rmw_destroy_node(rmw_node_t * node)
