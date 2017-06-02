@@ -985,11 +985,9 @@ rmw_create_node(
       property_policy.properties().emplace_back(
         Property("rtps.participant.rtps_protection_kind", "ENCRYPT"));
       participantAttrs.rtps.properties = property_policy;
-    } else {
-      if (options->enforce_security) {
-        RMW_SET_ERROR_MSG("couldn't find all security files!");
-        return NULL;
-      }
+    } else if (options->enforce_security) {
+      RMW_SET_ERROR_MSG("couldn't find all security files!");
+      return NULL;
     }
 #else
     RMW_SET_ERROR_MSG(
