@@ -37,10 +37,10 @@ find_path(FastRTPS_INCLUDE_DIR
   NAMES fastrtps/)
 
 find_library(FastRTPS_LIBRARY
-    NAMES fastrtps)
+    NAMES fastrtps-1.4 fastrtps)
 
 find_library(FastCDR_LIBRARY
-    NAMES fastcdr)
+    NAMES fastcdr-1.0 fastcdr)
 
 set(FastRTPS_LIBRARIES ${FastRTPS_LIBRARY} ${FastCDR_LIBRARY})
 
