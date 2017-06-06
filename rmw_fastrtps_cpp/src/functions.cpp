@@ -951,7 +951,7 @@ rmw_create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
-  const rmw_node_security_options_t * options)
+  const rmw_node_security_options_t * security_options)
 {
   if (!name) {
     RMW_SET_ERROR_MSG("name is null");
@@ -962,12 +962,12 @@ rmw_create_node(
   participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
   participantAttrs.rtps.setName(name);
 
-  if (options->security_root_path) {
+  if (security_options->security_root_path) {
     // if security_root_path provided, try to find the key and certificate files
 #if HAVE_SECURITY
     std::array<std::string, 3> security_files_paths;
 
-    if (rmw_get_security_file_paths(security_files_paths, options->security_root_path)) {
+    if (rmw_get_security_file_paths(security_files_paths, security_options->security_root_path)) {
       PropertyPolicy property_policy;
       property_policy.properties().emplace_back(
         Property("dds.sec.auth.plugin", "builtin.PKI-DH"));
@@ -985,7 +985,7 @@ rmw_create_node(
       property_policy.properties().emplace_back(
         Property("rtps.participant.rtps_protection_kind", "ENCRYPT"));
       participantAttrs.rtps.properties = property_policy;
-    } else if (options->enforce_security) {
+    } else if (security_options->enforce_security) {
       RMW_SET_ERROR_MSG("couldn't find all security files!");
       return NULL;
     }
