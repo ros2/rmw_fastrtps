@@ -39,14 +39,14 @@ find_path(FastRTPS_INCLUDE_DIR
 find_package(fastcdr REQUIRED CONFIG)
 find_package(fastrtps REQUIRED CONFIG)
 
-string(REGEX MATCH "^[0-9]+\\.[0-9]+" fastcdr_DLL_VERSION "${fastcdr_VERSION}")
-string(REGEX MATCH "^[0-9]+\\.[0-9]+" fastrtps_DLL_VERSION "${fastrtps_VERSION}")
+string(REGEX MATCH "^[0-9]+\\.[0-9]+" fastcdr_MAJOR_MINOR_VERSION "${fastcdr_VERSION}")
+string(REGEX MATCH "^[0-9]+\\.[0-9]+" fastrtps_MAJOR_MINOR_VERSION "${fastrtps_VERSION}")
 
 find_library(FastRTPS_LIBRARY
-    NAMES fastrtps-${fastrtps_DLL_VERSION} fastrtps)
+    NAMES fastrtps-${fastrtps_MAJOR_MINOR_VERSION} fastrtps)
 
 find_library(FastCDR_LIBRARY
-    NAMES fastcdr-${fastcdr_DLL_VERSION} fastcdr)
+    NAMES fastcdr-${fastcdr_MAJOR_MINOR_VERSION} fastcdr)
 
 set(FastRTPS_LIBRARIES ${FastRTPS_LIBRARY} ${FastCDR_LIBRARY})
 
