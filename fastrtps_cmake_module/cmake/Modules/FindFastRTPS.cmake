@@ -42,20 +42,30 @@ find_package(fastrtps REQUIRED CONFIG)
 string(REGEX MATCH "^[0-9]+\\.[0-9]+" fastcdr_MAJOR_MINOR_VERSION "${fastcdr_VERSION}")
 string(REGEX MATCH "^[0-9]+\\.[0-9]+" fastrtps_MAJOR_MINOR_VERSION "${fastrtps_VERSION}")
 
-find_library(FastRTPS_LIBRARY
-    NAMES fastrtpsd-${fastrtps_MAJOR_MINOR_VERSION} fastrtps-${fastrtps_MAJOR_MINOR_VERSION} fastrtps)
+find_library(FastRTPS_LIBRARY_RELEASE
+    NAMES fastrtps-${fastrtps_MAJOR_MINOR_VERSION} fastrtps)
 
-find_library(FastCDR_LIBRARY
-    NAMES fastcdrd-${fastcdr_MAJOR_MINOR_VERSION} fastcdr-${fastcdr_MAJOR_MINOR_VERSION} fastcdr)
+find_library(FastRTPS_LIBRARY_DEBUG
+    NAMES fastrtps${CMAKE_DEBUG_POSTFIX}-${fastrtps_MAJOR_MINOR_VERSION} fastrtps)
 
-set(FastRTPS_LIBRARIES ${FastRTPS_LIBRARY} ${FastCDR_LIBRARY})
+find_library(FastCDR_LIBRARY_RELEASE
+    NAMES fastcdr-${fastcdr_MAJOR_MINOR_VERSION} fastcdr)
+
+find_library(FastCDR_LIBRARY_RELEASE
+    NAMES fastcdr${CMAKE_DEBUG_POSTFIX}-${fastcdr_MAJOR_MINOR_VERSION} fastcdr)
+
+set(FastRTPS_LIBRARIES_RELEASE ${FastRTPS_LIBRARY_RELEASE} ${FastCDR_LIBRARY_RELEASE})
+set(FastRTPS_LIBRARIES_DEBUG ${FastRTPS_LIBRARY_DEBUG} ${FastCDR_LIBRARY_DEBUG})
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FastRTPS
   FOUND_VAR FastRTPS_FOUND
   REQUIRED_VARS
     FastRTPS_INCLUDE_DIR
-    FastCDR_LIBRARY
-    FastRTPS_LIBRARY
-    FastRTPS_LIBRARIES
+    FastCDR_LIBRARY_RELEASE
+    FastCDR_LIBRARY_DEBUG
+    FastRTPS_LIBRARY_RELEASE
+    FastRTPS_LIBRARY_DEBUG
+    FastRTPS_LIBRARIES_RELEASE
+    FastRTPS_LIBRARIES_DEBUG
 )

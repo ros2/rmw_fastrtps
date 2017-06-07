@@ -60,7 +60,7 @@ ament_target_dependencies(rmw_fastrtps_cpp
 
 configure_rmw_library(rmw_fastrtps_cpp)
 
-ament_export_libraries(rmw_fastrtps_cpp ${FastRTPS_LIBRARIES})
+ament_export_libraries(rmw_fastrtps_cpp ${FastRTPS_LIBRARIES_RELEASE} ${FastRTPS_LIBRARIES_DEBUG})
 if(NOT WIN32 AND NOT ANDROID)
   ament_export_libraries(pthread)
 endif()
