@@ -43,10 +43,10 @@ string(REGEX MATCH "^[0-9]+\\.[0-9]+" fastcdr_MAJOR_MINOR_VERSION "${fastcdr_VER
 string(REGEX MATCH "^[0-9]+\\.[0-9]+" fastrtps_MAJOR_MINOR_VERSION "${fastrtps_VERSION}")
 
 find_library(FastRTPS_LIBRARY
-    NAMES fastrtps-${fastrtps_MAJOR_MINOR_VERSION} fastrtps)
+    NAMES fastrtpsd-${fastrtps_MAJOR_MINOR_VERSION} fastrtps-${fastrtps_MAJOR_MINOR_VERSION} fastrtps)
 
 find_library(FastCDR_LIBRARY
-    NAMES fastcdr-${fastcdr_MAJOR_MINOR_VERSION} fastcdr)
+    NAMES fastcdrd-${fastcdr_MAJOR_MINOR_VERSION} fastcdr-${fastcdr_MAJOR_MINOR_VERSION} fastcdr)
 
 set(FastRTPS_LIBRARIES ${FastRTPS_LIBRARY} ${FastCDR_LIBRARY})
 
