@@ -27,7 +27,6 @@ find_package(rcutils REQUIRED)
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr REQUIRED CONFIG)
 find_package(fastrtps REQUIRED CONFIG)
-find_package(FastRTPS REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
 find_package(rosidl_generator_c REQUIRED)
@@ -60,7 +59,7 @@ ament_target_dependencies(rmw_fastrtps_cpp
 
 configure_rmw_library(rmw_fastrtps_cpp)
 
-ament_export_libraries(rmw_fastrtps_cpp ${FastRTPS_LIBRARIES})
+ament_export_libraries(rmw_fastrtps_cpp fastcdr fastrtps)
 if(NOT WIN32 AND NOT ANDROID)
   ament_export_libraries(pthread)
 endif()
