@@ -342,14 +342,15 @@ _assign_partitions_to_attributes(
     attributes->topic.topicName = name_tokens.data[0];
     ret = RCUTILS_RET_OK;
   } else if (name_tokens.size == 2) {
+    std::string partition;
     if (avoid_ros_namespace_conventions) {
       // no prefix to be used, just assign the user's namespace
-      attributes->qos.m_partition.push_back(name_tokens.data[0]);
+      partition = name_tokens.data[0];
     } else {
       // concat the prefix with the user's namespace
-      attributes->qos.m_partition.push_back(
-        (std::string(prefix) + "/" + name_tokens.data[0]).c_str());
+      partition = std::string(prefix) + "/" + name_tokens.data[0];
     }
+    attributes->qos.m_partition.push_back(partition.c_str());
     attributes->topic.topicName = name_tokens.data[1];
     ret = RCUTILS_RET_OK;
   } else {
