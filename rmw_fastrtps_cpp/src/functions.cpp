@@ -337,19 +337,31 @@ template<typename AttributeT>
 inline
 rcutils_ret_t
 _assign_partitions_to_attributes(
-  const char * const topic_name, const char * const prefix, AttributeT * attributes)
+  const char * const topic_name,
+  const char * const prefix,
+  bool avoid_ros_namespace_conventions,
+  AttributeT * attributes)
 {
   rcutils_ret_t ret = RCUTILS_RET_ERROR;
   // set topic and partitions
   rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
   name_tokens = rcutils_split_last(topic_name, '/');
   if (name_tokens.size == 1) {
-    attributes->qos.m_partition.push_back(prefix);
+    if (!avoid_ros_namespace_conventions) {
+      attributes->qos.m_partition.push_back(prefix);
+    }
     attributes->topic.topicName = name_tokens.data[0];
     ret = RCUTILS_RET_OK;
   } else if (name_tokens.size == 2) {
-    attributes->qos.m_partition.push_back(
-      (std::string(prefix) + "/" + name_tokens.data[0]).c_str());
+    std::string partition;
+    if (avoid_ros_namespace_conventions) {
+      // no prefix to be used, just assign the user's namespace
+      partition = name_tokens.data[0];
+    } else {
+      // concat the prefix with the user's namespace
+      partition = std::string(prefix) + "/" + name_tokens.data[0];
+    }
+    attributes->qos.m_partition.push_back(partition.c_str());
     attributes->topic.topicName = name_tokens.data[1];
     ret = RCUTILS_RET_OK;
   } else {
@@ -1037,7 +1049,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   publisherParam.topic.topicKind = NO_KEY;
   publisherParam.topic.topicDataType = type_name;
   rcutils_ret_t ret = _assign_partitions_to_attributes(
-    topic_name, ros_topic_prefix, &publisherParam);
+    topic_name, ros_topic_prefix, qos_policies->avoid_ros_namespace_conventions, &publisherParam);
   if (ret != RCUTILS_RET_OK) {
     // error msg already set
     goto fail;
@@ -1327,7 +1339,7 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   subscriberParam.topic.topicKind = NO_KEY;
   subscriberParam.topic.topicDataType = type_name;
   rcutils_ret_t ret = _assign_partitions_to_attributes(
-    topic_name, ros_topic_prefix, &subscriberParam);
+    topic_name, ros_topic_prefix, qos_policies->avoid_ros_namespace_conventions, &subscriberParam);
   if (ret != RCUTILS_RET_OK) {
     // error msg already set
     goto fail;
@@ -1855,7 +1867,8 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   subscriberParam.topic.topicDataType = response_type_name;
   subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   rcutils_ret_t ret = _assign_partitions_to_attributes(
-    service_name, ros_service_response_prefix, &subscriberParam);
+    service_name, ros_service_response_prefix,
+    qos_policies->avoid_ros_namespace_conventions, &subscriberParam);
   if (ret != RCUTILS_RET_OK) {
     // error msg already set
     goto fail;
@@ -1867,7 +1880,8 @@ rmw_client_t * rmw_create_client(const rmw_node_t * node,
   publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
   publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   ret = _assign_partitions_to_attributes(
-    service_name, ros_service_requester_prefix, &publisherParam);
+    service_name, ros_service_requester_prefix,
+    qos_policies->avoid_ros_namespace_conventions, &publisherParam);
   if (ret != RCUTILS_RET_OK) {
     // error msg already set
     goto fail;
@@ -2206,7 +2220,8 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   subscriberParam.topic.topicDataType = request_type_name;
   rcutils_ret_t ret = _assign_partitions_to_attributes(
-    service_name, ros_service_requester_prefix, &subscriberParam);
+    service_name, ros_service_requester_prefix,
+    qos_policies->avoid_ros_namespace_conventions, &subscriberParam);
   if (ret != RCUTILS_RET_OK) {
     // error msg already set
     goto fail;
@@ -2218,7 +2233,8 @@ rmw_service_t * rmw_create_service(const rmw_node_t * node,
   publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
   publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   ret = _assign_partitions_to_attributes(
-    service_name, ros_service_response_prefix, &publisherParam);
+    service_name, ros_service_response_prefix,
+    qos_policies->avoid_ros_namespace_conventions, &publisherParam);
   if (ret != RCUTILS_RET_OK) {
     // error msg already set
     goto fail;
