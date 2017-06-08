@@ -51,11 +51,13 @@ find_library(FastRTPS_LIBRARY_DEBUG
 find_library(FastCDR_LIBRARY_RELEASE
     NAMES fastcdr-${fastcdr_MAJOR_MINOR_VERSION} fastcdr)
 
-find_library(FastCDR_LIBRARY_RELEASE
+find_library(FastCDR_LIBRARY_DEBUG
     NAMES fastcdr${CMAKE_DEBUG_POSTFIX}-${fastcdr_MAJOR_MINOR_VERSION} fastcdr)
 
-set(FastRTPS_LIBRARIES_RELEASE ${FastRTPS_LIBRARY_RELEASE} ${FastCDR_LIBRARY_RELEASE})
-set(FastRTPS_LIBRARIES_DEBUG ${FastRTPS_LIBRARY_DEBUG} ${FastCDR_LIBRARY_DEBUG})
+set(FastRTPS_LIBRARIES
+    optimized ${FastRTPS_LIBRARY_RELEASE} ${FastCDR_LIBRARY_RELEASE}
+    debug ${FastRTPS_LIBRARY_DEBUG} ${FastCDR_LIBRARY_DEBUG}
+)
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FastRTPS
@@ -66,6 +68,5 @@ find_package_handle_standard_args(FastRTPS
     FastCDR_LIBRARY_DEBUG
     FastRTPS_LIBRARY_RELEASE
     FastRTPS_LIBRARY_DEBUG
-    FastRTPS_LIBRARIES_RELEASE
-    FastRTPS_LIBRARIES_DEBUG
+    FastRTPS_LIBRARIES
 )
