@@ -48,23 +48,21 @@ find_library(FastCDR_LIBRARY_RELEASE
 find_library(FastCDR_LIBRARY_DEBUG
     NAMES fastcdr${CMAKE_DEBUG_POSTFIX}-${fastcdr_MAJOR_MINOR_VERSION})
 
-if(FastCDR_LIBRARY_RELEASE)
-    if(FastCDR_LIBRARY_DEBUG)
-        set(FastCDR_LIBRARIES
-            optimized ${FastCDR_LIBRARY_RELEASE}
-            debug ${FastCDR_LIBRARY_DEBUG}
-        )
-    else()
-        set(FastCDR_LIBRARIES
-            ${FastCDR_LIBRARY_RELEASE}
-        )
-    endif()
+if(FastCDR_LIBRARY_RELEASE AND FastCDR_LIBRARY_DEBUG)
+    set(FastCDR_LIBRARIES
+        optimized ${FastCDR_LIBRARY_RELEASE}
+        debug ${FastCDR_LIBRARY_DEBUG}
+    )
+elseif(FastCDR_LIBRARY_RELEASE)
+    set(FastCDR_LIBRARIES
+        ${FastCDR_LIBRARY_RELEASE}
+    )
+elseif(FastCDR_LIBRARY_DEBUG)
+    set(FastCDR_LIBRARIES
+        ${FastCDR_LIBRARY_DEBUG}
+    )
 else()
-    if(FastCDR_LIBRARY_DEBUG)
-        set(FastCDR_LIBRARIES
-            ${FastCDR_LIBRARY_DEBUG}
-        )
-    endif()
+    set(FastCDR_LIBRARIES "")
 endif()
 
 find_library(FastRTPS_LIBRARY_RELEASE
@@ -73,28 +71,24 @@ find_library(FastRTPS_LIBRARY_RELEASE
 find_library(FastRTPS_LIBRARY_DEBUG
     NAMES fastrtps${CMAKE_DEBUG_POSTFIX}-${fastrtps_MAJOR_MINOR_VERSION})
 
-if(FastRTPS_LIBRARY_RELEASE)
-    if(FastRTPS_LIBRARY_DEBUG)
-        set(FastRTPS_LIBRARIES
-            optimized ${FastRTPS_LIBRARY_RELEASE}
-            debug ${FastRTPS_LIBRARY_DEBUG}
-            ${FastCDR_LIBRARIES}
-        )
-    else()
-        set(FastRTPS_LIBRARIES
-            ${FastRTPS_LIBRARY_RELEASE}
-            ${FastCDR_LIBRARIES}
-        )
-    endif()
+if(FastRTPS_LIBRARY_RELEASE AND FastRTPS_LIBRARY_DEBUG)
+    set(FastRTPS_LIBRARIES
+        optimized ${FastRTPS_LIBRARY_RELEASE}
+        debug ${FastRTPS_LIBRARY_DEBUG}
+        ${FastCDR_LIBRARIES}
+    )
+elseif(FastRTPS_LIBRARY_RELEASE)
+    set(FastRTPS_LIBRARIES
+        ${FastRTPS_LIBRARY_RELEASE}
+        ${FastCDR_LIBRARIES}
+    )
+elseif(FastRTPS_LIBRARY_DEBUG)
+    set(FastRTPS_LIBRARIES
+        ${FastRTPS_LIBRARY_DEBUG}
+        ${FastCDR_LIBRARIES}
+    )
 else()
-    if(FastRTPS_LIBRARY_DEBUG)
-        set(FastRTPS_LIBRARIES
-            ${FastRTPS_LIBRARY_DEBUG}
-            ${FastCDR_LIBRARIES}
-        )
-    endif()
-else()
-
+    set(FastRTPS_LIBRARIES "")
 endif()
 
 include(FindPackageHandleStandardArgs)
