@@ -42,31 +42,65 @@ find_package(fastrtps REQUIRED CONFIG)
 string(REGEX MATCH "^[0-9]+\\.[0-9]+" fastcdr_MAJOR_MINOR_VERSION "${fastcdr_VERSION}")
 string(REGEX MATCH "^[0-9]+\\.[0-9]+" fastrtps_MAJOR_MINOR_VERSION "${fastrtps_VERSION}")
 
-find_library(FastRTPS_LIBRARY_RELEASE
-    NAMES fastrtps-${fastrtps_MAJOR_MINOR_VERSION} fastrtps)
-
-find_library(FastRTPS_LIBRARY_DEBUG
-    NAMES fastrtps${CMAKE_DEBUG_POSTFIX}-${fastrtps_MAJOR_MINOR_VERSION} fastrtps)
-
 find_library(FastCDR_LIBRARY_RELEASE
     NAMES fastcdr-${fastcdr_MAJOR_MINOR_VERSION} fastcdr)
 
 find_library(FastCDR_LIBRARY_DEBUG
-    NAMES fastcdr${CMAKE_DEBUG_POSTFIX}-${fastcdr_MAJOR_MINOR_VERSION} fastcdr)
+    NAMES fastcdr${CMAKE_DEBUG_POSTFIX}-${fastcdr_MAJOR_MINOR_VERSION})
 
-set(FastRTPS_LIBRARIES
-    optimized ${FastRTPS_LIBRARY_RELEASE} ${FastCDR_LIBRARY_RELEASE}
-    debug ${FastRTPS_LIBRARY_DEBUG} ${FastCDR_LIBRARY_DEBUG}
-)
+if(FastCDR_LIBRARY_RELEASE)
+    if(FastCDR_LIBRARY_DEBUG)
+        set(FastCDR_LIBRARIES
+            optimized ${FastCDR_LIBRARY_RELEASE}
+            debug ${FastCDR_LIBRARY_DEBUG}
+        )
+    else()
+        set(FastCDR_LIBRARIES
+            ${FastCDR_LIBRARY_RELEASE}
+        )
+    endif()
+else()
+    if(FastCDR_LIBRARY_DEBUG)
+        set(FastCDR_LIBRARIES
+            ${FastCDR_LIBRARY_DEBUG}
+        )
+    endif()
+endif()
+
+find_library(FastRTPS_LIBRARY_RELEASE
+    NAMES fastrtps-${fastrtps_MAJOR_MINOR_VERSION} fastrtps)
+
+find_library(FastRTPS_LIBRARY_DEBUG
+    NAMES fastrtps${CMAKE_DEBUG_POSTFIX}-${fastrtps_MAJOR_MINOR_VERSION})
+
+if(FastRTPS_LIBRARY_RELEASE)
+    if(FastRTPS_LIBRARY_DEBUG)
+        set(FastRTPS_LIBRARIES
+            optimized ${FastRTPS_LIBRARY_RELEASE}
+            debug ${FastRTPS_LIBRARY_DEBUG}
+            ${FastCDR_LIBRARIES}
+        )
+    else()
+        set(FastRTPS_LIBRARIES
+            ${FastRTPS_LIBRARY_RELEASE}
+            ${FastCDR_LIBRARIES}
+        )
+    endif()
+else()
+    if(FastRTPS_LIBRARY_DEBUG)
+        set(FastRTPS_LIBRARIES
+            ${FastRTPS_LIBRARY_DEBUG}
+            ${FastCDR_LIBRARIES}
+        )
+    endif()
+else()
+
+endif()
 
 include(FindPackageHandleStandardArgs)
 find_package_handle_standard_args(FastRTPS
   FOUND_VAR FastRTPS_FOUND
   REQUIRED_VARS
     FastRTPS_INCLUDE_DIR
-    FastCDR_LIBRARY_RELEASE
-    FastCDR_LIBRARY_DEBUG
-    FastRTPS_LIBRARY_RELEASE
-    FastRTPS_LIBRARY_DEBUG
     FastRTPS_LIBRARIES
 )
