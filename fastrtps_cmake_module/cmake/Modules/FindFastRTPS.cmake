@@ -46,7 +46,7 @@ find_library(FastCDR_LIBRARY_RELEASE
     NAMES fastcdr-${fastcdr_MAJOR_MINOR_VERSION} fastcdr)
 
 find_library(FastCDR_LIBRARY_DEBUG
-    NAMES fastcdr${CMAKE_DEBUG_POSTFIX}-${fastcdr_MAJOR_MINOR_VERSION})
+    NAMES fastcdrd-${fastcdr_MAJOR_MINOR_VERSION})
 
 if(FastCDR_LIBRARY_RELEASE AND FastCDR_LIBRARY_DEBUG)
     set(FastCDR_LIBRARIES
@@ -69,7 +69,7 @@ find_library(FastRTPS_LIBRARY_RELEASE
     NAMES fastrtps-${fastrtps_MAJOR_MINOR_VERSION} fastrtps)
 
 find_library(FastRTPS_LIBRARY_DEBUG
-    NAMES fastrtps${CMAKE_DEBUG_POSTFIX}-${fastrtps_MAJOR_MINOR_VERSION})
+    NAMES fastrtpsd-${fastrtps_MAJOR_MINOR_VERSION})
 
 if(FastRTPS_LIBRARY_RELEASE AND FastRTPS_LIBRARY_DEBUG)
     set(FastRTPS_LIBRARIES
