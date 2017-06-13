@@ -933,7 +933,7 @@ bool get_security_file_paths(
 {
   // here assume only 3 files for security
   const char * file_names[3] = {"ca.cert.pem", "cert.pem", "key.pem"};
-  size_t num_files = 3;
+  size_t num_files = sizeof(file_names) / sizeof(char *);
 
   const char * file_prefix = "file://";
 
