@@ -959,6 +959,10 @@ rmw_create_node(
     RMW_SET_ERROR_MSG("name is null");
     return NULL;
   }
+  if (!security_options) {
+    RMW_SET_ERROR_MSG("security_options is null");
+    return nullptr;
+  }
 
   ParticipantAttributes participantAttrs;
   participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
