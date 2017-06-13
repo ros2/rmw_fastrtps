@@ -928,7 +928,7 @@ fail:
   return NULL;
 }
 
-bool rmw_get_security_file_paths(
+bool get_security_file_paths(
   std::array<std::string, 3> & security_files_paths, const char * node_secure_root)
 {
   // here assume only 3 files for security
@@ -973,7 +973,7 @@ rmw_create_node(
 #if HAVE_SECURITY
     std::array<std::string, 3> security_files_paths;
 
-    if (rmw_get_security_file_paths(security_files_paths, security_options->security_root_path)) {
+    if (get_security_file_paths(security_files_paths, security_options->security_root_path)) {
       PropertyPolicy property_policy;
       property_policy.properties().emplace_back(
         Property("dds.sec.auth.plugin", "builtin.PKI-DH"));
