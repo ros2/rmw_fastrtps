@@ -23,6 +23,9 @@
 #include <set>
 #include <string>
 
+#include "rcutils/allocator.h"
+#include "rcutils/error_handling.h"
+#include "rcutils/format_string.h"
 #include "rcutils/split.h"
 #include "rcutils/types.h"
 
@@ -343,9 +346,15 @@ _assign_partitions_to_attributes(
   AttributeT * attributes)
 {
   rcutils_ret_t ret = RCUTILS_RET_ERROR;
+  auto allocator = rcutils_get_default_allocator();
+
   // set topic and partitions
   rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
-  name_tokens = rcutils_split_last(topic_name, '/');
+  ret = rcutils_split_last(topic_name, '/', allocator, &name_tokens);
+  if (ret != RCUTILS_RET_OK) {
+    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe());
+    return ret;
+  }
   if (name_tokens.size == 1) {
     if (!avoid_ros_namespace_conventions) {
       attributes->qos.m_partition.push_back(prefix);
@@ -368,7 +377,7 @@ _assign_partitions_to_attributes(
     RMW_SET_ERROR_MSG("Malformed topic name");
     ret = RCUTILS_RET_ERROR;
   }
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens, &allocator) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
     ret = RCUTILS_RET_ERROR;
   }
