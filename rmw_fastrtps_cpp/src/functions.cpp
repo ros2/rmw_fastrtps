@@ -346,9 +346,11 @@ _assign_partitions_to_attributes(
   AttributeT * attributes)
 {
   rcutils_ret_t ret = RCUTILS_RET_ERROR;
+  auto allocator = rcutils_get_default_allocator();
+
   // set topic and partitions
   rcutils_string_array_t name_tokens = rcutils_get_zero_initialized_string_array();
-  ret = rcutils_split_last(topic_name, '/', rcutils_get_default_allocator(), &name_tokens);
+  ret = rcutils_split_last(topic_name, '/', allocator, &name_tokens);
   if (ret != RCUTILS_RET_OK) {
     RMW_SET_ERROR_MSG(rcutils_get_error_string_safe());
     return ret;
@@ -375,7 +377,7 @@ _assign_partitions_to_attributes(
     RMW_SET_ERROR_MSG("Malformed topic name");
     ret = RCUTILS_RET_ERROR;
   }
-  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens, &allocator) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
     ret = RCUTILS_RET_ERROR;
   }
