@@ -28,6 +28,7 @@
 #include "rcutils/filesystem.h"
 #include "rcutils/format_string.h"
 #include "rcutils/split.h"
+#include "rcutils/strdup.h"
 #include "rcutils/types.h"
 
 #include "rmw/allocators.h"
@@ -379,7 +380,7 @@ _assign_partitions_to_attributes(
     RMW_SET_ERROR_MSG("Malformed topic name");
     ret = RCUTILS_RET_ERROR;
   }
-  if (rcutils_string_array_fini(&name_tokens, &allocator) != RCUTILS_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
     ret = RCUTILS_RET_ERROR;
   }
@@ -1778,16 +1779,14 @@ rmw_destroy_waitset(rmw_waitset_t * waitset)
     return RMW_RET_ERROR;
   }
 
-  if (waitset) {
-    if (waitset->data) {
-      if (waitset_info) {
-        RMW_TRY_DESTRUCTOR(
-          waitset_info->~CustomWaitsetInfo(), waitset_info, result = RMW_RET_ERROR)
-      }
-      rmw_free(waitset->data);
+  if (waitset->data) {
+    if (waitset_info) {
+      RMW_TRY_DESTRUCTOR(
+        waitset_info->~CustomWaitsetInfo(), waitset_info, result = RMW_RET_ERROR)
     }
-    rmw_waitset_free(waitset);
+    rmw_free(waitset->data);
   }
+  rmw_waitset_free(waitset);
   return result;
 }
 
@@ -2882,12 +2881,19 @@ rmw_get_node_names(
   Participant * participant = impl->participant;
 
   auto participant_names = participant->getParticipantNames();
-  node_names->size = participant_names.size();
-  node_names->data = static_cast<char **>(rmw_allocate(node_names->size * sizeof(char *)));
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  rcutils_ret_t rcutils_ret =
+    rcutils_string_array_init(node_names, participant_names.size(), &allocator);
+  if (rcutils_ret != RCUTILS_RET_OK) {
+    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+  }
   for (size_t i = 0; i < participant_names.size(); ++i) {
-    size_t name_length = participant_names[i].size() + 1;
-    node_names->data[i] = static_cast<char *>(rmw_allocate(name_length * sizeof(char)));
-    snprintf(node_names->data[i], name_length, "%s", participant_names[i].c_str());
+    node_names->data[i] = rcutils_strdup(participant_names[i].c_str(), allocator);
+    if (!node_names->data[i]) {
+      RMW_SET_ERROR_MSG("failed to allocate memory for node name")
+      return RMW_RET_BAD_ALLOC;
+    }
   }
   return RMW_RET_OK;
 }
