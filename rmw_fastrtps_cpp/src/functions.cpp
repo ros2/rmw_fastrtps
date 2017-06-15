@@ -23,6 +23,7 @@
 #include <utility>
 #include <set>
 #include <string>
+#include <vector>
 
 #include "rcutils/allocator.h"
 #include "rcutils/error_handling.h"
@@ -2698,7 +2699,8 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t * subscriptions,
   return timeout ? RMW_RET_TIMEOUT : RMW_RET_OK;
 }
 
-static auto _ros_prefixes = {ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix};
+static auto _ros_prefixes =
+{ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix};
 
 /// Return the ROS specific prefix if it exists, otherwise "".
 static inline
@@ -2815,16 +2817,18 @@ rmw_get_topic_names_and_types(
     }
     // Setup cleanup function, in case of failure below
     auto fail_cleanup = [&topic_names_and_types]() {
-      rmw_ret_t rmw_ret = rmw_names_and_types_fini(topic_names_and_types);
-      if (rmw_ret != RMW_RET_OK) {
-        RCUTILS_LOG_ERROR("error during report of error: %s", rmw_get_error_string_safe())
-      }
-    };
+        rmw_ret_t rmw_ret = rmw_names_and_types_fini(topic_names_and_types);
+        if (rmw_ret != RMW_RET_OK) {
+          RCUTILS_LOG_ERROR("error during report of error: %s", rmw_get_error_string_safe())
+        }
+      };
     // Setup demangling functions based on no_demangle option
     auto demangle_topic = _demangle_if_ros_topic;
     auto demangle_type = _demangle_if_ros_type;
     if (no_demangle) {
-      auto noop = [](const std::string & in) {return in;};
+      auto noop = [](const std::string & in) {
+          return in;
+        };
       demangle_topic = noop;
       demangle_type = noop;
     }
@@ -2883,7 +2887,10 @@ _demangle_service_from_topic(const std::string & topic_name)
     ros_service_response_prefix,
     ros_service_requester_prefix,
   };
-  if (std::none_of(prefixes.cbegin(), prefixes.cend(), [&prefix](auto x) {return prefix == x;})) {
+  if (std::none_of(prefixes.cbegin(), prefixes.cend(), [&prefix](auto x) {
+      return prefix == x;
+    }))
+  {
     // not a ROS service topic
     return "";
   }
@@ -3040,11 +3047,11 @@ rmw_get_service_names_and_types(
     }
     // Setup cleanup function, in case of failure below
     auto fail_cleanup = [&service_names_and_types]() {
-      rmw_ret_t rmw_ret = rmw_names_and_types_fini(service_names_and_types);
-      if (rmw_ret != RMW_RET_OK) {
-        RCUTILS_LOG_ERROR("error during report of error: %s", rmw_get_error_string_safe())
-      }
-    };
+        rmw_ret_t rmw_ret = rmw_names_and_types_fini(service_names_and_types);
+        if (rmw_ret != RMW_RET_OK) {
+          RCUTILS_LOG_ERROR("error during report of error: %s", rmw_get_error_string_safe())
+        }
+      };
     // For each service, store the name, initialize the string array for types, and store all types
     size_t index = 0;
     for (const auto & service_n_types : services) {
