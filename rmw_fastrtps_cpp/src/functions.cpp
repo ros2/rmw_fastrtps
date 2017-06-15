@@ -2698,7 +2698,6 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t * subscriptions,
 
   return timeout ? RMW_RET_TIMEOUT : RMW_RET_OK;
 }
-
 }  // extern "C"
 
 static auto _ros_prefixes =
@@ -2751,7 +2750,6 @@ _demangle_if_ros_type(const std::string & dds_type_string)
 
 extern "C"
 {
-
 rmw_ret_t
 rmw_get_topic_names_and_types(
   const rmw_node_t * node,
@@ -2877,7 +2875,6 @@ rmw_get_topic_names_and_types(
   }
   return RMW_RET_OK;
 }
-
 }  // extern "C"
 
 /// Return the service name for a given topic if it is part of one, else "".
@@ -2895,8 +2892,8 @@ _demangle_service_from_topic(const std::string & topic_name)
     ros_service_requester_prefix,
   };
   if (std::none_of(prefixes.cbegin(), prefixes.cend(), [&prefix](auto x) {
-      return prefix == x;
-    }))
+    return prefix == x;
+  }))
   {
     // not a ROS service topic
     return "";
@@ -2978,7 +2975,6 @@ _demangle_service_type_only(const std::string & dds_type_name)
 
 extern "C"
 {
-
 rmw_ret_t
 rmw_get_service_names_and_types(
   const rmw_node_t * node,
