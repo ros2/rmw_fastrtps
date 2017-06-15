@@ -25,6 +25,7 @@
 
 #include "rcutils/allocator.h"
 #include "rcutils/error_handling.h"
+#include "rcutils/filesystem.h"
 #include "rcutils/format_string.h"
 #include "rcutils/split.h"
 #include "rcutils/types.h"
@@ -37,6 +38,7 @@
 #include "rmw_fastrtps_cpp/MessageTypeSupport.h"
 #include "rmw_fastrtps_cpp/ServiceTypeSupport.h"
 
+#include "fastrtps/config.h"
 #include "fastrtps/Domain.h"
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/attributes/ParticipantAttributes.h"
@@ -818,7 +820,10 @@ rmw_ret_t rmw_init()
   return RMW_RET_OK;
 }
 
-rmw_node_t * rmw_create_node(const char * name, const char * namespace_, size_t domain_id)
+rmw_node_t * create_node(
+  const char * name,
+  const char * namespace_,
+  ParticipantAttributes participantAttrs)
 {
   if (!name) {
     RMW_SET_ERROR_MSG("name is null");
@@ -833,7 +838,6 @@ rmw_node_t * rmw_create_node(const char * name, const char * namespace_, size_t 
   eprosima::fastrtps::Log::SetVerbosity(eprosima::fastrtps::Log::Error);
 
   // Declare everything before beginning to create things.
-  Participant * participant = nullptr;
   rmw_guard_condition_t * graph_guard_condition = nullptr;
   CustomParticipantInfo * node_impl = nullptr;
   rmw_node_t * node_handle = nullptr;
@@ -841,11 +845,7 @@ rmw_node_t * rmw_create_node(const char * name, const char * namespace_, size_t 
   WriterInfo * tnat_2 = nullptr;
   std::pair<StatefulReader *, StatefulReader *> edp_readers;
 
-  ParticipantAttributes participantParam;
-  participantParam.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
-  participantParam.rtps.setName(name);
-
-  participant = Domain::createParticipant(participantParam);
+  Participant * participant = Domain::createParticipant(participantAttrs);
   if (!participant) {
     RMW_SET_ERROR_MSG("create_node() could not create participant");
     return NULL;
@@ -926,6 +926,83 @@ fail:
     Domain::removeParticipant(participant);
   }
   return NULL;
+}
+
+bool get_security_file_paths(
+  std::array<std::string, 3> & security_files_paths, const char * node_secure_root)
+{
+  // here assume only 3 files for security
+  const char * file_names[3] = {"ca.cert.pem", "cert.pem", "key.pem"};
+  size_t num_files = sizeof(file_names) / sizeof(char *);
+
+  const char * file_prefix = "file://";
+
+  std::string tmpstr;
+  for (size_t i = 0; i < num_files; i++) {
+    tmpstr = std::string(rcutils_join_path(node_secure_root, file_names[i]));
+    if (!rcutils_is_readable(tmpstr.c_str())) {
+      return false;
+    }
+    security_files_paths[i] = std::string(file_prefix + tmpstr);
+  }
+  return true;
+}
+
+rmw_node_t *
+rmw_create_node(
+  const char * name,
+  const char * namespace_,
+  size_t domain_id,
+  const rmw_node_security_options_t * security_options)
+{
+  if (!name) {
+    RMW_SET_ERROR_MSG("name is null");
+    return NULL;
+  }
+  if (!security_options) {
+    RMW_SET_ERROR_MSG("security_options is null");
+    return nullptr;
+  }
+
+  ParticipantAttributes participantAttrs;
+  participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
+  participantAttrs.rtps.setName(name);
+
+  if (security_options->security_root_path) {
+    // if security_root_path provided, try to find the key and certificate files
+#if HAVE_SECURITY
+    std::array<std::string, 3> security_files_paths;
+
+    if (get_security_file_paths(security_files_paths, security_options->security_root_path)) {
+      PropertyPolicy property_policy;
+      property_policy.properties().emplace_back(
+        Property("dds.sec.auth.plugin", "builtin.PKI-DH"));
+      property_policy.properties().emplace_back(
+        Property("dds.sec.auth.builtin.PKI-DH.identity_ca",
+        security_files_paths[0]));
+      property_policy.properties().emplace_back(
+        Property("dds.sec.auth.builtin.PKI-DH.identity_certificate",
+        security_files_paths[1]));
+      property_policy.properties().emplace_back(
+        Property("dds.sec.auth.builtin.PKI-DH.private_key",
+        security_files_paths[2]));
+      property_policy.properties().emplace_back(
+        Property("dds.sec.crypto.plugin", "builtin.AES-GCM-GMAC"));
+      property_policy.properties().emplace_back(
+        Property("rtps.participant.rtps_protection_kind", "ENCRYPT"));
+      participantAttrs.rtps.properties = property_policy;
+    } else if (security_options->enforce_security) {
+      RMW_SET_ERROR_MSG("couldn't find all security files!");
+      return NULL;
+    }
+#else
+    RMW_SET_ERROR_MSG(
+      "This Fast-RTPS version doesn't have the security libraries\n"
+      "Please compile Fast-RTPS using the -DSECURITY=ON CMake option");
+    return NULL;
+#endif
+  }
+  return create_node(name, namespace_, participantAttrs);
 }
 
 rmw_ret_t rmw_destroy_node(rmw_node_t * node)
@@ -1063,6 +1140,22 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
     // error msg already set
     goto fail;
   }
+
+#if HAVE_SECURITY
+  // see if our participant has a security property set
+  if (eprosima::fastrtps::PropertyPolicyHelper::find_property(
+      participant->getAttributes().rtps.properties,
+      std::string("dds.sec.crypto.plugin")))
+  {
+    // set the encryption property on the publisher
+    PropertyPolicy publisher_property_policy;
+    publisher_property_policy.properties().emplace_back(
+      "rtps.endpoint.submessage_protection_kind", "ENCRYPT");
+    publisher_property_policy.properties().emplace_back(
+      "rtps.endpoint.payload_protection_kind", "ENCRYPT");
+    publisherParam.properties = publisher_property_policy;
+  }
+#endif
 
   // 1 Heartbeat every 10ms
   // publisherParam.times.heartbeatPeriod.seconds = 0;
@@ -1353,6 +1446,22 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
     // error msg already set
     goto fail;
   }
+
+#if HAVE_SECURITY
+  // see if our subscriber has a security property set
+  if (eprosima::fastrtps::PropertyPolicyHelper::find_property(
+      participant->getAttributes().rtps.properties,
+      std::string("dds.sec.crypto.plugin")))
+  {
+    // set the encryption property on the subscriber
+    PropertyPolicy subscriber_property_policy;
+    subscriber_property_policy.properties().emplace_back(
+      "rtps.endpoint.submessage_protection_kind", "ENCRYPT");
+    subscriber_property_policy.properties().emplace_back(
+      "rtps.endpoint.payload_protection_kind", "ENCRYPT");
+    subscriberParam.properties = subscriber_property_policy;
+  }
+#endif
 
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     RMW_SET_ERROR_MSG("failed to get datareader qos");
