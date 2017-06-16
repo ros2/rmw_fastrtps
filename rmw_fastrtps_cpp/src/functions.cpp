@@ -3133,6 +3133,12 @@ rmw_get_node_names(
     node_names->data[i] = rcutils_strdup(participant_names[i].c_str(), allocator);
     if (!node_names->data[i]) {
       RMW_SET_ERROR_MSG("failed to allocate memory for node name")
+      rcutils_ret = rcutils_string_array_fini(node_names);
+      if (rcutils_ret != RCUTILS_RET_OK) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rmw_fastrtps_cpp",
+          "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
+      }
       return RMW_RET_BAD_ALLOC;
     }
   }
