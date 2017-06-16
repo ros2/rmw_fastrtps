@@ -2700,7 +2700,7 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t * subscriptions,
 }
 }  // extern "C"
 
-static auto _ros_prefixes =
+static std::vector<std::string> _ros_prefixes =
 {ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix};
 
 /// Return the ROS specific prefix if it exists, otherwise "".
@@ -2903,7 +2903,7 @@ _demangle_service_from_topic(const std::string & topic_name)
     "Request",
   };
   std::string found_suffix;
-  size_t suffix_position;
+  size_t suffix_position = std::string::npos;
   for (auto suffix : suffixes) {
     suffix_position = topic_name.rfind(suffix);
     if (suffix_position != std::string::npos) {
