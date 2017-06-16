@@ -464,11 +464,11 @@ public:
 
     bool trigger = false;
     mapmutex.lock();
-    auto it = topicNtypes.find(fqdn);
     if (change->kind == ALIVE) {
       topicNtypes[fqdn].insert(proxyData.typeName());
       trigger = true;
     } else {
+      auto it = topicNtypes.find(fqdn);
       if (
         it != topicNtypes.end() &&
         it->second.find(proxyData.typeName()) != it->second.end())
@@ -534,11 +534,11 @@ public:
 
     bool trigger = false;
     mapmutex.lock();
-    auto it = topicNtypes.find(fqdn);
     if (change->kind == ALIVE) {
       topicNtypes[fqdn].insert(proxyData.typeName());
       trigger = true;
     } else {
+      auto it = topicNtypes.find(fqdn);
       if (
         it != topicNtypes.end() &&
         it->second.find(proxyData.typeName()) != it->second.end())
