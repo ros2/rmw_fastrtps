@@ -2728,7 +2728,7 @@ _demangle_if_ros_topic(const std::string & topic_name)
   return topic_name;
 }
 
-/// Return the demangle ROS type or the original if not a ROS type.
+/// Return the demangled ROS type or the original if not a ROS type.
 static inline
 std::string
 _demangle_if_ros_type(const std::string & dds_type_string)
@@ -2924,9 +2924,9 @@ _demangle_service_from_topic(const std::string & topic_name)
     return "";
   }
   // strip off the suffix first
-  std::string service_name = topic_name.substr(0, suffix_position);
+  std::string service_name = topic_name.substr(0, suffix_position + 1);
   // then the prefix
-  size_t start = prefix.length() + 1 /* for / */;
+  size_t start = prefix.length();  // explicitly leave / after prefix
   return service_name.substr(start, service_name.length() - 1 - start);
 }
 
