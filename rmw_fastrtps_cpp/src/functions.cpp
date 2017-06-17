@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <array>
 #include <cassert>
 #include <condition_variable>
@@ -22,19 +23,26 @@
 #include <utility>
 #include <set>
 #include <string>
+#include <vector>
 
 #include "rcutils/allocator.h"
 #include "rcutils/error_handling.h"
 #include "rcutils/filesystem.h"
 #include "rcutils/format_string.h"
+#include "rcutils/logging_macros.h"
 #include "rcutils/split.h"
+#include "rcutils/strdup.h"
 #include "rcutils/types.h"
 
 #include "rmw/allocators.h"
-#include "rmw/rmw.h"
+#include "rmw/convert_rcutils_ret_to_rmw_ret.h"
 #include "rmw/error_handling.h"
-#include "rmw/sanity_checks.h"
+#include "rmw/get_service_names_and_types.h"
+#include "rmw/get_topic_names_and_types.h"
 #include "rmw/impl/cpp/macros.hpp"
+#include "rmw/names_and_types.h"
+#include "rmw/rmw.h"
+#include "rmw/sanity_checks.h"
 #include "rmw_fastrtps_cpp/MessageTypeSupport.h"
 #include "rmw_fastrtps_cpp/ServiceTypeSupport.h"
 
@@ -379,7 +387,7 @@ _assign_partitions_to_attributes(
     RMW_SET_ERROR_MSG("Malformed topic name");
     ret = RCUTILS_RET_ERROR;
   }
-  if (rcutils_string_array_fini(&name_tokens, &allocator) != RCUTILS_RET_OK) {
+  if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
     fprintf(stderr, "Failed to destroy the token string array\n");
     ret = RCUTILS_RET_ERROR;
   }
@@ -447,9 +455,6 @@ public:
       }
     }
 
-    // TODO(wjwwood): remove this logic and replace with check for
-    // a single partition which is prefixed with the ROS specific
-    // prefix.
     auto partition_str = std::string("");
     // don't use std::accumulate - schlemiel O(n2)
     for (const auto & partition : proxyData.m_qos.m_partition.getNames()) {
@@ -459,16 +464,11 @@ public:
 
     bool trigger = false;
     mapmutex.lock();
-    auto it = topicNtypes.find(fqdn);
     if (change->kind == ALIVE) {
-      if (
-        it == topicNtypes.end() ||
-        it->second.find(proxyData.typeName()) == it->second.end())
-      {
-        topicNtypes[fqdn].insert(proxyData.typeName());
-        trigger = true;
-      }
+      topicNtypes[fqdn].insert(proxyData.typeName());
+      trigger = true;
     } else {
+      auto it = topicNtypes.find(fqdn);
       if (
         it != topicNtypes.end() &&
         it->second.find(proxyData.typeName()) != it->second.end())
@@ -525,9 +525,6 @@ public:
       }
     }
 
-    // TODO(wjwwood): remove this logic and replace with check for
-    // a single partition which is prefixed with the ROS specific
-    // prefix.
     auto partition_str = std::string("");
     // don't use std::accumulate - schlemiel O(n2)
     for (const auto & partition : proxyData.m_qos.m_partition.getNames()) {
@@ -537,16 +534,11 @@ public:
 
     bool trigger = false;
     mapmutex.lock();
-    auto it = topicNtypes.find(fqdn);
     if (change->kind == ALIVE) {
-      if (
-        it == topicNtypes.end() ||
-        it->second.find(proxyData.typeName()) == it->second.end())
-      {
-        topicNtypes[fqdn].insert(proxyData.typeName());
-        trigger = true;
-      }
+      topicNtypes[fqdn].insert(proxyData.typeName());
+      trigger = true;
     } else {
+      auto it = topicNtypes.find(fqdn);
       if (
         it != topicNtypes.end() &&
         it->second.find(proxyData.typeName()) != it->second.end())
@@ -662,19 +654,6 @@ typedef struct CustomParticipantInfo
   WriterInfo * secondaryPubListener;
   rmw_guard_condition_t * graph_guard_condition;
 } CustomParticipantInfo;
-
-inline
-std::string
-_filter_ros_prefix(const std::string & topic_name)
-{
-  auto prefixes = {ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix};
-  for (auto prefix : prefixes) {
-    if (topic_name.rfind(std::string(prefix) + "/", 0) == 0) {
-      return topic_name.substr(strlen(ros_topic_prefix));
-    }
-  }
-  return topic_name;
-}
 
 extern "C"
 {
@@ -1778,16 +1757,14 @@ rmw_destroy_waitset(rmw_waitset_t * waitset)
     return RMW_RET_ERROR;
   }
 
-  if (waitset) {
-    if (waitset->data) {
-      if (waitset_info) {
-        RMW_TRY_DESTRUCTOR(
-          waitset_info->~CustomWaitsetInfo(), waitset_info, result = RMW_RET_ERROR)
-      }
-      rmw_free(waitset->data);
+  if (waitset->data) {
+    if (waitset_info) {
+      RMW_TRY_DESTRUCTOR(
+        waitset_info->~CustomWaitsetInfo(), waitset_info, result = RMW_RET_ERROR)
     }
-    rmw_waitset_free(waitset);
+    rmw_free(waitset->data);
   }
+  rmw_waitset_free(waitset);
   return result;
 }
 
@@ -2721,51 +2698,100 @@ rmw_ret_t rmw_wait(rmw_subscriptions_t * subscriptions,
 
   return timeout ? RMW_RET_TIMEOUT : RMW_RET_OK;
 }
+}  // extern "C"
 
+static std::vector<std::string> _ros_prefixes =
+{ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix};
+
+/// Return the ROS specific prefix if it exists, otherwise "".
+static inline
+std::string
+_get_ros_prefix_if_exists(const std::string & topic_name)
+{
+  for (auto prefix : _ros_prefixes) {
+    if (topic_name.rfind(std::string(prefix) + "/", 0) == 0) {
+      return prefix;
+    }
+  }
+  return "";
+}
+
+/// Return the demangle ROS topic or the original if not a ROS topic.
+static inline
+std::string
+_demangle_if_ros_topic(const std::string & topic_name)
+{
+  std::string prefix = _get_ros_prefix_if_exists(topic_name);
+  if (prefix.length()) {
+    return topic_name.substr(strlen(ros_topic_prefix));
+  }
+  return topic_name;
+}
+
+/// Return the demangled ROS type or the original if not a ROS type.
+static inline
+std::string
+_demangle_if_ros_type(const std::string & dds_type_string)
+{
+  std::string substring = "::msg::dds_::";
+  size_t substring_position = dds_type_string.find(substring);
+  if (
+    dds_type_string[dds_type_string.size() - 1] == '_' &&
+    substring_position != std::string::npos)
+  {
+    std::string pkg = dds_type_string.substr(0, substring_position);
+    size_t start = substring_position + substring.size();
+    std::string type_name = dds_type_string.substr(start, dds_type_string.length() - 1 - start);
+    return pkg + "/" + type_name;
+  }
+  // not a ROS type
+  return dds_type_string;
+}
+
+extern "C"
+{
 rmw_ret_t
 rmw_get_topic_names_and_types(
   const rmw_node_t * node,
-  rmw_topic_names_and_types_t * topic_names_and_types)
+  rcutils_allocator_t * allocator,
+  bool no_demangle,
+  rmw_names_and_types_t * topic_names_and_types)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
-    return RMW_RET_ERROR;
+  if (!allocator) {
+    RMW_SET_ERROR_MSG("allocator is null")
+    return RMW_RET_INVALID_ARGUMENT;
   }
-  if (rmw_check_zero_rmw_topic_names_and_types(topic_names_and_types) != RMW_RET_OK) {
-    return RMW_RET_ERROR;
+  if (!node) {
+    RMW_SET_ERROR_MSG_ALLOC("null node handle", *allocator)
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+  rmw_ret_t ret = rmw_names_and_types_check_zero(topic_names_and_types);
+  if (ret != RMW_RET_OK) {
+    return ret;
   }
 
   // Get participant pointer from node
   if (node->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
+    RMW_SET_ERROR_MSG_ALLOC("node handle not from this implementation", *allocator);
     return RMW_RET_ERROR;
   }
 
   CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
 
-  // const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
-  //     type_supports, rosidl_typesupport_introspection_c__identifier);
-  // if (!type_support) {
-  //   type_support = get_message_typesupport_handle(
-  //     type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
-  //   if (!type_support) {
-  //     RMW_SET_ERROR_MSG("type support not from this implementation");
-  //     return NULL;
-  //   }
-  // }
-
   // Access the slave Listeners, which are the ones that have the topicnamesandtypes member
   // Get info from publisher and subscriber
   // Combined results from the two lists
-  std::map<std::string, std::set<std::string>> unfiltered_topics;
+  std::map<std::string, std::set<std::string>> topics;
   {
     ReaderInfo * slave_target = impl->secondarySubListener;
     slave_target->mapmutex.lock();
     for (auto it : slave_target->topicNtypes) {
+      if (!no_demangle && _get_ros_prefix_if_exists(it.first) != ros_topic_prefix) {
+        // if we are demangling and this is not prefixed with rt/, skip it
+        continue;
+      }
       for (auto & itt : it.second) {
-        // truncate the ROS specific prefix
-        auto topic_fqdn = _filter_ros_prefix(it.first);
-        unfiltered_topics[topic_fqdn].insert(itt);
+        topics[it.first].insert(itt);
       }
     }
     slave_target->mapmutex.unlock();
@@ -2774,88 +2800,302 @@ rmw_get_topic_names_and_types(
     WriterInfo * slave_target = impl->secondaryPubListener;
     slave_target->mapmutex.lock();
     for (auto it : slave_target->topicNtypes) {
+      if (!no_demangle && _get_ros_prefix_if_exists(it.first) != ros_topic_prefix) {
+        // if we are demangling and this is not prefixed with rt/, skip it
+        continue;
+      }
       for (auto & itt : it.second) {
-        // truncate the ROS specific prefix
-        auto topic_fqdn = _filter_ros_prefix(it.first);
-        unfiltered_topics[topic_fqdn].insert(itt);
+        topics[it.first].insert(itt);
       }
     }
     slave_target->mapmutex.unlock();
   }
-  // Filter duplicates
-  std::map<std::string, std::string> topics;
-  for (auto & it : unfiltered_topics) {
-    if (it.second.size() == 1) {
-      topics[it.first] = *it.second.begin();
-    }
-  }
-  std::string substring = "::msg::dds_::";
-  for (auto & it : topics) {
-    size_t substring_position = it.second.find(substring);
-    if (it.second[it.second.size() - 1] == '_' && substring_position != std::string::npos) {
-      it.second = it.second.substr(0, substring_position) + "/" + it.second.substr(
-        substring_position + substring.size(),
-        it.second.size() - substring_position - substring.size() - 1);
-    }
-  }
 
   // Copy data to results handle
   if (topics.size() > 0) {
-    // Alloc memory for pointers to instances
-    topic_names_and_types->topic_names =
-      static_cast<char **>(rmw_allocate(sizeof(char *) * topics.size()));
-    if (!topic_names_and_types->topic_names) {
-      RMW_SET_ERROR_MSG("Failed to allocate memory");
-      return RMW_RET_ERROR;
+    // Setup string array to store names
+    rmw_ret_t rmw_ret = rmw_names_and_types_init(topic_names_and_types, topics.size(), allocator);
+    if (rmw_ret != RMW_RET_OK) {
+      return rmw_ret;
     }
-    topic_names_and_types->type_names =
-      static_cast<char **>(rmw_allocate(sizeof(char *) * topics.size()));
-    if (!topic_names_and_types->type_names) {
-      rmw_free(topic_names_and_types->topic_names);
-      RMW_SET_ERROR_MSG("Failed to allocate memory");
-      return RMW_RET_ERROR;
+    // Setup cleanup function, in case of failure below
+    auto fail_cleanup = [&topic_names_and_types]() {
+        rmw_ret_t rmw_ret = rmw_names_and_types_fini(topic_names_and_types);
+        if (rmw_ret != RMW_RET_OK) {
+          RCUTILS_LOG_ERROR("error during report of error: %s", rmw_get_error_string_safe())
+        }
+      };
+    // Setup demangling functions based on no_demangle option
+    auto demangle_topic = _demangle_if_ros_topic;
+    auto demangle_type = _demangle_if_ros_type;
+    if (no_demangle) {
+      auto noop = [](const std::string & in) {
+          return in;
+        };
+      demangle_topic = noop;
+      demangle_type = noop;
     }
-    // Iterate topics for instances
-    topic_names_and_types->topic_count = 0;
-    for (auto it : topics) {
-      size_t index = topic_names_and_types->topic_count;
-#ifdef _WIN32
-#define __local_strdup _strdup
-#else
-#define __local_strdup strdup
-#endif
-      // Alloc
-      char * topic_name = __local_strdup(it.first.c_str());
+    // For each topic, store the name, initialize the string array for types, and store all types
+    size_t index = 0;
+    for (const auto & topic_n_types : topics) {
+      // Duplicate and store the topic_name
+      char * topic_name = rcutils_strdup(demangle_topic(topic_n_types.first).c_str(), *allocator);
       if (!topic_name) {
-        RMW_SET_ERROR_MSG("Failed to allocate memory");
-        return RMW_RET_ERROR;
+        RMW_SET_ERROR_MSG_ALLOC("failed to allocate memory for topic name", *allocator);
+        fail_cleanup();
+        return RMW_RET_BAD_ALLOC;
       }
-      char * topic_type = __local_strdup(it.second.c_str());
-      if (!topic_type) {
-        rmw_free(topic_name);
-        RMW_SET_ERROR_MSG("Failed to allocate memory");
-        return RMW_RET_ERROR;
+      topic_names_and_types->names.data[index] = topic_name;
+      // Setup storage for types
+      {
+        rcutils_ret_t rcutils_ret = rcutils_string_array_init(
+          &topic_names_and_types->types[index],
+          topic_n_types.second.size(),
+          allocator);
+        if (rcutils_ret != RCUTILS_RET_OK) {
+          RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+          fail_cleanup();
+          return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+        }
       }
-      // Insert
-      topic_names_and_types->topic_names[index] = topic_name;
-      topic_names_and_types->type_names[index] = topic_type;
-      ++topic_names_and_types->topic_count;
-    }
+      // Duplicate and store each type for the topic
+      size_t type_index = 0;
+      for (const auto & type : topic_n_types.second) {
+        char * type_name = rcutils_strdup(demangle_type(type).c_str(), *allocator);
+        if (!type_name) {
+          RMW_SET_ERROR_MSG_ALLOC("failed to allocate memory for type name", *allocator)
+          fail_cleanup();
+          return RMW_RET_BAD_ALLOC;
+        }
+        topic_names_and_types->types[index].data[type_index] = type_name;
+        ++type_index;
+      }  // for each type
+      ++index;
+    }  // for each topic
   }
   return RMW_RET_OK;
 }
+}  // extern "C"
 
-rmw_ret_t
-rmw_destroy_topic_names_and_types(
-  rmw_topic_names_and_types_t * topic_names_and_types)
+/// Return the service name for a given topic if it is part of one, else "".
+static inline
+std::string
+_demangle_service_from_topic(const std::string & topic_name)
 {
-  size_t cap = topic_names_and_types->topic_count;
-  for (size_t i = 0; i < cap; i++) {
-    rmw_free(topic_names_and_types->topic_names[i]);
-    rmw_free(topic_names_and_types->type_names[i]);
+  std::string prefix = _get_ros_prefix_if_exists(topic_name);
+  if (!prefix.length()) {
+    // not a ROS topic or service
+    return "";
   }
-  rmw_free(topic_names_and_types->topic_names);
-  rmw_free(topic_names_and_types->type_names);
+  std::vector<std::string> prefixes = {
+    ros_service_response_prefix,
+    ros_service_requester_prefix,
+  };
+  if (std::none_of(prefixes.cbegin(), prefixes.cend(), [&prefix](auto x) {
+    return prefix == x;
+  }))
+  {
+    // not a ROS service topic
+    return "";
+  }
+  std::vector<std::string> suffixes = {
+    "Reply",
+    "Request",
+  };
+  std::string found_suffix;
+  size_t suffix_position = std::string::npos;
+  for (auto suffix : suffixes) {
+    suffix_position = topic_name.rfind(suffix);
+    if (suffix_position != std::string::npos) {
+      if (topic_name.length() - suffix_position - suffix.length() != 0) {
+        RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_cpp",
+          "service topic has service prefix and a suffix, but not at the end"
+          ", report this: '%s'", topic_name.c_str())
+        continue;
+      }
+      found_suffix = suffix;
+      break;
+    }
+  }
+  if (suffix_position == std::string::npos) {
+    RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_cpp",
+      "service topic has prefix but no suffix"
+      ", report this: '%s'", topic_name.c_str())
+    return "";
+  }
+  // strip off the suffix first
+  std::string service_name = topic_name.substr(0, suffix_position + 1);
+  // then the prefix
+  size_t start = prefix.length();  // explicitly leave / after prefix
+  return service_name.substr(start, service_name.length() - 1 - start);
+}
+
+/// Return the demangled service type if it is a ROS srv type, else "".
+static inline
+std::string
+_demangle_service_type_only(const std::string & dds_type_name)
+{
+  std::string ns_substring = "::srv::dds_::";
+  size_t ns_substring_position = dds_type_name.find(ns_substring);
+  if (ns_substring_position == std::string::npos) {
+    // not a ROS service type
+    return "";
+  }
+  auto suffixes = {
+    std::string("_Response_"),
+    std::string("_Request_"),
+  };
+  std::string found_suffix = "";
+  size_t suffix_position = 0;
+  for (auto suffix : suffixes) {
+    suffix_position = dds_type_name.rfind(suffix);
+    if (suffix_position != std::string::npos) {
+      if (dds_type_name.length() - suffix_position - suffix.length() != 0) {
+        RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_cpp",
+          "service type contains '::srv::dds_::' and a suffix, but not at the end"
+          ", report this: '%s'", dds_type_name.c_str())
+        continue;
+      }
+      found_suffix = suffix;
+      break;
+    }
+  }
+  if (suffix_position == std::string::npos) {
+    RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_cpp",
+      "service type contains '::srv::dds_::' but does not have a suffix"
+      ", report this: '%s'", dds_type_name.c_str())
+    return "";
+  }
+  // everything checks out, reformat it from '<pkg>::srv::dds_::<type><suffix>' to '<pkg>/<type>'
+  std::string pkg = dds_type_name.substr(0, ns_substring_position);
+  size_t start = ns_substring_position + ns_substring.length();
+  std::string type_name = dds_type_name.substr(start, suffix_position - start);
+  return pkg + "/" + type_name;
+}
+
+extern "C"
+{
+rmw_ret_t
+rmw_get_service_names_and_types(
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  rmw_names_and_types_t * service_names_and_types)
+{
+  if (!allocator) {
+    RMW_SET_ERROR_MSG("allocator is null")
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+  if (!node) {
+    RMW_SET_ERROR_MSG_ALLOC("null node handle", *allocator)
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+  rmw_ret_t ret = rmw_names_and_types_check_zero(service_names_and_types);
+  if (ret != RMW_RET_OK) {
+    return ret;
+  }
+
+  // Get participant pointer from node
+  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+    RMW_SET_ERROR_MSG_ALLOC("node handle not from this implementation", *allocator);
+    return RMW_RET_ERROR;
+  }
+
+  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+
+  // Access the slave Listeners, which are the ones that have the topicnamesandtypes member
+  // Get info from publisher and subscriber
+  // Combined results from the two lists
+  std::map<std::string, std::set<std::string>> services;
+  {
+    ReaderInfo * slave_target = impl->secondarySubListener;
+    slave_target->mapmutex.lock();
+    for (auto it : slave_target->topicNtypes) {
+      std::string service_name = _demangle_service_from_topic(it.first);
+      if (!service_name.length()) {
+        // not a service
+        continue;
+      }
+      for (auto & itt : it.second) {
+        std::string service_type = _demangle_service_type_only(itt);
+        if (service_type.length()) {
+          services[service_name].insert(service_type);
+        }
+      }
+    }
+    slave_target->mapmutex.unlock();
+  }
+  {
+    WriterInfo * slave_target = impl->secondaryPubListener;
+    slave_target->mapmutex.lock();
+    for (auto it : slave_target->topicNtypes) {
+      std::string service_name = _demangle_service_from_topic(it.first);
+      if (!service_name.length()) {
+        // not a service
+        continue;
+      }
+      for (auto & itt : it.second) {
+        std::string service_type = _demangle_service_type_only(itt);
+        if (service_type.length()) {
+          services[service_name].insert(service_type);
+        }
+      }
+    }
+    slave_target->mapmutex.unlock();
+  }
+
+  // Fill out service_names_and_types
+  if (services.size()) {
+    // Setup string array to store names
+    rmw_ret_t rmw_ret =
+      rmw_names_and_types_init(service_names_and_types, services.size(), allocator);
+    if (rmw_ret != RMW_RET_OK) {
+      return rmw_ret;
+    }
+    // Setup cleanup function, in case of failure below
+    auto fail_cleanup = [&service_names_and_types]() {
+        rmw_ret_t rmw_ret = rmw_names_and_types_fini(service_names_and_types);
+        if (rmw_ret != RMW_RET_OK) {
+          RCUTILS_LOG_ERROR("error during report of error: %s", rmw_get_error_string_safe())
+        }
+      };
+    // For each service, store the name, initialize the string array for types, and store all types
+    size_t index = 0;
+    for (const auto & service_n_types : services) {
+      // Duplicate and store the service_name
+      char * service_name = rcutils_strdup(service_n_types.first.c_str(), *allocator);
+      if (!service_name) {
+        RMW_SET_ERROR_MSG_ALLOC("failed to allocate memory for service name", *allocator);
+        fail_cleanup();
+        return RMW_RET_BAD_ALLOC;
+      }
+      service_names_and_types->names.data[index] = service_name;
+      // Setup storage for types
+      {
+        rcutils_ret_t rcutils_ret = rcutils_string_array_init(
+          &service_names_and_types->types[index],
+          service_n_types.second.size(),
+          allocator);
+        if (rcutils_ret != RCUTILS_RET_OK) {
+          RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+          fail_cleanup();
+          return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+        }
+      }
+      // Duplicate and store each type for the service
+      size_t type_index = 0;
+      for (const auto & type : service_n_types.second) {
+        char * type_name = rcutils_strdup(type.c_str(), *allocator);
+        if (!type_name) {
+          RMW_SET_ERROR_MSG_ALLOC("failed to allocate memory for type name", *allocator)
+          fail_cleanup();
+          return RMW_RET_BAD_ALLOC;
+        }
+        service_names_and_types->types[index].data[type_index] = type_name;
+        ++type_index;
+      }  // for each type
+      ++index;
+    }  // for each service
+  }
   return RMW_RET_OK;
 }
 
@@ -2882,12 +3122,25 @@ rmw_get_node_names(
   Participant * participant = impl->participant;
 
   auto participant_names = participant->getParticipantNames();
-  node_names->size = participant_names.size();
-  node_names->data = static_cast<char **>(rmw_allocate(node_names->size * sizeof(char *)));
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  rcutils_ret_t rcutils_ret =
+    rcutils_string_array_init(node_names, participant_names.size(), &allocator);
+  if (rcutils_ret != RCUTILS_RET_OK) {
+    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+  }
   for (size_t i = 0; i < participant_names.size(); ++i) {
-    size_t name_length = participant_names[i].size() + 1;
-    node_names->data[i] = static_cast<char *>(rmw_allocate(name_length * sizeof(char)));
-    snprintf(node_names->data[i], name_length, "%s", participant_names[i].c_str());
+    node_names->data[i] = rcutils_strdup(participant_names[i].c_str(), allocator);
+    if (!node_names->data[i]) {
+      RMW_SET_ERROR_MSG("failed to allocate memory for node name")
+      rcutils_ret = rcutils_string_array_fini(node_names);
+      if (rcutils_ret != RCUTILS_RET_OK) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rmw_fastrtps_cpp",
+          "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
+      }
+      return RMW_RET_BAD_ALLOC;
+    }
   }
   return RMW_RET_OK;
 }
@@ -2918,7 +3171,7 @@ rmw_count_publishers(
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
       // truncate the ROS specific prefix
-      auto topic_fqdn = _filter_ros_prefix(it.first);
+      auto topic_fqdn = _demangle_if_ros_topic(it.first);
       unfiltered_topics[topic_fqdn].insert(itt);
     }
   }
@@ -2969,7 +3222,7 @@ rmw_count_subscribers(
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
       // truncate the ROS specific prefix
-      auto topic_fqdn = _filter_ros_prefix(it.first);
+      auto topic_fqdn = _demangle_if_ros_topic(it.first);
       unfiltered_topics[topic_fqdn].insert(itt);
     }
   }
@@ -3037,7 +3290,7 @@ rmw_service_server_is_available(
     return RMW_RET_ERROR;
   }
   auto pub_fqdn = pub_partitions[0] + "/" + pub_topic_name;
-  pub_fqdn = _filter_ros_prefix(pub_fqdn);
+  pub_fqdn = _demangle_if_ros_topic(pub_fqdn);
 
   auto sub_topic_name =
     client_info->response_subscriber_->getAttributes().topic.getTopicName();
@@ -3050,7 +3303,7 @@ rmw_service_server_is_available(
     return RMW_RET_ERROR;
   }
   auto sub_fqdn = sub_partitions[0] + "/" + sub_topic_name;
-  sub_fqdn = _filter_ros_prefix(sub_fqdn);
+  sub_fqdn = _demangle_if_ros_topic(sub_fqdn);
 
   *is_available = false;
   size_t number_of_request_subscribers = 0;
