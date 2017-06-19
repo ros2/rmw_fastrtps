@@ -838,7 +838,7 @@ rmw_node_t * create_node(
 
   try {
     node_impl = new CustomParticipantInfo();
-  } catch (std::bad_alloc) {
+  } catch (std::bad_alloc &) {
     RMW_SET_ERROR_MSG("failed to allocate node impl struct");
     goto fail;
   }
