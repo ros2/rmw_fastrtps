@@ -1177,7 +1177,7 @@ rmw_publisher_t * rmw_create_publisher(const rmw_node_t * node,
   }
   rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_publisher->data = info;
-  rmw_publisher->topic_name = reinterpret_cast<const char *>(new char[strlen(topic_name) + 1]);
+  rmw_publisher->topic_name = reinterpret_cast<char *>(rmw_allocate(strlen(topic_name) + 1));
   memcpy(const_cast<char *>(rmw_publisher->topic_name), topic_name, strlen(topic_name) + 1);
   return rmw_publisher;
 
@@ -1233,7 +1233,9 @@ rmw_ret_t rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     }
     delete info;
   }
-  delete (publisher);
+  rmw_free(const_cast<char *>(publisher->topic_name));
+  publisher->topic_name = nullptr;
+  rmw_publisher_free(publisher);
 
   return RMW_RET_OK;
 }
@@ -1462,7 +1464,8 @@ rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
   }
   rmw_subscription->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_subscription->data = info;
-  rmw_subscription->topic_name = reinterpret_cast<const char *>(new char[strlen(topic_name) + 1]);
+  rmw_subscription->topic_name =
+    reinterpret_cast<const char *>(rmw_allocate(strlen(topic_name) + 1));
   memcpy(const_cast<char *>(rmw_subscription->topic_name), topic_name, strlen(topic_name) + 1);
   return rmw_subscription;
 
@@ -1525,8 +1528,9 @@ rmw_ret_t rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subsc
     }
     delete info;
   }
-
-  delete (subscription);
+  rmw_free(const_cast<char *>(subscription->topic_name));
+  subscription->topic_name = nullptr;
+  rmw_subscription_free(subscription);
 
   return RMW_RET_OK;
 }
