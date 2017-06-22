@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_H_
-#define RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_H_
+#ifndef RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_HPP_
+#define RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_HPP_
 
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
 #include <cassert>
 
-#include "TypeSupport.h"
+#include "TypeSupport.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
 struct CustomServiceInfo;
@@ -50,6 +50,6 @@ public:
 
 }  // namespace rmw_fastrtps_cpp
 
-#include "ServiceTypeSupport_impl.h"
+#include "ServiceTypeSupport_impl.hpp"
 
-#endif  // RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_H_
+#endif  // RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_HPP_

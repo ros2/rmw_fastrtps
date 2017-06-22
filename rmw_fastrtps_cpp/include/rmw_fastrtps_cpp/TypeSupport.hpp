@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__TYPESUPPORT_H_
-#define RMW_FASTRTPS_CPP__TYPESUPPORT_H_
+#ifndef RMW_FASTRTPS_CPP__TYPESUPPORT_HPP_
+#define RMW_FASTRTPS_CPP__TYPESUPPORT_HPP_
 
 #include <rosidl_generator_c/string.h>
 #include <rosidl_generator_c/string_functions.h>
@@ -136,6 +136,6 @@ private:
 
 }  // namespace rmw_fastrtps_cpp
 
-#include "TypeSupport_impl.h"
+#include "TypeSupport_impl.hpp"
 
-#endif  // RMW_FASTRTPS_CPP__TYPESUPPORT_H_
+#endif  // RMW_FASTRTPS_CPP__TYPESUPPORT_HPP_
