@@ -43,8 +43,8 @@
 #include "rmw/names_and_types.h"
 #include "rmw/rmw.h"
 #include "rmw/sanity_checks.h"
-#include "rmw_fastrtps_cpp/MessageTypeSupport.h"
-#include "rmw_fastrtps_cpp/ServiceTypeSupport.h"
+#include "rmw_fastrtps_cpp/MessageTypeSupport.hpp"
+#include "rmw_fastrtps_cpp/ServiceTypeSupport.hpp"
 
 #include "fastrtps/config.h"
 #include "fastrtps/Domain.h"

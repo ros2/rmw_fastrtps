@@ -20,7 +20,7 @@
 #include <cassert>
 #include <string>
 
-#include "rmw_fastrtps_cpp/ServiceTypeSupport.h"
+#include "rmw_fastrtps_cpp/ServiceTypeSupport.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
 namespace rmw_fastrtps_cpp

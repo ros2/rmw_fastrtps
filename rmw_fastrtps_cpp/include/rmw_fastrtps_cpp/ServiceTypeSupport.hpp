@@ -12,41 +12,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_IMPL_H_
-#define RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_IMPL_H_
+#ifndef RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_H_
+#define RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_H_
 
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
-
 #include <cassert>
-#include <memory>
-#include <string>
 
-#include "rmw_fastrtps_cpp/MessageTypeSupport.h"
+#include "TypeSupport.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
+
+struct CustomServiceInfo;
 
 namespace rmw_fastrtps_cpp
 {
 
 template<typename MembersType>
-MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType * members)
+class ServiceTypeSupport : public TypeSupport<MembersType>
 {
-  assert(members);
-  this->members_ = members;
+protected:
+  ServiceTypeSupport();
+};
 
-  std::string name = std::string(members->package_name_) + "::msg::dds_::" +
-    members->message_name_ + "_";
-  this->setName(name.c_str());
+template<typename ServiceMembersType, typename MessageMembersType>
+class RequestTypeSupport : public ServiceTypeSupport<MessageMembersType>
+{
+public:
+  explicit RequestTypeSupport(const ServiceMembersType * members);
+};
 
-  // TODO(wjwwood): this could be more intelligent, setting m_typeSize to the
-  // maximum serialized size of the message, when the message is a bounded one.
-  if (members->member_count_ != 0) {
-    this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(members, 0));
-  } else {
-    this->m_typeSize = 4;
-  }
-}
+template<typename ServiceMembersType, typename MessageMembersType>
+class ResponseTypeSupport : public ServiceTypeSupport<MessageMembersType>
+{
+public:
+  explicit ResponseTypeSupport(const ServiceMembersType * members);
+};
 
 }  // namespace rmw_fastrtps_cpp
 
-#endif  // RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_IMPL_H_
+#include "ServiceTypeSupport_impl.hpp"
+
+#endif  // RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_H_

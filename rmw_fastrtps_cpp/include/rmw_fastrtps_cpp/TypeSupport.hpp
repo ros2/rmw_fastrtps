@@ -136,6 +136,6 @@ private:
 
 }  // namespace rmw_fastrtps_cpp
 
-#include "TypeSupport_impl.h"
+#include "TypeSupport_impl.hpp"
 
 #endif  // RMW_FASTRTPS_CPP__TYPESUPPORT_H_

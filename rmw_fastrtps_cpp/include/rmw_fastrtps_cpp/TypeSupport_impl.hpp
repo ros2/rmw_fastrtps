@@ -21,7 +21,7 @@
 #include <string>
 #include <vector>
 
-#include "rmw_fastrtps_cpp/TypeSupport.h"
+#include "rmw_fastrtps_cpp/TypeSupport.hpp"
 #include "rmw_fastrtps_cpp/macros.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
