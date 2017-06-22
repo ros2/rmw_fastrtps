@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_H_
-#define RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_H_
+#ifndef RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_HPP_
+#define RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_HPP_
 
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
@@ -39,4 +39,4 @@ public:
 
 #include "MessageTypeSupport_impl.hpp"
 
-#endif  // RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_H_
+#endif  // RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_HPP_

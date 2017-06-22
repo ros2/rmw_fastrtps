@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__TYPESUPPORT_IMPL_H_
-#define RMW_FASTRTPS_CPP__TYPESUPPORT_IMPL_H_
+#ifndef RMW_FASTRTPS_CPP__TYPESUPPORT_IMPL_HPP_
+#define RMW_FASTRTPS_CPP__TYPESUPPORT_IMPL_HPP_
 
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
@@ -70,7 +70,7 @@ rosidl_generator_c__void__Array__init(
   }
   void * data = NULL;
   if (size) {
-    data = (void *)calloc(size, member_size);
+    data = static_cast<void *>(calloc(size, member_size));
     if (!data) {
       return false;
     }
@@ -319,7 +319,7 @@ void serialize_array<std::string>(
     // tmpstring is defined here and not below to avoid
     // memory allocation in every iteration of the for loop
     std::string tmpstring;
-    auto string_field = (rosidl_generator_c__String *) field;
+    auto string_field = static_cast<rosidl_generator_c__String *>(field);
     for (size_t i = 0; i < member->array_size_; ++i) {
       tmpstring = string_field[i].data;
       ser.serialize(tmpstring);
@@ -344,8 +344,8 @@ size_t get_array_size_and_assign_field(
   size_t space)
 {
   std::vector<unsigned char> * vector = reinterpret_cast<std::vector<unsigned char> *>(field);
-  void * ptr = (void *)sub_members_size;
-  size_t vsize = vector->size() / (size_t)align_(max_align, 0, ptr, space);
+  void * ptr = reinterpret_cast<void *>(sub_members_size);
+  size_t vsize = vector->size() / reinterpret_cast<size_t>(align_(max_align, 0, ptr, space));
   if (member->is_upper_bound_ && vsize > member->array_size_) {
     throw std::runtime_error("vector overcomes the maximum length");
   }
@@ -359,7 +359,8 @@ size_t get_array_size_and_assign_field(
   void * & subros_message,
   size_t, size_t, size_t)
 {
-  rosidl_generator_c__void__Array * tmparray = (rosidl_generator_c__void__Array *) field;
+  rosidl_generator_c__void__Array * tmparray =
+    static_cast<rosidl_generator_c__void__Array *>(field);
   if (member->is_upper_bound_ && tmparray->size > member->array_size_) {
     throw std::runtime_error("vector overcomes the maximum length");
   }
@@ -376,7 +377,7 @@ bool TypeSupport<MembersType>::serializeROSmessage(
 
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     const auto member = members->members_ + i;
-    void * field = (char *)ros_message + member->offset_;
+    void * field = const_cast<char *>(static_cast<const char *>(ros_message)) + member->offset_;
 
     if (!member->is_array_) {
       switch (member->type_id_) {
@@ -385,41 +386,41 @@ bool TypeSupport<MembersType>::serializeROSmessage(
             bool sb = false;
             // don't cast to bool here because if the bool is
             // uninitialized the random value can't be deserialized
-            if (*(uint8_t *)field) {sb = true;}
+            if (*static_cast<uint8_t *>(field)) {sb = true;}
             ser << sb;
           }
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
-          ser << *(uint8_t *)field;
+          ser << *static_cast<uint8_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-          ser << *(char *)field;
+          ser << *static_cast<char *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
-          ser << *(float *)field;
+          ser << *static_cast<float *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
-          ser << *(double *)field;
+          ser << *static_cast<double *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
-          ser << *(int16_t *)field;
+          ser << *static_cast<int16_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-          ser << *(uint16_t *)field;
+          ser << *static_cast<uint16_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
-          ser << *(int32_t *)field;
+          ser << *static_cast<int32_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-          ser << *(uint32_t *)field;
+          ser << *static_cast<uint32_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
-          ser << *(int64_t *)field;
+          ser << *static_cast<int64_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-          ser << *(uint64_t *)field;
+          ser << *static_cast<uint64_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
           {
@@ -503,7 +504,7 @@ bool TypeSupport<MembersType>::serializeROSmessage(
 
             for (size_t index = 0; index < array_size; ++index) {
               serializeROSmessage(ser, sub_members, subros_message);
-              subros_message = (char *)subros_message + sub_members_size;
+              subros_message = static_cast<char *>(subros_message) + sub_members_size;
               // TODO(richiprosima) Change 100 values.
               subros_message = align_(max_align, 0, subros_message, space);
             }
@@ -565,7 +566,7 @@ void deserialize_array<std::string>(
 {
   (void)call_new;
   if (member->array_size_ && !member->is_upper_bound_) {
-    auto deser_field = (rosidl_generator_c__String *)field;
+    auto deser_field = static_cast<rosidl_generator_c__String *>(field);
     // tmpstring is defined here and not below to avoid
     // memory allocation in every iteration of the for loop
     std::string tmpstring;
@@ -612,7 +613,7 @@ size_t get_submessage_array_deserialize(
   if (call_new) {
     new(vector) std::vector<unsigned char>;
   }
-  void * ptr = (void *)sub_members_size;
+  void * ptr = reinterpret_cast<void *>(sub_members_size);
   vector->resize(vsize * (size_t)align_(max_align, 0, ptr, space));
   subros_message = reinterpret_cast<void *>(vector->data());
   return vsize;
@@ -631,7 +632,8 @@ size_t get_submessage_array_deserialize(
   // Deserialize length
   uint32_t vsize = 0;
   deser >> vsize;
-  rosidl_generator_c__void__Array * tmparray = (rosidl_generator_c__void__Array *)field;
+  rosidl_generator_c__void__Array * tmparray =
+    static_cast<rosidl_generator_c__void__Array *>(field);
   rosidl_generator_c__void__Array__init(tmparray, vsize, sub_members_size);
   subros_message = reinterpret_cast<void *>(tmparray->data);
   return vsize;
@@ -646,44 +648,44 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
 
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     const auto * member = members->members_ + i;
-    void * field = (char *)ros_message + member->offset_;
+    void * field = static_cast<char *>(ros_message) + member->offset_;
 
     if (!member->is_array_) {
       switch (member->type_id_) {
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-          deser >> *(bool *)field;
+          deser >> *static_cast<bool *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
-          deser >> *(uint8_t *)field;
+          deser >> *static_cast<uint8_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-          deser >> *(char *)field;
+          deser >> *static_cast<char *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
-          deser >> *(float *)field;
+          deser >> *static_cast<float *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
-          deser >> *(double *)field;
+          deser >> *static_cast<double *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
-          deser >> *(int16_t *)field;
+          deser >> *static_cast<int16_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-          deser >> *(uint16_t *)field;
+          deser >> *static_cast<uint16_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
-          deser >> *(int32_t *)field;
+          deser >> *static_cast<int32_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-          deser >> *(uint32_t *)field;
+          deser >> *static_cast<uint32_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
-          deser >> *(int64_t *)field;
+          deser >> *static_cast<int64_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-          deser >> *(uint64_t *)field;
+          deser >> *static_cast<uint64_t *>(field);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
           {
@@ -761,7 +763,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
 
             for (size_t index = 0; index < array_size; ++index) {
               deserializeROSmessage(deser, sub_members, subros_message, recall_new);
-              subros_message = (char *)subros_message + sub_members_size;
+              subros_message = static_cast<char *>(subros_message) + sub_members_size;
               // TODO(richiprosima) Change 100 values.
               subros_message = align_(max_align, 0, subros_message, space);
             }
@@ -978,4 +980,4 @@ std::function<uint32_t()> TypeSupport<MembersType>::getSerializedSizeProvider(vo
 
 }  // namespace rmw_fastrtps_cpp
 
-#endif  // RMW_FASTRTPS_CPP__TYPESUPPORT_IMPL_H_
+#endif  // RMW_FASTRTPS_CPP__TYPESUPPORT_IMPL_HPP_
