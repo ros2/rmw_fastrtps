@@ -437,7 +437,7 @@ public:
   {
     ReaderProxyData proxyData;
     if (change->kind == ALIVE) {
-      CDRMessage_t tempMsg;
+      CDRMessage_t tempMsg(0);
       tempMsg.wraps = true;
       tempMsg.msg_endian = change->serializedPayload.encapsulation ==
         PL_CDR_BE ? BIGEND : LITTLEEND;
@@ -507,7 +507,7 @@ public:
   {
     WriterProxyData proxyData;
     if (change->kind == ALIVE) {
-      CDRMessage_t tempMsg;
+      CDRMessage_t tempMsg(0);
       tempMsg.wraps = true;
       tempMsg.msg_endian = change->serializedPayload.encapsulation ==
         PL_CDR_BE ? BIGEND : LITTLEEND;
