@@ -205,77 +205,6 @@ static size_t calculateMaxAlign(const MembersType * members)
   return max_align;
 }
 
-template<typename MembersType>
-static size_t size_of(const MembersType * members)
-{
-  size_t size = 0;
-
-  const auto & last_member = members->members_[members->member_count_ - 1];
-
-  if (last_member.is_array_ && (!last_member.array_size_ || last_member.is_upper_bound_)) {
-    size = sizeof(std::vector<unsigned char>);
-  } else {
-    switch (last_member.type_id_) {
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-        size = sizeof(bool);
-        break;
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
-        size = sizeof(uint8_t);
-        break;
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-        size = sizeof(char);
-        break;
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
-        size = sizeof(float);
-        break;
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
-        size = sizeof(double);
-        break;
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
-        size = sizeof(int16_t);
-        break;
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-        size = sizeof(uint16_t);
-        break;
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
-        size = sizeof(int32_t);
-        break;
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-        size = sizeof(uint32_t);
-        break;
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
-        size = sizeof(int64_t);
-        break;
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-        size = sizeof(uint64_t);
-        break;
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-        // Note: specialization needed because size_of is called before
-        // casting submembers as std::string
-        if (std::is_same<MembersType, rosidl_typesupport_introspection_c__MessageMembers>::value) {
-          size = sizeof(rosidl_generator_c__String);
-        } else {
-          size = sizeof(std::string);
-        }
-        break;
-      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
-        {
-          const MembersType * sub_members = (const MembersType *)last_member.members_->data;
-          size = size_of(sub_members);
-        }
-        break;
-    }
-
-    if (last_member.is_array_) {
-      size *= last_member.array_size_;
-    }
-  }
-
-  return last_member.offset_ + size;
-}
-
 // C++ specialization
 template<typename T>
 void serialize_array(
@@ -487,7 +416,7 @@ bool TypeSupport<MembersType>::serializeROSmessage(
             const MembersType * sub_members = (const MembersType *)member->members_->data;
             void * subros_message = nullptr;
             size_t array_size = 0;
-            size_t sub_members_size = size_of(sub_members);
+            size_t sub_members_size = sub_members->size_of_;
             size_t max_align = calculateMaxAlign(sub_members);
             size_t space = 100;
 
@@ -746,7 +675,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
             const MembersType * sub_members = (const MembersType *)member->members_->data;
             void * subros_message = nullptr;
             size_t array_size = 0;
-            size_t sub_members_size = size_of(sub_members);
+            size_t sub_members_size = sub_members->size_of_;
             size_t max_align = calculateMaxAlign(sub_members);
             size_t space = 100;
             bool recall_new = call_new;
