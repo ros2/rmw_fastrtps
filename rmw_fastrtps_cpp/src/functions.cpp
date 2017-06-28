@@ -465,16 +465,22 @@ public:
     bool trigger = false;
     mapmutex.lock();
     if (change->kind == ALIVE) {
-      topicNtypes[fqdn].insert(proxyData.typeName());
+      topicNtypes[fqdn].push_back(proxyData.typeName());
       trigger = true;
     } else {
       auto it = topicNtypes.find(fqdn);
-      if (
-        it != topicNtypes.end() &&
-        it->second.find(proxyData.typeName()) != it->second.end())
-      {
-        topicNtypes[fqdn].erase(proxyData.typeName());
-        trigger = true;
+      if (it != topicNtypes.end()) {
+        const auto & loc =
+          std::find(std::begin(it->second), std::end(it->second), proxyData.typeName());
+        if (loc != std::end(it->second)) {
+          topicNtypes[fqdn].erase(loc, loc + 1);
+          trigger = true;
+        } else {
+          RCUTILS_LOG_DEBUG_NAMED(
+            "rmw_fastrps_cpp",
+            "unexpected removal of subscription on topic '%s' with type '%s'",
+            fqdn.c_str(), proxyData.typeName().c_str());
+        }
       }
     }
     mapmutex.unlock();
@@ -487,7 +493,7 @@ public:
       }
     }
   }
-  std::map<std::string, std::set<std::string>> topicNtypes;
+  std::map<std::string, std::vector<std::string>> topicNtypes;
   std::mutex mapmutex;
   Participant * participant_;
   rmw_guard_condition_t * graph_guard_condition_;
@@ -535,16 +541,22 @@ public:
     bool trigger = false;
     mapmutex.lock();
     if (change->kind == ALIVE) {
-      topicNtypes[fqdn].insert(proxyData.typeName());
+      topicNtypes[fqdn].push_back(proxyData.typeName());
       trigger = true;
     } else {
       auto it = topicNtypes.find(fqdn);
-      if (
-        it != topicNtypes.end() &&
-        it->second.find(proxyData.typeName()) != it->second.end())
-      {
-        topicNtypes[fqdn].erase(proxyData.typeName());
-        trigger = true;
+      if (it != topicNtypes.end()) {
+        const auto & loc =
+          std::find(std::begin(it->second), std::end(it->second), proxyData.typeName());
+        if (loc != std::end(it->second)) {
+          topicNtypes[fqdn].erase(loc, loc + 1);
+          trigger = true;
+        } else {
+          RCUTILS_LOG_DEBUG_NAMED(
+            "rmw_fastrps_cpp",
+            "unexpected removal of subscription on topic '%s' with type '%s'",
+            fqdn.c_str(), proxyData.typeName().c_str());
+        }
       }
     }
     mapmutex.unlock();
@@ -557,7 +569,7 @@ public:
       }
     }
   }
-  std::map<std::string, std::set<std::string>> topicNtypes;
+  std::map<std::string, std::vector<std::string>> topicNtypes;
   std::mutex mapmutex;
   Participant * participant_;
   rmw_guard_condition_t * graph_guard_condition_;
@@ -3169,14 +3181,14 @@ rmw_count_publishers(
 
   CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
 
-  std::map<std::string, std::set<std::string>> unfiltered_topics;
+  std::map<std::string, std::vector<std::string>> unfiltered_topics;
   WriterInfo * slave_target = impl->secondaryPubListener;
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
       // truncate the ROS specific prefix
       auto topic_fqdn = _demangle_if_ros_topic(it.first);
-      unfiltered_topics[topic_fqdn].insert(itt);
+      unfiltered_topics[topic_fqdn].push_back(itt);
     }
   }
   slave_target->mapmutex.unlock();
@@ -3220,14 +3232,14 @@ rmw_count_subscribers(
 
   CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
 
-  std::map<std::string, std::set<std::string>> unfiltered_topics;
+  std::map<std::string, std::vector<std::string>> unfiltered_topics;
   ReaderInfo * slave_target = impl->secondarySubListener;
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
     for (auto & itt : it.second) {
       // truncate the ROS specific prefix
       auto topic_fqdn = _demangle_if_ros_topic(it.first);
-      unfiltered_topics[topic_fqdn].insert(itt);
+      unfiltered_topics[topic_fqdn].push_back(itt);
     }
   }
   slave_target->mapmutex.unlock();
