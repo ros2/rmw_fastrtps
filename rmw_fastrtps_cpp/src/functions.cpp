@@ -556,6 +556,7 @@ public:
             "rmw_fastrps_cpp",
             "unexpected removal of subscription on topic '%s' with type '%s'",
             fqdn.c_str(), proxyData.typeName().c_str());
+        }
       }
     }
     mapmutex.unlock();
