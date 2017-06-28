@@ -475,6 +475,11 @@ public:
         if (loc != std::end(it->second)) {
           topicNtypes[fqdn].erase(loc, loc + 1);
           trigger = true;
+        } else {
+          RCUTILS_LOG_DEBUG_NAMED(
+            "rmw_fastrps_cpp",
+            "unexpected removal of subscription on topic '%s' with type '%s'",
+            fqdn.c_str(), proxyData.typeName().c_str());
         }
       }
     }
@@ -546,7 +551,11 @@ public:
         if (loc != std::end(it->second)) {
           topicNtypes[fqdn].erase(loc, loc + 1);
           trigger = true;
-        }
+        } else {
+          RCUTILS_LOG_DEBUG_NAMED(
+            "rmw_fastrps_cpp",
+            "unexpected removal of subscription on topic '%s' with type '%s'",
+            fqdn.c_str(), proxyData.typeName().c_str());
       }
     }
     mapmutex.unlock();
