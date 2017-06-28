@@ -469,13 +469,10 @@ public:
       trigger = true;
     } else {
       auto it = topicNtypes.find(fqdn);
-      auto vector_find = [] (const auto & v, const auto & data) {
-          auto ret = std::find(std::begin(v), std::end(v), data);
-          return ret;
-        };
       if (it != topicNtypes.end()) {
-        const auto & loc = vector_find(it->second, proxyData.typeName());
-        if (loc != std::end(loc)) {
+        const auto & loc =
+          std::find(std::begin(it->second), std::end(it->second), proxyData.typeName());
+        if (loc != std::end(it->second)) {
           topicNtypes[fqdn].erase(loc, loc + 1);
           trigger = true;
         }
@@ -543,12 +540,9 @@ public:
       trigger = true;
     } else {
       auto it = topicNtypes.find(fqdn);
-      auto vector_find = [] (const auto & v, const auto & data) {
-          auto ret = std::find(std::begin(v), std::end(v), data);
-          return ret;
-        };
       if (it != topicNtypes.end()) {
-        const auto & loc = vector_find(it->second, proxyData.typeName());
+        const auto & loc =
+          std::find(std::begin(it->second), std::end(it->second), proxyData.typeName());
         if (loc != std::end(it->second)) {
           topicNtypes[fqdn].erase(loc, loc + 1);
           trigger = true;
