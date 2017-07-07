@@ -648,6 +648,7 @@ public:
 
   bool hasData()
   {
+    std::lock_guard<std::mutex> lock(internalMutex_);
     return !list.empty();
   }
 
@@ -1879,6 +1880,7 @@ public:
 
   bool hasData()
   {
+    std::lock_guard<std::mutex> lock(internalMutex_);
     return !list.empty();
   }
 
