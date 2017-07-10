@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <array>
+#include <atomic>
 #include <cassert>
 #include <condition_variable>
 #include <limits>
@@ -579,7 +580,7 @@ class ClientListener : public SubscriberListener
 {
 public:
   explicit ClientListener(CustomClientInfo * info)
-  : info_(info),
+  : info_(info), list_has_data_(false),
     conditionMutex_(NULL), conditionVariable_(NULL) {}
 
 
@@ -606,6 +607,7 @@ public:
           } else {
             list.push_back(response);
           }
+          list_has_data_.store(true);
         }
       }
     }
@@ -621,11 +623,13 @@ public:
       if (!list.empty()) {
         response = list.front();
         list.pop_front();
+        list_has_data_.store(!list.empty());
       }
     } else {
       if (!list.empty()) {
         response = list.front();
         list.pop_front();
+        list_has_data_.store(!list.empty());
       }
     }
 
@@ -648,13 +652,14 @@ public:
 
   bool hasData()
   {
-    return !list.empty();
+    return list_has_data_.load();
   }
 
 private:
   CustomClientInfo * info_;
   std::mutex internalMutex_;
   std::list<CustomClientResponse> list;
+  std::atomic_bool list_has_data_;
   std::mutex * conditionMutex_;
   std::condition_variable * conditionVariable_;
 };
@@ -1810,7 +1815,8 @@ class ServiceListener : public SubscriberListener
 {
 public:
   explicit ServiceListener(CustomServiceInfo * info)
-  : info_(info), conditionMutex_(NULL), conditionVariable_(NULL)
+  : info_(info), list_has_data_(false),
+    conditionMutex_(NULL), conditionVariable_(NULL)
   {
     (void)info_;
   }
@@ -1838,6 +1844,7 @@ public:
         } else {
           list.push_back(request);
         }
+        list_has_data_.store(true);
       }
     }
   }
@@ -1852,11 +1859,13 @@ public:
       if (!list.empty()) {
         request = list.front();
         list.pop_front();
+        list_has_data_.store(!list.empty());
       }
     } else {
       if (!list.empty()) {
         request = list.front();
         list.pop_front();
+        list_has_data_.store(!list.empty());
       }
     }
 
@@ -1879,13 +1888,14 @@ public:
 
   bool hasData()
   {
-    return !list.empty();
+    return list_has_data_.load();
   }
 
 private:
   CustomServiceInfo * info_;
   std::mutex internalMutex_;
   std::list<CustomServiceRequest> list;
+  std::atomic_bool list_has_data_;
   std::mutex * conditionMutex_;
   std::condition_variable * conditionVariable_;
 };
