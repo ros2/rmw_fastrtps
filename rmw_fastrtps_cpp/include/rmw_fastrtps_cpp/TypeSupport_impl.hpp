@@ -61,6 +61,7 @@ typedef struct rosidl_generator_c__void__Array
   size_t capacity;
 } rosidl_generator_c__void__Array;
 
+inline
 bool
 rosidl_generator_c__void__Array__init(
   rosidl_generator_c__void__Array * array, size_t size, size_t member_size)
@@ -81,6 +82,7 @@ rosidl_generator_c__void__Array__init(
   return true;
 }
 
+inline
 void
 rosidl_generator_c__void__Array__fini(rosidl_generator_c__void__Array * array)
 {
@@ -236,6 +238,7 @@ void serialize_array(
 }
 
 template<>
+inline
 void serialize_array<std::string>(
   const rosidl_typesupport_introspection_c__MessageMember * member,
   void * field,
@@ -264,6 +267,7 @@ void serialize_array<std::string>(
   }
 }
 
+inline
 size_t get_array_size_and_assign_field(
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
   void * field,
@@ -282,6 +286,7 @@ size_t get_array_size_and_assign_field(
   return vsize;
 }
 
+inline
 size_t get_array_size_and_assign_field(
   const rosidl_typesupport_introspection_c__MessageMember * member,
   void * field,
@@ -485,9 +490,8 @@ void deserialize_array(
   }
 }
 
-
 template<>
-void deserialize_array<std::string>(
+inline void deserialize_array<std::string>(
   const rosidl_typesupport_introspection_c__MessageMember * member,
   void * field,
   eprosima::fastcdr::Cdr & deser,
@@ -524,7 +528,7 @@ void deserialize_array<std::string>(
   }
 }
 
-size_t get_submessage_array_deserialize(
+inline size_t get_submessage_array_deserialize(
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
   eprosima::fastcdr::Cdr & deser,
   void * field,
@@ -548,7 +552,7 @@ size_t get_submessage_array_deserialize(
   return vsize;
 }
 
-size_t get_submessage_array_deserialize(
+inline size_t get_submessage_array_deserialize(
   const rosidl_typesupport_introspection_c__MessageMember * member,
   eprosima::fastcdr::Cdr & deser,
   void * field,
