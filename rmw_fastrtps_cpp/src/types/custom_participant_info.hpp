@@ -24,7 +24,7 @@
 
 typedef struct CustomParticipantInfo
 {
-  Participant * participant;
+  eprosima::fastrtps::Participant * participant;
   ReaderInfo * secondarySubListener;
   WriterInfo * secondaryPubListener;
   rmw_guard_condition_t * graph_guard_condition;

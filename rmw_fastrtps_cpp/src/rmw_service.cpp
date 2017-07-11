@@ -42,7 +42,8 @@
 
 extern "C"
 {
-rmw_service_t * rmw_create_service(const rmw_node_t * node,
+rmw_service_t *
+rmw_create_service(const rmw_node_t * node,
   const rosidl_service_type_support_t * type_supports,
   const char * service_name, const rmw_qos_profile_t * qos_policies)
 {
@@ -229,7 +230,8 @@ fail:
   return NULL;
 }
 
-rmw_ret_t rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
+rmw_ret_t
+rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
 {
   (void)node;
   if (!service) {

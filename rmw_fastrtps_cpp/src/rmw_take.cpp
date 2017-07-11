@@ -27,7 +27,8 @@
 
 extern "C"
 {
-rmw_ret_t rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
+rmw_ret_t
+rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
 {
   assert(subscription);
   assert(ros_message);
@@ -59,7 +60,8 @@ rmw_ret_t rmw_take(const rmw_subscription_t * subscription, void * ros_message, 
   return RMW_RET_OK;
 }
 
-rmw_ret_t rmw_take_with_info(
+rmw_ret_t
+rmw_take_with_info(
   const rmw_subscription_t * subscription,
   void * ros_message,
   bool * taken,

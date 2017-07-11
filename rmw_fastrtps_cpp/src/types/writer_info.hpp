@@ -23,29 +23,32 @@
 #include <string>
 #include <vector>
 
-#include "rcutils/logging_macros.h"
-
-#include "rmw/rmw.h"
-
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/rtps/builtin/data/WriterProxyData.h"
 #include "fastrtps/rtps/reader/RTPSReader.h"
 
-class WriterInfo : public ReaderListener
+#include "rcutils/logging_macros.h"
+
+#include "rmw/rmw.h"
+
+class WriterInfo : public eprosima::fastrtps::ReaderListener
 {
 public:
   WriterInfo(
-    Participant * participant,
+    eprosima::fastrtps::Participant * participant,
     rmw_guard_condition_t * graph_guard_condition)
   : participant_(participant),
     graph_guard_condition_(graph_guard_condition)
   {}
 
-  void onNewCacheChangeAdded(RTPSReader *, const CacheChange_t * const change)
+  void
+  onNewCacheChangeAdded(
+    eprosima::fastrtps::rtps::RTPSReader *,
+    const eprosima::fastrtps::CacheChange_t * const change)
   {
-    WriterProxyData proxyData;
+    eprosima::fastrtps::rtps::WriterProxyData proxyData;
     if (change->kind == ALIVE) {
-      CDRMessage_t tempMsg(0);
+      eprosima::fastrtps::CDRMessage_t tempMsg(0);
       tempMsg.wraps = true;
       tempMsg.msg_endian = change->serializedPayload.encapsulation ==
         PL_CDR_BE ? BIGEND : LITTLEEND;
@@ -56,7 +59,7 @@ public:
         return;
       }
     } else {
-      GUID_t writerGuid;
+      eprosima::fastrtps::rtps::GUID_t writerGuid;
       iHandle2GUID(writerGuid, change->instanceHandle);
       if (!participant_->get_remote_writer_info(writerGuid, proxyData)) {
         return;
@@ -103,7 +106,7 @@ public:
   }
   std::map<std::string, std::vector<std::string>> topicNtypes;
   std::mutex mapmutex;
-  Participant * participant_;
+  eprosima::fastrtps::Participant * participant_;
   rmw_guard_condition_t * graph_guard_condition_;
 };
 

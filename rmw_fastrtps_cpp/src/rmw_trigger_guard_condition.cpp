@@ -22,7 +22,8 @@
 
 extern "C"
 {
-rmw_ret_t rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle)
+rmw_ret_t
+rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle)
 {
   assert(guard_condition_handle);
 

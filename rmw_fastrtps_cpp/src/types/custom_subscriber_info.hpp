@@ -22,14 +22,11 @@
 #include "fastrtps/subscriber/Subscriber.h"
 #include "fastrtps/subscriber/SubscriberListener.h"
 
-#include "fastrtps/rtps/builtin/data/ReaderProxyData.h"
-#include "fastrtps/rtps/builtin/data/WriterProxyData.h"
-
 class SubListener;
 
 typedef struct CustomSubscriberInfo
 {
-  Subscriber * subscriber_;
+  eprosima::fastrtps::Subscriber * subscriber_;
   SubListener * listener_;
   void * type_support_;
   const char * typesupport_identifier_;
@@ -46,13 +43,16 @@ public:
     (void)info;
   }
 
-  void onSubscriptionMatched(Subscriber * sub, MatchingInfo & info)
+  void
+  onSubscriptionMatched(
+    eprosima::fastrtps::Subscriber * sub, eprosima::fastrtps::MatchingInfo & info)
   {
     (void)sub;
     (void)info;
   }
 
-  void onNewDataMessage(Subscriber * sub)
+  void
+  onNewDataMessage(eprosima::fastrtps::Subscriber * sub)
   {
     (void)sub;
     std::lock_guard<std::mutex> lock(internalMutex_);
@@ -67,26 +67,30 @@ public:
     }
   }
 
-  void attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable)
+  void
+  attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable)
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
     conditionMutex_ = conditionMutex;
     conditionVariable_ = conditionVariable;
   }
 
-  void detachCondition()
+  void
+  detachCondition()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
     conditionMutex_ = NULL;
     conditionVariable_ = NULL;
   }
 
-  bool hasData()
+  bool
+  hasData()
   {
     return data_ > 0;
   }
 
-  void data_taken()
+  void
+  data_taken()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
 

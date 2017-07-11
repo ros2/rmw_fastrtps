@@ -20,7 +20,8 @@
 
 extern "C"
 {
-rmw_guard_condition_t * rmw_create_guard_condition()
+rmw_guard_condition_t *
+rmw_create_guard_condition()
 {
   rmw_guard_condition_t * guard_condition_handle = new rmw_guard_condition_t;
   guard_condition_handle->implementation_identifier = eprosima_fastrtps_identifier;
@@ -28,7 +29,8 @@ rmw_guard_condition_t * rmw_create_guard_condition()
   return guard_condition_handle;
 }
 
-rmw_ret_t rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
+rmw_ret_t
+rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
 {
   if (guard_condition) {
     delete static_cast<GuardCondition *>(guard_condition->data);

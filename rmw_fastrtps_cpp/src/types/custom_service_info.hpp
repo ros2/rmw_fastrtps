@@ -18,6 +18,7 @@
 #include <list>
 
 #include "fastcdr/FastBuffer.h"
+
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/publisher/Publisher.h"
 #include "fastrtps/publisher/PublisherListener.h"
@@ -25,19 +26,16 @@
 #include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/subscriber/SampleInfo.h"
 
-#include "fastrtps/rtps/builtin/data/ReaderProxyData.h"
-#include "fastrtps/rtps/builtin/data/WriterProxyData.h"
-
 class ServiceListener;
 
 typedef struct CustomServiceInfo
 {
   void * request_type_support_;
   void * response_type_support_;
-  Subscriber * request_subscriber_;
-  Publisher * response_publisher_;
+  eprosima::fastrtps::Subscriber * request_subscriber_;
+  eprosima::fastrtps::Publisher * response_publisher_;
   ServiceListener * listener_;
-  Participant * participant_;
+  eprosima::fastrtps::Participant * participant_;
   const char * typesupport_identifier_;
 } CustomServiceInfo;
 
@@ -50,7 +48,7 @@ typedef struct CustomServiceRequest
   : buffer_(nullptr) {}
 } CustomServiceRequest;
 
-class ServiceListener : public SubscriberListener
+class ServiceListener : public eprosima::fastrtps::SubscriberListener
 {
 public:
   explicit ServiceListener(CustomServiceInfo * info)
@@ -60,13 +58,14 @@ public:
   }
 
 
-  void onNewDataMessage(Subscriber * sub)
+  void
+  onNewDataMessage(eprosima::fastrtps::Subscriber * sub)
   {
     assert(sub);
 
     CustomServiceRequest request;
     request.buffer_ = new eprosima::fastcdr::FastBuffer();
-    SampleInfo_t sinfo;
+    eprosima::fastrtps::SampleInfo_t sinfo;
 
     if (sub->takeNextData(request.buffer_, &sinfo)) {
       if (sinfo.sampleKind == ALIVE) {
@@ -86,7 +85,8 @@ public:
     }
   }
 
-  CustomServiceRequest getRequest()
+  CustomServiceRequest
+  getRequest()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
     CustomServiceRequest request;
@@ -107,21 +107,24 @@ public:
     return request;
   }
 
-  void attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable)
+  void
+  attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable)
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
     conditionMutex_ = conditionMutex;
     conditionVariable_ = conditionVariable;
   }
 
-  void detachCondition()
+  void
+  detachCondition()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
     conditionMutex_ = NULL;
     conditionVariable_ = NULL;
   }
 
-  bool hasData()
+  bool
+  hasData()
   {
     return !list.empty();
   }

@@ -33,19 +33,22 @@
 #include "fastrtps/rtps/reader/ReaderListener.h"
 #include "fastrtps/rtps/reader/RTPSReader.h"
 
-class ReaderInfo : public ReaderListener
+class ReaderInfo : public eprosima::fastrtps::ReaderListener
 {
 public:
   ReaderInfo(
-    Participant * participant,
+    eprosima::fastrtps::Participant * participant,
     rmw_guard_condition_t * graph_guard_condition)
   : participant_(participant),
     graph_guard_condition_(graph_guard_condition)
   {}
 
-  void onNewCacheChangeAdded(RTPSReader *, const CacheChange_t * const change)
+  void
+  onNewCacheChangeAdded(
+    eprosima::fastrtps::rtps::RTPSReader *,
+    const eprosima::fastrtps::CacheChange_t * const change)
   {
-    ReaderProxyData proxyData;
+    eprosima::fastrtps::rtps::ReaderProxyData proxyData;
     if (change->kind == ALIVE) {
       CDRMessage_t tempMsg(0);
       tempMsg.wraps = true;
@@ -58,7 +61,7 @@ public:
         return;
       }
     } else {
-      GUID_t readerGuid;
+      eprosima::fastrtps::rtps::GUID_t readerGuid;
       iHandle2GUID(readerGuid, change->instanceHandle);
       if (!participant_->get_remote_reader_info(readerGuid, proxyData)) {
         return;
@@ -105,7 +108,7 @@ public:
   }
   std::map<std::string, std::vector<std::string>> topicNtypes;
   std::mutex mapmutex;
-  Participant * participant_;
+  eprosima::fastrtps::Participant * participant_;
   rmw_guard_condition_t * graph_guard_condition_;
 };
 

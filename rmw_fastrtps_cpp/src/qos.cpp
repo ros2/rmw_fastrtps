@@ -19,21 +19,21 @@
 #include "fastrtps/attributes/PublisherAttributes.h"
 #include "fastrtps/attributes/SubscriberAttributes.h"
 
-#include "fastrtps/rtps/builtin/data/ReaderProxyData.h"
-#include "fastrtps/rtps/builtin/data/WriterProxyData.h"
-
 #include "rmw/error_handling.h"
 
 extern "C"
 {
-bool get_datareader_qos(const rmw_qos_profile_t & qos_policies, SubscriberAttributes & sattr)
+bool
+get_datareader_qos(
+  const rmw_qos_profile_t & qos_policies,
+  eprosima::fastrtps::SubscriberAttributes & sattr)
 {
   switch (qos_policies.history) {
     case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
-      sattr.topic.historyQos.kind = KEEP_LAST_HISTORY_QOS;
+      sattr.topic.historyQos.kind = eprosima::fastrtps::KEEP_LAST_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
-      sattr.topic.historyQos.kind = KEEP_ALL_HISTORY_QOS;
+      sattr.topic.historyQos.kind = eprosima::fastrtps::KEEP_ALL_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
       break;
@@ -44,10 +44,10 @@ bool get_datareader_qos(const rmw_qos_profile_t & qos_policies, SubscriberAttrib
 
   switch (qos_policies.reliability) {
     case RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT:
-      sattr.qos.m_reliability.kind = BEST_EFFORT_RELIABILITY_QOS;
+      sattr.qos.m_reliability.kind = eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS;
       break;
     case RMW_QOS_POLICY_RELIABILITY_RELIABLE:
-      sattr.qos.m_reliability.kind = RELIABLE_RELIABILITY_QOS;
+      sattr.qos.m_reliability.kind = eprosima::fastrtps::RELIABLE_RELIABILITY_QOS;
       break;
     case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
       break;
@@ -58,10 +58,10 @@ bool get_datareader_qos(const rmw_qos_profile_t & qos_policies, SubscriberAttrib
 
   switch (qos_policies.durability) {
     case RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL:
-      sattr.qos.m_durability.kind = TRANSIENT_LOCAL_DURABILITY_QOS;
+      sattr.qos.m_durability.kind = eprosima::fastrtps::TRANSIENT_LOCAL_DURABILITY_QOS;
       break;
     case RMW_QOS_POLICY_DURABILITY_VOLATILE:
-      sattr.qos.m_durability.kind = VOLATILE_DURABILITY_QOS;
+      sattr.qos.m_durability.kind = eprosima::fastrtps::VOLATILE_DURABILITY_QOS;
       break;
     case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
       break;
@@ -77,7 +77,7 @@ bool get_datareader_qos(const rmw_qos_profile_t & qos_policies, SubscriberAttrib
   // ensure the history depth is at least the requested queue size
   assert(sattr.topic.historyQos.depth >= 0);
   if (
-    sattr.topic.historyQos.kind == KEEP_LAST_HISTORY_QOS &&
+    sattr.topic.historyQos.kind == eprosima::fastrtps::KEEP_LAST_HISTORY_QOS &&
     static_cast<size_t>(sattr.topic.historyQos.depth) < qos_policies.depth
   )
   {
@@ -92,14 +92,16 @@ bool get_datareader_qos(const rmw_qos_profile_t & qos_policies, SubscriberAttrib
   return true;
 }
 
-bool get_datawriter_qos(const rmw_qos_profile_t & qos_policies, PublisherAttributes & pattr)
+bool
+get_datawriter_qos(
+  const rmw_qos_profile_t & qos_policies, eprosima::fastrtps::PublisherAttributes & pattr)
 {
   switch (qos_policies.history) {
     case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
-      pattr.topic.historyQos.kind = KEEP_LAST_HISTORY_QOS;
+      pattr.topic.historyQos.kind = eprosima::fastrtps::KEEP_LAST_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
-      pattr.topic.historyQos.kind = KEEP_ALL_HISTORY_QOS;
+      pattr.topic.historyQos.kind = eprosima::fastrtps::KEEP_ALL_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
       break;
@@ -110,10 +112,10 @@ bool get_datawriter_qos(const rmw_qos_profile_t & qos_policies, PublisherAttribu
 
   switch (qos_policies.durability) {
     case RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL:
-      pattr.qos.m_durability.kind = TRANSIENT_LOCAL_DURABILITY_QOS;
+      pattr.qos.m_durability.kind = eprosima::fastrtps::TRANSIENT_LOCAL_DURABILITY_QOS;
       break;
     case RMW_QOS_POLICY_DURABILITY_VOLATILE:
-      pattr.qos.m_durability.kind = VOLATILE_DURABILITY_QOS;
+      pattr.qos.m_durability.kind = eprosima::fastrtps::VOLATILE_DURABILITY_QOS;
       break;
     case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
       break;
@@ -124,10 +126,10 @@ bool get_datawriter_qos(const rmw_qos_profile_t & qos_policies, PublisherAttribu
 
   switch (qos_policies.reliability) {
     case RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT:
-      pattr.qos.m_reliability.kind = BEST_EFFORT_RELIABILITY_QOS;
+      pattr.qos.m_reliability.kind = eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS;
       break;
     case RMW_QOS_POLICY_RELIABILITY_RELIABLE:
-      pattr.qos.m_reliability.kind = RELIABLE_RELIABILITY_QOS;
+      pattr.qos.m_reliability.kind = eprosima::fastrtps::RELIABLE_RELIABILITY_QOS;
       break;
     case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
       break;
@@ -143,7 +145,7 @@ bool get_datawriter_qos(const rmw_qos_profile_t & qos_policies, PublisherAttribu
   // ensure the history depth is at least the requested queue size
   assert(pattr.topic.historyQos.depth >= 0);
   if (
-    pattr.topic.historyQos.kind == KEEP_LAST_HISTORY_QOS &&
+    pattr.topic.historyQos.kind == eprosima::fastrtps::KEEP_LAST_HISTORY_QOS &&
     static_cast<size_t>(pattr.topic.historyQos.depth) < qos_policies.depth
   )
   {

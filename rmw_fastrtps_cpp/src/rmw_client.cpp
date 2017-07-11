@@ -32,7 +32,8 @@
 
 extern "C"
 {
-rmw_client_t * rmw_create_client(const rmw_node_t * node,
+rmw_client_t *
+rmw_create_client(const rmw_node_t * node,
   const rosidl_service_type_support_t * type_supports,
   const char * service_name, const rmw_qos_profile_t * qos_policies)
 {
@@ -226,7 +227,8 @@ fail:
   return NULL;
 }
 
-rmw_ret_t rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
+rmw_ret_t
+rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
 {
   (void)node;
   if (!client) {

@@ -17,7 +17,7 @@
 #include "fastcdr/Cdr.h"
 #include "fastcdr/FastBuffer.h"
 
-#include "fastrtps/subscriber/subscriber.h"
+#include "fastrtps/subscriber/Subscriber.h"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -30,7 +30,8 @@
 
 extern "C"
 {
-rmw_ret_t rmw_send_request(const rmw_client_t * client,
+rmw_ret_t
+rmw_send_request(const rmw_client_t * client,
   const void * ros_request,
   int64_t * sequence_id)
 {
@@ -71,7 +72,8 @@ rmw_ret_t rmw_send_request(const rmw_client_t * client,
   return returnedValue;
 }
 
-rmw_ret_t rmw_take_request(const rmw_service_t * service,
+rmw_ret_t
+rmw_take_request(const rmw_service_t * service,
   rmw_request_id_t * request_header,
   void * ros_request,
   bool * taken)

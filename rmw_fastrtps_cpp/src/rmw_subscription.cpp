@@ -35,7 +35,8 @@
 
 extern "C"
 {
-rmw_subscription_t * rmw_create_subscription(const rmw_node_t * node,
+rmw_subscription_t *
+rmw_create_subscription(const rmw_node_t * node,
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name, const rmw_qos_profile_t * qos_policies, bool ignore_local_publications)
 {
@@ -166,7 +167,8 @@ fail:
   return NULL;
 }
 
-rmw_ret_t rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
+rmw_ret_t
+rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");

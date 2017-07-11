@@ -28,7 +28,8 @@ public:
   : hasTriggered_(false),
     conditionMutex_(NULL), conditionVariable_(NULL) {}
 
-  void trigger()
+  void
+  trigger()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
 
@@ -42,26 +43,30 @@ public:
     }
   }
 
-  void attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable)
+  void
+  attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable)
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
     conditionMutex_ = conditionMutex;
     conditionVariable_ = conditionVariable;
   }
 
-  void detachCondition()
+  void
+  detachCondition()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
     conditionMutex_ = NULL;
     conditionVariable_ = NULL;
   }
 
-  bool hasTriggered()
+  bool
+  hasTriggered()
   {
     return hasTriggered_;
   }
 
-  bool getHasTriggered()
+  bool
+  getHasTriggered()
   {
     bool ret = hasTriggered_;
     hasTriggered_ = false;

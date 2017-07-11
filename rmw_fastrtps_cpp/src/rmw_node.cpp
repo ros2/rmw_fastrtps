@@ -46,7 +46,8 @@
 
 extern "C"
 {
-rmw_node_t * create_node(
+rmw_node_t *
+create_node(
   const char * name,
   const char * namespace_,
   ParticipantAttributes participantAttrs)
@@ -154,7 +155,8 @@ fail:
   return NULL;
 }
 
-bool get_security_file_paths(
+bool
+get_security_file_paths(
   std::array<std::string, 3> & security_files_paths, const char * node_secure_root)
 {
   // here assume only 3 files for security
@@ -231,7 +233,8 @@ rmw_create_node(
   return create_node(name, namespace_, participantAttrs);
 }
 
-rmw_ret_t rmw_destroy_node(rmw_node_t * node)
+rmw_ret_t
+rmw_destroy_node(rmw_node_t * node)
 {
   rmw_ret_t result_ret = RMW_RET_OK;
   if (!node) {

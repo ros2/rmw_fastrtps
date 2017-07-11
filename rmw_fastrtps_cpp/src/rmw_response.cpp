@@ -28,7 +28,8 @@
 
 extern "C"
 {
-rmw_ret_t rmw_take_response(const rmw_client_t * client,
+rmw_ret_t
+rmw_take_response(const rmw_client_t * client,
   rmw_request_id_t * request_header,
   void * ros_response,
   bool * taken)
@@ -65,7 +66,8 @@ rmw_ret_t rmw_take_response(const rmw_client_t * client,
   return RMW_RET_OK;
 }
 
-rmw_ret_t rmw_send_response(const rmw_service_t * service,
+rmw_ret_t
+rmw_send_response(const rmw_service_t * service,
   rmw_request_id_t * request_header,
   void * ros_response)
 {

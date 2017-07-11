@@ -24,7 +24,8 @@
 #include "types/guard_condition.hpp"
 
 // helper function for wait
-bool check_waitset_for_data(const rmw_subscriptions_t * subscriptions,
+bool
+check_waitset_for_data(const rmw_subscriptions_t * subscriptions,
   const rmw_guard_conditions_t * guard_conditions,
   const rmw_services_t * services,
   const rmw_clients_t * clients)
@@ -68,7 +69,9 @@ bool check_waitset_for_data(const rmw_subscriptions_t * subscriptions,
 
 extern "C"
 {
-rmw_ret_t rmw_wait(rmw_subscriptions_t * subscriptions,
+rmw_ret_t
+rmw_wait(
+  rmw_subscriptions_t * subscriptions,
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
   rmw_clients_t * clients,

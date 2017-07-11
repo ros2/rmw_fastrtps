@@ -15,15 +15,13 @@
 #ifndef TYPES__CUSTOM_PUBLISHER_INFO_HPP_
 #define TYPES__CUSTOM_PUBLISHER_INFO_HPP_
 
-#include "fastrtps/rtps/builtin/data/ReaderProxyData.h"
-#include "fastrtps/rtps/builtin/data/WriterProxyData.h"
 #include "fastrtps/publisher/Publisher.h"
 
 #include "rmw/rmw.h"
 
 typedef struct CustomPublisherInfo
 {
-  Publisher * publisher_;
+  eprosima::fastrtps::Publisher * publisher_;
   void * type_support_;
   rmw_gid_t publisher_gid;
   const char * typesupport_identifier_;

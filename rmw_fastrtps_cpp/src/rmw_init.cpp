@@ -16,7 +16,8 @@
 
 extern "C"
 {
-rmw_ret_t rmw_init()
+rmw_ret_t
+rmw_init()
 {
   return RMW_RET_OK;
 }

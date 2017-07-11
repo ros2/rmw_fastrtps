@@ -15,32 +15,19 @@
 #ifndef TYPE_SUPPORT_COMMONS_HPP_
 #define TYPE_SUPPORT_COMMONS_HPP_
 
-#include <algorithm>
-#include <array>
-#include <cassert>
-#include <condition_variable>
-#include <limits>
-#include <list>
-#include <map>
-#include <mutex>
-#include <utility>
-#include <set>
 #include <string>
-#include <vector>
+
+#include "fastrtps/Domain.h"
+#include "fastrtps/participant/Participant.h"
 
 #include "rmw/error_handling.h"
 
 #include "rmw_fastrtps_cpp/MessageTypeSupport.hpp"
 #include "rmw_fastrtps_cpp/ServiceTypeSupport.hpp"
 
-#include "fastrtps/Domain.h"
-#include "fastrtps/participant/Participant.h"
-
 #include "rosidl_typesupport_introspection_c/visibility_control.h"
 
 #include "identifier.hpp"
-
-using Domain = eprosima::fastrtps::Domain;
 
 using MessageTypeSupport_c =
     rmw_fastrtps_cpp::MessageTypeSupport<rosidl_typesupport_introspection_c__MessageMembers>;
@@ -69,9 +56,11 @@ using ResponseTypeSupport_cpp = rmw_fastrtps_cpp::ResponseTypeSupport<
     rosidl_typesupport_introspection_cpp::MessageMembers
     >;
 
-bool using_introspection_c_typesupport(const char * typesupport_identifier);
+bool
+using_introspection_c_typesupport(const char * typesupport_identifier);
 
-bool using_introspection_cpp_typesupport(const char * typesupport_identifier);
+bool
+using_introspection_cpp_typesupport(const char * typesupport_identifier);
 
 template<typename MembersType>
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
@@ -118,12 +107,14 @@ _create_response_type_support(const void * untyped_members, const char * typesup
 
 void
 _register_type(
-  eprosima::fastrtps::Participant * participant, void * untyped_typesupport,
+  eprosima::fastrtps::Participant * participant,
+  void * untyped_typesupport,
   const char * typesupport_identifier);
 
 void
 _unregister_type(
-  eprosima::fastrtps::Participant * participant, void * untyped_typesupport,
+  eprosima::fastrtps::Participant * participant,
+  void * untyped_typesupport,
   const char * typesupport_identifier);
 
 void
