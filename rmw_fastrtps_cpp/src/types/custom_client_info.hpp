@@ -15,6 +15,7 @@
 #ifndef TYPES__CUSTOM_CLIENT_INFO_HPP_
 #define TYPES__CUSTOM_CLIENT_INFO_HPP_
 
+#include <atomic>
 #include <list>
 
 #include "fastcdr/FastBuffer.h"
@@ -52,7 +53,7 @@ class ClientListener : public eprosima::fastrtps::SubscriberListener
 {
 public:
   explicit ClientListener(CustomClientInfo * info)
-  : info_(info),
+  : info_(info), list_has_data_(false),
     conditionMutex_(NULL), conditionVariable_(NULL) {}
 
 
@@ -80,6 +81,7 @@ public:
           } else {
             list.push_back(response);
           }
+          list_has_data_.store(true);
         }
       }
     }
@@ -96,11 +98,13 @@ public:
       if (!list.empty()) {
         response = list.front();
         list.pop_front();
+        list_has_data_.store(!list.empty());
       }
     } else {
       if (!list.empty()) {
         response = list.front();
         list.pop_front();
+        list_has_data_.store(!list.empty());
       }
     }
 
@@ -126,13 +130,14 @@ public:
   bool
   hasData()
   {
-    return !list.empty();
+    return list_has_data_.load();
   }
 
 private:
   CustomClientInfo * info_;
   std::mutex internalMutex_;
   std::list<CustomClientResponse> list;
+  std::atomic_bool list_has_data_;
   std::mutex * conditionMutex_;
   std::condition_variable * conditionVariable_;
 };
