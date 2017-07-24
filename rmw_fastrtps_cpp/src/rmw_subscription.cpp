@@ -28,7 +28,7 @@
 #include "qos.hpp"
 #include "types/custom_participant_info.hpp"
 #include "types/custom_subscriber_info.hpp"
-#include "type_support_commons.hpp"
+#include "type_support_common.hpp"
 
 // uncomment the next line to enable debug prints
 // #define DEBUG_LOGGING 1

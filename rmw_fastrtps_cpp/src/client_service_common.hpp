@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef CLIENT_SERVICE_COMMONS_HPP_
-#define CLIENT_SERVICE_COMMONS_HPP_
+#ifndef CLIENT_SERVICE_COMMON_HPP_
+#define CLIENT_SERVICE_COMMON_HPP_
 
 #include "rmw/error_handling.h"
 
@@ -43,4 +43,4 @@ const void * get_response_ptr(const void * untyped_service_members)
 
 const void * get_response_ptr(const void * untyped_service_members, const char * typesupport);
 
-#endif  // CLIENT_SERVICE_COMMONS_HPP_
+#endif  // CLIENT_SERVICE_COMMON_HPP_

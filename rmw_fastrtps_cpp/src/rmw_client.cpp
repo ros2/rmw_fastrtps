@@ -22,11 +22,11 @@
 #include "rosidl_typesupport_introspection_c/identifier.h"
 
 #include "assign_partitions.hpp"
-#include "client_service_commons.hpp"
+#include "client_service_common.hpp"
 #include "identifier.hpp"
 #include "namespace_prefix.hpp"
 #include "qos.hpp"
-#include "type_support_commons.hpp"
+#include "type_support_common.hpp"
 #include "types/custom_participant_info.hpp"
 #include "types/custom_client_info.hpp"
 

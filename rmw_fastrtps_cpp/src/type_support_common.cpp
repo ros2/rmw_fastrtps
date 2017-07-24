@@ -18,7 +18,7 @@
 
 #include "rosidl_typesupport_introspection_c/identifier.h"
 
-#include "type_support_commons.hpp"
+#include "type_support_common.hpp"
 
 bool
 using_introspection_c_typesupport(const char * typesupport_identifier)

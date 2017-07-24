@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "client_service_commons.hpp"
+#include "client_service_common.hpp"
 
-#include "type_support_commons.hpp"
+#include "type_support_common.hpp"
 
 const void *
 get_request_ptr(const void * untyped_service_members, const char * typesupport)

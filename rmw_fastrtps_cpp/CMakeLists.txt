@@ -50,7 +50,7 @@ ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 include_directories(include)
 
 add_library(rmw_fastrtps_cpp
-  src/client_service_commons.cpp
+  src/client_service_common.cpp
   src/demangle.cpp
   src/identifier.cpp
   src/namespace_prefix.cpp
@@ -79,7 +79,7 @@ add_library(rmw_fastrtps_cpp
   src/rmw_wait.cpp
   src/rmw_waitset.cpp
   src/ros_message_serialization.cpp
-  src/type_support_commons.cpp
+  src/type_support_common.cpp
 )
 target_link_libraries(rmw_fastrtps_cpp
   fastcdr fastrtps)

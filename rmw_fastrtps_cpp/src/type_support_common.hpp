@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TYPE_SUPPORT_COMMONS_HPP_
-#define TYPE_SUPPORT_COMMONS_HPP_
+#ifndef TYPE_SUPPORT_COMMON_HPP_
+#define TYPE_SUPPORT_COMMON_HPP_
 
 #include <string>
 
@@ -120,4 +120,4 @@ _unregister_type(
 void
 _delete_typesupport(void * untyped_typesupport, const char * typesupport_identifier);
 
-#endif  // TYPE_SUPPORT_COMMONS_HPP_
+#endif  // TYPE_SUPPORT_COMMON_HPP_
