@@ -154,14 +154,12 @@ rmw_create_service(const rmw_node_t * node,
   }
   publisherParam.topic.topicName += "Reply";
 
-#ifdef DEBUG_LOGGING
   RCUTILS_LOG_DEBUG("************ Service Details *********")
   RCUTILS_LOG_DEBUG("Sub Topic %s", subscriberParam.topic.topicName.c_str())
   RCUTILS_LOG_DEBUG("Sub Partition %s", subscriberParam.qos.m_partition.getNames()[0].c_str())
   RCUTILS_LOG_DEBUG("Pub Topic %s", publisherParam.topic.topicName.c_str())
   RCUTILS_LOG_DEBUG("Pub Partition %s", publisherParam.qos.m_partition.getNames()[0].c_str())
   RCUTILS_LOG_DEBUG("***********")
-#endif
 
   // Create Service Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {

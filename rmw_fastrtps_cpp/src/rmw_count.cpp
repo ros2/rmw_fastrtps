@@ -68,13 +68,11 @@ rmw_count_publishers(
     *count = it->second.size();
   }
 
-#ifdef DEBUG_LOGGING
   RCUTILS_LOG_DEBUG("looking for subscriber topic: %s", topic_name)
   for (auto it : unfiltered_topics) {
     RCUTILS_LOG_DEBUG("available topic: %s", it.first.c_str())
   }
   RCUTILS_LOG_DEBUG("number of matches: %zu", *count)
-#endif
 
   return RMW_RET_OK;
 }
@@ -119,13 +117,11 @@ rmw_count_subscribers(
     *count = it->second.size();
   }
 
-#ifdef DEBUG_LOGGING
   RCUTILS_LOG_DEBUG("looking for subscriber topic: %s", topic_name)
   for (auto it : unfiltered_topics) {
     RCUTILS_LOG_DEBUG("available topic: %s", it.first.c_str())
   }
   RCUTILS_LOG_DEBUG("number of matches: %zu", *count)
-#endif
 
   return RMW_RET_OK;
 }

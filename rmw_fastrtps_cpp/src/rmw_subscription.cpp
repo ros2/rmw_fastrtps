@@ -30,9 +30,6 @@
 #include "types/custom_subscriber_info.hpp"
 #include "type_support_common.hpp"
 
-// uncomment the next line to enable debug prints
-// #define DEBUG_LOGGING 1
-
 extern "C"
 {
 rmw_subscription_t *
