@@ -109,7 +109,9 @@ rmw_get_topic_names_and_types(
     auto fail_cleanup = [&topic_names_and_types]() {
         rmw_ret_t rmw_ret = rmw_names_and_types_fini(topic_names_and_types);
         if (rmw_ret != RMW_RET_OK) {
-          RCUTILS_LOG_ERROR("error during report of error: %s", rmw_get_error_string_safe())
+          RCUTILS_LOG_ERROR_NAMED(
+            "rmw_fastrtps_cpp",
+            "error during report of error: %s", rmw_get_error_string_safe())
         }
       };
     // Setup demangling functions based on no_demangle option

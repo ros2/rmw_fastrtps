@@ -144,12 +144,22 @@ rmw_create_client(const rmw_node_t * node,
   }
   publisherParam.topic.topicName += "Request";
 
-  RCUTILS_LOG_DEBUG("************ Client Details *********")
-  RCUTILS_LOG_DEBUG("Sub Topic %s", subscriberParam.topic.topicName.c_str())
-  RCUTILS_LOG_DEBUG("Sub Partition %s", subscriberParam.qos.m_partition.getNames()[0].c_str())
-  RCUTILS_LOG_DEBUG("Pub Topic %s", publisherParam.topic.topicName.c_str())
-  RCUTILS_LOG_DEBUG("Pub Partition %s", publisherParam.qos.m_partition.getNames()[0].c_str())
-  RCUTILS_LOG_DEBUG("***********")
+  RCUTILS_LOG_DEBUG_NAMED(
+    "rmw_fastrtps_cpp",
+    "************ Client Details *********")
+  RCUTILS_LOG_DEBUG_NAMED(
+    "rmw_fastrtps_cpp",
+    "Sub Topic %s", subscriberParam.topic.topicName.c_str())
+  RCUTILS_LOG_DEBUG_NAMED(
+    "rmw_fastrtps_cpp",
+    "Sub Partition %s", subscriberParam.qos.m_partition.getNames()[0].c_str())
+  RCUTILS_LOG_DEBUG_NAMED(
+    "rmw_fastrtps_cpp",
+    "Pub Topic %s", publisherParam.topic.topicName.c_str())
+  RCUTILS_LOG_DEBUG_NAMED(
+    "rmw_fastrtps_cpp",
+    "Pub Partition %s", publisherParam.qos.m_partition.getNames()[0].c_str())
+  RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_cpp", "***********")
 
   // Create Client Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {

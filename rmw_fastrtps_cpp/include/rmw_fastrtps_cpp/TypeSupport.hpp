@@ -58,11 +58,15 @@ struct StringHelper<rosidl_typesupport_introspection_c__MessageMembers>
   {
     auto c_string = static_cast<rosidl_generator_c__String *>(data);
     if (!c_string) {
-      RCUTILS_LOG_ERROR("Failed to cast data as rosidl_generator_c__String")
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Failed to cast data as rosidl_generator_c__String")
       return "";
     }
     if (!c_string->data) {
-      RCUTILS_LOG_ERROR("rosidl_generator_c_String had invalid data")
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "rosidl_generator_c_String had invalid data")
       return "";
     }
     return std::string(c_string->data);
