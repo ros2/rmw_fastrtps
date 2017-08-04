@@ -101,8 +101,10 @@ public:
     if (trigger) {
       rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
       if (ret != RMW_RET_OK) {
-        fprintf(stderr, "failed to trigger graph guard condition: %s\n",
-          rmw_get_error_string_safe());
+        RCUTILS_LOG_ERROR_NAMED(
+          "rmw_fastrps_cpp",
+          "failed to trigger graph guard condition: %s",
+          rmw_get_error_string_safe())
       }
     }
   }

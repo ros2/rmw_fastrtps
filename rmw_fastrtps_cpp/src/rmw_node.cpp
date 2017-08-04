@@ -18,6 +18,7 @@
 #include <string>
 
 #include "rcutils/filesystem.h"
+#include "rcutils/logging_macros.h"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -145,8 +146,9 @@ fail:
   if (graph_guard_condition) {
     rmw_ret_t ret = rmw_destroy_guard_condition(graph_guard_condition);
     if (ret != RMW_RET_OK) {
-      fprintf(stderr,
-        "[rmw_fastrtps]: failed to destroy guard condition during error handling\n");
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrps_cpp",
+        "failed to destroy guard condition during error handling")
     }
   }
   if (participant) {

@@ -25,6 +25,8 @@
 #include <string>
 #include <vector>
 
+#include "rcutils/logging_macros.h"
+
 #include "rmw/allocators.h"
 #include "rmw/rmw.h"
 
@@ -153,12 +155,12 @@ rmw_create_service(const rmw_node_t * node,
   publisherParam.topic.topicName += "Reply";
 
 #ifdef DEBUG_LOGGING
-  fprintf(stderr, "************ Service Details *********\n");
-  fprintf(stderr, "Sub Topic %s\n", subscriberParam.topic.topicName.c_str());
-  fprintf(stderr, "Sub Partition %s\n", subscriberParam.qos.m_partition.getNames()[0].c_str());
-  fprintf(stderr, "Pub Topic %s\n", publisherParam.topic.topicName.c_str());
-  fprintf(stderr, "Pub Partition %s\n", publisherParam.qos.m_partition.getNames()[0].c_str());
-  fprintf(stderr, "***********\n");
+  RCUTILS_LOG_DEBUG("************ Service Details *********")
+  RCUTILS_LOG_DEBUG("Sub Topic %s", subscriberParam.topic.topicName.c_str())
+  RCUTILS_LOG_DEBUG("Sub Partition %s", subscriberParam.qos.m_partition.getNames()[0].c_str())
+  RCUTILS_LOG_DEBUG("Pub Topic %s", publisherParam.topic.topicName.c_str())
+  RCUTILS_LOG_DEBUG("Pub Partition %s", publisherParam.qos.m_partition.getNames()[0].c_str())
+  RCUTILS_LOG_DEBUG("***********")
 #endif
 
   // Create Service Subscriber and set QoS

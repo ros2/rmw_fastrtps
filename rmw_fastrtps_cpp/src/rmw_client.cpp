@@ -14,6 +14,8 @@
 
 #include <string>
 
+#include "rcutils/logging_macros.h"
+
 #include "rmw/allocators.h"
 #include "rmw/rmw.h"
 
@@ -143,12 +145,12 @@ rmw_create_client(const rmw_node_t * node,
   publisherParam.topic.topicName += "Request";
 
 #ifdef DEBUG_LOGGING
-  fprintf(stderr, "************ Client Details *********\n");
-  fprintf(stderr, "Sub Topic %s\n", subscriberParam.topic.topicName.c_str());
-  fprintf(stderr, "Sub Partition %s\n", subscriberParam.qos.m_partition.getNames()[0].c_str());
-  fprintf(stderr, "Pub Topic %s\n", publisherParam.topic.topicName.c_str());
-  fprintf(stderr, "Pub Partition %s\n", publisherParam.qos.m_partition.getNames()[0].c_str());
-  fprintf(stderr, "***********\n");
+  RCUTILS_LOG_DEBUG("************ Client Details *********")
+  RCUTILS_LOG_DEBUG("Sub Topic %s", subscriberParam.topic.topicName.c_str())
+  RCUTILS_LOG_DEBUG("Sub Partition %s", subscriberParam.qos.m_partition.getNames()[0].c_str())
+  RCUTILS_LOG_DEBUG("Pub Topic %s", publisherParam.topic.topicName.c_str())
+  RCUTILS_LOG_DEBUG("Pub Partition %s", publisherParam.qos.m_partition.getNames()[0].c_str())
+  RCUTILS_LOG_DEBUG("***********")
 #endif
 
   // Create Client Subscriber and set QoS
@@ -215,8 +217,9 @@ fail:
         _unregister_type(participant, info->response_type_support_, info->typesupport_identifier_);
       }
     } else {
-      fprintf(stderr,
-        "[rmw_fastrtps] leaking type support objects because node impl is null\n");
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrps_cpp",
+        "leaking type support objects because node impl is null")
     }
 
     delete info;

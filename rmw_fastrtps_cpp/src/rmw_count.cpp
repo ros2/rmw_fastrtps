@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+#include "rcutils/logging_macros.h"
+
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
@@ -67,11 +69,11 @@ rmw_count_publishers(
   }
 
 #ifdef DEBUG_LOGGING
-  fprintf(stderr, "looking for subscriber topic: %s\n", topic_name);
+  RCUTILS_LOG_DEBUG("looking for subscriber topic: %s", topic_name)
   for (auto it : unfiltered_topics) {
-    fprintf(stderr, "available topic: %s\n", it.first.c_str());
+    RCUTILS_LOG_DEBUG("available topic: %s", it.first.c_str())
   }
-  fprintf(stderr, "number of matches: %zu\n", *count);
+  RCUTILS_LOG_DEBUG("number of matches: %zu", *count)
 #endif
 
   return RMW_RET_OK;
@@ -118,11 +120,11 @@ rmw_count_subscribers(
   }
 
 #ifdef DEBUG_LOGGING
-  fprintf(stderr, "looking for subscriber topic: %s\n", topic_name);
+  RCUTILS_LOG_DEBUG("looking for subscriber topic: %s", topic_name)
   for (auto it : unfiltered_topics) {
-    fprintf(stderr, "available topic: %s\n", it.first.c_str());
+    RCUTILS_LOG_DEBUG("available topic: %s", it.first.c_str())
   }
-  fprintf(stderr, "number of matches: %zu\n", *count);
+  RCUTILS_LOG_DEBUG("number of matches: %zu", *count)
 #endif
 
   return RMW_RET_OK;
