@@ -226,7 +226,7 @@ fail:
       }
     } else {
       RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrps_cpp",
+        "rmw_fastrtps_cpp",
         "leaking type support objects because node impl is null")
     }
 

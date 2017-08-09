@@ -147,7 +147,7 @@ fail:
     rmw_ret_t ret = rmw_destroy_guard_condition(graph_guard_condition);
     if (ret != RMW_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrps_cpp",
+        "rmw_fastrtps_cpp",
         "failed to destroy guard condition during error handling")
     }
   }

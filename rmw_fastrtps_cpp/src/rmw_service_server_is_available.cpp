@@ -69,7 +69,7 @@ rmw_service_server_is_available(
   // every rostopic has exactly 1 partition field set
   if (pub_partitions.size() != 1) {
     RCUTILS_LOG_ERROR_NAMED(
-      "rmw_fastrps_cpp",
+      "rmw_fastrtps_cpp",
       "Topic %s is not a ros topic", pub_topic_name.c_str())
     RMW_SET_ERROR_MSG((std::string(pub_topic_name) + " is a non-ros topic\n").c_str());
     return RMW_RET_ERROR;
@@ -84,7 +84,7 @@ rmw_service_server_is_available(
   // every rostopic has exactly 1 partition field set
   if (sub_partitions.size() != 1) {
     RCUTILS_LOG_ERROR_NAMED(
-      "rmw_fastrps_cpp",
+      "rmw_fastrtps_cpp",
       "Topic %s is not a ros topic", pub_topic_name.c_str())
     RMW_SET_ERROR_MSG((std::string(sub_topic_name) + " is a non-ros topic\n").c_str());
     return RMW_RET_ERROR;
