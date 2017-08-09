@@ -720,7 +720,8 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
   size_t initial_alignment = current_alignment;
 
   // Encapsulation
-  current_alignment += 4;
+  const size_t encapsulation = 4;
+  current_alignment += encapsulation;
 
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     const auto * member = members->members_ + i;
@@ -732,30 +733,34 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-          current_alignment += 1;
+          current_alignment += sizeof(int8_t);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-          current_alignment += 2 + eprosima::fastcdr::Cdr::alignment(current_alignment, 2);
+          current_alignment += sizeof(uint16_t) +
+            eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint16_t));
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-          current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+          current_alignment += sizeof(uint32_t) +
+            eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-          current_alignment += 8 + eprosima::fastcdr::Cdr::alignment(current_alignment, 8);
+          current_alignment += sizeof(uint64_t) +
+            eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint64_t));
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-          current_alignment += 4 +
-            eprosima::fastcdr::Cdr::alignment(current_alignment,
-              4) + (member->string_upper_bound_ ? member->string_upper_bound_ + 1 : 257);
+          current_alignment += encapsulation +
+            eprosima::fastcdr::Cdr::alignment(current_alignment, encapsulation) +
+            (member->string_upper_bound_ ? member->string_upper_bound_ + 1 : 257);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
-            const MembersType * sub_members = (const MembersType *)member->members_->data;
+            const MembersType * sub_members =
+              static_cast<const MembersType *>(member->members_->data);
             current_alignment += calculateMaxSerializedSize(sub_members, current_alignment);
           }
           break;
@@ -778,37 +783,38 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-          current_alignment += array_size;
+          current_alignment += array_size * sizeof(int8_t);
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-          current_alignment += array_size * 2 + eprosima::fastcdr::Cdr::alignment(current_alignment,
-              2);
+          current_alignment += array_size * sizeof(uint16_t) +
+            eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint16_t));
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-          current_alignment += array_size * 4 + eprosima::fastcdr::Cdr::alignment(current_alignment,
-              4);
+          current_alignment += array_size * sizeof(uint32_t) +
+            eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-          current_alignment += array_size * 8 + eprosima::fastcdr::Cdr::alignment(current_alignment,
-              8);
+          current_alignment += array_size * sizeof(uint64_t) +
+            eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint64_t));
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
           {
             for (size_t index = 0; index < array_size; ++index) {
-              current_alignment += 4 +
-                eprosima::fastcdr::Cdr::alignment(current_alignment,
-                  4) + (member->string_upper_bound_ ? member->string_upper_bound_ + 1 : 257);
+              current_alignment += encapsulation +
+                eprosima::fastcdr::Cdr::alignment(current_alignment, encapsulation) +
+                (member->string_upper_bound_ ? member->string_upper_bound_ + 1 : 257);
             }
           }
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
-            const MembersType * sub_members = (const MembersType *)member->members_->data;
+            const MembersType * sub_members =
+              static_cast<const MembersType *>(member->members_->data);
             for (size_t index = 0; index < array_size; ++index) {
               current_alignment += calculateMaxSerializedSize(sub_members, current_alignment);
             }
