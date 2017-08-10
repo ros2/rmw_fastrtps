@@ -755,7 +755,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
           current_alignment += encapsulation +
             eprosima::fastcdr::Cdr::alignment(current_alignment, encapsulation) +
-            (member->string_upper_bound_ ? member->string_upper_bound_ + 1 : 257);
+            member->string_upper_bound_ + 1;
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
@@ -769,12 +769,10 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
       }
     } else {
       size_t array_size = member->array_size_;
-
       // Whether it is a sequence.
       if (array_size == 0 || member->is_upper_bound_) {
-        current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-
-        if (array_size == 0) {array_size = 101;}
+        current_alignment += encapsulation +
+          eprosima::fastcdr::Cdr::alignment(current_alignment, encapsulation);
       }
 
       switch (member->type_id_) {
@@ -807,7 +805,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
             for (size_t index = 0; index < array_size; ++index) {
               current_alignment += encapsulation +
                 eprosima::fastcdr::Cdr::alignment(current_alignment, encapsulation) +
-                (member->string_upper_bound_ ? member->string_upper_bound_ + 1 : 257);
+                member->string_upper_bound_ + 1;
             }
           }
           break;
