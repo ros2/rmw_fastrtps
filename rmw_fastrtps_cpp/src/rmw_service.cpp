@@ -235,6 +235,9 @@ fail:
     delete info;
   }
 
+  if (rmw_service->service_name != nullptr) {
+    rmw_free(const_cast<char *>(rmw_service->service_name));
+  }
   rmw_free(rmw_service);
 
   return NULL;
@@ -275,7 +278,8 @@ rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
     }
     delete info;
   }
-  delete (service);
+  rmw_free(const_cast<char *>(service->service_name));
+  rmw_free(service);
 
   return RMW_RET_OK;
 }
