@@ -276,8 +276,10 @@ rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
     }
     delete info;
   }
-  rmw_free(const_cast<char *>(client->service_name));
-  client->service_name = nullptr;
+  if (client->service_name != nullptr) {
+    rmw_free(const_cast<char *>(client->service_name));
+    client->service_name = nullptr;
+  }
   rmw_client_free(client);
 
   return RMW_RET_OK;
