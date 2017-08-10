@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+#include "rcutils/logging_macros.h"
+
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
@@ -66,13 +68,17 @@ rmw_count_publishers(
     *count = it->second.size();
   }
 
-#ifdef DEBUG_LOGGING
-  fprintf(stderr, "looking for subscriber topic: %s\n", topic_name);
+  RCUTILS_LOG_DEBUG_NAMED(
+    "rmw_fastrtps_cpp",
+    "looking for subscriber topic: %s", topic_name)
   for (auto it : unfiltered_topics) {
-    fprintf(stderr, "available topic: %s\n", it.first.c_str());
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_fastrtps_cpp",
+      "available topic: %s", it.first.c_str())
   }
-  fprintf(stderr, "number of matches: %zu\n", *count);
-#endif
+  RCUTILS_LOG_DEBUG_NAMED(
+    "rmw_fastrtps_cpp",
+    "number of matches: %zu", *count)
 
   return RMW_RET_OK;
 }
@@ -117,13 +123,17 @@ rmw_count_subscribers(
     *count = it->second.size();
   }
 
-#ifdef DEBUG_LOGGING
-  fprintf(stderr, "looking for subscriber topic: %s\n", topic_name);
+  RCUTILS_LOG_DEBUG_NAMED(
+    "rmw_fastrtps_cpp",
+    "looking for subscriber topic: %s", topic_name)
   for (auto it : unfiltered_topics) {
-    fprintf(stderr, "available topic: %s\n", it.first.c_str());
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_fastrtps_cpp",
+      "available topic: %s", it.first.c_str())
   }
-  fprintf(stderr, "number of matches: %zu\n", *count);
-#endif
+  RCUTILS_LOG_DEBUG_NAMED(
+    "rmw_fastrtps_cpp",
+    "number of matches: %zu", *count)
 
   return RMW_RET_OK;
 }

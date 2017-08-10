@@ -19,6 +19,7 @@
 
 #include "rcutils/allocator.h"
 #include "rcutils/error_handling.h"
+#include "rcutils/logging_macros.h"
 #include "rcutils/split.h"
 #include "rcutils/types.h"
 
@@ -66,7 +67,7 @@ _assign_partitions_to_attributes(
     ret = RCUTILS_RET_ERROR;
   }
   if (rcutils_string_array_fini(&name_tokens) != RCUTILS_RET_OK) {
-    fprintf(stderr, "Failed to destroy the token string array\n");
+    RCUTILS_LOG_ERROR_NAMED("rmw_fastrtps_cpp", "Failed to destroy the token string array")
     ret = RCUTILS_RET_ERROR;
   }
   return ret;

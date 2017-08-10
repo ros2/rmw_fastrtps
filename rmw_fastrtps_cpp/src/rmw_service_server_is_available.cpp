@@ -16,6 +16,8 @@
 
 #include "fastrtps/subscriber/Subscriber.h"
 
+#include "rcutils/logging_macros.h"
+
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
@@ -66,7 +68,9 @@ rmw_service_server_is_available(
     client_info->request_publisher_->getAttributes().qos.m_partition.getNames();
   // every rostopic has exactly 1 partition field set
   if (pub_partitions.size() != 1) {
-    fprintf(stderr, "Topic %s is not a ros topic\n", pub_topic_name.c_str());
+    RCUTILS_LOG_ERROR_NAMED(
+      "rmw_fastrtps_cpp",
+      "Topic %s is not a ros topic", pub_topic_name.c_str())
     RMW_SET_ERROR_MSG((std::string(pub_topic_name) + " is a non-ros topic\n").c_str());
     return RMW_RET_ERROR;
   }
@@ -79,7 +83,9 @@ rmw_service_server_is_available(
     client_info->response_subscriber_->getAttributes().qos.m_partition.getNames();
   // every rostopic has exactly 1 partition field set
   if (sub_partitions.size() != 1) {
-    fprintf(stderr, "Topic %s is not a ros topic\n", sub_topic_name.c_str());
+    RCUTILS_LOG_ERROR_NAMED(
+      "rmw_fastrtps_cpp",
+      "Topic %s is not a ros topic", pub_topic_name.c_str())
     RMW_SET_ERROR_MSG((std::string(sub_topic_name) + " is a non-ros topic\n").c_str());
     return RMW_RET_ERROR;
   }
