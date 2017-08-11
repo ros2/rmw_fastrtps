@@ -720,8 +720,8 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
   size_t initial_alignment = current_alignment;
 
   // Encapsulation
-  const size_t encapsulation = 4;
-  current_alignment += encapsulation;
+  const size_t padding = 4;
+  current_alignment += padding;
 
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     const auto * member = members->members_ + i;
@@ -753,8 +753,8 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
             eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint64_t));
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-          current_alignment += encapsulation +
-            eprosima::fastcdr::Cdr::alignment(current_alignment, encapsulation) +
+          current_alignment += padding +
+            eprosima::fastcdr::Cdr::alignment(current_alignment, padding) +
             member->string_upper_bound_ + 1;
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
@@ -771,8 +771,8 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
       size_t array_size = member->array_size_;
       // Whether it is a sequence.
       if (array_size == 0 || member->is_upper_bound_) {
-        current_alignment += encapsulation +
-          eprosima::fastcdr::Cdr::alignment(current_alignment, encapsulation);
+        current_alignment += padding +
+          eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       }
 
       switch (member->type_id_) {
@@ -803,8 +803,8 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
           {
             for (size_t index = 0; index < array_size; ++index) {
-              current_alignment += encapsulation +
-                eprosima::fastcdr::Cdr::alignment(current_alignment, encapsulation) +
+              current_alignment += padding +
+                eprosima::fastcdr::Cdr::alignment(current_alignment, padding) +
                 member->string_upper_bound_ + 1;
             }
           }
