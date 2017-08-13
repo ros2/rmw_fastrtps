@@ -418,7 +418,8 @@ bool TypeSupport<MembersType>::serializeROSmessage(
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
-            const MembersType * sub_members = static_cast<const MembersType *>(member->members_->data);
+            const MembersType * sub_members =
+              static_cast<const MembersType *>(member->members_->data);
             void * subros_message = nullptr;
             size_t array_size = 0;
             size_t sub_members_size = sub_members->size_of_;
