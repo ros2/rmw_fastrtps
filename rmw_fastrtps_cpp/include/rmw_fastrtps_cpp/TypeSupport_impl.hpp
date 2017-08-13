@@ -418,12 +418,12 @@ bool TypeSupport<MembersType>::serializeROSmessage(
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
-            const MembersType * sub_members = (const MembersType *)member->members_->data;
+            const MembersType * sub_members = static_cast<const MembersType *>(member->members_->data);
             void * subros_message = nullptr;
             size_t array_size = 0;
             size_t sub_members_size = sub_members->size_of_;
             size_t max_align = calculateMaxAlign(sub_members);
-            size_t space = 100;
+            size_t space = 1;  /* start with 1 byte */
 
             if (member->array_size_ && !member->is_upper_bound_) {
               subros_message = field;
