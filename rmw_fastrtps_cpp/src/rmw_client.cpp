@@ -233,7 +233,11 @@ fail:
     delete info;
   }
 
-  rmw_free(rmw_client);
+  if (rmw_client->service_name != nullptr) {
+    rmw_free(const_cast<char *>(rmw_client->service_name));
+    rmw_client->service_name = nullptr;
+  }
+  rmw_client_free(rmw_client);
 
   return NULL;
 }
@@ -272,7 +276,11 @@ rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
     }
     delete info;
   }
-  delete (client);
+  if (client->service_name != nullptr) {
+    rmw_free(const_cast<char *>(client->service_name));
+    client->service_name = nullptr;
+  }
+  rmw_client_free(client);
 
   return RMW_RET_OK;
 }
