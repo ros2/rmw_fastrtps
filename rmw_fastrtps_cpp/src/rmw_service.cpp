@@ -239,7 +239,7 @@ fail:
     rmw_free(const_cast<char *>(rmw_service->service_name));
     rmw_service->service_name = nullptr;
   }
-  rmw_free(rmw_service);
+  rmw_service_free(rmw_service);
 
   return NULL;
 }
