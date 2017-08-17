@@ -182,15 +182,19 @@ rmw_wait(
     }
   }
 
+  // We're done with the condition variable now, but there's still a chance that something it was
+  // attached to will trigger and deadlock trying to lock the condition mutex.
+  // To avoid that we release it explicitly ASAP.
+  conditionVariable = NULL;
+  lock.unlock();
+
   for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
     void * data = subscriptions->subscribers[i];
     CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
     if (!custom_subscriber_info->listener_->hasData()) {
       subscriptions->subscribers[i] = 0;
     }
-    lock.unlock();
     custom_subscriber_info->listener_->detachCondition();
-    lock.lock();
   }
 
   for (size_t i = 0; i < clients->client_count; ++i) {
@@ -199,9 +203,7 @@ rmw_wait(
     if (!custom_client_info->listener_->hasData()) {
       clients->clients[i] = 0;
     }
-    lock.unlock();
     custom_client_info->listener_->detachCondition();
-    lock.lock();
   }
 
   for (size_t i = 0; i < services->service_count; ++i) {
@@ -210,9 +212,7 @@ rmw_wait(
     if (!custom_service_info->listener_->hasData()) {
       services->services[i] = 0;
     }
-    lock.unlock();
     custom_service_info->listener_->detachCondition();
-    lock.lock();
   }
 
   if (guard_conditions) {
@@ -222,9 +222,7 @@ rmw_wait(
       if (!guard_condition->getHasTriggered()) {
         guard_conditions->guard_conditions[i] = 0;
       }
-      lock.unlock();
       guard_condition->detachCondition();
-      lock.lock();
     }
   }
   // Make timeout behavior consistent with rcl expectations for zero timeout value
