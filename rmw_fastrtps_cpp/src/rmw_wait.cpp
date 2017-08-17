@@ -98,6 +98,11 @@ rmw_wait(
     return RMW_RET_ERROR;
   }
 
+  // Lock the condition mutex as we're attaching it.
+  // Otherwise, we might miss a notification of the condition variable if it occurs during setup
+  // before we start waiting, and that can cause us to wait forever.
+  std::unique_lock<std::mutex> lock(*conditionMutex);
+
   for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
     void * data = subscriptions->subscribers[i];
     CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
@@ -123,8 +128,6 @@ rmw_wait(
       guard_condition->attachCondition(conditionMutex, conditionVariable);
     }
   }
-
-  std::unique_lock<std::mutex> lock(*conditionMutex);
 
   // First check variables.
   // If wait_timeout is null, wait indefinitely (so we have to wait)
