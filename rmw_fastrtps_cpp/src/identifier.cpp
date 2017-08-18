@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "identifier.hpp"
+#include "rmw_fastrtps_cpp/identifier.hpp"
 
 const char * const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";

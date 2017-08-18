@@ -23,10 +23,10 @@
 #include "fastrtps/subscriber/Subscriber.h"
 
 #include "assign_partitions.hpp"
-#include "identifier.hpp"
+#include "rmw_fastrtps_cpp/identifier.hpp"
 #include "namespace_prefix.hpp"
 #include "qos.hpp"
-#include "types/custom_participant_info.hpp"
+#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
 #include "types/custom_subscriber_info.hpp"
 #include "type_support_common.hpp"
 

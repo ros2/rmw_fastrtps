@@ -12,22 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TYPES__CUSTOM_PARTICIPANT_INFO_HPP_
-#define TYPES__CUSTOM_PARTICIPANT_INFO_HPP_
+#ifndef RMW_FASTRTPS_CPP__IDENTIFIER_HPP_
+#define RMW_FASTRTPS_CPP__IDENTIFIER_HPP_
 
-#include "fastrtps/participant/Participant.h"
+extern const char * const eprosima_fastrtps_identifier;
 
-#include "rmw/rmw.h"
-
-#include "reader_info.hpp"
-#include "writer_info.hpp"
-
-typedef struct CustomParticipantInfo
-{
-  eprosima::fastrtps::Participant * participant;
-  ReaderInfo * secondarySubListener;
-  WriterInfo * secondaryPubListener;
-  rmw_guard_condition_t * graph_guard_condition;
-} CustomParticipantInfo;
-
-#endif  // TYPES__CUSTOM_PARTICIPANT_INFO_HPP_
+#endif  // RMW_FASTRTPS_CPP__IDENTIFIER_HPP_

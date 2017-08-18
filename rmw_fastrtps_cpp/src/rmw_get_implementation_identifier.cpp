@@ -14,7 +14,7 @@
 
 #include "rmw/rmw.h"
 
-#include "identifier.hpp"
+#include "rmw_fastrtps_cpp/identifier.hpp"
 
 extern "C"
 {

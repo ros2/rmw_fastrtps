@@ -27,7 +27,7 @@
 
 #include "rosidl_typesupport_introspection_c/visibility_control.h"
 
-#include "identifier.hpp"
+#include "rmw_fastrtps_cpp/identifier.hpp"
 
 using MessageTypeSupport_c =
     rmw_fastrtps_cpp::MessageTypeSupport<rosidl_typesupport_introspection_c__MessageMembers>;

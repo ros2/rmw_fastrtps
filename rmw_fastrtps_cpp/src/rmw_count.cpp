@@ -22,9 +22,9 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "identifier.hpp"
+#include "rmw_fastrtps_cpp/identifier.hpp"
 #include "demangle.hpp"
-#include "types/custom_participant_info.hpp"
+#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
 
 extern "C"
 {
