@@ -185,7 +185,6 @@ rmw_wait(
   // We're done with the condition variable now, but there's still a chance that something it was
   // attached to will trigger and deadlock trying to lock the condition mutex.
   // To avoid that we release it explicitly ASAP.
-  conditionVariable = NULL;
   lock.unlock();
 
   for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
