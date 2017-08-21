@@ -40,7 +40,7 @@
 #include "qos.hpp"
 #include "type_support_common.hpp"
 #include "rmw_fastrtps_cpp/custom_participant_info.hpp"
-#include "types/custom_service_info.hpp"
+#include "rmw_fastrtps_cpp/custom_service_info.hpp"
 
 extern "C"
 {

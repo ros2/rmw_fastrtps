@@ -23,7 +23,7 @@
 #include "namespace_prefix.hpp"
 #include "qos.hpp"
 #include "rmw_fastrtps_cpp/custom_participant_info.hpp"
-#include "types/custom_publisher_info.hpp"
+#include "rmw_fastrtps_cpp/custom_publisher_info.hpp"
 #include "type_support_common.hpp"
 
 extern "C"

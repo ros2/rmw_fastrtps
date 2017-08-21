@@ -21,8 +21,8 @@
 #include "fastrtps/attributes/SubscriberAttributes.h"
 
 #include "fastcdr/FastBuffer.h"
+#include "rmw_fastrtps_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
-#include "types/custom_subscriber_info.hpp"
 #include "ros_message_serialization.hpp"
 
 extern "C"

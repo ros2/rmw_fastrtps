@@ -29,8 +29,8 @@
 #include "namespace_prefix.hpp"
 #include "qos.hpp"
 #include "type_support_common.hpp"
+#include "rmw_fastrtps_cpp/custom_client_info.hpp"
 #include "rmw_fastrtps_cpp/custom_participant_info.hpp"
-#include "types/custom_client_info.hpp"
 
 extern "C"
 {
