@@ -52,7 +52,11 @@ include_directories(include)
 add_library(rmw_fastrtps_cpp
   src/client_service_common.cpp
   src/demangle.cpp
+  src/get_client.cpp
   src/get_participant.cpp
+  src/get_publisher.cpp
+  src/get_service.cpp
+  src/get_subscriber.cpp
   src/identifier.cpp
   src/namespace_prefix.cpp
   src/qos.cpp

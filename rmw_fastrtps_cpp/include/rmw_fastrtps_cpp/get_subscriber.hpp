@@ -12,27 +12,27 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__GET_PARTICIPANT_HPP_
-#define RMW_FASTRTPS_CPP__GET_PARTICIPANT_HPP_
+#ifndef RMW_FASTRTPS_CPP__GET_SUBSCRIBER_HPP_
+#define RMW_FASTRTPS_CPP__GET_SUBSCRIBER_HPP_
 
-#include "fastrtps/participant/Participant.h"
+#include "fastrtps/subscriber/Subscriber.h"
 #include "rmw/rmw.h"
 #include "rmw_fastrtps_cpp/visibility_control.h"
 
 namespace rmw_fastrtps_cpp
 {
 
-/// Return a native FastRTPS participant handle.
+/// Return a native FastRTPS subscriber handle.
 /**
- * The function returns `NULL` when either the node handle is `NULL` or when the
- * node handle is from a different rmw implementation.
+ * The function returns `NULL` when either the subscription handle is `NULL` or
+ * when the subscription handle is from a different rmw implementation.
  *
- * \return native FastRTPS participant handle if successful, otherwise `NULL`
+ * \return native FastRTPS subscriber handle if successful, otherwise `NULL`
  */
 RMW_FASTRTPS_CPP_PUBLIC
-eprosima::fastrtps::Participant *
-get_participant(rmw_node_t * node);
+eprosima::fastrtps::Subscriber *
+get_subscriber(rmw_subscription_t * subscription);
 
 }  // namespace rmw_fastrtps_cpp
 
-#endif  // RMW_FASTRTPS_CPP__GET_PARTICIPANT_HPP_
+#endif  // RMW_FASTRTPS_CPP__GET_SUBSCRIBER_HPP_
