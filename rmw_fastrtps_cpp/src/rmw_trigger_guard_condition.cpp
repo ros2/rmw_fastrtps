@@ -17,7 +17,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "identifier.hpp"
+#include "rmw_fastrtps_cpp/identifier.hpp"
 #include "types/guard_condition.hpp"
 
 extern "C"

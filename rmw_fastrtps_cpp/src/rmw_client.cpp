@@ -25,11 +25,11 @@
 
 #include "assign_partitions.hpp"
 #include "client_service_common.hpp"
-#include "identifier.hpp"
+#include "rmw_fastrtps_cpp/identifier.hpp"
 #include "namespace_prefix.hpp"
 #include "qos.hpp"
 #include "type_support_common.hpp"
-#include "types/custom_participant_info.hpp"
+#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
 #include "types/custom_client_info.hpp"
 
 extern "C"

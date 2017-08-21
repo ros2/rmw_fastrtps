@@ -52,6 +52,7 @@ include_directories(include)
 add_library(rmw_fastrtps_cpp
   src/client_service_common.cpp
   src/demangle.cpp
+  src/get_participant.cpp
   src/identifier.cpp
   src/namespace_prefix.cpp
   src/qos.cpp
@@ -94,6 +95,12 @@ ament_target_dependencies(rmw_fastrtps_cpp
 
 configure_rmw_library(rmw_fastrtps_cpp)
 
+# Causes the visibility macros to use dllexport rather than dllimport,
+# which is appropriate when building the dll but not consuming it.
+target_compile_definitions(${PROJECT_NAME}
+PRIVATE "RMW_FASTRTPS_CPP_BUILDING_LIBRARY")
+
+ament_export_include_directories(include)
 ament_export_libraries(rmw_fastrtps_cpp)
 if(NOT WIN32 AND NOT ANDROID)
   ament_export_libraries(pthread)

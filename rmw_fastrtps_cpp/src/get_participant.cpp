@@ -1,4 +1,4 @@
-// Copyright 2016 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2017 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,6 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rmw_fastrtps_cpp/get_participant.hpp"
+
+#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
 
-const char * const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
+namespace rmw_fastrtps_cpp
+{
+
+eprosima::fastrtps::Participant *
+get_participant(rmw_node_t * node)
+{
+  if (!node) {
+    return NULL;
+  }
+  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+    return NULL;
+  }
+  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  return impl->participant;
+}
+
+}  // namespace rmw_fastrtps_cpp

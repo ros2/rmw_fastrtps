@@ -31,9 +31,9 @@
 #include "rmw/rmw.h"
 
 #include "demangle.hpp"
-#include "identifier.hpp"
+#include "rmw_fastrtps_cpp/identifier.hpp"
 #include "namespace_prefix.hpp"
-#include "types/custom_participant_info.hpp"
+#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
 
 extern "C"
 {

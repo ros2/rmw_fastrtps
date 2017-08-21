@@ -18,7 +18,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/types.h"
 
-#include "identifier.hpp"
+#include "rmw_fastrtps_cpp/identifier.hpp"
 
 extern "C"
 {

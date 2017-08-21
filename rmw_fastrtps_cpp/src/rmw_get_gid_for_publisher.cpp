@@ -16,7 +16,7 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "identifier.hpp"
+#include "rmw_fastrtps_cpp/identifier.hpp"
 #include "types/custom_publisher_info.hpp"
 
 extern "C"

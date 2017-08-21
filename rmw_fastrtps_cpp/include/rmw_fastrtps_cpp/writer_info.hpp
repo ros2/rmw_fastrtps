@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TYPES__READER_INFO_HPP_
-#define TYPES__READER_INFO_HPP_
+#ifndef RMW_FASTRTPS_CPP__WRITER_INFO_HPP_
+#define RMW_FASTRTPS_CPP__WRITER_INFO_HPP_
 
 #include <cassert>
 #include <map>
@@ -23,20 +23,18 @@
 #include <string>
 #include <vector>
 
-#include "rcutils/logging_macros.h"
-
-#include "rmw/error_handling.h"
-#include "rmw/rmw.h"
-
 #include "fastrtps/participant/Participant.h"
-#include "fastrtps/rtps/builtin/data/ReaderProxyData.h"
-#include "fastrtps/rtps/reader/ReaderListener.h"
+#include "fastrtps/rtps/builtin/data/WriterProxyData.h"
 #include "fastrtps/rtps/reader/RTPSReader.h"
 
-class ReaderInfo : public eprosima::fastrtps::ReaderListener
+#include "rcutils/logging_macros.h"
+
+#include "rmw/rmw.h"
+
+class WriterInfo : public eprosima::fastrtps::ReaderListener
 {
 public:
-  ReaderInfo(
+  WriterInfo(
     eprosima::fastrtps::Participant * participant,
     rmw_guard_condition_t * graph_guard_condition)
   : participant_(participant),
@@ -48,9 +46,9 @@ public:
     eprosima::fastrtps::rtps::RTPSReader *,
     const eprosima::fastrtps::CacheChange_t * const change)
   {
-    eprosima::fastrtps::rtps::ReaderProxyData proxyData;
+    eprosima::fastrtps::rtps::WriterProxyData proxyData;
     if (change->kind == ALIVE) {
-      CDRMessage_t tempMsg(0);
+      eprosima::fastrtps::CDRMessage_t tempMsg(0);
       tempMsg.wraps = true;
       tempMsg.msg_endian = change->serializedPayload.encapsulation ==
         PL_CDR_BE ? BIGEND : LITTLEEND;
@@ -61,9 +59,9 @@ public:
         return;
       }
     } else {
-      eprosima::fastrtps::rtps::GUID_t readerGuid;
-      iHandle2GUID(readerGuid, change->instanceHandle);
-      if (!participant_->get_remote_reader_info(readerGuid, proxyData)) {
+      eprosima::fastrtps::rtps::GUID_t writerGuid;
+      iHandle2GUID(writerGuid, change->instanceHandle);
+      if (!participant_->get_remote_writer_info(writerGuid, proxyData)) {
         return;
       }
     }
@@ -114,4 +112,4 @@ public:
   rmw_guard_condition_t * graph_guard_condition_;
 };
 
-#endif  // TYPES__READER_INFO_HPP_
+#endif  // RMW_FASTRTPS_CPP__WRITER_INFO_HPP_

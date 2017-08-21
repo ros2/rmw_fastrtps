@@ -17,7 +17,7 @@
 #include "rmw/rmw.h"
 #include "rmw/impl/cpp/macros.hpp"
 
-#include "identifier.hpp"
+#include "rmw_fastrtps_cpp/identifier.hpp"
 #include "types/custom_waitset_info.hpp"
 
 extern "C"
