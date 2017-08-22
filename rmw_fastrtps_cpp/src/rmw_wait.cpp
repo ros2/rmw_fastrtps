@@ -124,7 +124,7 @@ rmw_wait(
     }
   }
 
-  // this mutex prevents any of the listeners
+  // This mutex prevents any of the listeners
   // to change the internal state and notify the condition
   // between the call to hasData() / hasTriggered() and wait()
   // otherwise the decision to wait might be incorrect
@@ -186,6 +186,11 @@ rmw_wait(
     }
   }
 
+  // Unlock the condition variable mutex to prevent deadlocks that can occur if
+  // a listener triggers while the condition variable is being detached.
+  // Listeners will no longer be prevented from changing their internal state,
+  // but that should not cause issues (if a listener has data / has triggered
+  // after we check, it will be caught on the next call to this function).
   lock.unlock();
 
   for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
