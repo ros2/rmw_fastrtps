@@ -124,6 +124,10 @@ rmw_wait(
     }
   }
 
+  // This mutex prevents any of the listeners
+  // to change the internal state and notify the condition
+  // between the call to hasData() / hasTriggered() and wait()
+  // otherwise the decision to wait might be incorrect
   std::unique_lock<std::mutex> lock(*conditionMutex);
 
   // First check variables.
@@ -182,49 +186,48 @@ rmw_wait(
     }
   }
 
+  // Unlock the condition variable mutex to prevent deadlocks that can occur if
+  // a listener triggers while the condition variable is being detached.
+  // Listeners will no longer be prevented from changing their internal state,
+  // but that should not cause issues (if a listener has data / has triggered
+  // after we check, it will be caught on the next call to this function).
+  lock.unlock();
+
   for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
     void * data = subscriptions->subscribers[i];
     CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
+    custom_subscriber_info->listener_->detachCondition();
     if (!custom_subscriber_info->listener_->hasData()) {
       subscriptions->subscribers[i] = 0;
     }
-    lock.unlock();
-    custom_subscriber_info->listener_->detachCondition();
-    lock.lock();
   }
 
   for (size_t i = 0; i < clients->client_count; ++i) {
     void * data = clients->clients[i];
     CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
+    custom_client_info->listener_->detachCondition();
     if (!custom_client_info->listener_->hasData()) {
       clients->clients[i] = 0;
     }
-    lock.unlock();
-    custom_client_info->listener_->detachCondition();
-    lock.lock();
   }
 
   for (size_t i = 0; i < services->service_count; ++i) {
     void * data = services->services[i];
     CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
+    custom_service_info->listener_->detachCondition();
     if (!custom_service_info->listener_->hasData()) {
       services->services[i] = 0;
     }
-    lock.unlock();
-    custom_service_info->listener_->detachCondition();
-    lock.lock();
   }
 
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
       void * data = guard_conditions->guard_conditions[i];
       GuardCondition * guard_condition = static_cast<GuardCondition *>(data);
+      guard_condition->detachCondition();
       if (!guard_condition->getHasTriggered()) {
         guard_conditions->guard_conditions[i] = 0;
       }
-      lock.unlock();
-      guard_condition->detachCondition();
-      lock.lock();
     }
   }
   // Make timeout behavior consistent with rcl expectations for zero timeout value
