@@ -25,8 +25,8 @@
 #include "rmw/types.h"
 
 #include "demangle.hpp"
+#include "rmw_fastrtps_cpp/custom_client_info.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
-#include "types/custom_client_info.hpp"
 
 extern "C"
 {

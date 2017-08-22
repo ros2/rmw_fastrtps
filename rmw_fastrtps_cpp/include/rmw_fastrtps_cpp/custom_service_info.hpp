@@ -12,49 +12,52 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TYPES__CUSTOM_CLIENT_INFO_HPP_
-#define TYPES__CUSTOM_CLIENT_INFO_HPP_
+#ifndef RMW_FASTRTPS_CPP__CUSTOM_SERVICE_INFO_HPP_
+#define RMW_FASTRTPS_CPP__CUSTOM_SERVICE_INFO_HPP_
 
 #include <atomic>
 #include <list>
 
 #include "fastcdr/FastBuffer.h"
 
-#include "fastrtps/subscriber/SampleInfo.h"
-#include "fastrtps/subscriber/Subscriber.h"
-#include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/publisher/Publisher.h"
+#include "fastrtps/publisher/PublisherListener.h"
+#include "fastrtps/subscriber/Subscriber.h"
+#include "fastrtps/subscriber/SubscriberListener.h"
+#include "fastrtps/subscriber/SampleInfo.h"
 
-class ClientListener;
+class ServiceListener;
 
-typedef struct CustomClientInfo
+typedef struct CustomServiceInfo
 {
   void * request_type_support_;
   void * response_type_support_;
-  eprosima::fastrtps::Subscriber * response_subscriber_;
-  eprosima::fastrtps::Publisher * request_publisher_;
-  ClientListener * listener_;
-  eprosima::fastrtps::rtps::GUID_t writer_guid_;
+  eprosima::fastrtps::Subscriber * request_subscriber_;
+  eprosima::fastrtps::Publisher * response_publisher_;
+  ServiceListener * listener_;
   eprosima::fastrtps::Participant * participant_;
   const char * typesupport_identifier_;
-} CustomClientInfo;
+} CustomServiceInfo;
 
-typedef struct CustomClientResponse
+typedef struct CustomServiceRequest
 {
   eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
   eprosima::fastcdr::FastBuffer * buffer_;
 
-  CustomClientResponse()
+  CustomServiceRequest()
   : buffer_(nullptr) {}
-} CustomClientResponse;
+} CustomServiceRequest;
 
-class ClientListener : public eprosima::fastrtps::SubscriberListener
+class ServiceListener : public eprosima::fastrtps::SubscriberListener
 {
 public:
-  explicit ClientListener(CustomClientInfo * info)
+  explicit ServiceListener(CustomServiceInfo * info)
   : info_(info), list_has_data_(false),
-    conditionMutex_(NULL), conditionVariable_(NULL) {}
+    conditionMutex_(NULL), conditionVariable_(NULL)
+  {
+    (void)info_;
+  }
 
 
   void
@@ -62,53 +65,51 @@ public:
   {
     assert(sub);
 
-    CustomClientResponse response;
-    response.buffer_ = new eprosima::fastcdr::FastBuffer();
+    CustomServiceRequest request;
+    request.buffer_ = new eprosima::fastcdr::FastBuffer();
     eprosima::fastrtps::SampleInfo_t sinfo;
 
-    if (sub->takeNextData(response.buffer_, &sinfo)) {
+    if (sub->takeNextData(request.buffer_, &sinfo)) {
       if (sinfo.sampleKind == ALIVE) {
-        response.sample_identity_ = sinfo.related_sample_identity;
+        request.sample_identity_ = sinfo.sample_identity;
 
-        if (info_->writer_guid_ == response.sample_identity_.writer_guid()) {
-          std::lock_guard<std::mutex> lock(internalMutex_);
+        std::lock_guard<std::mutex> lock(internalMutex_);
 
-          if (conditionMutex_ != NULL) {
-            std::unique_lock<std::mutex> clock(*conditionMutex_);
-            list.push_back(response);
-            clock.unlock();
-            conditionVariable_->notify_one();
-          } else {
-            list.push_back(response);
-          }
-          list_has_data_.store(true);
+        if (conditionMutex_ != NULL) {
+          std::unique_lock<std::mutex> clock(*conditionMutex_);
+          list.push_back(request);
+          clock.unlock();
+          conditionVariable_->notify_one();
+        } else {
+          list.push_back(request);
         }
+        list_has_data_.store(true);
       }
     }
   }
 
-  CustomClientResponse
-  getResponse()
+  CustomServiceRequest
+  getRequest()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
-    CustomClientResponse response;
+    CustomServiceRequest request;
 
     if (conditionMutex_ != NULL) {
       std::unique_lock<std::mutex> clock(*conditionMutex_);
       if (!list.empty()) {
-        response = list.front();
+        request = list.front();
         list.pop_front();
         list_has_data_.store(!list.empty());
       }
     } else {
       if (!list.empty()) {
-        response = list.front();
+        request = list.front();
         list.pop_front();
         list_has_data_.store(!list.empty());
       }
     }
 
-    return response;
+    return request;
   }
 
   void
@@ -134,12 +135,12 @@ public:
   }
 
 private:
-  CustomClientInfo * info_;
+  CustomServiceInfo * info_;
   std::mutex internalMutex_;
-  std::list<CustomClientResponse> list;
+  std::list<CustomServiceRequest> list;
   std::atomic_bool list_has_data_;
   std::mutex * conditionMutex_;
   std::condition_variable * conditionVariable_;
 };
 
-#endif  // TYPES__CUSTOM_CLIENT_INFO_HPP_
+#endif  // RMW_FASTRTPS_CPP__CUSTOM_SERVICE_INFO_HPP_

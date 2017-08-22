@@ -12,27 +12,25 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__GET_PARTICIPANT_HPP_
-#define RMW_FASTRTPS_CPP__GET_PARTICIPANT_HPP_
+#include "rmw_fastrtps_cpp/get_subscriber.hpp"
 
-#include "fastrtps/participant/Participant.h"
-#include "rmw/rmw.h"
-#include "rmw_fastrtps_cpp/visibility_control.h"
+#include "rmw_fastrtps_cpp/custom_subscriber_info.hpp"
+#include "rmw_fastrtps_cpp/identifier.hpp"
 
 namespace rmw_fastrtps_cpp
 {
 
-/// Return a native FastRTPS participant handle.
-/**
- * The function returns `NULL` when either the node handle is `NULL` or when the
- * node handle is from a different rmw implementation.
- *
- * \return native FastRTPS participant handle if successful, otherwise `NULL`
- */
-RMW_FASTRTPS_CPP_PUBLIC
-eprosima::fastrtps::Participant *
-get_participant(rmw_node_t * node);
+eprosima::fastrtps::Subscriber *
+get_subscriber(rmw_subscription_t * subscription)
+{
+  if (!subscription) {
+    return NULL;
+  }
+  if (subscription->implementation_identifier != eprosima_fastrtps_identifier) {
+    return NULL;
+  }
+  CustomSubscriberInfo * impl = static_cast<CustomSubscriberInfo *>(subscription->data);
+  return impl->subscriber_;
+}
 
 }  // namespace rmw_fastrtps_cpp
-
-#endif  // RMW_FASTRTPS_CPP__GET_PARTICIPANT_HPP_

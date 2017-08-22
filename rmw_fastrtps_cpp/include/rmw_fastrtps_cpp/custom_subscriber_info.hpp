@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TYPES__CUSTOM_SUBSCRIBER_INFO_HPP_
-#define TYPES__CUSTOM_SUBSCRIBER_INFO_HPP_
+#ifndef RMW_FASTRTPS_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
+#define RMW_FASTRTPS_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
 
 #include <condition_variable>
 #include <mutex>
@@ -109,4 +109,4 @@ private:
   std::condition_variable * conditionVariable_;
 };
 
-#endif  // TYPES__CUSTOM_SUBSCRIBER_INFO_HPP_
+#endif  // RMW_FASTRTPS_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_

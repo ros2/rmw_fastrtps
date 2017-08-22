@@ -21,10 +21,10 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
+#include "rmw_fastrtps_cpp/custom_client_info.hpp"
+#include "rmw_fastrtps_cpp/custom_service_info.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "ros_message_serialization.hpp"
-#include "types/custom_client_info.hpp"
-#include "types/custom_service_info.hpp"
 
 extern "C"
 {

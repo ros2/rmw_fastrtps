@@ -17,9 +17,9 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "types/custom_client_info.hpp"
-#include "types/custom_service_info.hpp"
-#include "types/custom_subscriber_info.hpp"
+#include "rmw_fastrtps_cpp/custom_client_info.hpp"
+#include "rmw_fastrtps_cpp/custom_service_info.hpp"
+#include "rmw_fastrtps_cpp/custom_subscriber_info.hpp"
 #include "types/custom_waitset_info.hpp"
 #include "types/guard_condition.hpp"
 
