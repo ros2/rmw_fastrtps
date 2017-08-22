@@ -16,6 +16,7 @@
 #define TYPES__GUARD_CONDITION_HPP_
 
 #include <array>
+#include <atomic>
 #include <cassert>
 #include <condition_variable>
 #include <mutex>
@@ -35,6 +36,9 @@ public:
 
     if (conditionMutex_ != NULL) {
       std::unique_lock<std::mutex> clock(*conditionMutex_);
+      // the change to hasTriggered_ needs to be mutually exclusive with
+      // rmw_wait() which checks hasTriggered() and decides if wait() needs to
+      // be called
       hasTriggered_ = true;
       clock.unlock();
       conditionVariable_->notify_one();
@@ -75,7 +79,7 @@ public:
 
 private:
   std::mutex internalMutex_;
-  bool hasTriggered_;
+  std::atomic_bool hasTriggered_;
   std::mutex * conditionMutex_;
   std::condition_variable * conditionVariable_;
 };

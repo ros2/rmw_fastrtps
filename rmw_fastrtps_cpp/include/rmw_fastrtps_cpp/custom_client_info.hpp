@@ -76,12 +76,16 @@ public:
           if (conditionMutex_ != NULL) {
             std::unique_lock<std::mutex> clock(*conditionMutex_);
             list.push_back(response);
+            // the change to list_has_data_ needs to be mutually exclusive with
+            // rmw_wait() which checks hasData() and decides if wait() needs to
+            // be called
+            list_has_data_.store(true);
             clock.unlock();
             conditionVariable_->notify_one();
           } else {
             list.push_back(response);
+            list_has_data_.store(true);
           }
-          list_has_data_.store(true);
         }
       }
     }

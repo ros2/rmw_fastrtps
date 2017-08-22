@@ -15,6 +15,7 @@
 #ifndef RMW_FASTRTPS_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
 #define RMW_FASTRTPS_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
 
+#include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <utility>
@@ -59,6 +60,8 @@ public:
 
     if (conditionMutex_ != NULL) {
       std::unique_lock<std::mutex> clock(*conditionMutex_);
+      // the change to data_ needs to be mutually exclusive with rmw_wait()
+      // which checks hasData() and decides if wait() needs to be called
       ++data_;
       clock.unlock();
       conditionVariable_->notify_one();
@@ -104,7 +107,7 @@ public:
 
 private:
   std::mutex internalMutex_;
-  uint32_t data_;
+  std::atomic_size_t data_;
   std::mutex * conditionMutex_;
   std::condition_variable * conditionVariable_;
 };
