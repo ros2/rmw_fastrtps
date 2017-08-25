@@ -20,4 +20,4 @@ find_package(fastrtps REQUIRED CONFIG)
 find_package(FastRTPS REQUIRED MODULE)
 
 list(APPEND rmw_fastrtps_cpp_INCLUDE_DIRS ${FastRTPS_INCLUDE_DIR})
-list(APPEND rmw_fastrtps_cpp_LIBRARIES ${FastRTPS_LIBRARIES})
+list(APPEND rmw_fastrtps_cpp_LIBRARIES fastcdr fastrtps)
