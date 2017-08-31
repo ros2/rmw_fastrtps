@@ -424,7 +424,7 @@ bool TypeSupport<MembersType>::serializeROSmessage(
             size_t array_size = 0;
             size_t sub_members_size = sub_members->size_of_;
             size_t max_align = calculateMaxAlign(sub_members);
-            size_t space = 1;  /* start with 1 byte */
+            size_t space = 100;
 
             if (member->array_size_ && !member->is_upper_bound_) {
               subros_message = field;
