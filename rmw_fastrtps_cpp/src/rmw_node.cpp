@@ -93,7 +93,7 @@ create_node(
     goto fail;
   }
 
-  node_handle = static_cast<rmw_node_t *>(rmw_allocate(sizeof(rmw_node_t)));
+  node_handle = rmw_node_allocate();
   if (!node_handle) {
     RMW_SET_ERROR_MSG("failed to allocate rmw_node_t");
     goto fail;
@@ -142,7 +142,7 @@ fail:
     rmw_free(const_cast<char *>(node_handle->name));
     node_handle->name = nullptr;
   }
-  rmw_free(node_handle);
+  rmw_node_free(node_handle);
   delete node_impl;
   if (graph_guard_condition) {
     rmw_ret_t ret = rmw_destroy_guard_condition(graph_guard_condition);
