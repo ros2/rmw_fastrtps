@@ -20,6 +20,7 @@
 #include "rcutils/filesystem.h"
 #include "rcutils/logging_macros.h"
 
+#include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -92,7 +93,7 @@ create_node(
     goto fail;
   }
 
-  node_handle = static_cast<rmw_node_t *>(malloc(sizeof(rmw_node_t)));
+  node_handle = static_cast<rmw_node_t *>(rmw_allocate(sizeof(rmw_node_t)));
   if (!node_handle) {
     RMW_SET_ERROR_MSG("failed to allocate rmw_node_t");
     goto fail;
@@ -103,7 +104,7 @@ create_node(
   node_handle->data = node_impl;
 
   node_handle->name =
-    static_cast<const char *>(malloc(sizeof(char) * strlen(name) + 1));
+    static_cast<const char *>(rmw_allocate(sizeof(char) * strlen(name) + 1));
   if (!node_handle->name) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
     node_handle->namespace_ = nullptr;  // to avoid free on uninitialized memory
@@ -112,7 +113,7 @@ create_node(
   memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
 
   node_handle->namespace_ =
-    static_cast<const char *>(malloc(sizeof(char) * strlen(namespace_) + 1));
+    static_cast<const char *>(rmw_allocate(sizeof(char) * strlen(namespace_) + 1));
   if (!node_handle->namespace_) {
     RMW_SET_ERROR_MSG("failed to allocate memory");
     goto fail;
@@ -136,12 +137,12 @@ fail:
   delete tnat_2;
   delete tnat_1;
   if (node_handle) {
-    free(const_cast<char *>(node_handle->namespace_));
+    rmw_free(const_cast<char *>(node_handle->namespace_));
     node_handle->namespace_ = nullptr;
-    free(const_cast<char *>(node_handle->name));
+    rmw_free(const_cast<char *>(node_handle->name));
     node_handle->name = nullptr;
   }
-  free(node_handle);
+  rmw_free(node_handle);
   delete node_impl;
   if (graph_guard_condition) {
     rmw_ret_t ret = rmw_destroy_guard_condition(graph_guard_condition);
@@ -270,11 +271,11 @@ rmw_destroy_node(rmw_node_t * node)
   }
   delete impl->secondaryPubListener;
 
-  free(const_cast<char *>(node->name));
+  rmw_free(const_cast<char *>(node->name));
   node->name = nullptr;
-  free(const_cast<char *>(node->namespace_));
+  rmw_free(const_cast<char *>(node->namespace_));
   node->namespace_ = nullptr;
-  free(static_cast<void *>(node));
+  rmw_free(static_cast<void *>(node));
 
   if (RMW_RET_OK != rmw_destroy_guard_condition(impl->graph_guard_condition)) {
     RMW_SET_ERROR_MSG("failed to destroy graph guard condition");
