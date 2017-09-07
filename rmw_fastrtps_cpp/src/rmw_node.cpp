@@ -275,7 +275,7 @@ rmw_destroy_node(rmw_node_t * node)
   node->name = nullptr;
   rmw_free(const_cast<char *>(node->namespace_));
   node->namespace_ = nullptr;
-  rmw_free(static_cast<void *>(node));
+  rmw_node_free(node);
 
   if (RMW_RET_OK != rmw_destroy_guard_condition(impl->graph_guard_condition)) {
     RMW_SET_ERROR_MSG("failed to destroy graph guard condition");
