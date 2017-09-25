@@ -81,6 +81,9 @@ rmw_create_publisher(
   PublisherAttributes publisherParam;
   const GUID_t * guid = nullptr;
 
+  // Load default XML profile.
+  Domain::getDefaultPublisherAttributes(publisherParam);
+
   // TODO(karsten1987) Verify consequences for std::unique_ptr?
   info = new CustomPublisherInfo();
   info->typesupport_identifier_ = type_support->typesupport_identifier;
