@@ -901,7 +901,7 @@ std::function<uint32_t()> TypeSupport<MembersType>::getSerializedSizeProvider(vo
   assert(data);
 
   eprosima::fastcdr::Cdr * ser = static_cast<eprosima::fastcdr::Cdr *>(data);
-  return [ser]()->uint32_t {return static_cast<uint32_t>(ser->getSerializedDataLength()); };
+  return [ser]() -> uint32_t {return static_cast<uint32_t>(ser->getSerializedDataLength());};
 }
 
 }  // namespace rmw_fastrtps_cpp
