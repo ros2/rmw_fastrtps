@@ -85,6 +85,9 @@ rmw_create_subscription(
   rmw_subscription_t * rmw_subscription = nullptr;
   SubscriberAttributes subscriberParam;
 
+  // Load default XML profile.
+  Domain::getDefaultSubscriberAttributes(subscriberParam);
+
   info = new CustomSubscriberInfo();
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
