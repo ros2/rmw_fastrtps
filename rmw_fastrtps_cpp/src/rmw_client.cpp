@@ -51,7 +51,8 @@ rmw_create_client(
   }
 
   if (!service_name || strlen(service_name) == 0) {
-    RMW_SET_ERROR_MSG("publisher topic is null or empty string");
+    RMW_SET_ERROR_MSG("client topic is null or empty string");
+    return NULL;
   }
 
   if (!qos_policies) {
