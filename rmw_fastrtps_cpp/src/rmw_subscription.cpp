@@ -49,7 +49,8 @@ rmw_create_subscription(
   }
 
   if (!topic_name || strlen(topic_name) == 0) {
-    RMW_SET_ERROR_MSG("publisher topic is null or empty string");
+    RMW_SET_ERROR_MSG("subscription topic is null or empty string");
+    return NULL;
   }
 
   if (!qos_policies) {
