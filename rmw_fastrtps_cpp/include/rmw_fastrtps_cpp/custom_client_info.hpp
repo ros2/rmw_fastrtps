@@ -54,7 +54,7 @@ class ClientListener : public eprosima::fastrtps::SubscriberListener
 public:
   explicit ClientListener(CustomClientInfo * info)
   : info_(info), list_has_data_(false),
-    conditionMutex_(NULL), conditionVariable_(NULL) {}
+    conditionMutex_(nullptr), conditionVariable_(nullptr) {}
 
 
   void
@@ -73,7 +73,7 @@ public:
         if (info_->writer_guid_ == response.sample_identity_.writer_guid()) {
           std::lock_guard<std::mutex> lock(internalMutex_);
 
-          if (conditionMutex_ != NULL) {
+          if (conditionMutex_ != nullptr) {
             std::unique_lock<std::mutex> clock(*conditionMutex_);
             list.push_back(response);
             // the change to list_has_data_ needs to be mutually exclusive with
@@ -97,7 +97,7 @@ public:
     std::lock_guard<std::mutex> lock(internalMutex_);
     CustomClientResponse response;
 
-    if (conditionMutex_ != NULL) {
+    if (conditionMutex_ != nullptr) {
       std::unique_lock<std::mutex> clock(*conditionMutex_);
       if (!list.empty()) {
         response = list.front();
@@ -127,8 +127,8 @@ public:
   detachCondition()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
-    conditionMutex_ = NULL;
-    conditionVariable_ = NULL;
+    conditionMutex_ = nullptr;
+    conditionVariable_ = nullptr;
   }
 
   bool

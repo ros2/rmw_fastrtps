@@ -24,12 +24,12 @@ eprosima::fastrtps::Publisher *
 get_request_publisher(rmw_client_t * client)
 {
   if (!client) {
-    return NULL;
+    return nullptr;
   }
   if (client->implementation_identifier != eprosima_fastrtps_identifier) {
-    return NULL;
+    return nullptr;
   }
-  CustomClientInfo * impl = static_cast<CustomClientInfo *>(client->data);
+  auto impl = static_cast<CustomClientInfo *>(client->data);
   return impl->request_publisher_;
 }
 
@@ -37,12 +37,12 @@ eprosima::fastrtps::Subscriber *
 get_response_subscriber(rmw_client_t * client)
 {
   if (!client) {
-    return NULL;
+    return nullptr;
   }
   if (client->implementation_identifier != eprosima_fastrtps_identifier) {
-    return NULL;
+    return nullptr;
   }
-  CustomClientInfo * impl = static_cast<CustomClientInfo *>(client->data);
+  auto impl = static_cast<CustomClientInfo *>(client->data);
   return impl->response_subscriber_;
 }
 

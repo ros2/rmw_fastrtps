@@ -23,7 +23,7 @@ const void * get_request_ptr(const void * untyped_service_members)
   auto service_members = static_cast<const ServiceType *>(untyped_service_members);
   if (!service_members) {
     RMW_SET_ERROR_MSG("service members handle is null");
-    return NULL;
+    return nullptr;
   }
   return service_members->request_members_;
 }
@@ -36,7 +36,7 @@ const void * get_response_ptr(const void * untyped_service_members)
   auto service_members = static_cast<const ServiceType *>(untyped_service_members);
   if (!service_members) {
     RMW_SET_ERROR_MSG("service members handle is null");
-    return NULL;
+    return nullptr;
   }
   return service_members->response_members_;
 }

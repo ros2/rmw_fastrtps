@@ -71,7 +71,7 @@ rmw_destroy_waitset(rmw_waitset_t * waitset)
     return RMW_RET_ERROR)
 
   auto result = RMW_RET_OK;
-  CustomWaitsetInfo * waitset_info = static_cast<CustomWaitsetInfo *>(waitset->data);
+  auto waitset_info = static_cast<CustomWaitsetInfo *>(waitset->data);
   if (!waitset_info) {
     RMW_SET_ERROR_MSG("waitset info is null");
     return RMW_RET_ERROR;

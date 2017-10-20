@@ -39,7 +39,7 @@ rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
     return RMW_RET_ERROR;
   }
 
-  const CustomPublisherInfo * info = static_cast<const CustomPublisherInfo *>(publisher->data);
+  auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
 
   if (!info) {
     RMW_SET_ERROR_MSG("publisher info handle is null");
