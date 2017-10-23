@@ -177,10 +177,6 @@ fail:
     delete info;
   }
 
-  if (rmw_publisher) {
-    rmw_publisher_free(rmw_publisher);
-  }
-
   return NULL;
 }
 

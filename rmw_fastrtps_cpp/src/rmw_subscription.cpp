@@ -162,10 +162,6 @@ fail:
     delete info;
   }
 
-  if (rmw_subscription) {
-    rmw_subscription_free(rmw_subscription);
-  }
-
   return NULL;
 }
 
