@@ -31,28 +31,34 @@ check_waitset_for_data(
   const rmw_services_t * services,
   const rmw_clients_t * clients)
 {
-  for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
-    void * data = subscriptions->subscribers[i];
-    CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
-    // Short circuiting out of this function is possible
-    if (custom_subscriber_info && custom_subscriber_info->listener_->hasData()) {
-      return true;
+  if (subscriptions) {
+    for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
+      void * data = subscriptions->subscribers[i];
+      CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
+      // Short circuiting out of this function is possible
+      if (custom_subscriber_info && custom_subscriber_info->listener_->hasData()) {
+        return true;
+      }
     }
   }
 
-  for (size_t i = 0; i < clients->client_count; ++i) {
-    void * data = clients->clients[i];
-    CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
-    if (custom_client_info && custom_client_info->listener_->hasData()) {
-      return true;
+  if (clients) {
+    for (size_t i = 0; i < clients->client_count; ++i) {
+      void * data = clients->clients[i];
+      CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
+      if (custom_client_info && custom_client_info->listener_->hasData()) {
+        return true;
+      }
     }
   }
 
-  for (size_t i = 0; i < services->service_count; ++i) {
-    void * data = services->services[i];
-    CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
-    if (custom_service_info && custom_service_info->listener_->hasData()) {
-      return true;
+  if (services) {
+    for (size_t i = 0; i < services->service_count; ++i) {
+      void * data = services->services[i];
+      CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
+      if (custom_service_info && custom_service_info->listener_->hasData()) {
+        return true;
+      }
     }
   }
 
@@ -99,22 +105,28 @@ rmw_wait(
     return RMW_RET_ERROR;
   }
 
-  for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
-    void * data = subscriptions->subscribers[i];
-    CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
-    custom_subscriber_info->listener_->attachCondition(conditionMutex, conditionVariable);
+  if (subscriptions) {
+    for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
+      void * data = subscriptions->subscribers[i];
+      CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
+      custom_subscriber_info->listener_->attachCondition(conditionMutex, conditionVariable);
+    }
   }
 
-  for (size_t i = 0; i < clients->client_count; ++i) {
-    void * data = clients->clients[i];
-    CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
-    custom_client_info->listener_->attachCondition(conditionMutex, conditionVariable);
+  if (clients) {
+    for (size_t i = 0; i < clients->client_count; ++i) {
+      void * data = clients->clients[i];
+      CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
+      custom_client_info->listener_->attachCondition(conditionMutex, conditionVariable);
+    }
   }
 
-  for (size_t i = 0; i < services->service_count; ++i) {
-    void * data = services->services[i];
-    CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
-    custom_service_info->listener_->attachCondition(conditionMutex, conditionVariable);
+  if (services) {
+    for (size_t i = 0; i < services->service_count; ++i) {
+      void * data = services->services[i];
+      CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
+      custom_service_info->listener_->attachCondition(conditionMutex, conditionVariable);
+    }
   }
 
   if (guard_conditions) {
@@ -137,27 +149,33 @@ rmw_wait(
   bool hasToWait = (wait_timeout && (wait_timeout->sec > 0 || wait_timeout->nsec > 0)) ||
     !wait_timeout;
 
-  for (size_t i = 0; hasToWait && i < subscriptions->subscriber_count; ++i) {
-    void * data = subscriptions->subscribers[i];
-    CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
-    if (custom_subscriber_info->listener_->hasData()) {
-      hasToWait = false;
+  if (subscriptions) {
+    for (size_t i = 0; hasToWait && i < subscriptions->subscriber_count; ++i) {
+      void * data = subscriptions->subscribers[i];
+      CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
+      if (custom_subscriber_info->listener_->hasData()) {
+        hasToWait = false;
+      }
     }
   }
 
-  for (size_t i = 0; hasToWait && i < clients->client_count; ++i) {
-    void * data = clients->clients[i];
-    CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
-    if (custom_client_info->listener_->hasData()) {
-      hasToWait = false;
+  if (clients) {
+    for (size_t i = 0; hasToWait && i < clients->client_count; ++i) {
+      void * data = clients->clients[i];
+      CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
+      if (custom_client_info->listener_->hasData()) {
+        hasToWait = false;
+      }
     }
   }
 
-  for (size_t i = 0; hasToWait && i < services->service_count; ++i) {
-    void * data = services->services[i];
-    CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
-    if (custom_service_info->listener_->hasData()) {
-      hasToWait = false;
+  if (services) {
+    for (size_t i = 0; hasToWait && i < services->service_count; ++i) {
+      void * data = services->services[i];
+      CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
+      if (custom_service_info->listener_->hasData()) {
+        hasToWait = false;
+      }
     }
   }
 
@@ -202,30 +220,37 @@ rmw_wait(
     timeout = true;
   }
 
-  for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
-    void * data = subscriptions->subscribers[i];
-    CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
-    custom_subscriber_info->listener_->detachCondition();
-    if (!custom_subscriber_info->listener_->hasData()) {
-      subscriptions->subscribers[i] = 0;
+  if (subscriptions) {
+    for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
+      void * data = subscriptions->subscribers[i];
+      CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
+      custom_subscriber_info->listener_->detachCondition();
+      if (!custom_subscriber_info->listener_->hasData()) {
+        subscriptions->subscribers[i] = 0;
+      }
     }
   }
 
-  for (size_t i = 0; i < clients->client_count; ++i) {
-    void * data = clients->clients[i];
-    CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
-    custom_client_info->listener_->detachCondition();
-    if (!custom_client_info->listener_->hasData()) {
-      clients->clients[i] = 0;
+  if (clients) {
+    for (size_t i = 0; i < clients->client_count; ++i) {
+      void * data = clients->clients[i];
+      CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
+      custom_client_info->listener_->detachCondition();
+      if (!custom_client_info->listener_->hasData()) {
+        clients->clients[i] = 0;
+      }
     }
   }
 
-  for (size_t i = 0; i < services->service_count; ++i) {
-    void * data = services->services[i];
-    CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
-    custom_service_info->listener_->detachCondition();
-    if (!custom_service_info->listener_->hasData()) {
-      services->services[i] = 0;
+
+  if (services) {
+    for (size_t i = 0; i < services->service_count; ++i) {
+      void * data = services->services[i];
+      CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
+      custom_service_info->listener_->detachCondition();
+      if (!custom_service_info->listener_->hasData()) {
+        services->services[i] = 0;
+      }
     }
   }
 
