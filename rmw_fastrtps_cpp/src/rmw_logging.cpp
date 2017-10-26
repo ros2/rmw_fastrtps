@@ -20,7 +20,7 @@ extern "C"
 {
 using eprosima::fastrtps::Log;
 
-eprosima::fastrtps::Log::Kind rmw_convert_severity_type(rmw_log_severity_t severity)
+eprosima::fastrtps::Log::Kind convert_rmw_severity_type(rmw_log_severity_t severity)
 {
   switch(severity)
   {
@@ -48,7 +48,7 @@ eprosima::fastrtps::Log::Kind rmw_convert_severity_type(rmw_log_severity_t sever
 rmw_ret_t
 rmw_set_log_severity(rmw_log_severity_t severity)
 {
-  Log::Kind _severity = rmw_convert_severity_type(severity);
+  Log::Kind _severity = convert_rmw_severity_type(severity);
   eprosima::fastrtps::Log::SetVerbosity(_severity);
 
   return RMW_RET_OK;
