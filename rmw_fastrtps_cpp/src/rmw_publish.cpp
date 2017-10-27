@@ -37,7 +37,7 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
     return RMW_RET_ERROR;
   }
 
-  CustomPublisherInfo * info = static_cast<CustomPublisherInfo *>(publisher->data);
+  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
   assert(info);
 
   eprosima::fastcdr::FastBuffer buffer;

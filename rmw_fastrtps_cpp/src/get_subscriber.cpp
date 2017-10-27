@@ -24,12 +24,12 @@ eprosima::fastrtps::Subscriber *
 get_subscriber(rmw_subscription_t * subscription)
 {
   if (!subscription) {
-    return NULL;
+    return nullptr;
   }
   if (subscription->implementation_identifier != eprosima_fastrtps_identifier) {
-    return NULL;
+    return nullptr;
   }
-  CustomSubscriberInfo * impl = static_cast<CustomSubscriberInfo *>(subscription->data);
+  auto impl = static_cast<CustomSubscriberInfo *>(subscription->data);
   return impl->subscriber_;
 }
 

@@ -40,34 +40,34 @@ rmw_create_subscription(
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
-    return NULL;
+    return nullptr;
   }
 
   if (node->implementation_identifier != eprosima_fastrtps_identifier) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return NULL;
+    return nullptr;
   }
 
   if (!topic_name || strlen(topic_name) == 0) {
     RMW_SET_ERROR_MSG("subscription topic is null or empty string");
-    return NULL;
+    return nullptr;
   }
 
   if (!qos_policies) {
     RMW_SET_ERROR_MSG("qos_profile is null");
-    return NULL;
+    return nullptr;
   }
 
-  const CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  auto impl = static_cast<CustomParticipantInfo *>(node->data);
   if (!impl) {
     RMW_SET_ERROR_MSG("node impl is null");
-    return NULL;
+    return nullptr;
   }
 
   Participant * participant = impl->participant;
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
-    return NULL;
+    return nullptr;
   }
 
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
@@ -77,7 +77,7 @@ rmw_create_subscription(
       type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
     if (!type_support) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
-      return NULL;
+      return nullptr;
     }
   }
 
@@ -162,7 +162,11 @@ fail:
     delete info;
   }
 
-  return NULL;
+  if (rmw_subscription) {
+    rmw_subscription_free(rmw_subscription);
+  }
+
+  return nullptr;
 }
 
 rmw_ret_t
@@ -188,7 +192,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     return RMW_RET_ERROR;
   }
 
-  CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
 
   if (info != nullptr) {
     if (info->subscriber_ != nullptr) {
@@ -198,7 +202,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
       delete info->listener_;
     }
     if (info->type_support_ != nullptr) {
-      CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+      auto impl = static_cast<CustomParticipantInfo *>(node->data);
       if (!impl) {
         RMW_SET_ERROR_MSG("node impl is null");
         return RMW_RET_ERROR;

@@ -56,7 +56,7 @@ rmw_get_service_names_and_types(
     return RMW_RET_ERROR;
   }
 
-  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  auto impl = static_cast<CustomParticipantInfo *>(node->data);
 
   // Access the slave Listeners, which are the ones that have the topicnamesandtypes member
   // Get info from publisher and subscriber

@@ -54,7 +54,7 @@ class ServiceListener : public eprosima::fastrtps::SubscriberListener
 public:
   explicit ServiceListener(CustomServiceInfo * info)
   : info_(info), list_has_data_(false),
-    conditionMutex_(NULL), conditionVariable_(NULL)
+    conditionMutex_(nullptr), conditionVariable_(nullptr)
   {
     (void)info_;
   }
@@ -75,7 +75,7 @@ public:
 
         std::lock_guard<std::mutex> lock(internalMutex_);
 
-        if (conditionMutex_ != NULL) {
+        if (conditionMutex_ != nullptr) {
           std::unique_lock<std::mutex> clock(*conditionMutex_);
           list.push_back(request);
           // the change to list_has_data_ needs to be mutually exclusive with
@@ -98,7 +98,7 @@ public:
     std::lock_guard<std::mutex> lock(internalMutex_);
     CustomServiceRequest request;
 
-    if (conditionMutex_ != NULL) {
+    if (conditionMutex_ != nullptr) {
       std::unique_lock<std::mutex> clock(*conditionMutex_);
       if (!list.empty()) {
         request = list.front();
@@ -128,8 +128,8 @@ public:
   detachCondition()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
-    conditionMutex_ = NULL;
-    conditionVariable_ = NULL;
+    conditionMutex_ = nullptr;
+    conditionVariable_ = nullptr;
   }
 
   bool

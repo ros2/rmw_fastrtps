@@ -56,7 +56,7 @@ rmw_service_server_is_available(
     return RMW_RET_ERROR;
   }
 
-  CustomClientInfo * client_info = static_cast<CustomClientInfo *>(client->data);
+  auto client_info = static_cast<CustomClientInfo *>(client->data);
   if (!client_info) {
     RMW_SET_ERROR_MSG("client info handle is null");
     return RMW_RET_ERROR;

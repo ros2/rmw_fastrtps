@@ -24,12 +24,12 @@ eprosima::fastrtps::Publisher *
 get_publisher(rmw_publisher_t * publisher)
 {
   if (!publisher) {
-    return NULL;
+    return nullptr;
   }
   if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
-    return NULL;
+    return nullptr;
   }
-  CustomPublisherInfo * impl = static_cast<CustomPublisherInfo *>(publisher->data);
+  auto impl = static_cast<CustomPublisherInfo *>(publisher->data);
   return impl->publisher_;
 }
 

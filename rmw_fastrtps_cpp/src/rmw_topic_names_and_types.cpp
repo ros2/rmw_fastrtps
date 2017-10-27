@@ -52,6 +52,7 @@ rmw_get_topic_names_and_types(
     RMW_SET_ERROR_MSG_ALLOC("null node handle", *allocator)
     return RMW_RET_INVALID_ARGUMENT;
   }
+
   rmw_ret_t ret = rmw_names_and_types_check_zero(topic_names_and_types);
   if (ret != RMW_RET_OK) {
     return ret;
@@ -63,7 +64,7 @@ rmw_get_topic_names_and_types(
     return RMW_RET_ERROR;
   }
 
-  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  auto impl = static_cast<CustomParticipantInfo *>(node->data);
 
   // Access the slave Listeners, which are the ones that have the topicnamesandtypes member
   // Get info from publisher and subscriber

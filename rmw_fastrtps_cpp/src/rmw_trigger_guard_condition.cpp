@@ -32,7 +32,7 @@ rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle
     return RMW_RET_ERROR;
   }
 
-  GuardCondition * guard_condition = static_cast<GuardCondition *>(guard_condition_handle->data);
+  auto guard_condition = static_cast<GuardCondition *>(guard_condition_handle->data);
   guard_condition->trigger();
   return RMW_RET_OK;
 }

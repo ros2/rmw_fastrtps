@@ -46,7 +46,7 @@ rmw_count_publishers(
     return RMW_RET_ERROR;
   }
 
-  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  auto impl = static_cast<CustomParticipantInfo *>(node->data);
 
   std::map<std::string, std::vector<std::string>> unfiltered_topics;
   WriterInfo * slave_target = impl->secondaryPubListener;
