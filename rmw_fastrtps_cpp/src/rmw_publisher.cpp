@@ -170,7 +170,7 @@ rmw_create_publisher(
   rmw_publisher->topic_name = reinterpret_cast<char *>(rmw_allocate(strlen(topic_name) + 1));
 
   if (!rmw_publisher->topic_name) {
-    RMW_SET_ERROR_MSG("failed to allocate memory for publiser node name");
+    RMW_SET_ERROR_MSG("failed to allocate memory for publiser topic name");
     goto fail;
   }
 

@@ -152,7 +152,7 @@ rmw_create_subscription(
     reinterpret_cast<const char *>(rmw_allocate(strlen(topic_name) + 1));
 
   if (!rmw_subscription->topic_name) {
-    RMW_SET_ERROR_MSG("failed to allocate memory for subscription node name");
+    RMW_SET_ERROR_MSG("failed to allocate memory for subscription topic name");
     goto fail;
   }
 
