@@ -24,12 +24,12 @@ eprosima::fastrtps::Participant *
 get_participant(rmw_node_t * node)
 {
   if (!node) {
-    return NULL;
+    return nullptr;
   }
   if (node->implementation_identifier != eprosima_fastrtps_identifier) {
-    return NULL;
+    return nullptr;
   }
-  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  auto impl = static_cast<CustomParticipantInfo *>(node->data);
   return impl->participant;
 }
 

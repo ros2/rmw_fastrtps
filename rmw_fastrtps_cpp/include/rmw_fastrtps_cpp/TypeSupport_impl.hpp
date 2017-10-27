@@ -69,7 +69,7 @@ rosidl_generator_c__void__Array__init(
   if (!array) {
     return false;
   }
-  void * data = NULL;
+  void * data = nullptr;
   if (size) {
     data = static_cast<void *>(calloc(size, member_size));
     if (!data) {
@@ -94,7 +94,7 @@ rosidl_generator_c__void__Array__fini(rosidl_generator_c__void__Array * array)
     assert(array->capacity > 0);
     // finalize all array elements
     free(array->data);
-    array->data = NULL;
+    array->data = nullptr;
     array->size = 0;
     array->capacity = 0;
   } else {
@@ -186,7 +186,7 @@ static size_t calculateMaxAlign(const MembersType * members)
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
-            const MembersType * sub_members = (const MembersType *)member.members_->data;
+            auto sub_members = (const MembersType *)member.members_->data;
             alignment = calculateMaxAlign(sub_members);
           }
           break;
@@ -269,7 +269,7 @@ size_t get_array_size_and_assign_field(
   size_t sub_members_size,
   size_t max_align)
 {
-  std::vector<unsigned char> * vector = reinterpret_cast<std::vector<unsigned char> *>(field);
+  auto vector = reinterpret_cast<std::vector<unsigned char> *>(field);
   void * ptr = reinterpret_cast<void *>(sub_members_size);
   size_t vsize = vector->size() / reinterpret_cast<size_t>(align_(max_align, ptr));
   if (member->is_upper_bound_ && vsize > member->array_size_) {
@@ -286,8 +286,7 @@ size_t get_array_size_and_assign_field(
   void * & subros_message,
   size_t, size_t)
 {
-  rosidl_generator_c__void__Array * tmparray =
-    static_cast<rosidl_generator_c__void__Array *>(field);
+  auto tmparray = static_cast<rosidl_generator_c__void__Array *>(field);
   if (member->is_upper_bound_ && tmparray->size > member->array_size_) {
     throw std::runtime_error("vector overcomes the maximum length");
   }
@@ -362,7 +361,7 @@ bool TypeSupport<MembersType>::serializeROSmessage(
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
-            const MembersType * sub_members = (const MembersType *)member->members_->data;
+            auto sub_members = (const MembersType *)member->members_->data;
             serializeROSmessage(ser, sub_members, field);
           }
           break;
@@ -411,7 +410,7 @@ bool TypeSupport<MembersType>::serializeROSmessage(
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
-            const MembersType * sub_members =
+            auto sub_members =
               static_cast<const MembersType *>(member->members_->data);
             void * subros_message = nullptr;
             size_t array_size = 0;
@@ -455,7 +454,7 @@ void deserialize_array(
   if (member->array_size_ && !member->is_upper_bound_) {
     deser.deserializeArray(static_cast<T *>(field), member->array_size_);
   } else {
-    std::vector<T> & vector = *reinterpret_cast<std::vector<T> *>(field);
+    auto & vector = *reinterpret_cast<std::vector<T> *>(field);
     if (call_new) {
       new(&vector) std::vector<T>;
     }
@@ -533,7 +532,7 @@ inline size_t get_submessage_array_deserialize(
   uint32_t vsize = 0;
   // Deserialize length
   deser >> vsize;
-  std::vector<unsigned char> * vector = reinterpret_cast<std::vector<unsigned char> *>(field);
+  auto vector = reinterpret_cast<std::vector<unsigned char> *>(field);
   if (call_new) {
     new(vector) std::vector<unsigned char>;
   }
@@ -556,8 +555,7 @@ inline size_t get_submessage_array_deserialize(
   // Deserialize length
   uint32_t vsize = 0;
   deser >> vsize;
-  rosidl_generator_c__void__Array * tmparray =
-    static_cast<rosidl_generator_c__void__Array *>(field);
+  auto tmparray = static_cast<rosidl_generator_c__void__Array *>(field);
   rosidl_generator_c__void__Array__init(tmparray, vsize, sub_members_size);
   subros_message = reinterpret_cast<void *>(tmparray->data);
   return vsize;
@@ -618,7 +616,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
-            const MembersType * sub_members = (const MembersType *)member->members_->data;
+            auto sub_members = (const MembersType *)member->members_->data;
             deserializeROSmessage(deser, sub_members, field, call_new);
           }
           break;
@@ -667,7 +665,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
-            const MembersType * sub_members = (const MembersType *)member->members_->data;
+            auto sub_members = (const MembersType *)member->members_->data;
             void * subros_message = nullptr;
             size_t array_size = 0;
             size_t sub_members_size = sub_members->size_of_;
@@ -748,8 +746,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
-            const MembersType * sub_members =
-              static_cast<const MembersType *>(member->members_->data);
+            auto sub_members = static_cast<const MembersType *>(member->members_->data);
             current_alignment += calculateMaxSerializedSize(sub_members, current_alignment);
           }
           break;
@@ -800,8 +797,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
-            const MembersType * sub_members =
-              static_cast<const MembersType *>(member->members_->data);
+            auto sub_members = static_cast<const MembersType *>(member->members_->data);
             for (size_t index = 0; index < array_size; ++index) {
               current_alignment += calculateMaxSerializedSize(sub_members, current_alignment);
             }
@@ -871,7 +867,7 @@ bool TypeSupport<MembersType>::serialize(
   assert(data);
   assert(payload);
 
-  eprosima::fastcdr::Cdr * ser = static_cast<eprosima::fastcdr::Cdr *>(data);
+  auto ser = static_cast<eprosima::fastcdr::Cdr *>(data);
   if (payload->max_size >= ser->getSerializedDataLength()) {
     payload->length = static_cast<uint32_t>(ser->getSerializedDataLength());
     payload->encapsulation = ser->endianness() ==
@@ -889,7 +885,7 @@ bool TypeSupport<MembersType>::deserialize(SerializedPayload_t * payload, void *
   assert(data);
   assert(payload);
 
-  eprosima::fastcdr::FastBuffer * buffer = static_cast<eprosima::fastcdr::FastBuffer *>(data);
+  auto buffer = static_cast<eprosima::fastcdr::FastBuffer *>(data);
   buffer->resize(payload->length);
   memcpy(buffer->getBuffer(), payload->data, payload->length);
   return true;
@@ -900,7 +896,7 @@ std::function<uint32_t()> TypeSupport<MembersType>::getSerializedSizeProvider(vo
 {
   assert(data);
 
-  eprosima::fastcdr::Cdr * ser = static_cast<eprosima::fastcdr::Cdr *>(data);
+  auto ser = static_cast<eprosima::fastcdr::Cdr *>(data);
   return [ser]() -> uint32_t {return static_cast<uint32_t>(ser->getSerializedDataLength());};
 }
 

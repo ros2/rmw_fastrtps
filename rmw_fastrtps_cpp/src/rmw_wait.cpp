@@ -34,7 +34,7 @@ check_waitset_for_data(
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
       void * data = subscriptions->subscribers[i];
-      CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
+      auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
       // Short circuiting out of this function is possible
       if (custom_subscriber_info && custom_subscriber_info->listener_->hasData()) {
         return true;
@@ -65,7 +65,7 @@ check_waitset_for_data(
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
       void * data = guard_conditions->guard_conditions[i];
-      GuardCondition * guard_condition = static_cast<GuardCondition *>(data);
+      auto guard_condition = static_cast<GuardCondition *>(data);
       if (guard_condition && guard_condition->hasTriggered()) {
         return true;
       }
@@ -108,7 +108,7 @@ rmw_wait(
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
       void * data = subscriptions->subscribers[i];
-      CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
+      auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
       custom_subscriber_info->listener_->attachCondition(conditionMutex, conditionVariable);
     }
   }
@@ -124,7 +124,7 @@ rmw_wait(
   if (services) {
     for (size_t i = 0; i < services->service_count; ++i) {
       void * data = services->services[i];
-      CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
+      auto custom_service_info = static_cast<CustomServiceInfo *>(data);
       custom_service_info->listener_->attachCondition(conditionMutex, conditionVariable);
     }
   }
@@ -132,7 +132,7 @@ rmw_wait(
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
       void * data = guard_conditions->guard_conditions[i];
-      GuardCondition * guard_condition = static_cast<GuardCondition *>(data);
+      auto guard_condition = static_cast<GuardCondition *>(data);
       guard_condition->attachCondition(conditionMutex, conditionVariable);
     }
   }
@@ -152,7 +152,7 @@ rmw_wait(
   if (subscriptions) {
     for (size_t i = 0; hasToWait && i < subscriptions->subscriber_count; ++i) {
       void * data = subscriptions->subscribers[i];
-      CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
+      auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
       if (custom_subscriber_info->listener_->hasData()) {
         hasToWait = false;
       }
@@ -172,7 +172,7 @@ rmw_wait(
   if (services) {
     for (size_t i = 0; hasToWait && i < services->service_count; ++i) {
       void * data = services->services[i];
-      CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
+      auto custom_service_info = static_cast<CustomServiceInfo *>(data);
       if (custom_service_info->listener_->hasData()) {
         hasToWait = false;
       }
@@ -182,7 +182,7 @@ rmw_wait(
   if (guard_conditions) {
     for (size_t i = 0; hasToWait && i < guard_conditions->guard_condition_count; ++i) {
       void * data = guard_conditions->guard_conditions[i];
-      GuardCondition * guard_condition = static_cast<GuardCondition *>(data);
+      auto guard_condition = static_cast<GuardCondition *>(data);
       if (guard_condition->hasTriggered()) {
         hasToWait = false;
       }
@@ -223,7 +223,7 @@ rmw_wait(
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
       void * data = subscriptions->subscribers[i];
-      CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
+      auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
       custom_subscriber_info->listener_->detachCondition();
       if (!custom_subscriber_info->listener_->hasData()) {
         subscriptions->subscribers[i] = 0;
@@ -242,11 +242,10 @@ rmw_wait(
     }
   }
 
-
   if (services) {
     for (size_t i = 0; i < services->service_count; ++i) {
       void * data = services->services[i];
-      CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
+      auto custom_service_info = static_cast<CustomServiceInfo *>(data);
       custom_service_info->listener_->detachCondition();
       if (!custom_service_info->listener_->hasData()) {
         services->services[i] = 0;
@@ -257,7 +256,7 @@ rmw_wait(
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
       void * data = guard_conditions->guard_conditions[i];
-      GuardCondition * guard_condition = static_cast<GuardCondition *>(data);
+      auto guard_condition = static_cast<GuardCondition *>(data);
       guard_condition->detachCondition();
       if (!guard_condition->getHasTriggered()) {
         guard_conditions->guard_conditions[i] = 0;

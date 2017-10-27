@@ -27,14 +27,14 @@ class GuardCondition
 public:
   GuardCondition()
   : hasTriggered_(false),
-    conditionMutex_(NULL), conditionVariable_(NULL) {}
+    conditionMutex_(nullptr), conditionVariable_(nullptr) {}
 
   void
   trigger()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
 
-    if (conditionMutex_ != NULL) {
+    if (conditionMutex_ != nullptr) {
       std::unique_lock<std::mutex> clock(*conditionMutex_);
       // the change to hasTriggered_ needs to be mutually exclusive with
       // rmw_wait() which checks hasTriggered() and decides if wait() needs to
@@ -59,8 +59,8 @@ public:
   detachCondition()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
-    conditionMutex_ = NULL;
-    conditionVariable_ = NULL;
+    conditionMutex_ = nullptr;
+    conditionVariable_ = nullptr;
   }
 
   bool

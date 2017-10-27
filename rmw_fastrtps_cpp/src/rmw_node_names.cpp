@@ -50,7 +50,7 @@ rmw_get_node_names(
     return RMW_RET_ERROR;
   }
 
-  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  auto impl = static_cast<CustomParticipantInfo *>(node->data);
   Participant * participant = impl->participant;
 
   auto participant_names = participant->getParticipantNames();

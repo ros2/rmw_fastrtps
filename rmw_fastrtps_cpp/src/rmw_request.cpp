@@ -47,7 +47,7 @@ rmw_send_request(
     return RMW_RET_ERROR;
   }
 
-  CustomClientInfo * info = static_cast<CustomClientInfo *>(client->data);
+  auto info = static_cast<CustomClientInfo *>(client->data);
   assert(info);
 
   eprosima::fastcdr::FastBuffer buffer;
@@ -92,7 +92,7 @@ rmw_take_request(
     return RMW_RET_ERROR;
   }
 
-  CustomServiceInfo * info = static_cast<CustomServiceInfo *>(service->data);
+  auto info = static_cast<CustomServiceInfo *>(service->data);
   assert(info);
 
   CustomServiceRequest request = info->listener_->getRequest();

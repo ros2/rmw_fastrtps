@@ -27,7 +27,7 @@ get_request_ptr(const void * untyped_service_members, const char * typesupport)
       untyped_service_members);
   }
   RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return NULL;
+  return nullptr;
 }
 
 const void *
@@ -41,5 +41,5 @@ get_response_ptr(const void * untyped_service_members, const char * typesupport)
       untyped_service_members);
   }
   RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return NULL;
+  return nullptr;
 }
