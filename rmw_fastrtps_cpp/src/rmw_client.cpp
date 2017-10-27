@@ -191,6 +191,11 @@ rmw_create_client(
   info->writer_guid_ = info->request_publisher_->getGuid();
 
   rmw_client = rmw_client_allocate();
+  if (!rmw_client) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for client");
+    goto fail;
+  }
+
   rmw_client->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_client->data = info;
   rmw_client->service_name = reinterpret_cast<const char *>(
@@ -204,42 +209,42 @@ rmw_create_client(
   return rmw_client;
 
 fail:
-
-  if (info != nullptr) {
-    if (info->request_publisher_ != nullptr) {
-      Domain::removePublisher(info->request_publisher_);
-    }
-
-    if (info->response_subscriber_ != nullptr) {
-      Domain::removeSubscriber(info->response_subscriber_);
-    }
-
-    if (info->listener_ != nullptr) {
-      delete info->listener_;
-    }
-
-    if (impl) {
-      if (info->request_type_support_ != nullptr) {
-        _unregister_type(participant, info->request_type_support_, info->typesupport_identifier_);
-      }
-
-      if (info->response_type_support_ != nullptr) {
-        _unregister_type(participant, info->response_type_support_, info->typesupport_identifier_);
-      }
-    } else {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_cpp",
-        "leaking type support objects because node impl is null")
-    }
-
-    delete info;
+  if (info->request_publisher_ != nullptr) {
+    Domain::removePublisher(info->request_publisher_);
   }
 
-  if (rmw_client->service_name != nullptr) {
-    rmw_free(const_cast<char *>(rmw_client->service_name));
-    rmw_client->service_name = nullptr;
+  if (info->response_subscriber_ != nullptr) {
+    Domain::removeSubscriber(info->response_subscriber_);
   }
-  rmw_client_free(rmw_client);
+
+  if (info->listener_ != nullptr) {
+    delete info->listener_;
+  }
+
+  if (impl) {
+    if (info->request_type_support_ != nullptr) {
+      _unregister_type(participant, info->request_type_support_, info->typesupport_identifier_);
+    }
+
+    if (info->response_type_support_ != nullptr) {
+      _unregister_type(participant, info->response_type_support_, info->typesupport_identifier_);
+    }
+  } else {
+    RCUTILS_LOG_ERROR_NAMED(
+      "rmw_fastrtps_cpp",
+      "leaking type support objects because node impl is null")
+  }
+
+  delete info;
+  info = nullptr;
+
+  if (nullptr != rmw_client) {
+    if (rmw_client->service_name != nullptr) {
+      rmw_free(const_cast<char *>(rmw_client->service_name));
+      rmw_client->service_name = nullptr;
+    }
+    rmw_client_free(rmw_client);
+  }
 
   return nullptr;
 }
