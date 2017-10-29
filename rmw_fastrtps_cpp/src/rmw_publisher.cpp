@@ -29,7 +29,8 @@
 extern "C"
 {
 rmw_publisher_t *
-rmw_create_publisher(const rmw_node_t * node,
+rmw_create_publisher(
+  const rmw_node_t * node,
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name, const rmw_qos_profile_t * qos_policies)
 {
@@ -45,6 +46,7 @@ rmw_create_publisher(const rmw_node_t * node,
 
   if (!topic_name || strlen(topic_name) == 0) {
     RMW_SET_ERROR_MSG("publisher topic is null or empty string");
+    return NULL;
   }
 
   if (!qos_policies) {
@@ -79,6 +81,9 @@ rmw_create_publisher(const rmw_node_t * node,
   rmw_publisher_t * rmw_publisher = nullptr;
   PublisherAttributes publisherParam;
   const GUID_t * guid = nullptr;
+
+  // Load default XML profile.
+  Domain::getDefaultPublisherAttributes(publisherParam);
 
   // TODO(karsten1987) Verify consequences for std::unique_ptr?
   info = new CustomPublisherInfo();

@@ -45,7 +45,8 @@
 extern "C"
 {
 rmw_service_t *
-rmw_create_service(const rmw_node_t * node,
+rmw_create_service(
+  const rmw_node_t * node,
   const rosidl_service_type_support_t * type_supports,
   const char * service_name, const rmw_qos_profile_t * qos_policies)
 {
@@ -60,7 +61,8 @@ rmw_create_service(const rmw_node_t * node,
   }
 
   if (!service_name || strlen(service_name) == 0) {
-    RMW_SET_ERROR_MSG("publisher topic is null or empty string");
+    RMW_SET_ERROR_MSG("service topic is null or empty string");
+    return NULL;
   }
 
   if (!qos_policies) {

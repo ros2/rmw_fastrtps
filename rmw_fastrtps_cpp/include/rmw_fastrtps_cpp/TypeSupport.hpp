@@ -133,11 +133,12 @@ protected:
   const MembersType * members_;
 
 private:
-  bool serializeROSmessage(eprosima::fastcdr::Cdr & ser, const MembersType * members,
-    const void * ros_message);
+  bool serializeROSmessage(
+    eprosima::fastcdr::Cdr & ser, const MembersType * members, const void * ros_message);
 
-  bool deserializeROSmessage(eprosima::fastcdr::Cdr & deser, const MembersType * members,
-    void * ros_message, bool call_new);
+  bool deserializeROSmessage(
+    eprosima::fastcdr::Cdr & deser, const MembersType * members, void * ros_message,
+    bool call_new);
 };
 
 }  // namespace rmw_fastrtps_cpp

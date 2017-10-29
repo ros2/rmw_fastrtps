@@ -194,6 +194,10 @@ rmw_create_node(
   }
 
   ParticipantAttributes participantAttrs;
+
+  // Load default XML profile.
+  Domain::getDefaultParticipantAttributes(participantAttrs);
+
   participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
   participantAttrs.rtps.setName(name);
 

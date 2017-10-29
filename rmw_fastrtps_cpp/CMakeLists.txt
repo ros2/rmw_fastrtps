@@ -36,14 +36,12 @@ find_package(FastRTPS REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
 find_package(rosidl_generator_c REQUIRED)
-find_package(rosidl_generator_cpp REQUIRED)
 find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rmw)
 ament_export_dependencies(rosidl_generator_c)
-ament_export_dependencies(rosidl_generator_cpp)
 ament_export_dependencies(rosidl_typesupport_introspection_c)
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 
@@ -60,7 +58,6 @@ add_library(rmw_fastrtps_cpp
   src/identifier.cpp
   src/namespace_prefix.cpp
   src/qos.cpp
-  src/rmw_init.cpp
   src/rmw_logging.cpp
   src/rmw_client.cpp
   src/rmw_compare_gids_equal.cpp
@@ -96,7 +93,7 @@ ament_target_dependencies(rmw_fastrtps_cpp
   "rosidl_typesupport_introspection_cpp"
   "rmw"
   "rosidl_generator_c"
-  "rosidl_generator_cpp")
+)
 
 configure_rmw_library(rmw_fastrtps_cpp)
 

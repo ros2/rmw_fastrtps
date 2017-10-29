@@ -25,7 +25,8 @@
 
 // helper function for wait
 bool
-check_waitset_for_data(const rmw_subscriptions_t * subscriptions,
+check_waitset_for_data(
+  const rmw_subscriptions_t * subscriptions,
   const rmw_guard_conditions_t * guard_conditions,
   const rmw_services_t * services,
   const rmw_clients_t * clients)
@@ -193,6 +194,14 @@ rmw_wait(
   // after we check, it will be caught on the next call to this function).
   lock.unlock();
 
+  // Even if this was a non-blocking wait, signal a timeout if there's no data.
+  // This makes the return behavior consistent with rcl expectations for zero timeout value.
+  // Do this before detaching the listeners because the data gets cleared for guard conditions.
+  bool hasData = check_waitset_for_data(subscriptions, guard_conditions, services, clients);
+  if (!hasData && wait_timeout && wait_timeout->sec == 0 && wait_timeout->nsec == 0) {
+    timeout = true;
+  }
+
   for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
     void * data = subscriptions->subscribers[i];
     CustomSubscriberInfo * custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
@@ -229,11 +238,6 @@ rmw_wait(
         guard_conditions->guard_conditions[i] = 0;
       }
     }
-  }
-  // Make timeout behavior consistent with rcl expectations for zero timeout value
-  bool hasData = check_waitset_for_data(subscriptions, guard_conditions, services, clients);
-  if (!hasData && wait_timeout && wait_timeout->sec == 0 && wait_timeout->nsec == 0) {
-    return RMW_RET_TIMEOUT;
   }
 
   return timeout ? RMW_RET_TIMEOUT : RMW_RET_OK;

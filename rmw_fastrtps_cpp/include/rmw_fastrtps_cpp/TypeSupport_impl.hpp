@@ -118,17 +118,11 @@ void TypeSupport<MembersType>::deleteData(void * data)
 }
 
 static inline void *
-align_(size_t __align, size_t __size, void * & __ptr, size_t & __space) noexcept
+align_(size_t __align, void * & __ptr) noexcept
 {
   const auto __intptr = reinterpret_cast<uintptr_t>(__ptr);
   const auto __aligned = (__intptr - 1u + __align) & ~(__align - 1);
-  const auto __diff = __aligned - __intptr;
-  if ((__size + __diff) > __space) {
-    return nullptr;
-  } else {
-    __space -= __diff;
-    return __ptr = reinterpret_cast<void *>(__aligned);
-  }
+  return __ptr = reinterpret_cast<void *>(__aligned);
 }
 
 template<typename MembersType>
@@ -273,12 +267,11 @@ size_t get_array_size_and_assign_field(
   void * field,
   void * & subros_message,
   size_t sub_members_size,
-  size_t max_align,
-  size_t space)
+  size_t max_align)
 {
   std::vector<unsigned char> * vector = reinterpret_cast<std::vector<unsigned char> *>(field);
   void * ptr = reinterpret_cast<void *>(sub_members_size);
-  size_t vsize = vector->size() / reinterpret_cast<size_t>(align_(max_align, 0, ptr, space));
+  size_t vsize = vector->size() / reinterpret_cast<size_t>(align_(max_align, ptr));
   if (member->is_upper_bound_ && vsize > member->array_size_) {
     throw std::runtime_error("vector overcomes the maximum length");
   }
@@ -291,7 +284,7 @@ size_t get_array_size_and_assign_field(
   const rosidl_typesupport_introspection_c__MessageMember * member,
   void * field,
   void * & subros_message,
-  size_t, size_t, size_t)
+  size_t, size_t)
 {
   rosidl_generator_c__void__Array * tmparray =
     static_cast<rosidl_generator_c__void__Array *>(field);
@@ -424,14 +417,13 @@ bool TypeSupport<MembersType>::serializeROSmessage(
             size_t array_size = 0;
             size_t sub_members_size = sub_members->size_of_;
             size_t max_align = calculateMaxAlign(sub_members);
-            size_t space = 100;
 
             if (member->array_size_ && !member->is_upper_bound_) {
               subros_message = field;
               array_size = member->array_size_;
             } else {
               array_size = get_array_size_and_assign_field(
-                member, field, subros_message, sub_members_size, max_align, space);
+                member, field, subros_message, sub_members_size, max_align);
 
               // Serialize length
               ser << (uint32_t)array_size;
@@ -440,8 +432,7 @@ bool TypeSupport<MembersType>::serializeROSmessage(
             for (size_t index = 0; index < array_size; ++index) {
               serializeROSmessage(ser, sub_members, subros_message);
               subros_message = static_cast<char *>(subros_message) + sub_members_size;
-              // TODO(richiprosima) Change 100 values.
-              subros_message = align_(max_align, 0, subros_message, space);
+              subros_message = align_(max_align, subros_message);
             }
           }
           break;
@@ -536,8 +527,7 @@ inline size_t get_submessage_array_deserialize(
   void * & subros_message,
   bool call_new,
   size_t sub_members_size,
-  size_t max_align,
-  size_t space)
+  size_t max_align)
 {
   (void)member;
   uint32_t vsize = 0;
@@ -548,7 +538,7 @@ inline size_t get_submessage_array_deserialize(
     new(vector) std::vector<unsigned char>;
   }
   void * ptr = reinterpret_cast<void *>(sub_members_size);
-  vector->resize(vsize * (size_t)align_(max_align, 0, ptr, space));
+  vector->resize(vsize * (size_t)align_(max_align, ptr));
   subros_message = reinterpret_cast<void *>(vector->data());
   return vsize;
 }
@@ -560,7 +550,7 @@ inline size_t get_submessage_array_deserialize(
   void * & subros_message,
   bool,
   size_t sub_members_size,
-  size_t, size_t)
+  size_t)
 {
   (void)member;
   // Deserialize length
@@ -682,7 +672,6 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
             size_t array_size = 0;
             size_t sub_members_size = sub_members->size_of_;
             size_t max_align = calculateMaxAlign(sub_members);
-            size_t space = 100;
             bool recall_new = call_new;
 
             if (member->array_size_ && !member->is_upper_bound_) {
@@ -691,15 +680,14 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
             } else {
               array_size = get_submessage_array_deserialize(
                 member, deser, field, subros_message,
-                call_new, sub_members_size, max_align, space);
+                call_new, sub_members_size, max_align);
               recall_new = true;
             }
 
             for (size_t index = 0; index < array_size; ++index) {
               deserializeROSmessage(deser, sub_members, subros_message, recall_new);
               subros_message = static_cast<char *>(subros_message) + sub_members_size;
-              // TODO(richiprosima) Change 100 values.
-              subros_message = align_(max_align, 0, subros_message, space);
+              subros_message = align_(max_align, subros_message);
             }
           }
           break;
@@ -913,7 +901,7 @@ std::function<uint32_t()> TypeSupport<MembersType>::getSerializedSizeProvider(vo
   assert(data);
 
   eprosima::fastcdr::Cdr * ser = static_cast<eprosima::fastcdr::Cdr *>(data);
-  return [ser]()->uint32_t {return static_cast<uint32_t>(ser->getSerializedDataLength()); };
+  return [ser]() -> uint32_t {return static_cast<uint32_t>(ser->getSerializedDataLength());};
 }
 
 }  // namespace rmw_fastrtps_cpp

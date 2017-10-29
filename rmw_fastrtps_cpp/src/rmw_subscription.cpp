@@ -33,7 +33,8 @@
 extern "C"
 {
 rmw_subscription_t *
-rmw_create_subscription(const rmw_node_t * node,
+rmw_create_subscription(
+  const rmw_node_t * node,
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name, const rmw_qos_profile_t * qos_policies, bool ignore_local_publications)
 {
@@ -48,7 +49,8 @@ rmw_create_subscription(const rmw_node_t * node,
   }
 
   if (!topic_name || strlen(topic_name) == 0) {
-    RMW_SET_ERROR_MSG("publisher topic is null or empty string");
+    RMW_SET_ERROR_MSG("subscription topic is null or empty string");
+    return NULL;
   }
 
   if (!qos_policies) {
@@ -83,6 +85,9 @@ rmw_create_subscription(const rmw_node_t * node,
   CustomSubscriberInfo * info = nullptr;
   rmw_subscription_t * rmw_subscription = nullptr;
   SubscriberAttributes subscriberParam;
+
+  // Load default XML profile.
+  Domain::getDefaultSubscriberAttributes(subscriberParam);
 
   info = new CustomSubscriberInfo();
   info->typesupport_identifier_ = type_support->typesupport_identifier;

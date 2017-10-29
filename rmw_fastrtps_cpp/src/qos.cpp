@@ -78,8 +78,7 @@ get_datareader_qos(
   assert(sattr.topic.historyQos.depth >= 0);
   if (
     sattr.topic.historyQos.kind == eprosima::fastrtps::KEEP_LAST_HISTORY_QOS &&
-    static_cast<size_t>(sattr.topic.historyQos.depth) < qos_policies.depth
-  )
+    static_cast<size_t>(sattr.topic.historyQos.depth) < qos_policies.depth)
   {
     if (qos_policies.depth > (std::numeric_limits<int32_t>::max)()) {
       RMW_SET_ERROR_MSG(
@@ -146,8 +145,7 @@ get_datawriter_qos(
   assert(pattr.topic.historyQos.depth >= 0);
   if (
     pattr.topic.historyQos.kind == eprosima::fastrtps::KEEP_LAST_HISTORY_QOS &&
-    static_cast<size_t>(pattr.topic.historyQos.depth) < qos_policies.depth
-  )
+    static_cast<size_t>(pattr.topic.historyQos.depth) < qos_policies.depth)
   {
     if (qos_policies.depth > (std::numeric_limits<int32_t>::max)()) {
       RMW_SET_ERROR_MSG(
