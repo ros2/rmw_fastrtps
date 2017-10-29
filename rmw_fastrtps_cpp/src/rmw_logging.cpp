@@ -40,7 +40,7 @@ eprosima::fastrtps::Log::Kind convert_rmw_severity_type(rmw_log_severity_t sever
   case RMW_LOG_SEVERITY_DEBUG:
        return Log::Kind::Error;
   default:
-       //Fallback to Info if undefined types
+       // Fallback to Info if undefined types
        return Log::Kind::Info;
   }
 }
@@ -53,4 +53,4 @@ rmw_set_log_severity(rmw_log_severity_t severity)
 
   return RMW_RET_OK;
 }
-} // extern "C"
+}  // extern "C"
