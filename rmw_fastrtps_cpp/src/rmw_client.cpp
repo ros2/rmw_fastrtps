@@ -209,34 +209,36 @@ rmw_create_client(
   return rmw_client;
 
 fail:
-  if (info->request_publisher_ != nullptr) {
-    Domain::removePublisher(info->request_publisher_);
-  }
-
-  if (info->response_subscriber_ != nullptr) {
-    Domain::removeSubscriber(info->response_subscriber_);
-  }
-
-  if (info->listener_ != nullptr) {
-    delete info->listener_;
-  }
-
-  if (impl) {
-    if (info->request_type_support_ != nullptr) {
-      _unregister_type(participant, info->request_type_support_, info->typesupport_identifier_);
+  if (info != nullptr) {
+    if (info->request_publisher_ != nullptr) {
+      Domain::removePublisher(info->request_publisher_);
     }
 
-    if (info->response_type_support_ != nullptr) {
-      _unregister_type(participant, info->response_type_support_, info->typesupport_identifier_);
+    if (info->response_subscriber_ != nullptr) {
+      Domain::removeSubscriber(info->response_subscriber_);
     }
-  } else {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rmw_fastrtps_cpp",
-      "leaking type support objects because node impl is null")
-  }
 
-  delete info;
-  info = nullptr;
+    if (info->listener_ != nullptr) {
+      delete info->listener_;
+    }
+
+    if (impl) {
+      if (info->request_type_support_ != nullptr) {
+        _unregister_type(participant, info->request_type_support_, info->typesupport_identifier_);
+      }
+
+      if (info->response_type_support_ != nullptr) {
+        _unregister_type(participant, info->response_type_support_, info->typesupport_identifier_);
+      }
+    } else {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "leaking type support objects because node impl is null")
+    }
+
+    delete info;
+    info = nullptr;
+  }
 
   if (nullptr != rmw_client) {
     if (rmw_client->service_name != nullptr) {
