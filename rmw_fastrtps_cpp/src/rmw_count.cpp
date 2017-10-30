@@ -46,39 +46,23 @@ rmw_count_publishers(
     return RMW_RET_ERROR;
   }
 
-  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  auto impl = static_cast<CustomParticipantInfo *>(node->data);
 
-  std::map<std::string, std::vector<std::string>> unfiltered_topics;
   WriterInfo * slave_target = impl->secondaryPubListener;
   slave_target->mapmutex.lock();
+  *count = 0;
   for (auto it : slave_target->topicNtypes) {
-    for (auto & itt : it.second) {
-      // truncate the ROS specific prefix
-      auto topic_fqdn = _demangle_if_ros_topic(it.first);
-      unfiltered_topics[topic_fqdn].push_back(itt);
+    auto topic_fqdn = _demangle_if_ros_topic(it.first);
+    if (topic_fqdn == topic_name) {
+      *count += it.second.size();
     }
   }
   slave_target->mapmutex.unlock();
 
-  // get count
-  auto it = unfiltered_topics.find(topic_name);
-  if (it == unfiltered_topics.end()) {
-    *count = 0;
-  } else {
-    *count = it->second.size();
-  }
-
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
-    "looking for subscriber topic: %s", topic_name)
-  for (auto it : unfiltered_topics) {
-    RCUTILS_LOG_DEBUG_NAMED(
-      "rmw_fastrtps_cpp",
-      "available topic: %s", it.first.c_str())
-  }
-  RCUTILS_LOG_DEBUG_NAMED(
-    "rmw_fastrtps_cpp",
-    "number of matches: %zu", *count)
+    "looking for subscriber topic: %s, number of matches: %zu",
+    topic_name, *count)
 
   return RMW_RET_OK;
 }
@@ -103,37 +87,21 @@ rmw_count_subscribers(
 
   CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
 
-  std::map<std::string, std::vector<std::string>> unfiltered_topics;
   ReaderInfo * slave_target = impl->secondarySubListener;
+  *count = 0;
   slave_target->mapmutex.lock();
   for (auto it : slave_target->topicNtypes) {
-    for (auto & itt : it.second) {
-      // truncate the ROS specific prefix
-      auto topic_fqdn = _demangle_if_ros_topic(it.first);
-      unfiltered_topics[topic_fqdn].push_back(itt);
+    auto topic_fqdn = _demangle_if_ros_topic(it.first);
+    if (topic_fqdn == topic_name) {
+      *count += it.second.size();
     }
   }
   slave_target->mapmutex.unlock();
 
-  // get_count
-  auto it = unfiltered_topics.find(topic_name);
-  if (it == unfiltered_topics.end()) {
-    *count = 0;
-  } else {
-    *count = it->second.size();
-  }
-
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
-    "looking for subscriber topic: %s", topic_name)
-  for (auto it : unfiltered_topics) {
-    RCUTILS_LOG_DEBUG_NAMED(
-      "rmw_fastrtps_cpp",
-      "available topic: %s", it.first.c_str())
-  }
-  RCUTILS_LOG_DEBUG_NAMED(
-    "rmw_fastrtps_cpp",
-    "number of matches: %zu", *count)
+    "looking for subscriber topic: %s, number of matches: %zu",
+    topic_name, *count)
 
   return RMW_RET_OK;
 }
