@@ -713,99 +713,60 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     const auto * member = members->members_ + i;
 
-    if (!member->is_array_) {
-      switch (member->type_id_) {
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-          current_alignment += sizeof(int8_t);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-          current_alignment += sizeof(uint16_t) +
-            eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint16_t));
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-          current_alignment += sizeof(uint32_t) +
-            eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-          current_alignment += sizeof(uint64_t) +
-            eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint64_t));
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-          current_alignment += padding +
-            eprosima::fastcdr::Cdr::alignment(current_alignment, padding) +
-            member->string_upper_bound_ + 1;
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
-          {
-            auto sub_members = static_cast<const MembersType *>(member->members_->data);
-            current_alignment += calculateMaxSerializedSize(sub_members, current_alignment);
-          }
-          break;
-        default:
-          throw std::runtime_error("unknown type");
-      }
-    } else {
-      size_t array_size = member->array_size_;
+    size_t array_size = 1;
+    if (member->is_array_) {
+      array_size = member->array_size_;
       // Whether it is a sequence.
       if (array_size == 0 || member->is_upper_bound_) {
         current_alignment += padding +
           eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       }
+    }
 
-      switch (member->type_id_) {
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-          current_alignment += array_size * sizeof(int8_t);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-          current_alignment += array_size * sizeof(uint16_t) +
-            eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint16_t));
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-          current_alignment += array_size * sizeof(uint32_t) +
-            eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-          current_alignment += array_size * sizeof(uint64_t) +
-            eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint64_t));
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-          {
-            for (size_t index = 0; index < array_size; ++index) {
-              current_alignment += padding +
-                eprosima::fastcdr::Cdr::alignment(current_alignment, padding) +
-                member->string_upper_bound_ + 1;
-            }
+    switch (member->type_id_) {
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
+        current_alignment += array_size * sizeof(int8_t);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
+        current_alignment += array_size * sizeof(uint16_t) +
+          eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint16_t));
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
+        current_alignment += array_size * sizeof(uint32_t) +
+          eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
+        current_alignment += array_size * sizeof(uint64_t) +
+          eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint64_t));
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
+        {
+          for (size_t index = 0; index < array_size; ++index) {
+            current_alignment += padding +
+              eprosima::fastcdr::Cdr::alignment(current_alignment, padding) +
+              member->string_upper_bound_ + 1;
           }
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
-          {
-            auto sub_members = static_cast<const MembersType *>(member->members_->data);
-            for (size_t index = 0; index < array_size; ++index) {
-              current_alignment += calculateMaxSerializedSize(sub_members, current_alignment);
-            }
+        }
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
+        {
+          auto sub_members = static_cast<const MembersType *>(member->members_->data);
+          for (size_t index = 0; index < array_size; ++index) {
+            current_alignment += calculateMaxSerializedSize(sub_members, current_alignment);
           }
-          break;
-        default:
-          throw std::runtime_error("unknown type");
-      }
+        }
+        break;
+      default:
+        throw std::runtime_error("unknown type");
     }
   }
 
