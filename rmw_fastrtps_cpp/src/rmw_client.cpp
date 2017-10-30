@@ -191,6 +191,11 @@ rmw_create_client(
   info->writer_guid_ = info->request_publisher_->getGuid();
 
   rmw_client = rmw_client_allocate();
+  if (!rmw_client) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for client");
+    goto fail;
+  }
+
   rmw_client->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_client->data = info;
   rmw_client->service_name = reinterpret_cast<const char *>(
@@ -204,7 +209,6 @@ rmw_create_client(
   return rmw_client;
 
 fail:
-
   if (info != nullptr) {
     if (info->request_publisher_ != nullptr) {
       Domain::removePublisher(info->request_publisher_);
@@ -233,13 +237,16 @@ fail:
     }
 
     delete info;
+    info = nullptr;
   }
 
-  if (rmw_client->service_name != nullptr) {
-    rmw_free(const_cast<char *>(rmw_client->service_name));
-    rmw_client->service_name = nullptr;
+  if (nullptr != rmw_client) {
+    if (rmw_client->service_name != nullptr) {
+      rmw_free(const_cast<char *>(rmw_client->service_name));
+      rmw_client->service_name = nullptr;
+    }
+    rmw_client_free(rmw_client);
   }
-  rmw_client_free(rmw_client);
 
   return nullptr;
 }
