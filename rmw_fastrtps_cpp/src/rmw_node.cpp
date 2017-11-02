@@ -171,18 +171,20 @@ get_security_file_paths(
   char * file_path = nullptr;
   for (size_t i = 0; i < num_files; i++) {
     file_path = rcutils_join_path(node_secure_root, file_names[i]);
-    if (file_path) {
-      if (!rcutils_is_readable(file_path)) {
-        free(file_path);
-        return false;
-      }
-
-      security_files_paths[i] = std::string(file_prefix + file_path);
-      free(file_path);
-    } else {
-        RMW_SET_ERROR_MSG("Failed to allocate memory to get security file path");
-        return false;
+    if (!file_path) {
+      RMW_SET_ERROR_MSG("Failed to allocate memory for security file path");
+      return false;
     }
+
+    if (rcutils_is_readable(file_path)) {
+      security_files_paths[i] = std::string(file_prefix + std::string(file_path));
+    } else {
+      RMW_SET_ERROR_MSG("No security file found");
+      free(file_path);
+      return false;
+    }
+
+    free(file_path);
   }
 
   return true;
