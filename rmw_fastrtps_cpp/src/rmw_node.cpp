@@ -166,16 +166,24 @@ get_security_file_paths(
   const char * file_names[3] = {"ca.cert.pem", "cert.pem", "key.pem"};
   size_t num_files = sizeof(file_names) / sizeof(char *);
 
-  const char * file_prefix = "file://";
+  std::string file_prefix("file://");
 
-  std::string tmpstr;
   for (size_t i = 0; i < num_files; i++) {
-    tmpstr = std::string(rcutils_join_path(node_secure_root, file_names[i]));
-    if (!rcutils_is_readable(tmpstr.c_str())) {
+    const char * file_path = rcutils_join_path(node_secure_root, file_names[i]);
+    if (!file_path) {
       return false;
     }
-    security_files_paths[i] = std::string(file_prefix + tmpstr);
+
+    if (rcutils_is_readable(file_path)) {
+      security_files_paths[i] = file_prefix + std::string(file_path);
+    } else {
+      free(const_cast<char *>(file_path));
+      return false;
+    }
+
+    free(const_cast<char *>(file_path));
   }
+
   return true;
 }
 
