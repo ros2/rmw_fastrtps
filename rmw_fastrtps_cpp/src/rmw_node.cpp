@@ -169,7 +169,7 @@ get_security_file_paths(
   std::string file_prefix("file://");
 
   for (size_t i = 0; i < num_files; i++) {
-    const char * file_path = rcutils_join_path(node_secure_root, file_names[i]);
+    char * file_path = rcutils_join_path(node_secure_root, file_names[i]);
     if (!file_path) {
       return false;
     }
@@ -177,11 +177,11 @@ get_security_file_paths(
     if (rcutils_is_readable(file_path)) {
       security_files_paths[i] = file_prefix + std::string(file_path);
     } else {
-      free(const_cast<char *>(file_path));
+      free(file_path);
       return false;
     }
 
-    free(const_cast<char *>(file_path));
+    free(file_path);
   }
 
   return true;
