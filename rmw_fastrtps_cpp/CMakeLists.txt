@@ -103,9 +103,6 @@ PRIVATE "RMW_FASTRTPS_CPP_BUILDING_LIBRARY")
 
 ament_export_include_directories(include)
 ament_export_libraries(rmw_fastrtps_cpp)
-if(NOT WIN32 AND NOT ANDROID)
-  ament_export_libraries(pthread)
-endif()
 
 register_rmw_implementation(
   "c:rosidl_typesupport_c:rosidl_typesupport_introspection_c"
