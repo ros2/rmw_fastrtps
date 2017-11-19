@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "rmw/rmw.h"
+#include "rmw/error_handling.h"
 
 #include "fastrtps/log/Log.h"
 
@@ -20,35 +21,36 @@ extern "C"
 {
 using eprosima::fastrtps::Log;
 
-eprosima::fastrtps::Log::Kind convert_rmw_severity_type(rmw_log_severity_t severity)
-{
-  switch(severity)
-  {
-  case RMW_LOG_SEVERITY_WARN:
-       return Log::Kind::Warning;
-  case RMW_LOG_SEVERITY_INFO:
-       return Log::Kind::Info;
-/* Fast-RTPS supports the following logging 'Kind's.
- * Error : Max priority
- * Warning : Medium priority
- * Info : Low priority
- * From rmw logging severity there are FATAL & DEBUG types as well
- * We map them to ERROR type of Fast-RTPS which has maximum priority
- */
-  case RMW_LOG_SEVERITY_ERROR:
-  case RMW_LOG_SEVERITY_FATAL:
-  case RMW_LOG_SEVERITY_DEBUG:
-       return Log::Kind::Error;
-  default:
-       // Fallback to Info if undefined types
-       return Log::Kind::Info;
-  }
-}
-
 rmw_ret_t
 rmw_set_log_severity(rmw_log_severity_t severity)
 {
-  Log::Kind _severity = convert_rmw_severity_type(severity);
+  Log::Kind _severity;
+
+  switch (severity) {
+    case RMW_LOG_SEVERITY_WARN:
+      _severity = Log::Kind::Warning;
+      break;
+    case RMW_LOG_SEVERITY_INFO:
+      _severity = Log::Kind::Info;
+      break;
+// Fast-RTPS supports the following logging 'Kind's.
+// Error : Max priority
+// Warning : Medium priority
+// Info : Low priority
+// From rmw logging severity there is FATAL severity type we map it
+// to ERROR type of Fast-RTPS which has maximum priority
+    case RMW_LOG_SEVERITY_DEBUG:
+      _severity = Log::Kind::Warning;
+      break;
+    case RMW_LOG_SEVERITY_ERROR:
+    case RMW_LOG_SEVERITY_FATAL:
+      _severity = Log::Kind::Error;
+      break;
+    default:
+      RMW_SET_ERROR_MSG("node handle is null");
+      return RMW_RET_ERROR;
+  }
+
   eprosima::fastrtps::Log::SetVerbosity(_severity);
 
   return RMW_RET_OK;
