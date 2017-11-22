@@ -18,78 +18,78 @@
 #include "rmw/impl/cpp/macros.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
-#include "types/custom_waitset_info.hpp"
+#include "types/custom_wait_set_info.hpp"
 
 extern "C"
 {
-rmw_waitset_t *
-rmw_create_waitset(size_t max_conditions)
+rmw_wait_set_t *
+rmw_create_wait_set(size_t max_conditions)
 {
   (void)max_conditions;
-  rmw_waitset_t * waitset = rmw_waitset_allocate();
-  CustomWaitsetInfo * waitset_info = nullptr;
+  rmw_wait_set_t * wait_set = rmw_wait_set_allocate();
+  CustomWaitsetInfo * wait_set_info = nullptr;
 
   // From here onward, error results in unrolling in the goto fail block.
-  if (!waitset) {
-    RMW_SET_ERROR_MSG("failed to allocate waitset");
+  if (!wait_set) {
+    RMW_SET_ERROR_MSG("failed to allocate wait_set");
     goto fail;
   }
-  waitset->implementation_identifier = eprosima_fastrtps_identifier;
-  waitset->data = rmw_allocate(sizeof(CustomWaitsetInfo));
+  wait_set->implementation_identifier = eprosima_fastrtps_identifier;
+  wait_set->data = rmw_allocate(sizeof(CustomWaitsetInfo));
   // This should default-construct the fields of CustomWaitsetInfo
-  waitset_info = static_cast<CustomWaitsetInfo *>(waitset->data);
-  RMW_TRY_PLACEMENT_NEW(waitset_info, waitset_info, goto fail, CustomWaitsetInfo, )
-  if (!waitset_info) {
-    RMW_SET_ERROR_MSG("failed to construct waitset info struct");
+  wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
+  RMW_TRY_PLACEMENT_NEW(wait_set_info, wait_set_info, goto fail, CustomWaitsetInfo, )
+  if (!wait_set_info) {
+    RMW_SET_ERROR_MSG("failed to construct wait_set info struct");
     goto fail;
   }
 
-  return waitset;
+  return wait_set;
 
 fail:
-  if (waitset) {
-    if (waitset->data) {
+  if (wait_set) {
+    if (wait_set->data) {
       RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
-        waitset_info->~CustomWaitsetInfo(), waitset_info)
-      rmw_free(waitset->data);
+        wait_set_info->~CustomWaitsetInfo(), wait_set_info)
+      rmw_free(wait_set->data);
     }
-    rmw_waitset_free(waitset);
+    rmw_wait_set_free(wait_set);
   }
   return nullptr;
 }
 
 rmw_ret_t
-rmw_destroy_waitset(rmw_waitset_t * waitset)
+rmw_destroy_wait_set(rmw_wait_set_t * wait_set)
 {
-  if (!waitset) {
-    RMW_SET_ERROR_MSG("waitset handle is null");
+  if (!wait_set) {
+    RMW_SET_ERROR_MSG("wait_set handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    waitset handle,
-    waitset->implementation_identifier, eprosima_fastrtps_identifier,
+    wait_set handle,
+    wait_set->implementation_identifier, eprosima_fastrtps_identifier,
     return RMW_RET_ERROR)
 
   auto result = RMW_RET_OK;
-  auto waitset_info = static_cast<CustomWaitsetInfo *>(waitset->data);
-  if (!waitset_info) {
-    RMW_SET_ERROR_MSG("waitset info is null");
+  auto wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
+  if (!wait_set_info) {
+    RMW_SET_ERROR_MSG("wait_set info is null");
     return RMW_RET_ERROR;
   }
-  std::mutex * conditionMutex = &waitset_info->condition_mutex;
+  std::mutex * conditionMutex = &wait_set_info->condition_mutex;
   if (!conditionMutex) {
-    RMW_SET_ERROR_MSG("waitset mutex is null");
+    RMW_SET_ERROR_MSG("wait_set mutex is null");
     return RMW_RET_ERROR;
   }
 
-  if (waitset->data) {
-    if (waitset_info) {
+  if (wait_set->data) {
+    if (wait_set_info) {
       RMW_TRY_DESTRUCTOR(
-        waitset_info->~CustomWaitsetInfo(), waitset_info, result = RMW_RET_ERROR)
+        wait_set_info->~CustomWaitsetInfo(), wait_set_info, result = RMW_RET_ERROR)
     }
-    rmw_free(waitset->data);
+    rmw_free(wait_set->data);
   }
-  rmw_waitset_free(waitset);
+  rmw_wait_set_free(wait_set);
   return result;
 }
 }  // extern "C"
