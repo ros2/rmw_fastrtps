@@ -31,7 +31,7 @@ rmw_create_wait_set(size_t max_conditions)
 
   // From here onward, error results in unrolling in the goto fail block.
   if (!wait_set) {
-    RMW_SET_ERROR_MSG("failed to allocate wait_set");
+    RMW_SET_ERROR_MSG("failed to allocate wait set");
     goto fail;
   }
   wait_set->implementation_identifier = eprosima_fastrtps_identifier;
@@ -40,7 +40,7 @@ rmw_create_wait_set(size_t max_conditions)
   wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
   RMW_TRY_PLACEMENT_NEW(wait_set_info, wait_set_info, goto fail, CustomWaitsetInfo, )
   if (!wait_set_info) {
-    RMW_SET_ERROR_MSG("failed to construct wait_set info struct");
+    RMW_SET_ERROR_MSG("failed to construct wait set info struct");
     goto fail;
   }
 
@@ -62,7 +62,7 @@ rmw_ret_t
 rmw_destroy_wait_set(rmw_wait_set_t * wait_set)
 {
   if (!wait_set) {
-    RMW_SET_ERROR_MSG("wait_set handle is null");
+    RMW_SET_ERROR_MSG("wait set handle is null");
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -73,12 +73,12 @@ rmw_destroy_wait_set(rmw_wait_set_t * wait_set)
   auto result = RMW_RET_OK;
   auto wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
   if (!wait_set_info) {
-    RMW_SET_ERROR_MSG("wait_set info is null");
+    RMW_SET_ERROR_MSG("wait set info is null");
     return RMW_RET_ERROR;
   }
   std::mutex * conditionMutex = &wait_set_info->condition_mutex;
   if (!conditionMutex) {
-    RMW_SET_ERROR_MSG("wait_set mutex is null");
+    RMW_SET_ERROR_MSG("wait set mutex is null");
     return RMW_RET_ERROR;
   }
 

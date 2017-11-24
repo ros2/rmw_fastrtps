@@ -86,7 +86,7 @@ rmw_wait(
   const rmw_time_t * wait_timeout)
 {
   if (!wait_set) {
-    RMW_SET_ERROR_MSG("Waitset handle is null");
+    RMW_SET_ERROR_MSG("wait set handle is null");
     return RMW_RET_ERROR;
   }
   CustomWaitsetInfo * wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
@@ -97,11 +97,11 @@ rmw_wait(
   std::mutex * conditionMutex = &wait_set_info->condition_mutex;
   std::condition_variable * conditionVariable = &wait_set_info->condition;
   if (!conditionMutex) {
-    RMW_SET_ERROR_MSG("Mutex for wait_set was null");
+    RMW_SET_ERROR_MSG("Mutex for wait set was null");
     return RMW_RET_ERROR;
   }
   if (!conditionVariable) {
-    RMW_SET_ERROR_MSG("Condition variable for wait_set was null");
+    RMW_SET_ERROR_MSG("Condition variable for wait set was null");
     return RMW_RET_ERROR;
   }
 
