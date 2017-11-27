@@ -20,12 +20,12 @@
 #include "rmw_fastrtps_cpp/custom_client_info.hpp"
 #include "rmw_fastrtps_cpp/custom_service_info.hpp"
 #include "rmw_fastrtps_cpp/custom_subscriber_info.hpp"
-#include "types/custom_waitset_info.hpp"
+#include "types/custom_wait_set_info.hpp"
 #include "types/guard_condition.hpp"
 
 // helper function for wait
 bool
-check_waitset_for_data(
+check_wait_set_for_data(
   const rmw_subscriptions_t * subscriptions,
   const rmw_guard_conditions_t * guard_conditions,
   const rmw_services_t * services,
@@ -82,26 +82,26 @@ rmw_wait(
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
   rmw_clients_t * clients,
-  rmw_waitset_t * waitset,
+  rmw_wait_set_t * wait_set,
   const rmw_time_t * wait_timeout)
 {
-  if (!waitset) {
-    RMW_SET_ERROR_MSG("Waitset handle is null");
+  if (!wait_set) {
+    RMW_SET_ERROR_MSG("wait set handle is null");
     return RMW_RET_ERROR;
   }
-  CustomWaitsetInfo * waitset_info = static_cast<CustomWaitsetInfo *>(waitset->data);
-  if (!waitset_info) {
+  CustomWaitsetInfo * wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
+  if (!wait_set_info) {
     RMW_SET_ERROR_MSG("Waitset info struct is null");
     return RMW_RET_ERROR;
   }
-  std::mutex * conditionMutex = &waitset_info->condition_mutex;
-  std::condition_variable * conditionVariable = &waitset_info->condition;
+  std::mutex * conditionMutex = &wait_set_info->condition_mutex;
+  std::condition_variable * conditionVariable = &wait_set_info->condition;
   if (!conditionMutex) {
-    RMW_SET_ERROR_MSG("Mutex for waitset was null");
+    RMW_SET_ERROR_MSG("Mutex for wait set was null");
     return RMW_RET_ERROR;
   }
   if (!conditionVariable) {
-    RMW_SET_ERROR_MSG("Condition variable for waitset was null");
+    RMW_SET_ERROR_MSG("Condition variable for wait set was null");
     return RMW_RET_ERROR;
   }
 
@@ -196,7 +196,7 @@ rmw_wait(
       conditionVariable->wait(lock);
     } else {
       auto predicate = [subscriptions, guard_conditions, services, clients]() {
-          return check_waitset_for_data(subscriptions, guard_conditions, services, clients);
+          return check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
         };
       auto n = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::seconds(wait_timeout->sec));
@@ -215,7 +215,7 @@ rmw_wait(
   // Even if this was a non-blocking wait, signal a timeout if there's no data.
   // This makes the return behavior consistent with rcl expectations for zero timeout value.
   // Do this before detaching the listeners because the data gets cleared for guard conditions.
-  bool hasData = check_waitset_for_data(subscriptions, guard_conditions, services, clients);
+  bool hasData = check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
   if (!hasData && wait_timeout && wait_timeout->sec == 0 && wait_timeout->nsec == 0) {
     timeout = true;
   }
