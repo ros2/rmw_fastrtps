@@ -66,7 +66,7 @@ rmw_destroy_wait_set(rmw_wait_set_t * wait_set)
     return RMW_RET_ERROR;
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    wait_set handle,
+    wait set handle,
     wait_set->implementation_identifier, eprosima_fastrtps_identifier,
     return RMW_RET_ERROR)
 
