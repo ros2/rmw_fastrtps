@@ -62,11 +62,11 @@ public:
       std::unique_lock<std::mutex> clock(*conditionMutex_);
       // the change to data_ needs to be mutually exclusive with rmw_wait()
       // which checks hasData() and decides if wait() needs to be called
-      ++data_;
+      data_ = sub->getUnreadCount();
       clock.unlock();
       conditionVariable_->notify_one();
     } else {
-      ++data_;
+      data_ = sub->getUnreadCount();
     }
   }
 
