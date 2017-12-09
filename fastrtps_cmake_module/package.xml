@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="2">
   <name>fastrtps_cmake_module</name>
-  <version>0.0.3</version>
+  <version>0.4.0</version>
   <description>Provide CMake module to find eProsima FastRTPS.</description>
   <maintainer email="ricardogonzalez@eprosima.com">Ricardo Gonzalez</maintainer>
   <license>Apache License 2.0</license>
