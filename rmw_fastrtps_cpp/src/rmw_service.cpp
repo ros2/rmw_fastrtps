@@ -199,6 +199,10 @@ rmw_create_service(
   }
 
   rmw_service = rmw_service_allocate();
+  if (!rmw_service) {
+    RMW_SET_ERROR_MSG("failed to allocate memory for service");
+    goto fail;
+  }
   rmw_service->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_service->data = info;
   rmw_service->service_name = reinterpret_cast<const char *>(
@@ -237,7 +241,7 @@ fail:
     delete info;
   }
 
-  if (rmw_service->service_name != nullptr) {
+  if (rmw_service && rmw_service->service_name != nullptr) {
     rmw_free(const_cast<char *>(rmw_service->service_name));
     rmw_service->service_name = nullptr;
   }
