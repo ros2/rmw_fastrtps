@@ -47,7 +47,7 @@ rmw_set_log_severity(rmw_log_severity_t severity)
       _severity = Log::Kind::Error;
       break;
     default:
-      RMW_SET_ERROR_MSG("node handle is null");
+      RMW_SET_ERROR_MSG("Unknown logging severity type, please check");
       return RMW_RET_ERROR;
   }
 
