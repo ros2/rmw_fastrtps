@@ -65,6 +65,8 @@ create_node(
   }
 
   // Declare everything before beginning to create things.
+  ::ParticipantListener * listener = nullptr;
+  Participant * participant = nullptr;
   rmw_guard_condition_t * graph_guard_condition = nullptr;
   CustomParticipantInfo * node_impl = nullptr;
   rmw_node_t * node_handle = nullptr;
@@ -72,7 +74,14 @@ create_node(
   WriterInfo * tnat_2 = nullptr;
   std::pair<StatefulReader *, StatefulReader *> edp_readers;
 
-  Participant * participant = Domain::createParticipant(participantAttrs);
+  try {
+    listener = new ::ParticipantListener();
+  } catch (std::bad_alloc &) {
+    RMW_SET_ERROR_MSG("failed to allocate participant listener");
+    goto fail;
+  }
+
+  participant = Domain::createParticipant(participantAttrs, listener);
   if (!participant) {
     RMW_SET_ERROR_MSG("create_node() could not create participant");
     return nullptr;
@@ -98,6 +107,7 @@ create_node(
   }
   node_handle->implementation_identifier = eprosima_fastrtps_identifier;
   node_impl->participant = participant;
+  node_impl->listener = listener;
   node_impl->graph_guard_condition = graph_guard_condition;
   node_handle->data = node_impl;
 
@@ -160,6 +170,7 @@ fail:
         "failed to destroy guard condition during error handling")
     }
   }
+  rmw_free(listener);
   if (participant) {
     Domain::removeParticipant(participant);
   }
@@ -317,9 +328,11 @@ rmw_destroy_node(rmw_node_t * node)
     result_ret = RMW_RET_ERROR;
   }
 
-  delete impl;
-
   Domain::removeParticipant(participant);
+
+  delete impl->listener;
+  impl->listener = nullptr;
+  delete impl;
 
   return result_ret;
 }
