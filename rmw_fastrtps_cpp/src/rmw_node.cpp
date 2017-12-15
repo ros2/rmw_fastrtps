@@ -133,7 +133,7 @@ create_node(
       goto fail;
     }
   } else {
-    RMW_SET_ERROR_MSG("Failed to get valid reader for node subsciber and publisher");
+    RMW_SET_ERROR_MSG("Failed to get valid reader for node subscriber and publisher");
     goto fail;
   }
 
@@ -277,12 +277,17 @@ rmw_destroy_node(rmw_node_t * node)
 
   // Begin deleting things in the same order they were created in rmw_create_node().
   std::pair<StatefulReader *, StatefulReader *> edp_readers = participant->getEDPReaders();
-  if (!edp_readers.first || !edp_readers.first->setListener(nullptr)) {
+  if (!edp_readers.first || !edp_readers.second) {
+    RMW_SET_ERROR_MSG("failed to get EDPReader listener");
+    result_ret = RMW_RET_ERROR;
+  }
+
+  if (edp_readers.first && !edp_readers.first->setListener(nullptr)) {
     RMW_SET_ERROR_MSG("failed to unset EDPReader listener");
     result_ret = RMW_RET_ERROR;
   }
   delete impl->secondarySubListener;
-  if (!edp_readers.second || !edp_readers.second->setListener(nullptr)) {
+  if (edp_readers.second && !edp_readers.second->setListener(nullptr)) {
     RMW_SET_ERROR_MSG("failed to unset EDPReader listener");
     result_ret = RMW_RET_ERROR;
   }
