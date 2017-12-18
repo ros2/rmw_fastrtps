@@ -127,13 +127,18 @@ create_node(
   node_impl->secondaryPubListener = tnat_2;
 
   edp_readers = participant->getEDPReaders();
-  if (edp_readers.first && edp_readers.second) {
-    if (!(edp_readers.first->setListener(tnat_1) & edp_readers.second->setListener(tnat_2))) {
-      RMW_SET_ERROR_MSG("Failed to attach ROS related logic to the Participant");
-      goto fail;
-    }
-  } else {
-    RMW_SET_ERROR_MSG("Failed to get valid reader for node subscriber and publisher");
+  if (!edp_readers.first) {
+    RMW_SET_ERROR_MSG("edp_readers.first is null");
+    goto fail;
+  }
+
+  if (!edp_readers.second) {
+    RMW_SET_ERROR_MSG("edp_readers.second is null");
+    goto fail;
+  }
+
+  if (!(edp_readers.first->setListener(tnat_1) & edp_readers.second->setListener(tnat_2))) {
+    RMW_SET_ERROR_MSG("Failed to attach ROS related logic to the Participant");
     goto fail;
   }
 
