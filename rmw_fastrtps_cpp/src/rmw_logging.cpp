@@ -24,34 +24,28 @@ using eprosima::fastrtps::Log;
 rmw_ret_t
 rmw_set_log_severity(rmw_log_severity_t severity)
 {
-  Log::Kind _severity;
+  Log::Kind log_kind;
 
   switch (severity) {
-    case RMW_LOG_SEVERITY_WARN:
-      _severity = Log::Kind::Warning;
-      break;
-    case RMW_LOG_SEVERITY_INFO:
-      _severity = Log::Kind::Info;
-      break;
-// Fast-RTPS supports the following logging 'Kind's.
-// Error : Max priority
-// Warning : Medium priority
-// Info : Low priority
-// From rmw logging severity there is FATAL severity type we map it
-// to ERROR type of Fast-RTPS which has maximum priority
     case RMW_LOG_SEVERITY_DEBUG:
-      _severity = Log::Kind::Info;
+      // fall through
+    case RMW_LOG_SEVERITY_INFO:
+      log_kind = Log::Kind::Info;
+      break;
+    case RMW_LOG_SEVERITY_WARN:
+      log_kind = Log::Kind::Warning;
       break;
     case RMW_LOG_SEVERITY_ERROR:
+      // fall through
     case RMW_LOG_SEVERITY_FATAL:
-      _severity = Log::Kind::Error;
+      log_kind = Log::Kind::Error;
       break;
     default:
-      RMW_SET_ERROR_MSG("Unknown logging severity type, please check");
+      RMW_SET_ERROR_MSG("Unknown logging severity type %d", severity);
       return RMW_RET_ERROR;
   }
 
-  eprosima::fastrtps::Log::SetVerbosity(_severity);
+  eprosima::fastrtps::Log::SetVerbosity(log_kind);
 
   return RMW_RET_OK;
 }
