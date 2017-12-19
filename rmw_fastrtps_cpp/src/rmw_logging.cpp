@@ -40,7 +40,7 @@ rmw_set_log_severity(rmw_log_severity_t severity)
 // From rmw logging severity there is FATAL severity type we map it
 // to ERROR type of Fast-RTPS which has maximum priority
     case RMW_LOG_SEVERITY_DEBUG:
-      _severity = Log::Kind::Warning;
+      _severity = Log::Kind::Info;
       break;
     case RMW_LOG_SEVERITY_ERROR:
     case RMW_LOG_SEVERITY_FATAL:
