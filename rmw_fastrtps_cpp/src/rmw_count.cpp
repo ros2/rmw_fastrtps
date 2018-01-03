@@ -51,8 +51,8 @@ rmw_count_publishers(
   WriterInfo * slave_target = impl->secondaryPubListener;
   slave_target->mapmutex.lock();
   *count = 0;
-  for (auto it : slave_target->topicNtypes) {
-    auto topic_fqdn = _demangle_if_ros_topic(it.first);
+  for (const auto & it : slave_target->topicNtypes) {
+    const auto topic_fqdn = _demangle_if_ros_topic(it.first);
     if (topic_fqdn == topic_name) {
       *count += it.second.size();
     }
@@ -90,8 +90,8 @@ rmw_count_subscribers(
   ReaderInfo * slave_target = impl->secondarySubListener;
   *count = 0;
   slave_target->mapmutex.lock();
-  for (auto it : slave_target->topicNtypes) {
-    auto topic_fqdn = _demangle_if_ros_topic(it.first);
+  for (const auto & it : slave_target->topicNtypes) {
+    const auto topic_fqdn = _demangle_if_ros_topic(it.first);
     if (topic_fqdn == topic_name) {
       *count += it.second.size();
     }

@@ -25,11 +25,7 @@
 std::string
 _demangle_if_ros_topic(const std::string & topic_name)
 {
-  std::string prefix = _get_ros_prefix_if_exists(topic_name);
-  if (prefix.length()) {
-    return topic_name.substr(strlen(ros_topic_prefix));
-  }
-  return topic_name;
+  return _strip_ros_prefix_if_exists(topic_name);
 }
 
 /// Return the demangled ROS type or the original if not a ROS type.

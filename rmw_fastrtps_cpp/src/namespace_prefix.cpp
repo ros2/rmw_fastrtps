@@ -32,10 +32,22 @@ const std::vector<std::string> _ros_prefixes =
 std::string
 _get_ros_prefix_if_exists(const std::string & topic_name)
 {
-  for (auto prefix : _ros_prefixes) {
-    if (topic_name.rfind(std::string(prefix) + "/", 0) == 0) {
+  for (const auto & prefix : _ros_prefixes) {
+    if (topic_name.rfind(prefix, 0) == 0 && topic_name.at(prefix.length()) == '/') {
       return prefix;
     }
   }
   return "";
+}
+
+/// Strip the ROS specific prefix if it exists from the topic name.
+std::string
+_strip_ros_prefix_if_exists(const std::string & topic_name)
+{
+  for (const auto & prefix : _ros_prefixes) {
+    if (topic_name.rfind(prefix, 0) == 0 && topic_name.at(prefix.length()) == '/') {
+      return topic_name.substr(prefix.length());
+    }
+  }
+  return topic_name;
 }
