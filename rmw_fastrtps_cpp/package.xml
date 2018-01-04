@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
-<?xml-model href="http://download.ros.org/schema/package_format2.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
-<package format="2">
+<?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
+<package format="3">
   <name>rmw_fastrtps_cpp</name>
-  <version>0.0.3</version>
+  <version>0.4.0</version>
   <description>Implement the ROS middleware interface using eProsima FastRTPS  static code generation in C++.</description>
   <maintainer email="ricardogonzalez@eprosima.com">Ricardo González</maintainer>
   <license>Apache License 2.0</license>
@@ -32,6 +32,8 @@
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
+
+  <member_of_group>rmw_implementation_packages</member_of_group>
 
   <export>
     <build_type>ament_cmake</build_type>

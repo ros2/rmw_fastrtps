@@ -125,6 +125,16 @@ create_node(
   node_impl->secondaryPubListener = tnat_2;
 
   edp_readers = participant->getEDPReaders();
+  if (!edp_readers.first) {
+    RMW_SET_ERROR_MSG("edp_readers.first is null");
+    goto fail;
+  }
+
+  if (!edp_readers.second) {
+    RMW_SET_ERROR_MSG("edp_readers.second is null");
+    goto fail;
+  }
+
   if (!(edp_readers.first->setListener(tnat_1) & edp_readers.second->setListener(tnat_2))) {
     RMW_SET_ERROR_MSG("Failed to attach ROS related logic to the Participant");
     goto fail;
@@ -164,16 +174,24 @@ get_security_file_paths(
   const char * file_names[3] = {"ca.cert.pem", "cert.pem", "key.pem"};
   size_t num_files = sizeof(file_names) / sizeof(char *);
 
-  const char * file_prefix = "file://";
+  std::string file_prefix("file://");
 
-  std::string tmpstr;
   for (size_t i = 0; i < num_files; i++) {
-    tmpstr = std::string(rcutils_join_path(node_secure_root, file_names[i]));
-    if (!rcutils_is_readable(tmpstr.c_str())) {
+    char * file_path = rcutils_join_path(node_secure_root, file_names[i]);
+    if (!file_path) {
       return false;
     }
-    security_files_paths[i] = std::string(file_prefix + tmpstr);
+
+    if (rcutils_is_readable(file_path)) {
+      security_files_paths[i] = file_prefix + std::string(file_path);
+    } else {
+      free(file_path);
+      return false;
+    }
+
+    free(file_path);
   }
+
   return true;
 }
 
@@ -262,12 +280,17 @@ rmw_destroy_node(rmw_node_t * node)
 
   // Begin deleting things in the same order they were created in rmw_create_node().
   std::pair<StatefulReader *, StatefulReader *> edp_readers = participant->getEDPReaders();
-  if (!edp_readers.first->setListener(nullptr)) {
+  if (!edp_readers.first || !edp_readers.second) {
+    RMW_SET_ERROR_MSG("failed to get EDPReader listener");
+    result_ret = RMW_RET_ERROR;
+  }
+
+  if (edp_readers.first && !edp_readers.first->setListener(nullptr)) {
     RMW_SET_ERROR_MSG("failed to unset EDPReader listener");
     result_ret = RMW_RET_ERROR;
   }
   delete impl->secondarySubListener;
-  if (!edp_readers.second->setListener(nullptr)) {
+  if (edp_readers.second && !edp_readers.second->setListener(nullptr)) {
     RMW_SET_ERROR_MSG("failed to unset EDPReader listener");
     result_ret = RMW_RET_ERROR;
   }

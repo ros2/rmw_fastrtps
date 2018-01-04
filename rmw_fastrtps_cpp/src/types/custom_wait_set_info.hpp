@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TYPES__CUSTOM_WAITSET_INFO_HPP_
-#define TYPES__CUSTOM_WAITSET_INFO_HPP_
+#ifndef TYPES__CUSTOM_WAIT_SET_INFO_HPP_
+#define TYPES__CUSTOM_WAIT_SET_INFO_HPP_
 
 #include <condition_variable>
 #include <mutex>
@@ -24,4 +24,4 @@ typedef struct CustomWaitsetInfo
   std::mutex condition_mutex;
 } CustomWaitsetInfo;
 
-#endif  // TYPES__CUSTOM_WAITSET_INFO_HPP_
+#endif  // TYPES__CUSTOM_WAIT_SET_INFO_HPP_
