@@ -15,6 +15,8 @@
 #include "rmw/rmw.h"
 #include "rmw/error_handling.h"
 
+#include "rcutils/logging_macros.h"
+
 #include "fastrtps/log/Log.h"
 
 extern "C"
@@ -41,7 +43,7 @@ rmw_set_log_severity(rmw_log_severity_t severity)
       log_kind = Log::Kind::Error;
       break;
     default:
-      RMW_SET_ERROR_MSG("Unknown logging severity type %d", severity);
+      RCUTILS_LOG_ERROR("Unknown logging severity type %d", severity);
       return RMW_RET_ERROR;
   }
 
