@@ -149,7 +149,7 @@ rmw_wait(
   bool hasToWait = (wait_timeout && (wait_timeout->sec > 0 || wait_timeout->nsec > 0)) ||
     !wait_timeout;
   hasToWait &= !check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
- 
+
   bool timeout = false;
 
   if (hasToWait) {
