@@ -148,47 +148,8 @@ rmw_wait(
   // If wait_timeout is not null and either of its fields are nonzero, we have to wait
   bool hasToWait = (wait_timeout && (wait_timeout->sec > 0 || wait_timeout->nsec > 0)) ||
     !wait_timeout;
-
-  if (subscriptions) {
-    for (size_t i = 0; hasToWait && i < subscriptions->subscriber_count; ++i) {
-      void * data = subscriptions->subscribers[i];
-      auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
-      if (custom_subscriber_info->listener_->hasData()) {
-        hasToWait = false;
-      }
-    }
-  }
-
-  if (clients) {
-    for (size_t i = 0; hasToWait && i < clients->client_count; ++i) {
-      void * data = clients->clients[i];
-      CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
-      if (custom_client_info->listener_->hasData()) {
-        hasToWait = false;
-      }
-    }
-  }
-
-  if (services) {
-    for (size_t i = 0; hasToWait && i < services->service_count; ++i) {
-      void * data = services->services[i];
-      auto custom_service_info = static_cast<CustomServiceInfo *>(data);
-      if (custom_service_info->listener_->hasData()) {
-        hasToWait = false;
-      }
-    }
-  }
-
-  if (guard_conditions) {
-    for (size_t i = 0; hasToWait && i < guard_conditions->guard_condition_count; ++i) {
-      void * data = guard_conditions->guard_conditions[i];
-      auto guard_condition = static_cast<GuardCondition *>(data);
-      if (guard_condition->hasTriggered()) {
-        hasToWait = false;
-      }
-    }
-  }
-
+  hasToWait &= !check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
+ 
   bool timeout = false;
 
   if (hasToWait) {
