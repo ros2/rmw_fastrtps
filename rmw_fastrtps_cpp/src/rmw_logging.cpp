@@ -30,7 +30,7 @@ rmw_set_log_severity(rmw_log_severity_t severity)
 
   switch (severity) {
     case RMW_LOG_SEVERITY_DEBUG:
-      // fall through
+// fall through
     case RMW_LOG_SEVERITY_INFO:
       log_kind = Log::Kind::Info;
       break;
@@ -38,7 +38,7 @@ rmw_set_log_severity(rmw_log_severity_t severity)
       log_kind = Log::Kind::Warning;
       break;
     case RMW_LOG_SEVERITY_ERROR:
-      // fall through
+// fall through
     case RMW_LOG_SEVERITY_FATAL:
       log_kind = Log::Kind::Error;
       break;
