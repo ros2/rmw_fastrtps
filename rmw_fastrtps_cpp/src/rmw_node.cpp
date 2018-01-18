@@ -64,8 +64,6 @@ create_node(
     return nullptr;
   }
 
-  eprosima::fastrtps::Log::SetVerbosity(eprosima::fastrtps::Log::Error);
-
   // Declare everything before beginning to create things.
   rmw_guard_condition_t * graph_guard_condition = nullptr;
   CustomParticipantInfo * node_impl = nullptr;
