@@ -148,21 +148,28 @@ rmw_wait(
   // If wait_timeout is not null and either of its fields are nonzero, we have to wait
   bool hasToWait = (wait_timeout && (wait_timeout->sec > 0 || wait_timeout->nsec > 0)) ||
     !wait_timeout;
-  hasToWait &= !check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
+  bool hasData = check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
+  hasToWait &= !hasData;
 
   bool timeout = false;
-
-  if (hasToWait) {
-    if (!wait_timeout) {
+  if (hasToWait && wait_timeout) {
+    auto predicate = [subscriptions, guard_conditions, services, clients]() {
+        return check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
+      };
+    auto n = std::chrono::duration_cast<std::chrono::nanoseconds>(
+      std::chrono::seconds(wait_timeout->sec));
+    n += std::chrono::nanoseconds(wait_timeout->nsec);
+    timeout = !conditionVariable->wait_for(lock, n, predicate);
+  } else {
+    if (hasToWait && !wait_timeout) {
       conditionVariable->wait(lock);
-    } else {
-      auto predicate = [subscriptions, guard_conditions, services, clients]() {
-          return check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
-        };
-      auto n = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::seconds(wait_timeout->sec));
-      n += std::chrono::nanoseconds(wait_timeout->nsec);
-      timeout = !conditionVariable->wait_for(lock, n, predicate);
+      hasData = check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
+    }
+    // Even if this was a non-blocking wait, signal a timeout if there's no data.
+    // This makes the return behavior consistent with rcl expectations for zero timeout value.
+    // Do this before detaching the listeners because the data gets cleared for guard conditions.
+    if (!hasData && wait_timeout && wait_timeout->sec == 0 && wait_timeout->nsec == 0) {
+      timeout = true;
     }
   }
 
@@ -172,14 +179,6 @@ rmw_wait(
   // but that should not cause issues (if a listener has data / has triggered
   // after we check, it will be caught on the next call to this function).
   lock.unlock();
-
-  // Even if this was a non-blocking wait, signal a timeout if there's no data.
-  // This makes the return behavior consistent with rcl expectations for zero timeout value.
-  // Do this before detaching the listeners because the data gets cleared for guard conditions.
-  bool hasData = check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
-  if (!hasData && wait_timeout && wait_timeout->sec == 0 && wait_timeout->nsec == 0) {
-    timeout = true;
-  }
 
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
