@@ -149,27 +149,19 @@ rmw_wait(
   bool hasToWait = (wait_timeout && (wait_timeout->sec > 0 || wait_timeout->nsec > 0)) ||
     !wait_timeout;
   bool hasData = check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
-  hasToWait &= !hasData;
+  auto predicate = [subscriptions, guard_conditions, services, clients]() {
+      return check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
+    };
 
   bool timeout = false;
-  if (hasToWait && wait_timeout) {
-    auto predicate = [subscriptions, guard_conditions, services, clients]() {
-        return check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
-      };
-    auto n = std::chrono::duration_cast<std::chrono::nanoseconds>(
-      std::chrono::seconds(wait_timeout->sec));
-    n += std::chrono::nanoseconds(wait_timeout->nsec);
-    timeout = !conditionVariable->wait_for(lock, n, predicate);
-  } else {
-    if (hasToWait && !wait_timeout) {
-      conditionVariable->wait(lock);
-      hasData = check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
-    }
-    // Even if this was a non-blocking wait, signal a timeout if there's no data.
-    // This makes the return behavior consistent with rcl expectations for zero timeout value.
-    // Do this before detaching the listeners because the data gets cleared for guard conditions.
-    if (!hasData && wait_timeout && wait_timeout->sec == 0 && wait_timeout->nsec == 0) {
-      timeout = true;
+  if (hasToWait && !hasData) {
+    if (!wait_timeout) {
+      conditionVariable->wait(lock, predicate);
+    } else {
+      auto n = std::chrono::duration_cast<std::chrono::nanoseconds>(
+        std::chrono::seconds(wait_timeout->sec));
+      n += std::chrono::nanoseconds(wait_timeout->nsec);
+      timeout = !conditionVariable->wait_for(lock, n, predicate);
     }
   }
 
