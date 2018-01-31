@@ -143,25 +143,22 @@ rmw_wait(
   // otherwise the decision to wait might be incorrect
   std::unique_lock<std::mutex> lock(*conditionMutex);
 
-  // First check variables.
-  // If wait_timeout is null, wait indefinitely (so we have to wait)
-  // If wait_timeout is not null and either of its fields are nonzero, we have to wait
-  bool hasToWait = (wait_timeout && (wait_timeout->sec > 0 || wait_timeout->nsec > 0)) ||
-    !wait_timeout;
   bool hasData = check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
   auto predicate = [subscriptions, guard_conditions, services, clients]() {
       return check_wait_set_for_data(subscriptions, guard_conditions, services, clients);
     };
 
   bool timeout = false;
-  if (hasToWait && !hasData) {
+  if (!hasData) {
     if (!wait_timeout) {
       conditionVariable->wait(lock, predicate);
-    } else {
+    } else if (wait_timeout->sec > 0 || wait_timeout->nsec > 0) {
       auto n = std::chrono::duration_cast<std::chrono::nanoseconds>(
         std::chrono::seconds(wait_timeout->sec));
       n += std::chrono::nanoseconds(wait_timeout->nsec);
       timeout = !conditionVariable->wait_for(lock, n, predicate);
+    } else {
+      timeout = true;
     }
   }
 
