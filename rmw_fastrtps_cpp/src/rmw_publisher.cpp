@@ -116,22 +116,6 @@ rmw_create_publisher(
     goto fail;
   }
 
-#if HAVE_SECURITY
-  // see if our participant has a security property set
-  if (eprosima::fastrtps::rtps::PropertyPolicyHelper::find_property(
-      participant->getAttributes().rtps.properties,
-      std::string("dds.sec.crypto.plugin")))
-  {
-    // set the encryption property on the publisher
-    eprosima::fastrtps::rtps::PropertyPolicy publisher_property_policy;
-    publisher_property_policy.properties().emplace_back(
-      "rtps.endpoint.submessage_protection_kind", "ENCRYPT");
-    publisher_property_policy.properties().emplace_back(
-      "rtps.endpoint.payload_protection_kind", "ENCRYPT");
-    publisherParam.properties = publisher_property_policy;
-  }
-#endif
-
   // 1 Heartbeat every 10ms
   // publisherParam.times.heartbeatPeriod.seconds = 0;
   // publisherParam.times.heartbeatPeriod.fraction = 42949673;

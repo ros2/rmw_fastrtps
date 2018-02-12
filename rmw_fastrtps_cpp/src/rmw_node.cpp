@@ -19,6 +19,7 @@
 
 #include "rcutils/filesystem.h"
 #include "rcutils/logging_macros.h"
+#include "rcutils/get_env.h"
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
@@ -45,6 +46,8 @@
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/custom_participant_info.hpp"
+
+#define ROS_SECURITY_ROOT_DIRECTORY_VAR_NAME "ROS_SECURITY_ROOT_DIRECTORY"
 
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
@@ -184,16 +187,31 @@ fail:
 
 bool
 get_security_file_paths(
-  std::array<std::string, 3> & security_files_paths, const char * node_secure_root)
+  std::array<std::string, 6> & security_files_paths, const char * node_secure_root)
 {
-  // here assume only 3 files for security
-  const char * file_names[3] = {"ca.cert.pem", "cert.pem", "key.pem"};
+  // here assume only 6 files for security
+  const char * file_names[6] = {
+    "ca.cert.pem", "cert.pem", "key.pem",
+    "ca.cert.pem", "governance.p7s", "permissions.p7s"
+  };
   size_t num_files = sizeof(file_names) / sizeof(char *);
 
   std::string file_prefix("file://");
 
   for (size_t i = 0; i < num_files; i++) {
-    char * file_path = rcutils_join_path(node_secure_root, file_names[i]);
+    char * file_path;
+
+    if (i != 3) {
+      file_path = rcutils_join_path(node_secure_root, file_names[i]);
+    } else {
+      const char * ros_secure_root_env = NULL;
+      if (rcutils_get_env(ROS_SECURITY_ROOT_DIRECTORY_VAR_NAME, &ros_secure_root_env) == NULL) {
+        file_path = rcutils_join_path(ros_secure_root_env, file_names[i]);
+      } else {
+        return false;
+      }
+    }
+
     if (!file_path) {
       return false;
     }
@@ -248,7 +266,7 @@ rmw_create_node(
   if (security_options->security_root_path) {
     // if security_root_path provided, try to find the key and certificate files
 #if HAVE_SECURITY
-    std::array<std::string, 3> security_files_paths;
+    std::array<std::string, 6> security_files_paths;
 
     if (get_security_file_paths(security_files_paths, security_options->security_root_path)) {
       eprosima::fastrtps::rtps::PropertyPolicy property_policy;
@@ -266,8 +284,16 @@ rmw_create_node(
         security_files_paths[2]));
       property_policy.properties().emplace_back(
         Property("dds.sec.crypto.plugin", "builtin.AES-GCM-GMAC"));
-      property_policy.properties().emplace_back(
-        Property("rtps.participant.rtps_protection_kind", "ENCRYPT"));
+
+      property_policy.properties().emplace_back(Property(
+          "dds.sec.access.plugin", "builtin.Access-Permissions"));
+      property_policy.properties().emplace_back(Property(
+          "dds.sec.access.builtin.Access-Permissions.permissions_ca", security_files_paths[3]));
+      property_policy.properties().emplace_back(Property(
+          "dds.sec.access.builtin.Access-Permissions.governance", security_files_paths[4]));
+      property_policy.properties().emplace_back(Property(
+          "dds.sec.access.builtin.Access-Permissions.permissions", security_files_paths[5]));
+
       participantAttrs.rtps.properties = property_policy;
     } else if (security_options->enforce_security) {
       RMW_SET_ERROR_MSG("couldn't find all security files!");
