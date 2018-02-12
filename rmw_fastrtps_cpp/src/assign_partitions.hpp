@@ -44,13 +44,13 @@ _assign_partitions_to_attributes(
     RMW_SET_ERROR_MSG(rcutils_get_error_string_safe());
     return ret;
   }
-  if (name_tokens.size == 1) {
+  if (1 == name_tokens.size) {
     if (!avoid_ros_namespace_conventions) {
       attributes->qos.m_partition.push_back(prefix);
     }
     attributes->topic.topicName = name_tokens.data[0];
     ret = RCUTILS_RET_OK;
-  } else if (name_tokens.size == 2) {
+  } else if (2 == name_tokens.size) {
     std::string partition;
     if (avoid_ros_namespace_conventions) {
       // no prefix to be used, just assign the user's namespace

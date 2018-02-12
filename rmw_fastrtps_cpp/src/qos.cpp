@@ -77,7 +77,7 @@ get_datareader_qos(
   // ensure the history depth is at least the requested queue size
   assert(sattr.topic.historyQos.depth >= 0);
   if (
-    sattr.topic.historyQos.kind == eprosima::fastrtps::KEEP_LAST_HISTORY_QOS &&
+    eprosima::fastrtps::KEEP_LAST_HISTORY_QOS == sattr.topic.historyQos.kind &&
     static_cast<size_t>(sattr.topic.historyQos.depth) < qos_policies.depth)
   {
     if (qos_policies.depth > (std::numeric_limits<int32_t>::max)()) {
@@ -144,7 +144,7 @@ get_datawriter_qos(
   // ensure the history depth is at least the requested queue size
   assert(pattr.topic.historyQos.depth >= 0);
   if (
-    pattr.topic.historyQos.kind == eprosima::fastrtps::KEEP_LAST_HISTORY_QOS &&
+    eprosima::fastrtps::KEEP_LAST_HISTORY_QOS == pattr.topic.historyQos.kind &&
     static_cast<size_t>(pattr.topic.historyQos.depth) < qos_policies.depth)
   {
     if (qos_policies.depth > (std::numeric_limits<int32_t>::max)()) {

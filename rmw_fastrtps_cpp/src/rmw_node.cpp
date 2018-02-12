@@ -46,6 +46,11 @@
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/custom_participant_info.hpp"
 
+using Domain = eprosima::fastrtps::Domain;
+using Participant = eprosima::fastrtps::Participant;
+using ParticipantAttributes = eprosima::fastrtps::ParticipantAttributes;
+using StatefulReader = eprosima::fastrtps::rtps::StatefulReader;
+
 extern "C"
 {
 rmw_node_t *
@@ -246,7 +251,8 @@ rmw_create_node(
     std::array<std::string, 3> security_files_paths;
 
     if (get_security_file_paths(security_files_paths, security_options->security_root_path)) {
-      PropertyPolicy property_policy;
+      eprosima::fastrtps::rtps::PropertyPolicy property_policy;
+      using Property = eprosima::fastrtps::rtps::Property;
       property_policy.properties().emplace_back(
         Property("dds.sec.auth.plugin", "builtin.PKI-DH"));
       property_policy.properties().emplace_back(

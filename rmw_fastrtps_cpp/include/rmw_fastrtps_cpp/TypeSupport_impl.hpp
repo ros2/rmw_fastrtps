@@ -632,7 +632,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
     if (member->is_array_) {
       array_size = member->array_size_;
       // Whether it is a sequence.
-      if (array_size == 0 || member->is_upper_bound_) {
+      if (0 == array_size || member->is_upper_bound_) {
         current_alignment += padding +
           eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       }
@@ -738,7 +738,7 @@ void * TypeSupport<MembersType>::createData()
 
 template<typename MembersType>
 bool TypeSupport<MembersType>::serialize(
-  void * data, SerializedPayload_t * payload)
+  void * data, eprosima::fastrtps::rtps::SerializedPayload_t * payload)
 {
   assert(data);
   assert(payload);
@@ -756,7 +756,9 @@ bool TypeSupport<MembersType>::serialize(
 }
 
 template<typename MembersType>
-bool TypeSupport<MembersType>::deserialize(SerializedPayload_t * payload, void * data)
+bool TypeSupport<MembersType>::deserialize(
+  eprosima::fastrtps::rtps::SerializedPayload_t * payload,
+  void * data)
 {
   assert(data);
   assert(payload);

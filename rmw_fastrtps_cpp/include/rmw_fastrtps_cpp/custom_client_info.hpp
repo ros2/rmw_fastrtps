@@ -67,10 +67,10 @@ public:
     eprosima::fastrtps::SampleInfo_t sinfo;
 
     if (sub->takeNextData(response.buffer_, &sinfo)) {
-      if (sinfo.sampleKind == ALIVE) {
+      if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
         response.sample_identity_ = sinfo.related_sample_identity;
 
-        if (info_->writer_guid_ == response.sample_identity_.writer_guid()) {
+        if (response.sample_identity_.writer_guid() == info_->writer_guid_) {
           std::lock_guard<std::mutex> lock(internalMutex_);
 
           if (conditionMutex_ != nullptr) {

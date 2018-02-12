@@ -32,6 +32,10 @@
 #include "rmw_fastrtps_cpp/custom_client_info.hpp"
 #include "rmw_fastrtps_cpp/custom_participant_info.hpp"
 
+using Domain = eprosima::fastrtps::Domain;
+using Participant = eprosima::fastrtps::Participant;
+using TopicDataType = eprosima::fastrtps::TopicDataType;
+
 extern "C"
 {
 rmw_client_t *
@@ -84,8 +88,8 @@ rmw_create_client(
   }
 
   CustomClientInfo * info = nullptr;
-  SubscriberAttributes subscriberParam;
-  PublisherAttributes publisherParam;
+  eprosima::fastrtps::SubscriberAttributes subscriberParam;
+  eprosima::fastrtps::PublisherAttributes publisherParam;
   rmw_client_t * rmw_client = nullptr;
 
   info = new CustomClientInfo();
@@ -121,9 +125,10 @@ rmw_create_client(
     _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
   }
 
-  subscriberParam.topic.topicKind = NO_KEY;
+  subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   subscriberParam.topic.topicDataType = response_type_name;
-  subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  subscriberParam.historyMemoryPolicy =
+    eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   rcutils_ret_t ret = _assign_partitions_to_attributes(
     service_name, ros_service_response_prefix,
     qos_policies->avoid_ros_namespace_conventions, &subscriberParam);
@@ -133,10 +138,11 @@ rmw_create_client(
   }
   subscriberParam.topic.topicName += "Reply";
 
-  publisherParam.topic.topicKind = NO_KEY;
+  publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   publisherParam.topic.topicDataType = request_type_name;
-  publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
-  publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
+  publisherParam.historyMemoryPolicy =
+    eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   ret = _assign_partitions_to_attributes(
     service_name, ros_service_requester_prefix,
     qos_policies->avoid_ros_namespace_conventions, &publisherParam);

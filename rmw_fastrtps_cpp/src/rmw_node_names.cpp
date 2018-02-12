@@ -29,6 +29,8 @@
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/custom_participant_info.hpp"
 
+using Participant = eprosima::fastrtps::Participant;
+
 extern "C"
 {
 rmw_ret_t
