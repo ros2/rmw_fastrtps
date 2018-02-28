@@ -135,7 +135,8 @@ rmw_take_raw(
 
     if (sinfo.sampleKind == ALIVE) {
       raw_message->buffer_length = buffer.getBufferSize();
-      raw_message->buffer = (char *)malloc(sizeof(char) * raw_message->buffer_length);
+      raw_message->buffer =
+        reinterpret_cast<char *>(malloc(sizeof(char) * raw_message->buffer_length));
       memcpy(raw_message->buffer, buffer.getBuffer(), raw_message->buffer_length);
       *taken = true;
     }
@@ -173,18 +174,18 @@ rmw_take_raw_with_info(
 
     if (sinfo.sampleKind == ALIVE) {
       raw_message->buffer_length = buffer.getBufferSize();
-      raw_message->buffer = (char *)malloc(sizeof(char) * raw_message->buffer_length);
+      raw_message->buffer =
+        reinterpret_cast<char *>(malloc(sizeof(char) * raw_message->buffer_length));
       memcpy(raw_message->buffer, buffer.getBuffer(), raw_message->buffer_length);
       rmw_gid_t * sender_gid = &message_info->publisher_gid;
       sender_gid->implementation_identifier = eprosima_fastrtps_identifier;
       memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
       memcpy(sender_gid->data, &sinfo.sample_identity.writer_guid(),
-          sizeof(eprosima::fastrtps::rtps::GUID_t));
+        sizeof(eprosima::fastrtps::rtps::GUID_t));
       *taken = true;
     }
   }
 
   return RMW_RET_OK;
 }
-
 }  // extern "C"

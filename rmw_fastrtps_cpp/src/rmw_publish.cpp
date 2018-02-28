@@ -75,8 +75,8 @@ rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw
   assert(info);
 
   eprosima::fastcdr::FastBuffer buffer(raw_message->buffer, raw_message->buffer_length);
-  eprosima::fastcdr::Cdr ser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
-      eprosima::fastcdr::Cdr::DDS_CDR);
+  eprosima::fastcdr::Cdr ser(
+    buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
   if (!ser.jump(raw_message->buffer_length)) {
     RMW_SET_ERROR_MSG("cannot correctly set raw buffer");
   }
@@ -87,7 +87,6 @@ rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw
     RMW_SET_ERROR_MSG("cannot publish data");
   }
 
-  fprintf(stderr, "publishing raw\n");
   return returnedValue;
 }
 }  // extern "C"
