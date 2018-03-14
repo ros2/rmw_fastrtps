@@ -129,17 +129,21 @@ rmw_create_client(
   subscriberParam.topic.topicDataType = response_type_name;
   subscriberParam.historyMemoryPolicy =
     eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-  rcutils_ret_t ret = _assign_partitions_to_attributes(
-    service_name, ros_service_response_prefix,
-    qos_policies->avoid_ros_namespace_conventions, &subscriberParam);
-  if (ret != RCUTILS_RET_OK) {
-    // error msg already set
-    goto fail;
-  }
+  subscriberParam.topic.topicName = service_name;
+  // rcutils_ret_t ret = _assign_partitions_to_attributes(
+  //   service_name, ros_service_response_prefix,
+  //   qos_policies->avoid_ros_namespace_conventions, &subscriberParam);
+  // if (ret != RCUTILS_RET_OK) {
+  //   // error msg already set
+  //   goto fail;
+  // }
+
+>>>>>>> removed the use of partitions, use the complete topic_name directly
   subscriberParam.topic.topicName += "Reply";
 
   publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   publisherParam.topic.topicDataType = request_type_name;
+<<<<<<< 698de9c022c7079351735c65e8a4e70c55b4900f
   publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
   publisherParam.historyMemoryPolicy =
     eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
@@ -150,6 +154,18 @@ rmw_create_client(
     // error msg already set
     goto fail;
   }
+=======
+  publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
+  publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  publisherParam.topic.topicName = service_name;
+  // ret = _assign_partitions_to_attributes(
+  //   service_name, ros_service_requester_prefix,
+  //   qos_policies->avoid_ros_namespace_conventions, &publisherParam);
+  // if (ret != RCUTILS_RET_OK) {
+  //   // error msg already set
+  //   goto fail;
+  // }
+>>>>>>> removed the use of partitions, use the complete topic_name directly
   publisherParam.topic.topicName += "Request";
 
   RCUTILS_LOG_DEBUG_NAMED(

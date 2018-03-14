@@ -22,7 +22,6 @@
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/subscriber/Subscriber.h"
 
-#include "assign_partitions.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "namespace_prefix.hpp"
 #include "qos.hpp"
@@ -110,13 +109,7 @@ rmw_create_subscription(
     eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   subscriberParam.topic.topicDataType = type_name;
-  rcutils_ret_t ret = _assign_partitions_to_attributes(
-    topic_name, ros_topic_prefix,
-    qos_policies->avoid_ros_namespace_conventions, &subscriberParam);
-  if (ret != RCUTILS_RET_OK) {
-    // error msg already set
-    goto fail;
-  }
+  subscriberParam.topic.topicName = std::string(ros_topic_prefix)+ topic_name;
 
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     RMW_SET_ERROR_MSG("failed to get datareader qos");

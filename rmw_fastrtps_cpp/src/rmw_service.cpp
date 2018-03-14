@@ -139,13 +139,19 @@ rmw_create_service(
   subscriberParam.historyMemoryPolicy =
     eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   subscriberParam.topic.topicDataType = request_type_name;
-  rcutils_ret_t ret = _assign_partitions_to_attributes(
-    service_name, ros_service_requester_prefix,
-    qos_policies->avoid_ros_namespace_conventions, &subscriberParam);
-  if (ret != RCUTILS_RET_OK) {
-    // error msg already set
-    goto fail;
-  }
+  subscriberParam.topic.topicName = service_name;
+  // rcutils_ret_t ret = _assign_partitions_to_attributes(
+  //   service_name, ros_service_requester_prefix,
+  //   qos_policies->avoid_ros_namespace_conventions, &subscriberParam);
+  // if (ret != RCUTILS_RET_OK) {
+  //   // error msg already set
+  //   goto fail;
+  // }
+  // std::cout << "Direct print :" << std::endl;
+  // std::cout << service_name << std::endl;
+  // std::cout << "After Partition:" << std::endl;
+  // std::cout << subscriberParam.topic.topicName << std::endl;
+
   subscriberParam.topic.topicName += "Request";
 
   publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
@@ -153,13 +159,14 @@ rmw_create_service(
   publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
   publisherParam.historyMemoryPolicy =
     eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-  ret = _assign_partitions_to_attributes(
-    service_name, ros_service_response_prefix,
-    qos_policies->avoid_ros_namespace_conventions, &publisherParam);
-  if (ret != RCUTILS_RET_OK) {
-    // error msg already set
-    goto fail;
-  }
+  publisherParam.topic.topicName = service_name;
+  // ret = _assign_partitions_to_attributes(
+  //   service_name, ros_service_response_prefix,
+  //   qos_policies->avoid_ros_namespace_conventions, &publisherParam);
+  // if (ret != RCUTILS_RET_OK) {
+  //   // error msg already set
+  //   goto fail;
+  // }
   publisherParam.topic.topicName += "Reply";
 
   RCUTILS_LOG_DEBUG_NAMED(

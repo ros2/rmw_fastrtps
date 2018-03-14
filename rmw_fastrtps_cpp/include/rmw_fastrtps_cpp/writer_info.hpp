@@ -74,7 +74,7 @@ public:
     for (const auto & partition : proxyData.m_qos.m_partition.getNames()) {
       partition_str += partition;
     }
-    auto fqdn = partition_str + "/" + proxyData.topicName();
+    auto fqdn =  proxyData.topicName();
 
     bool trigger = false;
     mapmutex.lock();

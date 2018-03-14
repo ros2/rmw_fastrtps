@@ -18,7 +18,6 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "assign_partitions.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "namespace_prefix.hpp"
 #include "qos.hpp"
@@ -108,13 +107,7 @@ rmw_create_publisher(
     eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   publisherParam.topic.topicDataType = type_name;
-  rcutils_ret_t ret = _assign_partitions_to_attributes(
-    topic_name, ros_topic_prefix,
-    qos_policies->avoid_ros_namespace_conventions, &publisherParam);
-  if (ret != RCUTILS_RET_OK) {
-    // error msg already set
-    goto fail;
-  }
+  publisherParam.topic.topicName = std::string(ros_topic_prefix)+topic_name;
 
   // 1 Heartbeat every 10ms
   // publisherParam.times.heartbeatPeriod.seconds = 0;
