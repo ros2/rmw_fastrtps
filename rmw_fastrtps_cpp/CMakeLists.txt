@@ -39,12 +39,6 @@ find_package(rosidl_generator_c REQUIRED)
 find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 
-ament_export_dependencies(rcutils)
-ament_export_dependencies(rmw)
-ament_export_dependencies(rosidl_generator_c)
-ament_export_dependencies(rosidl_typesupport_introspection_c)
-ament_export_dependencies(rosidl_typesupport_introspection_cpp)
-
 include_directories(include)
 
 add_library(rmw_fastrtps_cpp
@@ -87,6 +81,7 @@ add_library(rmw_fastrtps_cpp
 target_link_libraries(rmw_fastrtps_cpp
   fastcdr fastrtps)
 
+# specific order: dependents before dependencies
 ament_target_dependencies(rmw_fastrtps_cpp
   "rcutils"
   "rosidl_typesupport_introspection_c"
@@ -102,8 +97,15 @@ configure_rmw_library(rmw_fastrtps_cpp)
 target_compile_definitions(${PROJECT_NAME}
 PRIVATE "RMW_FASTRTPS_CPP_BUILDING_LIBRARY")
 
+# specific order: dependents before dependencies
 ament_export_include_directories(include)
 ament_export_libraries(rmw_fastrtps_cpp)
+
+ament_export_dependencies(rosidl_typesupport_introspection_cpp)
+ament_export_dependencies(rosidl_typesupport_introspection_c)
+ament_export_dependencies(rosidl_generator_c)
+ament_export_dependencies(rcutils)
+ament_export_dependencies(rmw)
 
 register_rmw_implementation(
   "c:rosidl_typesupport_c:rosidl_typesupport_introspection_c"
@@ -115,7 +117,7 @@ if(BUILD_TESTING)
 endif()
 
 ament_package(
-  CONFIG_EXTRAS "rmw_fastrtps_cpp-extras.cmake"
+  CONFIG_EXTRAS_POST "rmw_fastrtps_cpp-extras.cmake"
 )
 
 install(
