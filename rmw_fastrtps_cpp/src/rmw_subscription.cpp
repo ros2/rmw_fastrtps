@@ -109,7 +109,11 @@ rmw_create_subscription(
     eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   subscriberParam.topic.topicDataType = type_name;
-  subscriberParam.topic.topicName = std::string(ros_topic_prefix)+ topic_name;
+  if (!qos_policies->avoid_ros_namespace_conventions) {
+    subscriberParam.topic.topicName = std::string(ros_topic_prefix) + topic_name;
+  } else {
+    subscriberParam.topic.topicName = topic_name;
+  }
 
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     RMW_SET_ERROR_MSG("failed to get datareader qos");

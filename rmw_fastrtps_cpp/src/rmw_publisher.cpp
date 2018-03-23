@@ -107,7 +107,11 @@ rmw_create_publisher(
     eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   publisherParam.topic.topicDataType = type_name;
-  publisherParam.topic.topicName = std::string(ros_topic_prefix)+topic_name;
+  if (!qos_policies->avoid_ros_namespace_conventions) {
+    publisherParam.topic.topicName = std::string(ros_topic_prefix) + topic_name;
+  } else {
+    publisherParam.topic.topicName = topic_name;
+  }
 
   // 1 Heartbeat every 10ms
   // publisherParam.times.heartbeatPeriod.seconds = 0;

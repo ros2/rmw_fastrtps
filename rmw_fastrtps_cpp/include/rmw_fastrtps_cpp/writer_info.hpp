@@ -69,12 +69,7 @@ public:
       }
     }
 
-    auto partition_str = std::string("");
-    // don't use std::accumulate - schlemiel O(n2)
-    for (const auto & partition : proxyData.m_qos.m_partition.getNames()) {
-      partition_str += partition;
-    }
-    auto fqdn =  proxyData.topicName();
+    auto fqdn = proxyData.topicName();
 
     bool trigger = false;
     mapmutex.lock();

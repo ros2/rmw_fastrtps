@@ -64,32 +64,14 @@ rmw_service_server_is_available(
 
   auto pub_topic_name =
     client_info->request_publisher_->getAttributes().topic.getTopicName();
-  auto pub_partitions =
-    client_info->request_publisher_->getAttributes().qos.m_partition.getNames();
-  // every rostopic has exactly 1 partition field set
-  if (pub_partitions.size() != 1) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rmw_fastrtps_cpp",
-      "Topic %s is not a ros topic", pub_topic_name.c_str())
-    RMW_SET_ERROR_MSG((std::string(pub_topic_name) + " is a non-ros topic\n").c_str());
-    return RMW_RET_ERROR;
-  }
-  auto pub_fqdn = pub_partitions[0] + "/" + pub_topic_name;
+
+  auto pub_fqdn = pub_topic_name;
   pub_fqdn = _demangle_if_ros_topic(pub_fqdn);
 
   auto sub_topic_name =
     client_info->response_subscriber_->getAttributes().topic.getTopicName();
-  auto sub_partitions =
-    client_info->response_subscriber_->getAttributes().qos.m_partition.getNames();
-  // every rostopic has exactly 1 partition field set
-  if (sub_partitions.size() != 1) {
-    RCUTILS_LOG_ERROR_NAMED(
-      "rmw_fastrtps_cpp",
-      "Topic %s is not a ros topic", pub_topic_name.c_str())
-    RMW_SET_ERROR_MSG((std::string(sub_topic_name) + " is a non-ros topic\n").c_str());
-    return RMW_RET_ERROR;
-  }
-  auto sub_fqdn = sub_partitions[0] + "/" + sub_topic_name;
+
+  auto sub_fqdn = sub_topic_name;
   sub_fqdn = _demangle_if_ros_topic(sub_fqdn);
 
   *is_available = false;
