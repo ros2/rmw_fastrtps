@@ -51,18 +51,21 @@ rmw_get_node_names(
   }
 
   auto impl = static_cast<CustomParticipantInfo *>(node->data);
-  Participant * participant = impl->participant;
+  auto participant_names = impl->listener->get_discovered_names();
 
-  auto participant_names = participant->getParticipantNames();
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
   rcutils_ret_t rcutils_ret =
-    rcutils_string_array_init(node_names, participant_names.size(), &allocator);
+    rcutils_string_array_init(node_names, participant_names.size() + 1, &allocator);
   if (rcutils_ret != RCUTILS_RET_OK) {
     RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
     return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
   }
-  for (size_t i = 0; i < participant_names.size(); ++i) {
-    node_names->data[i] = rcutils_strdup(participant_names[i].c_str(), allocator);
+  for (size_t i = 0; i < participant_names.size() + 1; ++i) {
+    if (0 == i) {
+      node_names->data[i] = rcutils_strdup(node->name, allocator);
+    } else {
+      node_names->data[i] = rcutils_strdup(participant_names[i - 1].c_str(), allocator);
+    }
     if (!node_names->data[i]) {
       RMW_SET_ERROR_MSG("failed to allocate memory for node name")
       rcutils_ret = rcutils_string_array_fini(node_names);
