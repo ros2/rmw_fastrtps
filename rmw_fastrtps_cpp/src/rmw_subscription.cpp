@@ -64,7 +64,7 @@ rmw_create_subscription(
     return nullptr;
   }
 
-  Participant * participant = impl->participant;
+  eprosima::fastrtps::Participant * participant = impl->participant;
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return nullptr;
@@ -84,26 +84,26 @@ rmw_create_subscription(
   (void)ignore_local_publications;
   CustomSubscriberInfo * info = nullptr;
   rmw_subscription_t * rmw_subscription = nullptr;
-  SubscriberAttributes subscriberParam;
+  eprosima::fastrtps::SubscriberAttributes subscriberParam;
 
   // Load default XML profile.
-  Domain::getDefaultSubscriberAttributes(subscriberParam);
+  eprosima::fastrtps::Domain::getDefaultSubscriberAttributes(subscriberParam);
 
   info = new CustomSubscriberInfo();
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
   std::string type_name = _create_type_name(
     type_support->data, "msg", info->typesupport_identifier_);
-  if (!Domain::getRegisteredType(participant, type_name.c_str(),
-    reinterpret_cast<TopicDataType **>(&info->type_support_)))
+  if (!eprosima::fastrtps::Domain::getRegisteredType(participant, type_name.c_str(),
+    reinterpret_cast<eprosima::fastrtps::TopicDataType **>(&info->type_support_)))
   {
     info->type_support_ = _create_message_type_support(type_support->data,
         info->typesupport_identifier_);
     _register_type(participant, info->type_support_, info->typesupport_identifier_);
   }
 
-  subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-  subscriberParam.topic.topicKind = NO_KEY;
+  subscriberParam.historyMemoryPolicy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   subscriberParam.topic.topicDataType = type_name;
   rcutils_ret_t ret = _assign_partitions_to_attributes(
     topic_name, ros_topic_prefix, qos_policies->avoid_ros_namespace_conventions, &subscriberParam);
@@ -134,7 +134,7 @@ rmw_create_subscription(
   }
 
   info->listener_ = new SubListener(info);
-  info->subscriber_ = Domain::createSubscriber(participant, subscriberParam, info->listener_);
+  info->subscriber_ = eprosima::fastrtps::Domain::createSubscriber(participant, subscriberParam, info->listener_);
 
   if (!info->subscriber_) {
     RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber");
@@ -202,7 +202,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 
   if (info != nullptr) {
     if (info->subscriber_ != nullptr) {
-      Domain::removeSubscriber(info->subscriber_);
+        eprosima::fastrtps::Domain::removeSubscriber(info->subscriber_);
     }
     if (info->listener_ != nullptr) {
       delete info->listener_;
@@ -214,7 +214,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
         return RMW_RET_ERROR;
       }
 
-      Participant * participant = impl->participant;
+      eprosima::fastrtps::Participant * participant = impl->participant;
       _unregister_type(participant, info->type_support_, info->typesupport_identifier_);
     }
     delete info;

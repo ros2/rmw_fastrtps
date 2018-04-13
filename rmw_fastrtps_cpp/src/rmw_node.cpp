@@ -52,7 +52,7 @@ rmw_node_t *
 create_node(
   const char * name,
   const char * namespace_,
-  ParticipantAttributes participantAttrs)
+  eprosima::fastrtps::ParticipantAttributes participantAttrs)
 {
   if (!name) {
     RMW_SET_ERROR_MSG("name is null");
@@ -66,13 +66,13 @@ create_node(
 
   // Declare everything before beginning to create things.
   ::ParticipantListener * listener = nullptr;
-  Participant * participant = nullptr;
+  eprosima::fastrtps::Participant * participant = nullptr;
   rmw_guard_condition_t * graph_guard_condition = nullptr;
   CustomParticipantInfo * node_impl = nullptr;
   rmw_node_t * node_handle = nullptr;
   ReaderInfo * tnat_1 = nullptr;
   WriterInfo * tnat_2 = nullptr;
-  std::pair<StatefulReader *, StatefulReader *> edp_readers;
+  std::pair<eprosima::fastrtps::rtps::StatefulReader *, eprosima::fastrtps::rtps::StatefulReader *> edp_readers;
 
   try {
     listener = new ::ParticipantListener();
@@ -81,7 +81,7 @@ create_node(
     goto fail;
   }
 
-  participant = Domain::createParticipant(participantAttrs, listener);
+  participant = eprosima::fastrtps::Domain::createParticipant(participantAttrs, listener);
   if (!participant) {
     RMW_SET_ERROR_MSG("create_node() could not create participant");
     return nullptr;
@@ -172,7 +172,7 @@ fail:
   }
   rmw_free(listener);
   if (participant) {
-    Domain::removeParticipant(participant);
+    eprosima::fastrtps::Domain::removeParticipant(participant);
   }
   return nullptr;
 }
@@ -222,10 +222,10 @@ rmw_create_node(
     return nullptr;
   }
 
-  ParticipantAttributes participantAttrs;
+  eprosima::fastrtps::ParticipantAttributes participantAttrs;
 
   // Load default XML profile.
-  Domain::getDefaultParticipantAttributes(participantAttrs);
+  eprosima::fastrtps::Domain::getDefaultParticipantAttributes(participantAttrs);
 
   participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
   // since the participant name is not part of the DDS spec
@@ -297,10 +297,10 @@ rmw_destroy_node(rmw_node_t * node)
     return RMW_RET_ERROR;
   }
 
-  Participant * participant = impl->participant;
+  eprosima::fastrtps::Participant * participant = impl->participant;
 
   // Begin deleting things in the same order they were created in rmw_create_node().
-  std::pair<StatefulReader *, StatefulReader *> edp_readers = participant->getEDPReaders();
+  std::pair<eprosima::fastrtps::rtps::StatefulReader *, eprosima::fastrtps::rtps::StatefulReader *> edp_readers = participant->getEDPReaders();
   if (!edp_readers.first || !edp_readers.second) {
     RMW_SET_ERROR_MSG("failed to get EDPReader listener");
     result_ret = RMW_RET_ERROR;
@@ -328,7 +328,7 @@ rmw_destroy_node(rmw_node_t * node)
     result_ret = RMW_RET_ERROR;
   }
 
-  Domain::removeParticipant(participant);
+  eprosima::fastrtps::Domain::removeParticipant(participant);
 
   delete impl->listener;
   impl->listener = nullptr;

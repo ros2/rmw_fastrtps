@@ -46,7 +46,7 @@ public:
 
   void
   onSubscriptionMatched(
-    eprosima::fastrtps::Subscriber * sub, eprosima::fastrtps::MatchingInfo & info)
+    eprosima::fastrtps::Subscriber * sub, eprosima::fastrtps::rtps::MatchingInfo & info)
   {
     (void)sub;
     (void)info;

@@ -33,7 +33,7 @@
 #include "fastrtps/rtps/reader/ReaderListener.h"
 #include "fastrtps/rtps/reader/RTPSReader.h"
 
-class ReaderInfo : public eprosima::fastrtps::ReaderListener
+class ReaderInfo : public eprosima::fastrtps::rtps::ReaderListener
 {
 public:
   ReaderInfo(
@@ -46,14 +46,14 @@ public:
   void
   onNewCacheChangeAdded(
     eprosima::fastrtps::rtps::RTPSReader *,
-    const eprosima::fastrtps::CacheChange_t * const change)
+    const eprosima::fastrtps::rtps::CacheChange_t * const change)
   {
     eprosima::fastrtps::rtps::ReaderProxyData proxyData;
-    if (change->kind == ALIVE) {
-      CDRMessage_t tempMsg(0);
+    if (change->kind == eprosima::fastrtps::rtps::ALIVE) {
+      eprosima::fastrtps::rtps::CDRMessage_t tempMsg(0);
       tempMsg.wraps = true;
       tempMsg.msg_endian = change->serializedPayload.encapsulation ==
-        PL_CDR_BE ? BIGEND : LITTLEEND;
+        PL_CDR_BE ? eprosima::fastrtps::rtps::BIGEND : eprosima::fastrtps::rtps::LITTLEEND;
       tempMsg.length = change->serializedPayload.length;
       tempMsg.max_size = change->serializedPayload.max_size;
       tempMsg.buffer = change->serializedPayload.data;
@@ -77,7 +77,7 @@ public:
 
     bool trigger = false;
     mapmutex.lock();
-    if (change->kind == ALIVE) {
+    if (change->kind == eprosima::fastrtps::rtps::ALIVE) {
       topicNtypes[fqdn].push_back(proxyData.typeName());
       trigger = true;
     } else {
