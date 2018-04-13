@@ -60,7 +60,7 @@ rmw_create_publisher(
     return nullptr;
   }
 
-  Participant * participant = impl->participant;
+  eprosima::fastrtps::Participant * participant = impl->participant;
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return nullptr;
@@ -79,11 +79,11 @@ rmw_create_publisher(
 
   CustomPublisherInfo * info = nullptr;
   rmw_publisher_t * rmw_publisher = nullptr;
-  PublisherAttributes publisherParam;
-  const GUID_t * guid = nullptr;
+  eprosima::fastrtps::PublisherAttributes publisherParam;
+  const eprosima::fastrtps::rtps::GUID_t * guid = nullptr;
 
   // Load default XML profile.
-  Domain::getDefaultPublisherAttributes(publisherParam);
+  eprosima::fastrtps::Domain::getDefaultPublisherAttributes(publisherParam);
 
   // TODO(karsten1987) Verify consequences for std::unique_ptr?
   info = new CustomPublisherInfo();
@@ -91,17 +91,17 @@ rmw_create_publisher(
 
   std::string type_name = _create_type_name(
     type_support->data, "msg", info->typesupport_identifier_);
-  if (!Domain::getRegisteredType(participant, type_name.c_str(),
-    reinterpret_cast<TopicDataType **>(&info->type_support_)))
+  if (!eprosima::fastrtps::Domain::getRegisteredType(participant, type_name.c_str(),
+    reinterpret_cast<eprosima::fastrtps::TopicDataType **>(&info->type_support_)))
   {
     info->type_support_ = _create_message_type_support(type_support->data,
         info->typesupport_identifier_);
     _register_type(participant, info->type_support_, info->typesupport_identifier_);
   }
 
-  publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
-  publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-  publisherParam.topic.topicKind = NO_KEY;
+  publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
+  publisherParam.historyMemoryPolicy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   publisherParam.topic.topicDataType = type_name;
   rcutils_ret_t ret = _assign_partitions_to_attributes(
     topic_name, ros_topic_prefix, qos_policies->avoid_ros_namespace_conventions, &publisherParam);
@@ -139,7 +139,7 @@ rmw_create_publisher(
     goto fail;
   }
 
-  info->publisher_ = Domain::createPublisher(participant, publisherParam, nullptr);
+  info->publisher_ = eprosima::fastrtps::Domain::createPublisher(participant, publisherParam, nullptr);
 
   if (!info->publisher_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
@@ -216,7 +216,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
   if (info != nullptr) {
     if (info->publisher_ != nullptr) {
-      Domain::removePublisher(info->publisher_);
+        eprosima::fastrtps::Domain::removePublisher(info->publisher_);
     }
     if (info->type_support_ != nullptr) {
       auto impl = static_cast<CustomParticipantInfo *>(node->data);
@@ -225,7 +225,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
         return RMW_RET_ERROR;
       }
 
-      Participant * participant = impl->participant;
+      eprosima::fastrtps::Participant * participant = impl->participant;
       _unregister_type(participant, info->type_support_, info->typesupport_identifier_);
     }
     delete info;

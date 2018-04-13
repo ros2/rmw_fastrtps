@@ -43,17 +43,17 @@ typedef struct CustomParticipantInfo
 class ParticipantListener : public eprosima::fastrtps::ParticipantListener
 {
 public:
-  void onParticipantDiscovery(Participant *, ParticipantDiscoveryInfo info) override
+  void onParticipantDiscovery(eprosima::fastrtps::Participant *, eprosima::fastrtps::ParticipantDiscoveryInfo info) override
   {
     if (
-      info.rtps.m_status != DISCOVERED_RTPSPARTICIPANT &&
-      info.rtps.m_status != REMOVED_RTPSPARTICIPANT &&
-      info.rtps.m_status != DROPPED_RTPSPARTICIPANT)
+      info.rtps.m_status != eprosima::fastrtps::rtps::DISCOVERED_RTPSPARTICIPANT &&
+      info.rtps.m_status != eprosima::fastrtps::rtps::REMOVED_RTPSPARTICIPANT &&
+      info.rtps.m_status != eprosima::fastrtps::rtps::DROPPED_RTPSPARTICIPANT)
     {
       return;
     }
 
-    if (DISCOVERED_RTPSPARTICIPANT == info.rtps.m_status) {
+    if (eprosima::fastrtps::rtps::DISCOVERED_RTPSPARTICIPANT == info.rtps.m_status) {
       // ignore already known GUIDs
       if (discovered_names.find(info.rtps.m_guid) == discovered_names.end()) {
         auto map = rmw::impl::cpp::parse_key_value(info.rtps.m_userData);
@@ -90,7 +90,7 @@ public:
     return names;
   }
 
-  std::map<GUID_t, std::string> discovered_names;
+  std::map<eprosima::fastrtps::rtps::GUID_t, std::string> discovered_names;
 };
 
 #endif  // RMW_FASTRTPS_CPP__CUSTOM_PARTICIPANT_INFO_HPP_

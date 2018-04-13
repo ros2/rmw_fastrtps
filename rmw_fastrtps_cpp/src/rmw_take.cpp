@@ -50,7 +50,7 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
   if (info->subscriber_->takeNextData(&buffer, &sinfo)) {
     info->listener_->data_taken();
 
-    if (sinfo.sampleKind == ALIVE) {
+    if (sinfo.sampleKind == eprosima::fastrtps::rtps::ALIVE) {
       _deserialize_ros_message(&buffer, ros_message, info->type_support_,
         info->typesupport_identifier_);
       *taken = true;
@@ -92,7 +92,7 @@ rmw_take_with_info(
   if (info->subscriber_->takeNextData(&buffer, &sinfo)) {
     info->listener_->data_taken();
 
-    if (sinfo.sampleKind == ALIVE) {
+    if (sinfo.sampleKind == eprosima::fastrtps::rtps::ALIVE) {
       _deserialize_ros_message(&buffer, ros_message, info->type_support_,
         info->typesupport_identifier_);
       rmw_gid_t * sender_gid = &message_info->publisher_gid;

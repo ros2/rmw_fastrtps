@@ -66,7 +66,7 @@ rmw_create_client(
     return nullptr;
   }
 
-  Participant * participant = impl->participant;
+  eprosima::fastrtps::Participant * participant = impl->participant;
   if (!participant) {
     RMW_SET_ERROR_MSG("participant handle is null");
     return nullptr;
@@ -84,8 +84,8 @@ rmw_create_client(
   }
 
   CustomClientInfo * info = nullptr;
-  SubscriberAttributes subscriberParam;
-  PublisherAttributes publisherParam;
+  eprosima::fastrtps::SubscriberAttributes subscriberParam;
+  eprosima::fastrtps::PublisherAttributes publisherParam;
   rmw_client_t * rmw_client = nullptr;
 
   info = new CustomClientInfo();
@@ -105,25 +105,25 @@ rmw_create_client(
   std::string response_type_name = _create_type_name(untyped_response_members, "srv",
       info->typesupport_identifier_);
 
-  if (!Domain::getRegisteredType(participant, request_type_name.c_str(),
-    reinterpret_cast<TopicDataType **>(&info->request_type_support_)))
+  if (!eprosima::fastrtps::Domain::getRegisteredType(participant, request_type_name.c_str(),
+    reinterpret_cast<eprosima::fastrtps::TopicDataType **>(&info->request_type_support_)))
   {
     info->request_type_support_ = _create_request_type_support(type_support->data,
         info->typesupport_identifier_);
     _register_type(participant, info->request_type_support_, info->typesupport_identifier_);
   }
 
-  if (!Domain::getRegisteredType(participant, response_type_name.c_str(),
-    reinterpret_cast<TopicDataType **>(&info->response_type_support_)))
+  if (!eprosima::fastrtps::Domain::getRegisteredType(participant, response_type_name.c_str(),
+    reinterpret_cast<eprosima::fastrtps::TopicDataType **>(&info->response_type_support_)))
   {
     info->response_type_support_ = _create_response_type_support(type_support->data,
         info->typesupport_identifier_);
     _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
   }
 
-  subscriberParam.topic.topicKind = NO_KEY;
+  subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   subscriberParam.topic.topicDataType = response_type_name;
-  subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  subscriberParam.historyMemoryPolicy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   rcutils_ret_t ret = _assign_partitions_to_attributes(
     service_name, ros_service_response_prefix,
     qos_policies->avoid_ros_namespace_conventions, &subscriberParam);
@@ -133,10 +133,10 @@ rmw_create_client(
   }
   subscriberParam.topic.topicName += "Reply";
 
-  publisherParam.topic.topicKind = NO_KEY;
+  publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   publisherParam.topic.topicDataType = request_type_name;
-  publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
-  publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
+  publisherParam.historyMemoryPolicy = eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   ret = _assign_partitions_to_attributes(
     service_name, ros_service_requester_prefix,
     qos_policies->avoid_ros_namespace_conventions, &publisherParam);
@@ -170,7 +170,7 @@ rmw_create_client(
   }
   info->listener_ = new ClientListener(info);
   info->response_subscriber_ =
-    Domain::createSubscriber(participant, subscriberParam, info->listener_);
+    eprosima::fastrtps::Domain::createSubscriber(participant, subscriberParam, info->listener_);
   if (!info->response_subscriber_) {
     RMW_SET_ERROR_MSG("create_client() could not create subscriber");
     goto fail;
@@ -182,7 +182,7 @@ rmw_create_client(
     goto fail;
   }
   info->request_publisher_ =
-    Domain::createPublisher(participant, publisherParam, nullptr);
+    eprosima::fastrtps::Domain::createPublisher(participant, publisherParam, nullptr);
   if (!info->request_publisher_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
     goto fail;
@@ -211,11 +211,11 @@ rmw_create_client(
 fail:
   if (info != nullptr) {
     if (info->request_publisher_ != nullptr) {
-      Domain::removePublisher(info->request_publisher_);
+        eprosima::fastrtps::Domain::removePublisher(info->request_publisher_);
     }
 
     if (info->response_subscriber_ != nullptr) {
-      Domain::removeSubscriber(info->response_subscriber_);
+        eprosima::fastrtps::Domain::removeSubscriber(info->response_subscriber_);
     }
 
     if (info->listener_ != nullptr) {
@@ -267,10 +267,10 @@ rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
   auto info = static_cast<CustomClientInfo *>(client->data);
   if (info != nullptr) {
     if (info->response_subscriber_ != nullptr) {
-      Domain::removeSubscriber(info->response_subscriber_);
+        eprosima::fastrtps::Domain::removeSubscriber(info->response_subscriber_);
     }
     if (info->request_publisher_ != nullptr) {
-      Domain::removePublisher(info->request_publisher_);
+        eprosima::fastrtps::Domain::removePublisher(info->request_publisher_);
     }
     if (info->listener_ != nullptr) {
       delete info->listener_;
