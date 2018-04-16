@@ -29,7 +29,6 @@
 #include "rmw_fastrtps_cpp/reader_info.hpp"
 #include "rmw_fastrtps_cpp/writer_info.hpp"
 
-
 class ParticipantListener;
 
 typedef struct CustomParticipantInfo
