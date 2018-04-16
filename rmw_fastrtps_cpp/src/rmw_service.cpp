@@ -42,6 +42,10 @@
 #include "rmw_fastrtps_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_cpp/custom_service_info.hpp"
 
+using Domain = eprosima::fastrtps::Domain;
+using Participant = eprosima::fastrtps::Participant;
+using TopicDataType = eprosima::fastrtps::TopicDataType;
+
 extern "C"
 {
 rmw_service_t *
@@ -94,8 +98,8 @@ rmw_create_service(
   }
 
   CustomServiceInfo * info = nullptr;
-  SubscriberAttributes subscriberParam;
-  PublisherAttributes publisherParam;
+  eprosima::fastrtps::SubscriberAttributes subscriberParam;
+  eprosima::fastrtps::PublisherAttributes publisherParam;
   rmw_service_t * rmw_service = nullptr;
 
   info = new CustomServiceInfo();
@@ -131,8 +135,9 @@ rmw_create_service(
     _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
   }
 
-  subscriberParam.topic.topicKind = NO_KEY;
-  subscriberParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
+  subscriberParam.historyMemoryPolicy =
+    eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   subscriberParam.topic.topicDataType = request_type_name;
   rcutils_ret_t ret = _assign_partitions_to_attributes(
     service_name, ros_service_requester_prefix,
@@ -143,10 +148,11 @@ rmw_create_service(
   }
   subscriberParam.topic.topicName += "Request";
 
-  publisherParam.topic.topicKind = NO_KEY;
+  publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   publisherParam.topic.topicDataType = response_type_name;
-  publisherParam.qos.m_publishMode.kind = ASYNCHRONOUS_PUBLISH_MODE;
-  publisherParam.historyMemoryPolicy = PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
+  publisherParam.historyMemoryPolicy =
+    eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   ret = _assign_partitions_to_attributes(
     service_name, ros_service_response_prefix,
     qos_policies->avoid_ros_namespace_conventions, &publisherParam);

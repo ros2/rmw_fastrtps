@@ -115,9 +115,9 @@ public:
 
   bool deserializeROSmessage(eprosima::fastcdr::FastBuffer * data, void * ros_message);
 
-  bool serialize(void * data, SerializedPayload_t * payload);
+  bool serialize(void * data, eprosima::fastrtps::rtps::SerializedPayload_t * payload);
 
-  bool deserialize(SerializedPayload_t * payload, void * data);
+  bool deserialize(eprosima::fastrtps::rtps::SerializedPayload_t * payload, void * data);
 
   std::function<uint32_t()> getSerializedSizeProvider(void * data);
 

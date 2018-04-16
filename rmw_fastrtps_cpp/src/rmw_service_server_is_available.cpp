@@ -102,7 +102,7 @@ rmw_service_server_is_available(
     // error string already set
     return ret;
   }
-  if (number_of_request_subscribers == 0) {
+  if (0 == number_of_request_subscribers) {
     // not ready
     return RMW_RET_OK;
   }
@@ -116,7 +116,7 @@ rmw_service_server_is_available(
     // error string already set
     return ret;
   }
-  if (number_of_response_publishers == 0) {
+  if (0 == number_of_response_publishers) {
     // not ready
     return RMW_RET_OK;
   }
