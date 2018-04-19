@@ -19,7 +19,6 @@
 
 #include "rcutils/filesystem.h"
 #include "rcutils/logging_macros.h"
-#include "rcutils/get_env.h"
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
@@ -46,8 +45,6 @@
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/custom_participant_info.hpp"
-
-#define ROS_SECURITY_ROOT_DIRECTORY_VAR_NAME "ROS_SECURITY_ROOT_DIRECTORY"
 
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
@@ -199,18 +196,7 @@ get_security_file_paths(
   std::string file_prefix("file://");
 
   for (size_t i = 0; i < num_files; i++) {
-    char * file_path;
-
-    if (i != 3) {
-      file_path = rcutils_join_path(node_secure_root, file_names[i]);
-    } else {
-      const char * ros_secure_root_env = NULL;
-      if (rcutils_get_env(ROS_SECURITY_ROOT_DIRECTORY_VAR_NAME, &ros_secure_root_env) == NULL) {
-        file_path = rcutils_join_path(ros_secure_root_env, file_names[i]);
-      } else {
-        return false;
-      }
-    }
+    char * file_path = rcutils_join_path(node_secure_root, file_names[i]);
 
     if (!file_path) {
       return false;
