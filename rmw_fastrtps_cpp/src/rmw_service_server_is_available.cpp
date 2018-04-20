@@ -65,14 +65,12 @@ rmw_service_server_is_available(
   auto pub_topic_name =
     client_info->request_publisher_->getAttributes().topic.getTopicName();
 
-  auto pub_fqdn = pub_topic_name;
-  pub_fqdn = _demangle_if_ros_topic(pub_fqdn);
+  auto pub_fqdn = _demangle_if_ros_topic(pub_topic_name);
 
   auto sub_topic_name =
     client_info->response_subscriber_->getAttributes().topic.getTopicName();
 
-  auto sub_fqdn = sub_topic_name;
-  sub_fqdn = _demangle_if_ros_topic(sub_fqdn);
+  auto sub_fqdn = _demangle_if_ros_topic(sub_topic_name);
 
   *is_available = false;
   size_t number_of_request_subscribers = 0;
