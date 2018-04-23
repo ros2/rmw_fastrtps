@@ -14,16 +14,20 @@
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
+#include "rmw/raw_message.h"
 #include "rmw/rmw.h"
 
 #include "fastrtps/subscriber/Subscriber.h"
 #include "fastrtps/subscriber/SampleInfo.h"
 #include "fastrtps/attributes/SubscriberAttributes.h"
 
+#include "fastcdr/Cdr.h"
 #include "fastcdr/FastBuffer.h"
+
 #include "rmw_fastrtps_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
-#include "ros_message_serialization.hpp"
+
+#include "./ros_message_serialization.hpp"
 
 extern "C"
 {
@@ -51,7 +55,9 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
     info->listener_->data_taken();
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
-      _deserialize_ros_message(&buffer, ros_message, info->type_support_,
+      eprosima::fastcdr::Cdr deser(
+        buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
+      _deserialize_ros_message(deser, ros_message, info->type_support_,
         info->typesupport_identifier_);
       *taken = true;
     }
@@ -93,7 +99,9 @@ rmw_take_with_info(
     info->listener_->data_taken();
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
-      _deserialize_ros_message(&buffer, ros_message, info->type_support_,
+      eprosima::fastcdr::Cdr deser(
+        buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
+      _deserialize_ros_message(deser, ros_message, info->type_support_,
         info->typesupport_identifier_);
       rmw_gid_t * sender_gid = &message_info->publisher_gid;
       sender_gid->implementation_identifier = eprosima_fastrtps_identifier;
@@ -133,10 +141,16 @@ rmw_take_raw(
   if (info->subscriber_->takeNextData(&buffer, &sinfo)) {
     info->listener_->data_taken();
 
-    if (sinfo.sampleKind == ALIVE) {
+    if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
+      if (raw_message->buffer_capacity < buffer.getBufferSize()) {
+        auto ret = rmw_raw_message_resize(raw_message, buffer.getBufferSize());
+        if (ret != RMW_RET_OK) {
+          return ret;  // Error message already set
+        }
+        fprintf(stderr, "had to resize to %zu\n", buffer.getBufferSize());
+      }
       raw_message->buffer_length = buffer.getBufferSize();
-      raw_message->buffer =
-        reinterpret_cast<char *>(malloc(sizeof(char) * raw_message->buffer_length));
+      // check for capacity and realloc if needed with allocator
       memcpy(raw_message->buffer, buffer.getBuffer(), raw_message->buffer_length);
       *taken = true;
     }
@@ -172,10 +186,14 @@ rmw_take_raw_with_info(
   if (info->subscriber_->takeNextData(&buffer, &sinfo)) {
     info->listener_->data_taken();
 
-    if (sinfo.sampleKind == ALIVE) {
+    if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
+      if (raw_message->buffer_capacity < buffer.getBufferSize()) {
+        auto ret = rmw_raw_message_resize(raw_message, buffer.getBufferSize());
+        if (ret != RMW_RET_OK) {
+          return ret;  // Error message already set
+        }
+      }
       raw_message->buffer_length = buffer.getBufferSize();
-      raw_message->buffer =
-        reinterpret_cast<char *>(malloc(sizeof(char) * raw_message->buffer_length));
       memcpy(raw_message->buffer, buffer.getBuffer(), raw_message->buffer_length);
       rmw_gid_t * sender_gid = &message_info->publisher_gid;
       sender_gid->implementation_identifier = eprosima_fastrtps_identifier;

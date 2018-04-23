@@ -53,8 +53,12 @@ rmw_take_response(
   CustomClientResponse response;
 
   if (info->listener_->getResponse(response)) {
-    _deserialize_ros_message(response.buffer_.get(), ros_response, info->response_type_support_,
-      info->typesupport_identifier_);
+    eprosima::fastcdr::Cdr deser(
+      response.buffer_.get(),
+      eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
+      eprosima::fastcdr::Cdr::DDS_CDR);
+    _deserialize_ros_message(
+      deser, ros_response, info->response_type_support_, info->typesupport_identifier_);
 
     request_header->sequence_number = ((int64_t)response.sample_identity_.sequence_number().high) <<
       32 | response.sample_identity_.sequence_number().low;
