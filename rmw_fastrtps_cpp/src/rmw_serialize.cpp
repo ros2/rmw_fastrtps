@@ -15,6 +15,7 @@
 #include "fastcdr/FastBuffer.h"
 
 #include "rmw/error_handling.h"
+#include "rmw/raw_message.h"
 #include "rmw/rmw.h"
 
 #include "./type_support_common.hpp"
@@ -41,12 +42,19 @@ rmw_serialize(
   }
 
   auto tss = _create_message_type_support(ts->data, ts->typesupport_identifier);
-  eprosima::fastcdr::FastBuffer buffer(raw_message->buffer, raw_message->buffer_capacity);
-  eprosima::fastcdr::Cdr ser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
-  auto ret = _serialize_ros_message(ros_message, ser, tss, ts->typesupport_identifier);
-  raw_message->buffer_length = ser.getSerializedDataLength();
-  raw_message->buffer_capacity = buffer.getBufferSize();
+  eprosima::fastcdr::FastBuffer buffer;
+  eprosima::fastcdr::Cdr ser(
+    buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
 
+  auto ret = _serialize_ros_message(ros_message, ser, tss, ts->typesupport_identifier);
+  auto data_length = ser.getSerializedDataLength();
+  if (raw_message->buffer_capacity < data_length) {
+    rmw_raw_message_resize(raw_message, data_length);
+  }
+  memcpy(raw_message->buffer, ser.getBufferPointer(), data_length);
+  raw_message->buffer_length = data_length;
+  raw_message->buffer_capacity = data_length;
+  _delete_typesupport(tss, ts->typesupport_identifier);
   return ret == true ? RMW_RET_OK : RMW_RET_ERROR;
 }
 
@@ -73,8 +81,7 @@ rmw_deserialize(
     eprosima::fastcdr::Cdr::DDS_CDR);
 
   auto ret = _deserialize_ros_message(deser, ros_message, tss, ts->typesupport_identifier);
-  const_cast<rmw_message_raw_t *>(raw_message)->buffer_length = deser.getSerializedDataLength();
-
+  _delete_typesupport(tss, ts->typesupport_identifier);
   return ret == true ? RMW_RET_OK : RMW_RET_ERROR;
 }
 
