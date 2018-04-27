@@ -23,18 +23,17 @@
 
 extern "C"
 {
-
 rmw_ret_t
 rmw_serialize(
-    const void * ros_message,
-    const rosidl_message_type_support_t * type_support,
-    rmw_message_raw_t * raw_message)
+  const void * ros_message,
+  const rosidl_message_type_support_t * type_support,
+  rmw_message_raw_t * raw_message)
 {
   const rosidl_message_type_support_t * ts = get_message_typesupport_handle(
-      type_support, rosidl_typesupport_introspection_c__identifier);
+    type_support, rosidl_typesupport_introspection_c__identifier);
   if (!ts) {
     ts = get_message_typesupport_handle(
-        type_support, rosidl_typesupport_introspection_cpp::typesupport_identifier);
+      type_support, rosidl_typesupport_introspection_cpp::typesupport_identifier);
     if (!ts) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return RMW_RET_ERROR;
@@ -60,15 +59,15 @@ rmw_serialize(
 
 rmw_ret_t
 rmw_deserialize(
-    const rmw_message_raw_t * raw_message,
-    const rosidl_message_type_support_t * type_support,
-    void * ros_message)
+  const rmw_message_raw_t * raw_message,
+  const rosidl_message_type_support_t * type_support,
+  void * ros_message)
 {
   const rosidl_message_type_support_t * ts = get_message_typesupport_handle(
-      type_support, rosidl_typesupport_introspection_c__identifier);
+    type_support, rosidl_typesupport_introspection_c__identifier);
   if (!ts) {
     ts = get_message_typesupport_handle(
-        type_support, rosidl_typesupport_introspection_cpp::typesupport_identifier);
+      type_support, rosidl_typesupport_introspection_cpp::typesupport_identifier);
     if (!ts) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return RMW_RET_ERROR;
@@ -84,5 +83,4 @@ rmw_deserialize(
   _delete_typesupport(tss, ts->typesupport_identifier);
   return ret == true ? RMW_RET_OK : RMW_RET_ERROR;
 }
-
 }  // extern "C"
