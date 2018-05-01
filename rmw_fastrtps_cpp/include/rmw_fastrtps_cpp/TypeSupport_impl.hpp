@@ -420,6 +420,32 @@ void deserialize_field(
   }
 }
 
+template<>
+inline void deserialize_field<std::string>(
+  const rosidl_typesupport_introspection_cpp::MessageMember * member,
+  void * field,
+  eprosima::fastcdr::Cdr & deser,
+  bool call_new)
+{
+  if (!member->is_array_) {
+    if (call_new) {
+      // Because std::string is a complex datatype, we need to make sure that
+      // the memory is initialized to something reasonable before eventually
+      // passing it as a reference to Fast-CDR.
+      new (field) std::string();
+    }
+    deser >> *static_cast<std::string *>(field);
+  } else if (member->array_size_ && !member->is_upper_bound_) {
+    deser.deserializeArray(static_cast<std::string *>(field), member->array_size_);
+  } else {
+    auto & vector = *reinterpret_cast<std::vector<std::string> *>(field);
+    if (call_new) {
+      new(&vector) std::vector<std::string>;
+    }
+    deser >> vector;
+  }
+}
+
 template<typename T>
 void deserialize_field(
   const rosidl_typesupport_introspection_c__MessageMember * member,
