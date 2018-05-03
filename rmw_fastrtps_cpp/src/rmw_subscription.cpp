@@ -118,22 +118,6 @@ rmw_create_subscription(
     goto fail;
   }
 
-#if HAVE_SECURITY
-  // see if our subscriber has a security property set
-  if (eprosima::fastrtps::rtps::PropertyPolicyHelper::find_property(
-      participant->getAttributes().rtps.properties,
-      std::string("dds.sec.crypto.plugin")))
-  {
-    // set the encryption property on the subscriber
-    eprosima::fastrtps::rtps::PropertyPolicy subscriber_property_policy;
-    subscriber_property_policy.properties().emplace_back(
-      "rtps.endpoint.submessage_protection_kind", "ENCRYPT");
-    subscriber_property_policy.properties().emplace_back(
-      "rtps.endpoint.payload_protection_kind", "ENCRYPT");
-    subscriberParam.properties = subscriber_property_policy;
-  }
-#endif
-
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
     RMW_SET_ERROR_MSG("failed to get datareader qos");
     goto fail;
