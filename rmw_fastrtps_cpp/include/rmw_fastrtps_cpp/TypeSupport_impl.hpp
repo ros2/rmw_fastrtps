@@ -432,7 +432,7 @@ inline void deserialize_field<std::string>(
       // Because std::string is a complex datatype, we need to make sure that
       // the memory is initialized to something reasonable before eventually
       // passing it as a reference to Fast-CDR.
-      new (field) std::string();
+      new(field) std::string();
     }
     deser >> *static_cast<std::string *>(field);
   } else if (member->array_size_ && !member->is_upper_bound_) {
