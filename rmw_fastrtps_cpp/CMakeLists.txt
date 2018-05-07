@@ -99,7 +99,6 @@ PRIVATE "RMW_FASTRTPS_CPP_BUILDING_LIBRARY")
 
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
-ament_export_interfaces(export_rmw_fastrtps_cpp)
 ament_export_libraries(rmw_fastrtps_cpp)
 
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
@@ -107,10 +106,6 @@ ament_export_dependencies(rosidl_typesupport_introspection_c)
 ament_export_dependencies(rosidl_generator_c)
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rmw)
-ament_export_dependencies(fastrtps_cmake_module)
-ament_export_dependencies(fastcdr)
-ament_export_dependencies(fastrtps)
-ament_export_dependencies(FastRTPS)
 
 register_rmw_implementation(
   "c:rosidl_typesupport_c:rosidl_typesupport_introspection_c"
@@ -132,7 +127,6 @@ install(
 
 install(
   TARGETS rmw_fastrtps_cpp
-  EXPORT export_rmw_fastrtps_cpp
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
