@@ -142,14 +142,15 @@ rmw_take_raw(
     info->listener_->data_taken();
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
-      if (raw_message->buffer_capacity < buffer.getBufferSize()) {
-        auto ret = rmw_raw_message_resize(raw_message, buffer.getBufferSize());
+      auto buffer_size = static_cast<unsigned int>(buffer.getBufferSize());
+      if (raw_message->buffer_capacity < buffer_size) {
+        auto ret = rmw_raw_message_resize(raw_message, buffer_size);
         if (ret != RMW_RET_OK) {
           return ret;  // Error message already set
         }
-        fprintf(stderr, "had to resize to %zu\n", buffer.getBufferSize());
+        fprintf(stderr, "had to resize to %u\n", buffer_size);
       }
-      raw_message->buffer_length = buffer.getBufferSize();
+      raw_message->buffer_length = buffer_size;
       // check for capacity and realloc if needed with allocator
       memcpy(raw_message->buffer, buffer.getBuffer(), raw_message->buffer_length);
       *taken = true;
@@ -187,13 +188,14 @@ rmw_take_raw_with_info(
     info->listener_->data_taken();
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
-      if (raw_message->buffer_capacity < buffer.getBufferSize()) {
-        auto ret = rmw_raw_message_resize(raw_message, buffer.getBufferSize());
+      auto buffer_size = static_cast<unsigned int>(buffer.getBufferSize());
+      if (raw_message->buffer_capacity < buffer_size) {
+        auto ret = rmw_raw_message_resize(raw_message, buffer_size);
         if (ret != RMW_RET_OK) {
           return ret;  // Error message already set
         }
       }
-      raw_message->buffer_length = buffer.getBufferSize();
+      raw_message->buffer_length = buffer_size;
       memcpy(raw_message->buffer, buffer.getBuffer(), raw_message->buffer_length);
       rmw_gid_t * sender_gid = &message_info->publisher_gid;
       sender_gid->implementation_identifier = eprosima_fastrtps_identifier;
