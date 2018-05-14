@@ -21,16 +21,17 @@
 
 #include "rmw_fastrtps_cpp/custom_publisher_info.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
-#include "ros_message_serialization.hpp"
+#include "rmw_fastrtps_cpp/macros.hpp"
+
+#include "./ros_message_serialization.hpp"
 
 extern "C"
 {
 rmw_ret_t
 rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 {
-  assert(publisher);
-  assert(ros_message);
-  rmw_ret_t returnedValue = RMW_RET_ERROR;
+  RETURN_ERROR_ON_NULL(publisher);
+  RETURN_ERROR_ON_NULL(ros_message);
 
   if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
@@ -38,33 +39,31 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
   }
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  assert(info);
+  RETURN_ERROR_ON_NULL(info);
 
   eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastcdr::Cdr ser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
     eprosima::fastcdr::Cdr::DDS_CDR);
 
-  if (_serialize_ros_message(ros_message, ser, info->type_support_,
+  if (!_serialize_ros_message(ros_message, ser, info->type_support_,
     info->typesupport_identifier_))
   {
-    if (info->publisher_->write(&ser)) {
-      returnedValue = RMW_RET_OK;
-    } else {
-      RMW_SET_ERROR_MSG("cannot publish data");
-    }
-  } else {
     RMW_SET_ERROR_MSG("cannot serialize data");
+    return RMW_RET_ERROR;
+  }
+  if (!info->publisher_->write(&ser)) {
+    RMW_SET_ERROR_MSG("cannot publish data");
+    return RMW_RET_ERROR;
   }
 
-  return returnedValue;
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
 rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw_message)
 {
-  assert(publisher);
-  assert(raw_message);
-  rmw_ret_t returnedValue = RMW_RET_ERROR;
+  RETURN_ERROR_ON_NULL(publisher);
+  RETURN_ERROR_ON_NULL(raw_message);
 
   if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
@@ -72,21 +71,21 @@ rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw
   }
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  assert(info);
+  RETURN_ERROR_ON_NULL(info);
 
   eprosima::fastcdr::FastBuffer buffer(raw_message->buffer, raw_message->buffer_length);
   eprosima::fastcdr::Cdr ser(
     buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
   if (!ser.jump(raw_message->buffer_length)) {
     RMW_SET_ERROR_MSG("cannot correctly set raw buffer");
+    return RMW_RET_ERROR;
   }
 
-  if (info->publisher_->write(&ser)) {
-    returnedValue = RMW_RET_OK;
-  } else {
+  if (!info->publisher_->write(&ser)) {
     RMW_SET_ERROR_MSG("cannot publish data");
+    return RMW_RET_ERROR;
   }
 
-  return returnedValue;
+  return RMW_RET_OK;
 }
 }  // extern "C"

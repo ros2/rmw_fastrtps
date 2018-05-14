@@ -26,6 +26,7 @@
 
 #include "rmw_fastrtps_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_cpp/macros.hpp"
 
 #include "./ros_message_serialization.hpp"
 
@@ -34,9 +35,9 @@ extern "C"
 rmw_ret_t
 rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
 {
-  assert(subscription);
-  assert(ros_message);
-  assert(taken);
+  RETURN_ERROR_ON_NULL(subscription);
+  RETURN_ERROR_ON_NULL(ros_message);
+  RETURN_ERROR_ON_NULL(subscription);
 
   *taken = false;
 
@@ -46,7 +47,7 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
   }
 
   CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  assert(info);
+  RETURN_ERROR_ON_NULL(info);
 
   eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastrtps::SampleInfo_t sinfo;
@@ -73,14 +74,10 @@ rmw_take_with_info(
   bool * taken,
   rmw_message_info_t * message_info)
 {
-  assert(subscription);
-  assert(ros_message);
-  assert(taken);
-
-  if (!message_info) {
-    RMW_SET_ERROR_MSG("message info is null");
-    return RMW_RET_ERROR;
-  }
+  RETURN_ERROR_ON_NULL(subscription);
+  RETURN_ERROR_ON_NULL(ros_message);
+  RETURN_ERROR_ON_NULL(taken);
+  RETURN_ERROR_ON_NULL(message_info);
 
   *taken = false;
 
@@ -90,7 +87,7 @@ rmw_take_with_info(
   }
 
   CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  assert(info);
+  RETURN_ERROR_ON_NULL(info);
 
   eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastrtps::SampleInfo_t sinfo;
@@ -121,9 +118,9 @@ rmw_take_raw(
   rmw_message_raw_t * raw_message,
   bool * taken)
 {
-  assert(subscription);
-  assert(raw_message);
-  assert(taken);
+  RETURN_ERROR_ON_NULL(subscription);
+  RETURN_ERROR_ON_NULL(raw_message);
+  RETURN_ERROR_ON_NULL(taken);
 
   *taken = false;
 
@@ -133,7 +130,7 @@ rmw_take_raw(
   }
 
   CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  assert(info);
+  RETURN_ERROR_ON_NULL(info);
 
   eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastrtps::SampleInfo_t sinfo;
@@ -167,9 +164,10 @@ rmw_take_raw_with_info(
   bool * taken,
   rmw_message_info_t * message_info)
 {
-  assert(subscription);
-  assert(raw_message);
-  assert(taken);
+  RETURN_ERROR_ON_NULL(subscription);
+  RETURN_ERROR_ON_NULL(raw_message);
+  RETURN_ERROR_ON_NULL(taken);
+  RETURN_ERROR_ON_NULL(message_info);
 
   *taken = false;
 
@@ -179,7 +177,7 @@ rmw_take_raw_with_info(
   }
 
   CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  assert(info);
+  RETURN_ERROR_ON_NULL(info);
 
   eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastrtps::SampleInfo_t sinfo;

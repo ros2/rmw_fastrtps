@@ -33,4 +33,12 @@
     } \
   };
 
+// check the input pointer for null, sets the error msg accordingly and
+// return RMW_RET_ERROR if null
+#define RETURN_ERROR_ON_NULL(POINTER) \
+  if (POINTER == nullptr) { \
+    RMW_SET_ERROR_MSG("#POINTER pointer is null"); \
+    return RMW_RET_ERROR; \
+  } \
+
 #endif  // RMW_FASTRTPS_CPP__MACROS_HPP_
