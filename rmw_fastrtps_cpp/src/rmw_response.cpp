@@ -53,13 +53,11 @@ rmw_take_response(
   CustomClientResponse response = info->listener_->getResponse();
 
   if (response.buffer_ != nullptr) {
-    _deserialize_ros_message(response.buffer_, ros_response, info->response_type_support_,
+    _deserialize_ros_message(response.buffer_.get(), ros_response, info->response_type_support_,
       info->typesupport_identifier_);
 
     request_header->sequence_number = ((int64_t)response.sample_identity_.sequence_number().high) <<
       32 | response.sample_identity_.sequence_number().low;
-
-    delete response.buffer_;
 
     *taken = true;
   }
