@@ -63,7 +63,7 @@ public:
 
     CustomClientResponse response;
     // Todo(sloretz) eliminate heap allocation pending eprosima/Fast-CDR#19
-    response.buffer_.reset(new eprosima::fastcdr::FastBuffer);
+    response.buffer_.reset(new eprosima::fastcdr::FastBuffer());
     eprosima::fastrtps::SampleInfo_t sinfo;
 
     if (sub->takeNextData(response.buffer_.get(), &sinfo)) {
