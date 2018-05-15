@@ -50,9 +50,9 @@ rmw_take_response(
   auto info = static_cast<CustomClientInfo *>(client->data);
   assert(info);
 
-  CustomClientResponse response = info->listener_->getResponse();
+  CustomClientResponse response;
 
-  if (response.buffer_ != nullptr) {
+  if (info->listener_->getResponse(response)) {
     _deserialize_ros_message(response.buffer_.get(), ros_response, info->response_type_support_,
       info->typesupport_identifier_);
 

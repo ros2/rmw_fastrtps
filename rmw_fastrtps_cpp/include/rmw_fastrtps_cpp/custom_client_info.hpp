@@ -46,9 +46,6 @@ typedef struct CustomClientResponse
 {
   eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
   std::unique_ptr<eprosima::fastcdr::FastBuffer> buffer_;
-
-  CustomClientResponse()
-  : buffer_(nullptr) {}
 } CustomClientResponse;
 
 class ClientListener : public eprosima::fastrtps::SubscriberListener
@@ -65,7 +62,8 @@ public:
     assert(sub);
 
     CustomClientResponse response;
-    response.buffer_.reset(new eprosima::fastcdr::FastBuffer());
+    // Todo(sloretz) eliminate heap allocation pending eprosima/Fast-CDR#19
+    response.buffer_.reset(new eprosima::fastcdr::FastBuffer);
     eprosima::fastrtps::SampleInfo_t sinfo;
 
     if (sub->takeNextData(response.buffer_.get(), &sinfo)) {
@@ -93,28 +91,27 @@ public:
     }
   }
 
-  CustomClientResponse
-  getResponse()
+  bool
+  getResponse(CustomClientResponse & response)
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
-    CustomClientResponse response;
+
+    auto pop_response = [this](CustomClientResponse & response) -> bool
+      {
+        if (!list.empty()) {
+          response = std::move(list.front());
+          list.pop_front();
+          list_has_data_.store(!list.empty());
+          return true;
+        }
+        return false;
+      };
 
     if (conditionMutex_ != nullptr) {
       std::unique_lock<std::mutex> clock(*conditionMutex_);
-      if (!list.empty()) {
-        response = std::move(list.front());
-        list.pop_front();
-        list_has_data_.store(!list.empty());
-      }
-    } else {
-      if (!list.empty()) {
-        response = std::move(list.front());
-        list.pop_front();
-        list_has_data_.store(!list.empty());
-      }
+      return pop_response(response);
     }
-
-    return std::move(response);
+    return pop_response(response);
   }
 
   void
