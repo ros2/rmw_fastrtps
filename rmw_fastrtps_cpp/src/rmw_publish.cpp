@@ -30,8 +30,11 @@ extern "C"
 rmw_ret_t
 rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 {
-  RETURN_ERROR_ON_NULL(publisher);
-  RETURN_ERROR_ON_NULL(ros_message);
+  auto error_allocator = rcutils_get_default_allocator();
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    publisher, "publisher pointer is null", return RMW_RET_ERROR, error_allocator);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    ros_message, "ros_message pointer is null", return RMW_RET_ERROR, error_allocator);
 
   if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
@@ -39,7 +42,8 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
   }
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  RETURN_ERROR_ON_NULL(info);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    info, "publisher info pointer is null", return RMW_RET_ERROR, error_allocator);
 
   eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastcdr::Cdr ser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
@@ -62,8 +66,11 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 rmw_ret_t
 rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw_message)
 {
-  RETURN_ERROR_ON_NULL(publisher);
-  RETURN_ERROR_ON_NULL(raw_message);
+  auto error_allocator = rcutils_get_default_allocator();
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    publisher, "publisher pointer is null", return RMW_RET_ERROR, error_allocator);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    raw_message, "raw_message pointer is null", return RMW_RET_ERROR, error_allocator);
 
   if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
@@ -71,7 +78,8 @@ rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw
   }
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  RETURN_ERROR_ON_NULL(info);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    info, "publisher info pointer is null", return RMW_RET_ERROR, error_allocator);
 
   eprosima::fastcdr::FastBuffer buffer(raw_message->buffer, raw_message->buffer_length);
   eprosima::fastcdr::Cdr ser(
