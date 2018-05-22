@@ -196,7 +196,8 @@ get_security_file_paths(
   std::string file_prefix("file://");
 
   for (size_t i = 0; i < num_files; i++) {
-    char * file_path = rcutils_join_path(node_secure_root, file_names[i]);
+    rcutils_allocator_t allocator = rcutils_get_default_allocator();
+    char * file_path = rcutils_join_path(node_secure_root, file_names[i], allocator);
 
     if (!file_path) {
       return false;
