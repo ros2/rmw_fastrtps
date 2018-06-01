@@ -17,6 +17,8 @@
 
 #include <atomic>
 #include <list>
+#include <memory>
+#include <utility>
 
 #include "fastcdr/FastBuffer.h"
 
@@ -43,10 +45,7 @@ typedef struct CustomClientInfo
 typedef struct CustomClientResponse
 {
   eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
-  eprosima::fastcdr::FastBuffer * buffer_;
-
-  CustomClientResponse()
-  : buffer_(nullptr) {}
+  std::unique_ptr<eprosima::fastcdr::FastBuffer> buffer_;
 } CustomClientResponse;
 
 class ClientListener : public eprosima::fastrtps::SubscriberListener
@@ -63,10 +62,11 @@ public:
     assert(sub);
 
     CustomClientResponse response;
-    response.buffer_ = new eprosima::fastcdr::FastBuffer();
+    // Todo(sloretz) eliminate heap allocation pending eprosima/Fast-CDR#19
+    response.buffer_.reset(new eprosima::fastcdr::FastBuffer());
     eprosima::fastrtps::SampleInfo_t sinfo;
 
-    if (sub->takeNextData(response.buffer_, &sinfo)) {
+    if (sub->takeNextData(response.buffer_.get(), &sinfo)) {
       if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
         response.sample_identity_ = sinfo.related_sample_identity;
 
@@ -75,7 +75,7 @@ public:
 
           if (conditionMutex_ != nullptr) {
             std::unique_lock<std::mutex> clock(*conditionMutex_);
-            list.push_back(response);
+            list.emplace_back(std::move(response));
             // the change to list_has_data_ needs to be mutually exclusive with
             // rmw_wait() which checks hasData() and decides if wait() needs to
             // be called
@@ -83,7 +83,7 @@ public:
             clock.unlock();
             conditionVariable_->notify_one();
           } else {
-            list.push_back(response);
+            list.emplace_back(std::move(response));
             list_has_data_.store(true);
           }
         }
@@ -91,28 +91,27 @@ public:
     }
   }
 
-  CustomClientResponse
-  getResponse()
+  bool
+  getResponse(CustomClientResponse & response)
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
-    CustomClientResponse response;
+
+    auto pop_response = [this](CustomClientResponse & response) -> bool
+      {
+        if (!list.empty()) {
+          response = std::move(list.front());
+          list.pop_front();
+          list_has_data_.store(!list.empty());
+          return true;
+        }
+        return false;
+      };
 
     if (conditionMutex_ != nullptr) {
       std::unique_lock<std::mutex> clock(*conditionMutex_);
-      if (!list.empty()) {
-        response = list.front();
-        list.pop_front();
-        list_has_data_.store(!list.empty());
-      }
-    } else {
-      if (!list.empty()) {
-        response = list.front();
-        list.pop_front();
-        list_has_data_.store(!list.empty());
-      }
+      return pop_response(response);
     }
-
-    return response;
+    return pop_response(response);
   }
 
   void
