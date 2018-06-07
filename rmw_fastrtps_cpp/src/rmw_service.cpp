@@ -31,9 +31,9 @@
 #include "rmw/rmw.h"
 
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
+
 #include "rosidl_typesupport_introspection_c/identifier.h"
 
-#include "assign_partitions.hpp"
 #include "client_service_common.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "namespace_prefix.hpp"
@@ -139,12 +139,10 @@ rmw_create_service(
   subscriberParam.historyMemoryPolicy =
     eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   subscriberParam.topic.topicDataType = request_type_name;
-  rcutils_ret_t ret = _assign_partitions_to_attributes(
-    service_name, ros_service_requester_prefix,
-    qos_policies->avoid_ros_namespace_conventions, &subscriberParam);
-  if (ret != RCUTILS_RET_OK) {
-    // error msg already set
-    goto fail;
+  if (!qos_policies->avoid_ros_namespace_conventions) {
+    subscriberParam.topic.topicName = std::string(ros_service_requester_prefix) + service_name;
+  } else {
+    subscriberParam.topic.topicName = service_name;
   }
   subscriberParam.topic.topicName += "Request";
 
@@ -153,12 +151,10 @@ rmw_create_service(
   publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
   publisherParam.historyMemoryPolicy =
     eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-  ret = _assign_partitions_to_attributes(
-    service_name, ros_service_response_prefix,
-    qos_policies->avoid_ros_namespace_conventions, &publisherParam);
-  if (ret != RCUTILS_RET_OK) {
-    // error msg already set
-    goto fail;
+  if (!qos_policies->avoid_ros_namespace_conventions) {
+    publisherParam.topic.topicName = std::string(ros_service_response_prefix) + service_name;
+  } else {
+    publisherParam.topic.topicName = service_name;
   }
   publisherParam.topic.topicName += "Reply";
 
@@ -170,13 +166,7 @@ rmw_create_service(
     "Sub Topic %s", subscriberParam.topic.topicName.c_str())
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
-    "Sub Partition %s", subscriberParam.qos.m_partition.getNames()[0].c_str())
-  RCUTILS_LOG_DEBUG_NAMED(
-    "rmw_fastrtps_cpp",
     "Pub Topic %s", publisherParam.topic.topicName.c_str())
-  RCUTILS_LOG_DEBUG_NAMED(
-    "rmw_fastrtps_cpp",
-    "Pub Partition %s", publisherParam.qos.m_partition.getNames()[0].c_str())
   RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_cpp", "***********")
 
   // Create Service Subscriber and set QoS
