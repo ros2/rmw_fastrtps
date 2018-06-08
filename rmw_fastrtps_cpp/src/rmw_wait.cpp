@@ -46,7 +46,11 @@ check_wait_set_for_data(
     for (size_t i = 0; i < clients->client_count; ++i) {
       void * data = clients->clients[i];
       CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
-      if (custom_client_info && custom_client_info->listener_->hasData()) {
+      if (
+        custom_client_info &&
+        custom_client_info->listener_ &&
+        custom_client_info->listener_->hasData())
+      {
         return true;
       }
     }
@@ -117,7 +121,9 @@ rmw_wait(
     for (size_t i = 0; i < clients->client_count; ++i) {
       void * data = clients->clients[i];
       CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
-      custom_client_info->listener_->attachCondition(conditionMutex, conditionVariable);
+      if (custom_client_info->listener_) {
+        custom_client_info->listener_->attachCondition(conditionMutex, conditionVariable);
+      }
     }
   }
 
@@ -184,9 +190,11 @@ rmw_wait(
     for (size_t i = 0; i < clients->client_count; ++i) {
       void * data = clients->clients[i];
       CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
-      custom_client_info->listener_->detachCondition();
-      if (!custom_client_info->listener_->hasData()) {
-        clients->clients[i] = 0;
+      if (custom_client_info->listener_) {
+        custom_client_info->listener_->detachCondition();
+        if (!custom_client_info->listener_->hasData()) {
+          clients->clients[i] = 0;
+        }
       }
     }
   }

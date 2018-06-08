@@ -55,6 +55,12 @@ public:
   : info_(info), list_has_data_(false),
     conditionMutex_(nullptr), conditionVariable_(nullptr) {}
 
+  ~ClientListener()
+  {
+    // TODO(sloretz) must acquire lock before editing info_
+    // Remove reference to self to avoid crash in rmw_wait()
+    info_->listener_ = nullptr;
+  }
 
   void
   onNewDataMessage(eprosima::fastrtps::Subscriber * sub)
