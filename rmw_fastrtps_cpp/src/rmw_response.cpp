@@ -54,7 +54,7 @@ rmw_take_response(
 
   if (info->listener_->getResponse(response)) {
     eprosima::fastcdr::Cdr deser(
-      response.buffer_.get(),
+      *response.buffer_,
       eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::Cdr::DDS_CDR);
     _deserialize_ros_message(
