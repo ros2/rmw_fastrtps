@@ -48,7 +48,10 @@ rmw_serialize(
   auto ret = _serialize_ros_message(ros_message, ser, tss, ts->typesupport_identifier);
   auto data_length = static_cast<unsigned int>(ser.getSerializedDataLength());
   if (raw_message->buffer_capacity < data_length) {
-    rmw_raw_message_resize(raw_message, data_length);
+    if (rmw_raw_message_resize(raw_message, data_length != RMW_RET_OK)) {
+      RMW_SET_ERROR_MSG("unable to dynamically resize raw message");
+      return RMW_RET_ERROR;
+    }
   }
   memcpy(raw_message->buffer, ser.getBufferPointer(), data_length);
   raw_message->buffer_length = data_length;

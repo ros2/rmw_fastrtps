@@ -786,11 +786,6 @@ bool TypeSupport<MembersType>::deserialize(
   assert(payload);
 
   auto buffer = static_cast<eprosima::fastcdr::FastBuffer *>(data);
-  // TODO(karsten1987): This is a bug IMO
-  // see issue here: https://github.com/eProsima/Fast-CDR/issues/15
-  // an empty buffer will always be initialized to a hard set value - atm 200
-  // it will call malloc internally, so we can use malloc here to preinitialize our
-  // own buffer.
   if (!buffer->reserve(payload->length)) {
     return false;
   }
