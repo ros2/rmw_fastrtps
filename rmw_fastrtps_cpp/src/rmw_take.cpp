@@ -144,7 +144,7 @@ _take_serialized_message(
     info->listener_->data_taken();
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
-      auto buffer_size = static_cast<unsigned int>(buffer.getBufferSize());
+      auto buffer_size = static_cast<size_t>(buffer.getBufferSize());
       if (serialized_message->buffer_capacity < buffer_size) {
         auto ret = rmw_serialized_message_resize(serialized_message, buffer_size);
         if (ret != RMW_RET_OK) {

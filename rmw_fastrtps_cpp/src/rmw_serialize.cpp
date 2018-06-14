@@ -46,7 +46,7 @@ rmw_serialize(
     buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
 
   auto ret = _serialize_ros_message(ros_message, ser, tss, ts->typesupport_identifier);
-  auto data_length = static_cast<unsigned int>(ser.getSerializedDataLength());
+  auto data_length = static_cast<size_t>(ser.getSerializedDataLength());
   if (serialized_message->buffer_capacity < data_length) {
     if (rmw_serialized_message_resize(serialized_message, data_length) != RMW_RET_OK) {
       RMW_SET_ERROR_MSG("unable to dynamically resize serialized message");
