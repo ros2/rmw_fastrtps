@@ -14,7 +14,7 @@
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
-#include "rmw/raw_message.h"
+#include "rmw/serialized_message.h"
 #include "rmw/rmw.h"
 
 #include "fastrtps/subscriber/Subscriber.h"
@@ -119,9 +119,9 @@ rmw_take_with_info(
 }
 
 rmw_ret_t
-_take_raw(
+_take_serialized_message(
   const rmw_subscription_t * subscription,
-  rmw_message_raw_t * raw_message,
+  rmw_serialized_message_t * serialized_message,
   bool * taken,
   rmw_message_info_t * message_info)
 {
@@ -145,14 +145,14 @@ _take_raw(
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
       auto buffer_size = static_cast<unsigned int>(buffer.getBufferSize());
-      if (raw_message->buffer_capacity < buffer_size) {
-        auto ret = rmw_raw_message_resize(raw_message, buffer_size);
+      if (serialized_message->buffer_capacity < buffer_size) {
+        auto ret = rmw_serialized_message_resize(serialized_message, buffer_size);
         if (ret != RMW_RET_OK) {
           return ret;  // Error message already set
         }
       }
-      raw_message->buffer_length = buffer_size;
-      memcpy(raw_message->buffer, buffer.getBuffer(), raw_message->buffer_length);
+      serialized_message->buffer_length = buffer_size;
+      memcpy(serialized_message->buffer, buffer.getBuffer(), serialized_message->buffer_length);
 
       if (message_info) {
         _assign_message_info(message_info, &sinfo);
@@ -165,26 +165,26 @@ _take_raw(
 }
 
 rmw_ret_t
-rmw_take_raw(
+rmw_take_serialized_message(
   const rmw_subscription_t * subscription,
-  rmw_message_raw_t * raw_message,
+  rmw_serialized_message_t * serialized_message,
   bool * taken)
 {
   auto error_msg_allocator = rcutils_get_default_allocator();
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     subscription, "subscription pointer is null", return RMW_RET_ERROR, error_msg_allocator);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    raw_message, "ros_message pointer is null", return RMW_RET_ERROR, error_msg_allocator);
+    serialized_message, "ros_message pointer is null", return RMW_RET_ERROR, error_msg_allocator);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     taken, "boolean flag for taken is null", return RMW_RET_ERROR, error_msg_allocator);
 
-  return _take_raw(subscription, raw_message, taken, nullptr);
+  return _take_serialized_message(subscription, serialized_message, taken, nullptr);
 }
 
 rmw_ret_t
-rmw_take_raw_with_info(
+rmw_take_serialized_message_with_info(
   const rmw_subscription_t * subscription,
-  rmw_message_raw_t * raw_message,
+  rmw_serialized_message_t * serialized_message,
   bool * taken,
   rmw_message_info_t * message_info)
 {
@@ -192,12 +192,12 @@ rmw_take_raw_with_info(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     subscription, "subscription pointer is null", return RMW_RET_ERROR, error_msg_allocator);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    raw_message, "ros_message pointer is null", return RMW_RET_ERROR, error_msg_allocator);
+    serialized_message, "ros_message pointer is null", return RMW_RET_ERROR, error_msg_allocator);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     taken, "boolean flag for taken is null", return RMW_RET_ERROR, error_msg_allocator);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     message_info, "message info pointer is null", return RMW_RET_ERROR, error_msg_allocator);
 
-  return _take_raw(subscription, raw_message, taken, message_info);
+  return _take_serialized_message(subscription, serialized_message, taken, message_info);
 }
 }  // extern "C"

@@ -15,7 +15,7 @@
 #include "fastcdr/FastBuffer.h"
 
 #include "rmw/error_handling.h"
-#include "rmw/raw_message.h"
+#include "rmw/serialized_message.h"
 #include "rmw/rmw.h"
 
 #include "./type_support_common.hpp"
@@ -27,7 +27,7 @@ rmw_ret_t
 rmw_serialize(
   const void * ros_message,
   const rosidl_message_type_support_t * type_support,
-  rmw_message_raw_t * raw_message)
+  rmw_serialized_message_t * serialized_message)
 {
   const rosidl_message_type_support_t * ts = get_message_typesupport_handle(
     type_support, rosidl_typesupport_introspection_c__identifier);
@@ -47,22 +47,22 @@ rmw_serialize(
 
   auto ret = _serialize_ros_message(ros_message, ser, tss, ts->typesupport_identifier);
   auto data_length = static_cast<unsigned int>(ser.getSerializedDataLength());
-  if (raw_message->buffer_capacity < data_length) {
-    if (rmw_raw_message_resize(raw_message, data_length) != RMW_RET_OK) {
-      RMW_SET_ERROR_MSG("unable to dynamically resize raw message");
+  if (serialized_message->buffer_capacity < data_length) {
+    if (rmw_serialized_message_resize(serialized_message, data_length) != RMW_RET_OK) {
+      RMW_SET_ERROR_MSG("unable to dynamically resize serialized message");
       return RMW_RET_ERROR;
     }
   }
-  memcpy(raw_message->buffer, ser.getBufferPointer(), data_length);
-  raw_message->buffer_length = data_length;
-  raw_message->buffer_capacity = data_length;
+  memcpy(serialized_message->buffer, ser.getBufferPointer(), data_length);
+  serialized_message->buffer_length = data_length;
+  serialized_message->buffer_capacity = data_length;
   _delete_typesupport(tss, ts->typesupport_identifier);
   return ret == true ? RMW_RET_OK : RMW_RET_ERROR;
 }
 
 rmw_ret_t
 rmw_deserialize(
-  const rmw_message_raw_t * raw_message,
+  const rmw_serialized_message_t * serialized_message,
   const rosidl_message_type_support_t * type_support,
   void * ros_message)
 {
@@ -78,7 +78,8 @@ rmw_deserialize(
   }
 
   auto tss = _create_message_type_support(ts->data, ts->typesupport_identifier);
-  eprosima::fastcdr::FastBuffer buffer(raw_message->buffer, raw_message->buffer_length);
+  eprosima::fastcdr::FastBuffer buffer(
+    serialized_message->buffer, serialized_message->buffer_length);
   eprosima::fastcdr::Cdr deser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
     eprosima::fastcdr::Cdr::DDS_CDR);
 

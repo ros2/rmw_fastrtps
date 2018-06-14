@@ -64,13 +64,15 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 }
 
 rmw_ret_t
-rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw_message)
+rmw_publish_serialized_message(
+  const rmw_publisher_t * publisher, const rmw_serialized_message_t * serialized_message)
 {
   auto error_allocator = rcutils_get_default_allocator();
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     publisher, "publisher pointer is null", return RMW_RET_ERROR, error_allocator);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    raw_message, "raw_message pointer is null", return RMW_RET_ERROR, error_allocator);
+    serialized_message, "serialized_message pointer is null",
+    return RMW_RET_ERROR, error_allocator);
 
   if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
@@ -81,11 +83,12 @@ rmw_publish_raw(const rmw_publisher_t * publisher, const rmw_message_raw_t * raw
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     info, "publisher info pointer is null", return RMW_RET_ERROR, error_allocator);
 
-  eprosima::fastcdr::FastBuffer buffer(raw_message->buffer, raw_message->buffer_length);
+  eprosima::fastcdr::FastBuffer buffer(
+    serialized_message->buffer, serialized_message->buffer_length);
   eprosima::fastcdr::Cdr ser(
     buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
-  if (!ser.jump(raw_message->buffer_length)) {
-    RMW_SET_ERROR_MSG("cannot correctly set raw buffer");
+  if (!ser.jump(serialized_message->buffer_length)) {
+    RMW_SET_ERROR_MSG("cannot correctly set serialized buffer");
     return RMW_RET_ERROR;
   }
 
