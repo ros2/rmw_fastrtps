@@ -206,11 +206,11 @@ get_security_file_paths(
     if (rcutils_is_readable(file_path)) {
       security_files_paths[i] = file_prefix + std::string(file_path);
     } else {
-      free(file_path);
+      allocator.deallocate(file_path, allocator.state);
       return false;
     }
 
-    free(file_path);
+    allocator.deallocate(file_path, allocator.state);
   }
 
   return true;
