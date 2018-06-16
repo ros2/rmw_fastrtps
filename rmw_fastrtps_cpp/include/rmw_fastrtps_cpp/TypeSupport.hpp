@@ -113,7 +113,7 @@ class TypeSupport : public eprosima::fastrtps::TopicDataType
 public:
   bool serializeROSmessage(const void * ros_message, eprosima::fastcdr::Cdr & ser);
 
-  bool deserializeROSmessage(eprosima::fastcdr::FastBuffer * data, void * ros_message);
+  bool deserializeROSmessage(eprosima::fastcdr::Cdr & deser, void * ros_message);
 
   bool serialize(void * data, eprosima::fastrtps::rtps::SerializedPayload_t * payload);
 

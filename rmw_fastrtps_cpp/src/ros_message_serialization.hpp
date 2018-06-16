@@ -33,7 +33,7 @@ _serialize_ros_message(
 
 bool
 _deserialize_ros_message(
-  eprosima::fastcdr::FastBuffer * buffer,
+  eprosima::fastcdr::Cdr & deser,
   void * ros_message,
   void * untyped_typesupport,
   const char * typesupport_identifier);

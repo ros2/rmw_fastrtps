@@ -734,13 +734,9 @@ bool TypeSupport<MembersType>::serializeROSmessage(
 
 template<typename MembersType>
 bool TypeSupport<MembersType>::deserializeROSmessage(
-  eprosima::fastcdr::FastBuffer * buffer, void * ros_message)
+  eprosima::fastcdr::Cdr & deser, void * ros_message)
 {
-  assert(buffer);
   assert(ros_message);
-
-  eprosima::fastcdr::Cdr deser(*buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
-    eprosima::fastcdr::Cdr::DDS_CDR);
 
   // Deserialize encapsulation.
   deser.read_encapsulation();
@@ -790,7 +786,9 @@ bool TypeSupport<MembersType>::deserialize(
   assert(payload);
 
   auto buffer = static_cast<eprosima::fastcdr::FastBuffer *>(data);
-  buffer->resize(payload->length);
+  if (!buffer->reserve(payload->length)) {
+    return false;
+  }
   memcpy(buffer->getBuffer(), payload->data, payload->length);
   return true;
 }
