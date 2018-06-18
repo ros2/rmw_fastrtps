@@ -43,7 +43,7 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType * members)
   if (members->member_count_ != 0) {
     this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(members, 0));
   } else {
-    this->m_typeSize = 4;
+    this->m_typeSize = 5;
   }
 }
 

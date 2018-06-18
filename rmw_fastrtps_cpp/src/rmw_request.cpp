@@ -54,7 +54,7 @@ rmw_send_request(
   eprosima::fastcdr::Cdr ser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
     eprosima::fastcdr::Cdr::DDS_CDR);
 
-  if (_serialize_ros_message(ros_request, ser, info->request_type_support_,
+  if (_serialize_ros_message(ros_request, buffer, ser, info->request_type_support_,
     info->typesupport_identifier_))
   {
     eprosima::fastrtps::rtps::WriteParams wparams;

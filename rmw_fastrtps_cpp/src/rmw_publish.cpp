@@ -49,7 +49,7 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
   eprosima::fastcdr::Cdr ser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
     eprosima::fastcdr::Cdr::DDS_CDR);
 
-  if (!_serialize_ros_message(ros_message, ser, info->type_support_,
+  if (!_serialize_ros_message(ros_message, buffer, ser, info->type_support_,
     info->typesupport_identifier_))
   {
     RMW_SET_ERROR_MSG("cannot serialize data");
