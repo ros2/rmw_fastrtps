@@ -108,6 +108,7 @@ template<typename MembersType>
 TypeSupport<MembersType>::TypeSupport()
 {
   m_isGetKeyDefined = false;
+  max_size_bound_ = false;
 }
 
 template<typename MembersType>
@@ -853,9 +854,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
 
   size_t initial_alignment = current_alignment;
 
-  // Encapsulation
   const size_t padding = 4;
-  current_alignment += padding;
 
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     const auto * member = members->members_ + i;
@@ -865,6 +864,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
       array_size = member->array_size_;
       // Whether it is a sequence.
       if (0 == array_size || member->is_upper_bound_) {
+        this->max_size_bound_ = false;
         current_alignment += padding +
           eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       }
@@ -897,6 +897,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
         {
+          this->max_size_bound_ = false;
           for (size_t index = 0; index < array_size; ++index) {
             current_alignment += padding +
               eprosima::fastcdr::Cdr::alignment(current_alignment, padding) +
@@ -924,6 +925,10 @@ template<typename MembersType>
 size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
   const void * ros_message)
 {
+  if (max_size_bound_) {
+    return m_typeSize;
+  }
+
   assert(ros_message);
 
   // Encapsulation size

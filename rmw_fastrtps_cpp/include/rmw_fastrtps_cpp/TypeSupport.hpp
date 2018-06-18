@@ -154,6 +154,7 @@ protected:
   size_t calculateMaxSerializedSize(const MembersType * members, size_t current_alignment);
 
   const MembersType * members_;
+  bool max_size_bound_;
 
 private:
   size_t getEstimatedSerializedSize(
