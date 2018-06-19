@@ -42,12 +42,14 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
     members->service_name_ + "_Request_";
   this->setName(name.c_str());
 
-  // TODO(wjwwood): this could be more intelligent, setting m_typeSize to the
-  // maximum serialized size of the message, when the message is a bounded one.
+  // Fully bound by default
+  this->max_size_bound_ = true;
+  // Encapsulation size
+  this->m_typeSize = 4;
   if (this->members_->member_count_ != 0) {
-    this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 0));
+    this->m_typeSize += static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 4));
   } else {
-    this->m_typeSize = 4;
+    this->m_typeSize++;
   }
 }
 
@@ -62,12 +64,14 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
     members->service_name_ + "_Response_";
   this->setName(name.c_str());
 
-  // TODO(wjwwood): this could be more intelligent, setting m_typeSize to the
-  // maximum serialized size of the message, when the message is a bounded one.
+  // Fully bound by default
+  this->max_size_bound_ = true;
+  // Encapsulation size
+  this->m_typeSize = 4;
   if (this->members_->member_count_ != 0) {
-    this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 0));
+    this->m_typeSize += static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 4));
   } else {
-    this->m_typeSize = 4;
+    this->m_typeSize++;
   }
 }
 

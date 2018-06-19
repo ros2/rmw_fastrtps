@@ -54,6 +54,27 @@ struct StringHelper<rosidl_typesupport_introspection_c__MessageMembers>
 {
   using type = rosidl_generator_c__String;
 
+  static size_t next_field_align(void * data, size_t current_alignment)
+  {
+    auto c_string = static_cast<rosidl_generator_c__String *>(data);
+    if (!c_string) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Failed to cast data as rosidl_generator_c__String")
+      return current_alignment;
+    }
+    if (!c_string->data) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "rosidl_generator_c_String had invalid data")
+      return current_alignment;
+    }
+
+    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+    current_alignment += 4;
+    return current_alignment + strlen(c_string->data) + 1;
+  }
+
   static std::string convert_to_std_string(void * data)
   {
     auto c_string = static_cast<rosidl_generator_c__String *>(data);
@@ -111,6 +132,8 @@ template<typename MembersType>
 class TypeSupport : public eprosima::fastrtps::TopicDataType
 {
 public:
+  size_t getEstimatedSerializedSize(const void * ros_message);
+
   bool serializeROSmessage(const void * ros_message, eprosima::fastcdr::Cdr & ser);
 
   bool deserializeROSmessage(eprosima::fastcdr::Cdr & deser, void * ros_message);
@@ -131,8 +154,12 @@ protected:
   size_t calculateMaxSerializedSize(const MembersType * members, size_t current_alignment);
 
   const MembersType * members_;
+  bool max_size_bound_;
 
 private:
+  size_t getEstimatedSerializedSize(
+    const MembersType * members, const void * ros_message, size_t current_alignment);
+
   bool serializeROSmessage(
     eprosima::fastcdr::Cdr & ser, const MembersType * members, const void * ros_message);
 

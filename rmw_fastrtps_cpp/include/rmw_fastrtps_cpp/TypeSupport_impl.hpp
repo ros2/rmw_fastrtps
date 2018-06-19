@@ -108,6 +108,7 @@ template<typename MembersType>
 TypeSupport<MembersType>::TypeSupport()
 {
   m_isGetKeyDefined = false;
+  max_size_bound_ = false;
 }
 
 template<typename MembersType>
@@ -400,6 +401,212 @@ bool TypeSupport<MembersType>::serializeROSmessage(
   return true;
 }
 
+// C++ specialization
+template<typename T>
+size_t next_field_align(
+  const rosidl_typesupport_introspection_cpp::MessageMember * member,
+  void * field,
+  size_t current_alignment)
+{
+  const size_t padding = 4;
+  size_t item_size = sizeof(T);
+  if (!member->is_array_) {
+    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+    current_alignment += item_size;
+  } else if (member->array_size_ && !member->is_upper_bound_) {
+    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+    current_alignment += item_size * member->array_size_;
+  } else {
+    std::vector<T> & data = *reinterpret_cast<std::vector<T> *>(field);
+    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+    current_alignment += padding;
+    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+    current_alignment += item_size * data.size();
+  }
+  return current_alignment;
+}
+
+template<>
+inline
+size_t next_field_align<std::string>(
+  const rosidl_typesupport_introspection_cpp::MessageMember * member,
+  void * field,
+  size_t current_alignment)
+{
+  const size_t padding = 4;
+  if (!member->is_array_) {
+    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+    current_alignment += padding;
+    auto str = *static_cast<std::string *>(field);
+    current_alignment += str.size() + 1;
+  } else if (member->array_size_ && !member->is_upper_bound_) {
+    auto str_arr = static_cast<std::string *>(field);
+    for (size_t index = 0; index < member->array_size_; ++index) {
+      current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+      current_alignment += padding;
+      current_alignment += str_arr[index].size() + 1;
+    }
+  } else {
+    auto & data = *reinterpret_cast<std::vector<std::string> *>(field);
+    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+    current_alignment += padding;
+    for (auto & it : data) {
+      current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+      current_alignment += padding;
+      current_alignment += it.size() + 1;
+    }
+  }
+  return current_alignment;
+}
+
+// C specialization
+template<typename T>
+size_t next_field_align(
+  const rosidl_typesupport_introspection_c__MessageMember * member,
+  void * field,
+  size_t current_alignment)
+{
+  const size_t padding = 4;
+  size_t item_size = sizeof(T);
+  if (!member->is_array_) {
+    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+    current_alignment += item_size;
+  } else if (member->array_size_ && !member->is_upper_bound_) {
+    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+    current_alignment += item_size * member->array_size_;
+  } else {
+    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+    current_alignment += padding;
+
+    auto & data = *reinterpret_cast<typename GenericCArray<T>::type *>(field);
+    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+    current_alignment += item_size * data.size;
+  }
+  return current_alignment;
+}
+
+template<>
+inline
+size_t next_field_align<std::string>(
+  const rosidl_typesupport_introspection_c__MessageMember * member,
+  void * field,
+  size_t current_alignment)
+{
+  const size_t padding = 4;
+  using CStringHelper = StringHelper<rosidl_typesupport_introspection_c__MessageMembers>;
+  if (!member->is_array_) {
+    current_alignment = CStringHelper::next_field_align(field, current_alignment);
+  } else {
+    if (member->array_size_ && !member->is_upper_bound_) {
+      auto string_field = static_cast<rosidl_generator_c__String *>(field);
+      for (size_t i = 0; i < member->array_size_; ++i) {
+        current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+        current_alignment += padding;
+        current_alignment += strlen(string_field[i].data) + 1;
+      }
+    } else {
+      current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+      current_alignment += padding;
+      auto & string_array_field = *reinterpret_cast<rosidl_generator_c__String__Array *>(field);
+      for (size_t i = 0; i < string_array_field.size; ++i) {
+        current_alignment = CStringHelper::next_field_align(
+          &(string_array_field.data[i]), current_alignment);
+      }
+    }
+  }
+  return current_alignment;
+}
+
+template<typename MembersType>
+size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
+  const MembersType * members, const void * ros_message, size_t current_alignment)
+{
+  assert(members);
+  assert(ros_message);
+
+  size_t initial_alignment = current_alignment;
+
+  for (uint32_t i = 0; i < members->member_count_; ++i) {
+    const auto member = members->members_ + i;
+    void * field = const_cast<char *>(static_cast<const char *>(ros_message)) + member->offset_;
+    switch (member->type_id_) {
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
+        current_alignment = next_field_align<bool>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
+        current_alignment = next_field_align<uint8_t>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
+        current_alignment = next_field_align<char>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
+        current_alignment = next_field_align<float>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
+        current_alignment = next_field_align<double>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
+        current_alignment = next_field_align<int16_t>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
+        current_alignment = next_field_align<uint16_t>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
+        current_alignment = next_field_align<int32_t>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
+        current_alignment = next_field_align<uint32_t>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
+        current_alignment = next_field_align<int64_t>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
+        current_alignment = next_field_align<uint64_t>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
+        current_alignment = next_field_align<std::string>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
+        {
+          auto sub_members = static_cast<const MembersType *>(member->members_->data);
+          if (!member->is_array_) {
+            current_alignment += getEstimatedSerializedSize(sub_members, field, current_alignment);
+          } else {
+            void * subros_message = nullptr;
+            size_t array_size = 0;
+            size_t sub_members_size = sub_members->size_of_;
+            size_t max_align = calculateMaxAlign(sub_members);
+
+            if (member->array_size_ && !member->is_upper_bound_) {
+              subros_message = field;
+              array_size = member->array_size_;
+            } else {
+              array_size = get_array_size_and_assign_field(
+                member, field, subros_message, sub_members_size, max_align);
+
+              // Length serialization
+              current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
+            }
+
+            for (size_t index = 0; index < array_size; ++index) {
+              current_alignment += getEstimatedSerializedSize(
+                sub_members, subros_message, current_alignment);
+              subros_message = static_cast<char *>(subros_message) + sub_members_size;
+              subros_message = align_(max_align, subros_message);
+            }
+          }
+        }
+        break;
+      default:
+        throw std::runtime_error("unknown type");
+    }
+  }
+
+  return current_alignment - initial_alignment;
+}
+
 template<typename T>
 void deserialize_field(
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
@@ -647,9 +854,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
 
   size_t initial_alignment = current_alignment;
 
-  // Encapsulation
   const size_t padding = 4;
-  current_alignment += padding;
 
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     const auto * member = members->members_ + i;
@@ -659,6 +864,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
       array_size = member->array_size_;
       // Whether it is a sequence.
       if (0 == array_size || member->is_upper_bound_) {
+        this->max_size_bound_ = false;
         current_alignment += padding +
           eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       }
@@ -691,6 +897,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
         {
+          this->max_size_bound_ = false;
           for (size_t index = 0; index < array_size; ++index) {
             current_alignment += padding +
               eprosima::fastcdr::Cdr::alignment(current_alignment, padding) +
@@ -712,6 +919,28 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
   }
 
   return current_alignment - initial_alignment;
+}
+
+template<typename MembersType>
+size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
+  const void * ros_message)
+{
+  if (max_size_bound_) {
+    return m_typeSize;
+  }
+
+  assert(ros_message);
+
+  // Encapsulation size
+  size_t ret_val = 4;
+
+  if (members_->member_count_ != 0) {
+    ret_val += TypeSupport::getEstimatedSerializedSize(members_, ros_message, ret_val);
+  } else {
+    ret_val += 1;
+  }
+
+  return ret_val;
 }
 
 template<typename MembersType>

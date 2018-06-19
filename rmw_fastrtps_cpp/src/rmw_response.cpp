@@ -93,7 +93,7 @@ rmw_send_response(
   eprosima::fastcdr::Cdr ser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
     eprosima::fastcdr::Cdr::DDS_CDR);
 
-  _serialize_ros_message(ros_response, ser, info->response_type_support_,
+  _serialize_ros_message(ros_response, buffer, ser, info->response_type_support_,
     info->typesupport_identifier_);
   eprosima::fastrtps::rtps::WriteParams wparams;
   memcpy(&wparams.related_sample_identity().writer_guid(), request_header->writer_guid,

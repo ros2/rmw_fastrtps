@@ -27,6 +27,7 @@ class FastBuffer;
 bool
 _serialize_ros_message(
   const void * ros_message,
+  eprosima::fastcdr::FastBuffer & buffer,
   eprosima::fastcdr::Cdr & ser,
   void * untyped_typesupport,
   const char * typesupport_identifier);

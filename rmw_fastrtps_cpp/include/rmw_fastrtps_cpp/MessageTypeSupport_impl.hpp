@@ -38,12 +38,14 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType * members)
     members->message_name_ + "_";
   this->setName(name.c_str());
 
-  // TODO(wjwwood): this could be more intelligent, setting m_typeSize to the
-  // maximum serialized size of the message, when the message is a bounded one.
-  if (members->member_count_ != 0) {
-    this->m_typeSize = static_cast<uint32_t>(this->calculateMaxSerializedSize(members, 0));
+  // Fully bound by default
+  this->max_size_bound_ = true;
+  // Encapsulation size
+  this->m_typeSize = 4;
+  if (this->members_->member_count_ != 0) {
+    this->m_typeSize += static_cast<uint32_t>(this->calculateMaxSerializedSize(members, 4));
   } else {
-    this->m_typeSize = 4;
+    this->m_typeSize++;
   }
 }
 
