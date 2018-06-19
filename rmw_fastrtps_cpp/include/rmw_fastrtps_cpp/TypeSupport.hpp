@@ -42,6 +42,13 @@
 namespace rmw_fastrtps_cpp
 {
 
+// Publishers write method will receive a pointer to this struct
+struct SerializedData
+{
+  bool is_cdr_buffer;  // Whether next field is a pointer to a Cdr or to a plain ros message
+  void * data;
+};
+
 // Helper class that uses template specialization to read/write string types to/from a
 // eprosima::fastcdr::Cdr
 template<typename MembersType>

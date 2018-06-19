@@ -24,6 +24,7 @@
 #include "rmw_fastrtps_cpp/custom_client_info.hpp"
 #include "rmw_fastrtps_cpp/custom_service_info.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_cpp/TypeSupport.hpp"
 #include "ros_message_serialization.hpp"
 
 extern "C"
@@ -89,12 +90,6 @@ rmw_send_response(
   auto info = static_cast<CustomServiceInfo *>(service->data);
   assert(info);
 
-  eprosima::fastcdr::FastBuffer buffer;
-  eprosima::fastcdr::Cdr ser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
-    eprosima::fastcdr::Cdr::DDS_CDR);
-
-  _serialize_ros_message(ros_response, buffer, ser, info->response_type_support_,
-    info->typesupport_identifier_);
   eprosima::fastrtps::rtps::WriteParams wparams;
   memcpy(&wparams.related_sample_identity().writer_guid(), request_header->writer_guid,
     sizeof(eprosima::fastrtps::rtps::GUID_t));
@@ -103,7 +98,11 @@ rmw_send_response(
   wparams.related_sample_identity().sequence_number().low =
     (int32_t)(request_header->sequence_number & 0xFFFFFFFF);
 
-  if (info->response_publisher_->write(&ser, wparams)) {
+  rmw_fastrtps_cpp::SerializedData data;
+  data.is_cdr_buffer = false;
+  data.data = const_cast<void *>(ros_response);
+
+  if (info->response_publisher_->write(&data, wparams)) {
     returnedValue = RMW_RET_OK;
   } else {
     RMW_SET_ERROR_MSG("cannot publish data");
