@@ -96,10 +96,10 @@ rmw_take_request(
   assert(info);
 
   CustomServiceRequest request = info->listener_->getRequest();
-  eprosima::fastcdr::Cdr deser(*request.buffer_, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
-    eprosima::fastcdr::Cdr::DDS_CDR);
 
   if (request.buffer_ != nullptr) {
+    eprosima::fastcdr::Cdr deser(*request.buffer_, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
+      eprosima::fastcdr::Cdr::DDS_CDR);
     _deserialize_ros_message(deser, ros_request, info->request_type_support_,
       info->typesupport_identifier_);
 
