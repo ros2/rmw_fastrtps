@@ -420,8 +420,11 @@ size_t next_field_align(
     std::vector<T> & data = *reinterpret_cast<std::vector<T> *>(field);
     current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
     current_alignment += padding;
-    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
-    current_alignment += item_size * data.size();
+    auto num_elems = data.size();
+    if (num_elems > 0) {
+      current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
+      current_alignment += item_size * data.size();
+    }
   }
   return current_alignment;
 }
@@ -437,7 +440,7 @@ size_t next_field_align<std::string>(
   if (!member->is_array_) {
     current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
     current_alignment += padding;
-    auto str = *static_cast<std::string *>(field);
+    auto & str = *static_cast<std::string *>(field);
     current_alignment += str.size() + 1;
   } else if (member->array_size_ && !member->is_upper_bound_) {
     auto str_arr = static_cast<std::string *>(field);
@@ -935,7 +938,7 @@ size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
   size_t ret_val = 4;
 
   if (members_->member_count_ != 0) {
-    ret_val += TypeSupport::getEstimatedSerializedSize(members_, ros_message, ret_val);
+    ret_val += TypeSupport::getEstimatedSerializedSize(members_, ros_message, 0);
   } else {
     ret_val += 1;
   }
