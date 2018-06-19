@@ -27,6 +27,7 @@
 #include "rmw_fastrtps_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/macros.hpp"
+#include "rmw_fastrtps_cpp/TypeSupport.hpp"
 
 #include "./ros_message_serialization.hpp"
 
@@ -63,17 +64,15 @@ _take(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     info, "custom subscriber info is null", return RMW_RET_ERROR, error_msg_allocator);
 
-  eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastrtps::SampleInfo_t sinfo;
 
-  if (info->subscriber_->takeNextData(&buffer, &sinfo)) {
+  rmw_fastrtps_cpp::SerializedData data;
+  data.is_cdr_buffer = false;
+  data.data = ros_message;
+  if (info->subscriber_->takeNextData(&data, &sinfo)) {
     info->listener_->data_taken();
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
-      eprosima::fastcdr::Cdr deser(
-        buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
-      _deserialize_ros_message(deser, ros_message, info->type_support_,
-        info->typesupport_identifier_);
       if (message_info) {
         _assign_message_info(message_info, &sinfo);
       }
@@ -140,7 +139,10 @@ _take_serialized_message(
   eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastrtps::SampleInfo_t sinfo;
 
-  if (info->subscriber_->takeNextData(&buffer, &sinfo)) {
+  rmw_fastrtps_cpp::SerializedData data;
+  data.is_cdr_buffer = true;
+  data.data = &buffer;
+  if (info->subscriber_->takeNextData(&data, &sinfo)) {
     info->listener_->data_taken();
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {

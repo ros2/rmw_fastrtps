@@ -27,6 +27,7 @@
 #include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/publisher/Publisher.h"
+#include "rmw_fastrtps_cpp/TypeSupport.hpp"
 
 class ClientListener;
 
@@ -66,7 +67,10 @@ public:
     response.buffer_.reset(new eprosima::fastcdr::FastBuffer());
     eprosima::fastrtps::SampleInfo_t sinfo;
 
-    if (sub->takeNextData(response.buffer_.get(), &sinfo)) {
+    rmw_fastrtps_cpp::SerializedData data;
+    data.is_cdr_buffer = true;
+    data.data = response.buffer_.get();
+    if (sub->takeNextData(&data, &sinfo)) {
       if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
         response.sample_identity_ = sinfo.related_sample_identity;
 

@@ -1032,12 +1032,24 @@ bool TypeSupport<MembersType>::deserialize(
   assert(data);
   assert(payload);
 
-  auto buffer = static_cast<eprosima::fastcdr::FastBuffer *>(data);
-  if (!buffer->reserve(payload->length)) {
-    return false;
+  auto ser_data = static_cast<SerializedData *>(data);
+  if (ser_data->is_cdr_buffer) {
+    auto buffer = static_cast<eprosima::fastcdr::FastBuffer *>(ser_data->data);
+    if (!buffer->reserve(payload->length)) {
+      return false;
+    }
+    memcpy(buffer->getBuffer(), payload->data, payload->length);
+    return true;
   }
-  memcpy(buffer->getBuffer(), payload->data, payload->length);
-  return true;
+
+  eprosima::fastcdr::FastBuffer fastbuffer(
+    reinterpret_cast<char *>(payload->data),
+    payload->length);
+  eprosima::fastcdr::Cdr deser(
+    fastbuffer,
+    eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
+    eprosima::fastcdr::Cdr::DDS_CDR);
+  return deserializeROSmessage(deser, ser_data->data);
 }
 
 template<typename MembersType>
