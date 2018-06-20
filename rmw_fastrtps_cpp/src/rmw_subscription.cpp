@@ -19,11 +19,13 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
+
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/subscriber/Subscriber.h"
 
-#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
-#include "rmw_fastrtps_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
 
 #include "namespace_prefix.hpp"
@@ -103,7 +105,7 @@ rmw_create_subscription(
   {
     info->type_support_ = _create_message_type_support(type_support->data,
         info->typesupport_identifier_);
-    _register_type(participant, info->type_support_, info->typesupport_identifier_);
+    _register_type(participant, info->type_support_);
   }
 
   subscriberParam.historyMemoryPolicy =
@@ -151,7 +153,7 @@ fail:
 
   if (info != nullptr) {
     if (info->type_support_ != nullptr) {
-      _delete_typesupport(info->type_support_, info->typesupport_identifier_);
+      delete info->type_support_;
     }
     delete info;
   }
@@ -166,51 +168,7 @@ fail:
 rmw_ret_t
 rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
-    return RMW_RET_ERROR;
-  }
-
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  if (!subscription) {
-    RMW_SET_ERROR_MSG("subscription handle is null");
-    return RMW_RET_ERROR;
-  }
-
-  if (subscription->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
-
-  if (info != nullptr) {
-    if (info->subscriber_ != nullptr) {
-      Domain::removeSubscriber(info->subscriber_);
-    }
-    if (info->listener_ != nullptr) {
-      delete info->listener_;
-    }
-    if (info->type_support_ != nullptr) {
-      auto impl = static_cast<CustomParticipantInfo *>(node->data);
-      if (!impl) {
-        RMW_SET_ERROR_MSG("node impl is null");
-        return RMW_RET_ERROR;
-      }
-
-      Participant * participant = impl->participant;
-      _unregister_type(participant, info->type_support_, info->typesupport_identifier_);
-    }
-    delete info;
-  }
-  rmw_free(const_cast<char *>(subscription->topic_name));
-  subscription->topic_name = nullptr;
-  rmw_subscription_free(subscription);
-
-  return RMW_RET_OK;
+  return rmw_fastrtps_shared_cpp::__rmw_destroy_subscription(
+    eprosima_fastrtps_identifier, node, subscription);
 }
 }  // extern "C"

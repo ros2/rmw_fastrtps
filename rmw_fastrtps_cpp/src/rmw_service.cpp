@@ -30,21 +30,23 @@
 #include "rmw/allocators.h"
 #include "rmw/rmw.h"
 
-#include "rosidl_typesupport_introspection_cpp/identifier.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
+#include "rosidl_typesupport_introspection_cpp/identifier.hpp"
 #include "rosidl_typesupport_introspection_c/identifier.h"
 
+#include "type_support_common.hpp"
 #include "client_service_common.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "namespace_prefix.hpp"
 #include "qos.hpp"
-#include "type_support_common.hpp"
-#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
-#include "rmw_fastrtps_cpp/custom_service_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
 using TopicDataType = eprosima::fastrtps::TopicDataType;
+using CustomParticipantInfo = CustomParticipantInfo;
 
 extern "C"
 {
@@ -124,7 +126,7 @@ rmw_create_service(
   {
     info->request_type_support_ = _create_request_type_support(type_support->data,
         info->typesupport_identifier_);
-    _register_type(participant, info->request_type_support_, info->typesupport_identifier_);
+    _register_type(participant, info->request_type_support_);
   }
 
   if (!Domain::getRegisteredType(participant, response_type_name.c_str(),
@@ -132,7 +134,7 @@ rmw_create_service(
   {
     info->response_type_support_ = _create_response_type_support(type_support->data,
         info->typesupport_identifier_);
-    _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
+    _register_type(participant, info->response_type_support_);
   }
 
   subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
@@ -227,11 +229,11 @@ fail:
     }
 
     if (info->request_type_support_) {
-      _unregister_type(participant, info->request_type_support_, info->typesupport_identifier_);
+      rmw_fastrtps_shared_cpp::_unregister_type(participant, info->request_type_support_);
     }
 
     if (info->response_type_support_) {
-      _unregister_type(participant, info->response_type_support_, info->typesupport_identifier_);
+      rmw_fastrtps_shared_cpp::_unregister_type(participant, info->response_type_support_);
     }
 
     delete info;
@@ -249,44 +251,7 @@ fail:
 rmw_ret_t
 rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
 {
-  (void)node;
-  if (!service) {
-    RMW_SET_ERROR_MSG("service handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (service->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("publisher handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  CustomServiceInfo * info = static_cast<CustomServiceInfo *>(service->data);
-  if (info != nullptr) {
-    if (info->request_subscriber_ != nullptr) {
-      Domain::removeSubscriber(info->request_subscriber_);
-    }
-    if (info->response_publisher_ != nullptr) {
-      Domain::removePublisher(info->response_publisher_);
-    }
-    if (info->listener_ != nullptr) {
-      delete info->listener_;
-    }
-
-    if (info->request_type_support_ != nullptr) {
-      _unregister_type(info->participant_, info->request_type_support_,
-        info->typesupport_identifier_);
-    }
-    if (info->response_type_support_ != nullptr) {
-      _unregister_type(info->participant_, info->response_type_support_,
-        info->typesupport_identifier_);
-    }
-    delete info;
-  }
-  if (service->service_name != nullptr) {
-    rmw_free(const_cast<char *>(service->service_name));
-    service->service_name = nullptr;
-  }
-  rmw_service_free(service);
-
-  return RMW_RET_OK;
+  return rmw_fastrtps_shared_cpp::__rmw_destroy_service(
+    eprosima_fastrtps_identifier, node, service);
 }
 }  // extern "C"

@@ -28,6 +28,7 @@ endif()
 find_package(ament_cmake_ros REQUIRED)
 
 find_package(rcutils REQUIRED)
+find_package(rmw_fastrtps_shared_cpp REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr REQUIRED CONFIG)
@@ -43,7 +44,6 @@ include_directories(include)
 
 add_library(rmw_fastrtps_cpp
   src/client_service_common.cpp
-  src/demangle.cpp
   src/get_client.cpp
   src/get_participant.cpp
   src/get_publisher.cpp
@@ -76,7 +76,6 @@ add_library(rmw_fastrtps_cpp
   src/rmw_trigger_guard_condition.cpp
   src/rmw_wait.cpp
   src/rmw_wait_set.cpp
-  src/ros_message_serialization.cpp
   src/type_support_common.cpp
 )
 target_link_libraries(rmw_fastrtps_cpp
@@ -87,6 +86,7 @@ ament_target_dependencies(rmw_fastrtps_cpp
   "rcutils"
   "rosidl_typesupport_introspection_c"
   "rosidl_typesupport_introspection_cpp"
+  "rmw_fastrtps_shared_cpp"
   "rmw"
   "rosidl_generator_c"
 )
@@ -106,6 +106,7 @@ ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 ament_export_dependencies(rosidl_typesupport_introspection_c)
 ament_export_dependencies(rosidl_generator_c)
 ament_export_dependencies(rcutils)
+ament_export_dependencies(rmw_fastrtps_shared_cpp)
 ament_export_dependencies(rmw)
 
 register_rmw_implementation(

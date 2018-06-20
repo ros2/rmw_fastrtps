@@ -22,6 +22,8 @@
 
 #include "rmw/error_handling.h"
 
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+
 #include "rmw_fastrtps_cpp/MessageTypeSupport.hpp"
 #include "rmw_fastrtps_cpp/ServiceTypeSupport.hpp"
 
@@ -96,28 +98,18 @@ _create_type_name(
   return "";
 }
 
-void *
+rmw_fastrtps_shared_cpp::TypeSupport *
 _create_message_type_support(const void * untyped_members, const char * typesupport_identifier);
 
-void *
+rmw_fastrtps_shared_cpp::TypeSupport *
 _create_request_type_support(const void * untyped_members, const char * typesupport_identifier);
 
-void *
+rmw_fastrtps_shared_cpp::TypeSupport *
 _create_response_type_support(const void * untyped_members, const char * typesupport_identifier);
 
 void
 _register_type(
   eprosima::fastrtps::Participant * participant,
-  void * untyped_typesupport,
-  const char * typesupport_identifier);
-
-void
-_unregister_type(
-  eprosima::fastrtps::Participant * participant,
-  void * untyped_typesupport,
-  const char * typesupport_identifier);
-
-void
-_delete_typesupport(void * untyped_typesupport, const char * typesupport_identifier);
+  rmw_fastrtps_shared_cpp::TypeSupport * typed_typesupport);
 
 #endif  // TYPE_SUPPORT_COMMON_HPP_

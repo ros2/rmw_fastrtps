@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "client_service_common.hpp"
+#include <string>
 
+#include "client_service_common.hpp"
 #include "type_support_common.hpp"
 
 const void *

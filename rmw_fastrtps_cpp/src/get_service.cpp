@@ -14,7 +14,7 @@
 
 #include "rmw_fastrtps_cpp/get_service.hpp"
 
-#include "rmw_fastrtps_cpp/custom_service_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
 
 namespace rmw_fastrtps_cpp

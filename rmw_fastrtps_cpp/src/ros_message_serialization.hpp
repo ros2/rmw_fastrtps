@@ -24,12 +24,6 @@ class FastBuffer;
 }  // namespace fastcdr
 }  // namespace eprosima
 
-size_t
-_get_serialized_size(
-  const void * ros_message,
-  void * untyped_typesupport,
-  const char * typesupport_identifier);
-
 bool
 _serialize_ros_message(
   const void * ros_message,
