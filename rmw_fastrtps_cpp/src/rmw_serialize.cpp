@@ -19,7 +19,6 @@
 #include "rmw/rmw.h"
 
 #include "./type_support_common.hpp"
-#include "./ros_message_serialization.hpp"
 
 extern "C"
 {
@@ -41,7 +40,7 @@ rmw_serialize(
   }
 
   auto tss = _create_message_type_support(ts->data, ts->typesupport_identifier);
-  auto data_length = _get_serialized_size(ros_message, tss, ts->typesupport_identifier);
+  auto data_length = tss->getEstimatedSerializedSize(ros_message);
   if (serialized_message->buffer_capacity < data_length) {
     if (rmw_serialized_message_resize(serialized_message, data_length) != RMW_RET_OK) {
       RMW_SET_ERROR_MSG("unable to dynamically resize serialized message");
@@ -53,10 +52,10 @@ rmw_serialize(
   eprosima::fastcdr::Cdr ser(
     buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
 
-  auto ret = _serialize_ros_message(ros_message, buffer, ser, tss, ts->typesupport_identifier);
+  auto ret = tss->serializeROSmessage(ros_message, ser);
   serialized_message->buffer_length = data_length;
   serialized_message->buffer_capacity = data_length;
-  _delete_typesupport(tss, ts->typesupport_identifier);
+  delete tss;
   return ret == true ? RMW_RET_OK : RMW_RET_ERROR;
 }
 
@@ -83,8 +82,8 @@ rmw_deserialize(
   eprosima::fastcdr::Cdr deser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
     eprosima::fastcdr::Cdr::DDS_CDR);
 
-  auto ret = _deserialize_ros_message(deser, ros_message, tss, ts->typesupport_identifier);
-  _delete_typesupport(tss, ts->typesupport_identifier);
+  auto ret = tss->deserializeROSmessage(deser, ros_message);
+  delete tss;
   return ret == true ? RMW_RET_OK : RMW_RET_ERROR;
 }
 }  // extern "C"

@@ -39,15 +39,10 @@
 #include "rosidl_typesupport_introspection_c/service_introspection.h"
 #include "rosidl_typesupport_introspection_c/visibility_control.h"
 
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+
 namespace rmw_fastrtps_cpp
 {
-
-// Publishers write method will receive a pointer to this struct
-struct SerializedData
-{
-  bool is_cdr_buffer;  // Whether next field is a pointer to a Cdr or to a plain ros message
-  void * data;
-};
 
 // Helper class that uses template specialization to read/write string types to/from a
 // eprosima::fastcdr::Cdr
@@ -136,7 +131,7 @@ struct StringHelper<rosidl_typesupport_introspection_cpp::MessageMembers>
 };
 
 template<typename MembersType>
-class TypeSupport : public eprosima::fastrtps::TopicDataType
+class TypeSupport : public rmw_fastrtps_shared_cpp::TypeSupport
 {
 public:
   size_t getEstimatedSerializedSize(const void * ros_message);
@@ -145,23 +140,12 @@ public:
 
   bool deserializeROSmessage(eprosima::fastcdr::Cdr & deser, void * ros_message);
 
-  bool serialize(void * data, eprosima::fastrtps::rtps::SerializedPayload_t * payload);
-
-  bool deserialize(eprosima::fastrtps::rtps::SerializedPayload_t * payload, void * data);
-
-  std::function<uint32_t()> getSerializedSizeProvider(void * data);
-
-  void * createData();
-
-  void deleteData(void * data);
-
 protected:
   TypeSupport();
 
   size_t calculateMaxSerializedSize(const MembersType * members, size_t current_alignment);
 
   const MembersType * members_;
-  bool max_size_bound_;
 
 private:
   size_t getEstimatedSerializedSize(

@@ -22,9 +22,9 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+
 #include "rmw_fastrtps_cpp/identifier.hpp"
-#include "demangle.hpp"
-#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
 
 extern "C"
 {
@@ -34,37 +34,8 @@ rmw_count_publishers(
   const char * topic_name,
   size_t * count)
 {
-  // safechecks
-
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
-    return RMW_RET_ERROR;
-  }
-  // Get participant pointer from node
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  auto impl = static_cast<CustomParticipantInfo *>(node->data);
-
-  WriterInfo * slave_target = impl->secondaryPubListener;
-  slave_target->mapmutex.lock();
-  *count = 0;
-  for (const auto & it : slave_target->topicNtypes) {
-    const auto topic_fqdn = _demangle_if_ros_topic(it.first);
-    if (topic_fqdn == topic_name) {
-      *count += it.second.size();
-    }
-  }
-  slave_target->mapmutex.unlock();
-
-  RCUTILS_LOG_DEBUG_NAMED(
-    "rmw_fastrtps_cpp",
-    "looking for subscriber topic: %s, number of matches: %zu",
-    topic_name, *count)
-
-  return RMW_RET_OK;
+  return rmw_fastrtps_shared_cpp::__rmw_count_publishers(
+    eprosima_fastrtps_identifier, node, topic_name, count);
 }
 
 rmw_ret_t
@@ -73,36 +44,7 @@ rmw_count_subscribers(
   const char * topic_name,
   size_t * count)
 {
-  // safechecks
-
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
-    return RMW_RET_ERROR;
-  }
-  // Get participant pointer from node
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
-
-  ReaderInfo * slave_target = impl->secondarySubListener;
-  *count = 0;
-  slave_target->mapmutex.lock();
-  for (const auto & it : slave_target->topicNtypes) {
-    const auto topic_fqdn = _demangle_if_ros_topic(it.first);
-    if (topic_fqdn == topic_name) {
-      *count += it.second.size();
-    }
-  }
-  slave_target->mapmutex.unlock();
-
-  RCUTILS_LOG_DEBUG_NAMED(
-    "rmw_fastrtps_cpp",
-    "looking for subscriber topic: %s, number of matches: %zu",
-    topic_name, *count)
-
-  return RMW_RET_OK;
+  return rmw_fastrtps_shared_cpp::__rmw_count_subscribers(
+    eprosima_fastrtps_identifier, node, topic_name, count);
 }
 }  // extern "C"

@@ -18,6 +18,8 @@
 #include "rmw/error_handling.h"
 #include "rmw/types.h"
 
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+
 #include "rmw_fastrtps_cpp/identifier.hpp"
 
 extern "C"
@@ -25,34 +27,7 @@ extern "C"
 rmw_ret_t
 rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * result)
 {
-  if (!gid1) {
-    RMW_SET_ERROR_MSG("gid1 is null");
-    return RMW_RET_ERROR;
-  }
-
-  if (gid1->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("guid1 handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  if (!gid2) {
-    RMW_SET_ERROR_MSG("gid2 is null");
-    return RMW_RET_ERROR;
-  }
-
-  if (gid2->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("gid1 handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  if (!result) {
-    RMW_SET_ERROR_MSG("result is null");
-    return RMW_RET_ERROR;
-  }
-
-  *result =
-    memcmp(gid1->data, gid2->data, sizeof(eprosima::fastrtps::rtps::GUID_t)) == 0;
-
-  return RMW_RET_OK;
+  return rmw_fastrtps_shared_cpp::__rmw_compare_gids_equal(
+    eprosima_fastrtps_identifier, gid1, gid2, result);
 }
 }  // extern "C"

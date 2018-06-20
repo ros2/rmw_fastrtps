@@ -17,38 +17,13 @@
 
 #include "rcutils/logging_macros.h"
 
-#include "fastrtps/log/Log.h"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
 extern "C"
 {
-using eprosima::fastrtps::Log;
-
 rmw_ret_t
 rmw_set_log_severity(rmw_log_severity_t severity)
 {
-  Log::Kind log_kind;
-
-  switch (severity) {
-    case RMW_LOG_SEVERITY_DEBUG:
-// fall through
-    case RMW_LOG_SEVERITY_INFO:
-      log_kind = Log::Kind::Info;
-      break;
-    case RMW_LOG_SEVERITY_WARN:
-      log_kind = Log::Kind::Warning;
-      break;
-    case RMW_LOG_SEVERITY_ERROR:
-// fall through
-    case RMW_LOG_SEVERITY_FATAL:
-      log_kind = Log::Kind::Error;
-      break;
-    default:
-      RCUTILS_LOG_ERROR("Unknown logging severity type %d", severity);
-      return RMW_RET_ERROR;
-  }
-
-  eprosima::fastrtps::Log::SetVerbosity(log_kind);
-
-  return RMW_RET_OK;
+  return rmw_fastrtps_shared_cpp::__rmw_set_log_severity(severity);
 }
 }  // extern "C"

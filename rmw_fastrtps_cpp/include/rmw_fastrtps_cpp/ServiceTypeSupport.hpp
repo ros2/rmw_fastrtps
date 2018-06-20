@@ -22,8 +22,6 @@
 #include "TypeSupport.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
-struct CustomServiceInfo;
-
 namespace rmw_fastrtps_cpp
 {
 

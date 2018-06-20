@@ -33,7 +33,7 @@ using_introspection_cpp_typesupport(const char * typesupport_identifier)
          rosidl_typesupport_introspection_cpp::typesupport_identifier;
 }
 
-void *
+rmw_fastrtps_shared_cpp::TypeSupport *
 _create_message_type_support(const void * untyped_members, const char * typesupport_identifier)
 {
   if (using_introspection_c_typesupport(typesupport_identifier)) {
@@ -49,7 +49,7 @@ _create_message_type_support(const void * untyped_members, const char * typesupp
   return nullptr;
 }
 
-void *
+rmw_fastrtps_shared_cpp::TypeSupport *
 _create_request_type_support(const void * untyped_members, const char * typesupport_identifier)
 {
   if (using_introspection_c_typesupport(typesupport_identifier)) {
@@ -65,7 +65,7 @@ _create_request_type_support(const void * untyped_members, const char * typesupp
   return nullptr;
 }
 
-void *
+rmw_fastrtps_shared_cpp::TypeSupport *
 _create_response_type_support(const void * untyped_members, const char * typesupport_identifier)
 {
   if (using_introspection_c_typesupport(typesupport_identifier)) {
@@ -84,55 +84,7 @@ _create_response_type_support(const void * untyped_members, const char * typesup
 void
 _register_type(
   eprosima::fastrtps::Participant * participant,
-  void * untyped_typesupport,
-  const char * typesupport_identifier)
+  rmw_fastrtps_shared_cpp::TypeSupport * typed_typesupport)
 {
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<TypeSupport_c *>(untyped_typesupport);
-    eprosima::fastrtps::Domain::registerType(participant, typed_typesupport);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<TypeSupport_cpp *>(untyped_typesupport);
-    eprosima::fastrtps::Domain::registerType(participant, typed_typesupport);
-  } else {
-    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  }
-}
-
-void
-_unregister_type(
-  eprosima::fastrtps::Participant * participant,
-  void * untyped_typesupport,
-  const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<TypeSupport_c *>(untyped_typesupport);
-    if (eprosima::fastrtps::Domain::unregisterType(participant, typed_typesupport->getName())) {
-      delete typed_typesupport;
-    }
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<TypeSupport_cpp *>(untyped_typesupport);
-    if (eprosima::fastrtps::Domain::unregisterType(participant, typed_typesupport->getName())) {
-      delete typed_typesupport;
-    }
-  } else {
-    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  }
-}
-
-void
-_delete_typesupport(void * untyped_typesupport, const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<MessageTypeSupport_c *>(untyped_typesupport);
-    if (typed_typesupport != nullptr) {
-      delete typed_typesupport;
-    }
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto typed_typesupport = static_cast<MessageTypeSupport_cpp *>(untyped_typesupport);
-    if (typed_typesupport != nullptr) {
-      delete typed_typesupport;
-    }
-  } else {
-    RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  }
+  eprosima::fastrtps::Domain::registerType(participant, typed_typesupport);
 }
