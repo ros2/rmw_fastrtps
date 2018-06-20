@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
-#define RMW_FASTRTPS_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
 
 #include <map>
 #include <string>
@@ -26,10 +26,9 @@
 #include "rmw/impl/cpp/key_value.hpp"
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_cpp/reader_info.hpp"
-#include "rmw_fastrtps_cpp/writer_info.hpp"
-
 class ParticipantListener;
+class ReaderInfo;
+class WriterInfo;
 
 typedef struct CustomParticipantInfo
 {
@@ -95,4 +94,4 @@ public:
   std::map<eprosima::fastrtps::rtps::GUID_t, std::string> discovered_names;
 };
 
-#endif  // RMW_FASTRTPS_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_

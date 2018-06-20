@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_HPP_
-#define RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__MESSAGETYPESUPPORT_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__MESSAGETYPESUPPORT_HPP_
 
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
@@ -22,10 +22,8 @@
 #include <memory>
 
 #include "TypeSupport.hpp"
-#include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
-#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
-namespace rmw_fastrtps_cpp
+namespace rmw_fastrtps_shared_cpp
 {
 
 template<typename MembersType>
@@ -35,8 +33,6 @@ public:
   explicit MessageTypeSupport(const MembersType * members);
 };
 
-}  // namespace rmw_fastrtps_cpp
+}  // namespace rmw_fastrtps_shared_cpp
 
-#include "MessageTypeSupport_impl.hpp"
-
-#endif  // RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__MESSAGETYPESUPPORT_HPP_

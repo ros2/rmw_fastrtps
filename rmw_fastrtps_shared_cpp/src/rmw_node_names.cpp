@@ -15,6 +15,7 @@
 #include <string>
 
 #include "rcutils/allocator.h"
+#include "rcutils/logging_macros.h"
 #include "rcutils/strdup.h"
 #include "rcutils/types.h"
 
@@ -26,15 +27,16 @@
 
 #include "fastrtps/Domain.h"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
-#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 
 using Participant = eprosima::fastrtps::Participant;
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
-rmw_get_node_names(
+__rmw_get_node_names(
+  const char * identifier,
   const rmw_node_t * node,
   rcutils_string_array_t * node_names)
 {
@@ -47,7 +49,7 @@ rmw_get_node_names(
   }
 
   // Get participant pointer from node
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -73,7 +75,7 @@ rmw_get_node_names(
       rcutils_ret = rcutils_string_array_fini(node_names);
       if (rcutils_ret != RCUTILS_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
-          "rmw_fastrtps_cpp",
+          "rmw_fastrtps_shared_cpp",
           "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
       }
       return RMW_RET_BAD_ALLOC;
@@ -81,4 +83,4 @@ rmw_get_node_names(
   }
   return RMW_RET_OK;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

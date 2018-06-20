@@ -17,17 +17,19 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "types/guard_condition.hpp"
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
-rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle)
+__rmw_trigger_guard_condition(
+  const char * identifier,
+  const rmw_guard_condition_t * guard_condition_handle)
 {
   assert(guard_condition_handle);
 
-  if (guard_condition_handle->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (guard_condition_handle->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("guard condition handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -36,4 +38,4 @@ rmw_trigger_guard_condition(const rmw_guard_condition_t * guard_condition_handle
   guard_condition->trigger();
   return RMW_RET_OK;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

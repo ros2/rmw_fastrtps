@@ -18,19 +18,23 @@
 #include "rmw/error_handling.h"
 #include "rmw/types.h"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
-rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * result)
+__rmw_compare_gids_equal(
+  const char * identifier,
+  const rmw_gid_t * gid1,
+  const rmw_gid_t * gid2,
+  bool * result)
 {
   if (!gid1) {
     RMW_SET_ERROR_MSG("gid1 is null");
     return RMW_RET_ERROR;
   }
 
-  if (gid1->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (gid1->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("guid1 handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -40,8 +44,8 @@ rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * re
     return RMW_RET_ERROR;
   }
 
-  if (gid2->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("gid1 handle not from this implementation");
+  if (gid2->implementation_identifier != identifier) {
+    RMW_SET_ERROR_MSG("gid2 handle not from this implementation");
     return RMW_RET_ERROR;
   }
 
@@ -55,4 +59,4 @@ rmw_compare_gids_equal(const rmw_gid_t * gid1, const rmw_gid_t * gid2, bool * re
 
   return RMW_RET_OK;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

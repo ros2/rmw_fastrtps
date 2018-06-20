@@ -23,16 +23,16 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "rmw_fastrtps_cpp/custom_client_info.hpp"
-#include "rmw_fastrtps_cpp/custom_service_info.hpp"
-#include "rmw_fastrtps_cpp/identifier.hpp"
-#include "rmw_fastrtps_cpp/TypeSupport.hpp"
-#include "ros_message_serialization.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
-rmw_send_request(
+__rmw_send_request(
+  const char * identifier,
   const rmw_client_t * client,
   const void * ros_request,
   int64_t * sequence_id)
@@ -43,7 +43,7 @@ rmw_send_request(
 
   rmw_ret_t returnedValue = RMW_RET_ERROR;
 
-  if (client->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (client->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -52,7 +52,7 @@ rmw_send_request(
   assert(info);
 
   eprosima::fastrtps::rtps::WriteParams wparams;
-  rmw_fastrtps_cpp::SerializedData data;
+  rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = false;
   data.data = const_cast<void *>(ros_request);
   if (info->request_publisher_->write(&data, wparams)) {
@@ -67,7 +67,8 @@ rmw_send_request(
 }
 
 rmw_ret_t
-rmw_take_request(
+__rmw_take_request(
+  const char * identifier,
   const rmw_service_t * service,
   rmw_request_id_t * request_header,
   void * ros_request,
@@ -80,7 +81,7 @@ rmw_take_request(
 
   *taken = false;
 
-  if (service->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (service->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("service handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -93,8 +94,7 @@ rmw_take_request(
   if (request.buffer_ != nullptr) {
     eprosima::fastcdr::Cdr deser(*request.buffer_, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::Cdr::DDS_CDR);
-    _deserialize_ros_message(deser, ros_request, info->request_type_support_,
-      info->typesupport_identifier_);
+    info->request_type_support_->deserializeROSmessage(deser, ros_request);
 
     // Get header
     memcpy(request_header->writer_guid, &request.sample_identity_.writer_guid(),
@@ -109,4 +109,4 @@ rmw_take_request(
 
   return RMW_RET_OK;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

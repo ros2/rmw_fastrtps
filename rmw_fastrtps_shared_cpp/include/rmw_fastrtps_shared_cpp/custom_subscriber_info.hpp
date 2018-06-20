@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
-#define RMW_FASTRTPS_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
 
 #include <atomic>
 #include <condition_variable>
@@ -23,13 +23,15 @@
 #include "fastrtps/subscriber/Subscriber.h"
 #include "fastrtps/subscriber/SubscriberListener.h"
 
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+
 class SubListener;
 
 typedef struct CustomSubscriberInfo
 {
   eprosima::fastrtps::Subscriber * subscriber_;
   SubListener * listener_;
-  void * type_support_;
+  rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
   const char * typesupport_identifier_;
 } CustomSubscriberInfo;
 
@@ -112,4 +114,4 @@ private:
   std::condition_variable * conditionVariable_;
 };
 
-#endif  // RMW_FASTRTPS_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_

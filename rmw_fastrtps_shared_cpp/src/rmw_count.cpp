@@ -22,14 +22,17 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
 #include "demangle.hpp"
-#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "reader_info.hpp"
+#include "writer_info.hpp"
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
-rmw_count_publishers(
+__rmw_count_publishers(
+  const char * identifier,
   const rmw_node_t * node,
   const char * topic_name,
   size_t * count)
@@ -41,7 +44,7 @@ rmw_count_publishers(
     return RMW_RET_ERROR;
   }
   // Get participant pointer from node
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -60,7 +63,7 @@ rmw_count_publishers(
   slave_target->mapmutex.unlock();
 
   RCUTILS_LOG_DEBUG_NAMED(
-    "rmw_fastrtps_cpp",
+    "rmw_fastrtps_shared_cpp",
     "looking for subscriber topic: %s, number of matches: %zu",
     topic_name, *count)
 
@@ -68,7 +71,8 @@ rmw_count_publishers(
 }
 
 rmw_ret_t
-rmw_count_subscribers(
+__rmw_count_subscribers(
+  const char * identifier,
   const rmw_node_t * node,
   const char * topic_name,
   size_t * count)
@@ -80,7 +84,7 @@ rmw_count_subscribers(
     return RMW_RET_ERROR;
   }
   // Get participant pointer from node
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -99,10 +103,10 @@ rmw_count_subscribers(
   slave_target->mapmutex.unlock();
 
   RCUTILS_LOG_DEBUG_NAMED(
-    "rmw_fastrtps_cpp",
+    "rmw_fastrtps_shared_cpp",
     "looking for subscriber topic: %s, number of matches: %zu",
     topic_name, *count)
 
   return RMW_RET_OK;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp
