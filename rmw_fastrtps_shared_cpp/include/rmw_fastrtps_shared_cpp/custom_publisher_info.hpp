@@ -12,19 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__CUSTOM_PUBLISHER_INFO_HPP_
-#define RMW_FASTRTPS_CPP__CUSTOM_PUBLISHER_INFO_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 
 #include "fastrtps/publisher/Publisher.h"
 
 #include "rmw/rmw.h"
 
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+
 typedef struct CustomPublisherInfo
 {
   eprosima::fastrtps::Publisher * publisher_;
-  void * type_support_;
+  rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
   rmw_gid_t publisher_gid;
   const char * typesupport_identifier_;
 } CustomPublisherInfo;
 
-#endif  // RMW_FASTRTPS_CPP__CUSTOM_PUBLISHER_INFO_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_

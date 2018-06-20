@@ -17,9 +17,10 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_cpp/custom_client_info.hpp"
-#include "rmw_fastrtps_cpp/custom_service_info.hpp"
-#include "rmw_fastrtps_cpp/custom_subscriber_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "types/custom_wait_set_info.hpp"
 #include "types/guard_condition.hpp"
 
@@ -74,10 +75,10 @@ check_wait_set_for_data(
   return false;
 }
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
-rmw_wait(
+__rmw_wait(
   rmw_subscriptions_t * subscriptions,
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
@@ -215,4 +216,4 @@ rmw_wait(
 
   return timeout ? RMW_RET_TIMEOUT : RMW_RET_OK;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

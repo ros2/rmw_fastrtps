@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__READER_INFO_HPP_
-#define RMW_FASTRTPS_CPP__READER_INFO_HPP_
+#ifndef READER_INFO_HPP_
+#define READER_INFO_HPP_
 
 #include <cassert>
 #include <map>
@@ -33,6 +33,8 @@
 #include "fastrtps/rtps/reader/ReaderListener.h"
 #include "fastrtps/rtps/reader/RTPSReader.h"
 
+#include "types/guard_condition.hpp"
+
 class ReaderInfo : public eprosima::fastrtps::rtps::ReaderListener
 {
 public:
@@ -40,7 +42,7 @@ public:
     eprosima::fastrtps::Participant * participant,
     rmw_guard_condition_t * graph_guard_condition)
   : participant_(participant),
-    graph_guard_condition_(graph_guard_condition)
+    graph_guard_condition_(static_cast<GuardCondition *>(graph_guard_condition->data))
   {}
 
   void
@@ -88,7 +90,7 @@ public:
           trigger = true;
         } else {
           RCUTILS_LOG_DEBUG_NAMED(
-            "rmw_fastrtps_cpp",
+            "rmw_fastrtps_shared_cpp",
             "unexpected removal of subscription on topic '%s' with type '%s'",
             fqdn.c_str(), proxyData.typeName().c_str());
         }
@@ -97,19 +99,13 @@ public:
     mapmutex.unlock();
 
     if (trigger) {
-      rmw_ret_t ret = rmw_trigger_guard_condition(graph_guard_condition_);
-      if (ret != RMW_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rmw_fastrtps_cpp",
-          "failed to trigger graph guard condition: %s",
-          rmw_get_error_string_safe())
-      }
+      graph_guard_condition_->trigger();
     }
   }
   std::map<std::string, std::vector<std::string>> topicNtypes;
   std::mutex mapmutex;
   eprosima::fastrtps::Participant * participant_;
-  rmw_guard_condition_t * graph_guard_condition_;
+  GuardCondition * graph_guard_condition_;
 };
 
-#endif  // RMW_FASTRTPS_CPP__READER_INFO_HPP_
+#endif  // READER_INFO_HPP_

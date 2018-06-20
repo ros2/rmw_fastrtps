@@ -15,22 +15,23 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+
 #include "types/guard_condition.hpp"
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_guard_condition_t *
-rmw_create_guard_condition()
+__rmw_create_guard_condition(const char * identifier)
 {
   rmw_guard_condition_t * guard_condition_handle = new rmw_guard_condition_t;
-  guard_condition_handle->implementation_identifier = eprosima_fastrtps_identifier;
+  guard_condition_handle->implementation_identifier = identifier;
   guard_condition_handle->data = new GuardCondition();
   return guard_condition_handle;
 }
 
 rmw_ret_t
-rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
+__rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
 {
   if (guard_condition) {
     delete static_cast<GuardCondition *>(guard_condition->data);
@@ -40,4 +41,4 @@ rmw_destroy_guard_condition(rmw_guard_condition_t * guard_condition)
 
   return RMW_RET_ERROR;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

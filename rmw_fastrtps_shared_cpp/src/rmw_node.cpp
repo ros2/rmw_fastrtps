@@ -43,18 +43,22 @@
 #include "fastrtps/rtps/reader/ReaderListener.h"
 #include "fastrtps/rtps/builtin/discovery/endpoint/EDPSimple.h"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
-#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+
+#include "reader_info.hpp"
+#include "writer_info.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
 using ParticipantAttributes = eprosima::fastrtps::ParticipantAttributes;
 using StatefulReader = eprosima::fastrtps::rtps::StatefulReader;
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_node_t *
 create_node(
+  const char * identifier,
   const char * name,
   const char * namespace_,
   ParticipantAttributes participantAttrs)
@@ -92,7 +96,7 @@ create_node(
     return nullptr;
   }
 
-  graph_guard_condition = rmw_create_guard_condition();
+  graph_guard_condition = __rmw_create_guard_condition(identifier);
   if (!graph_guard_condition) {
     // error already set
     goto fail;
@@ -110,7 +114,7 @@ create_node(
     RMW_SET_ERROR_MSG("failed to allocate rmw_node_t");
     goto fail;
   }
-  node_handle->implementation_identifier = eprosima_fastrtps_identifier;
+  node_handle->implementation_identifier = identifier;
   node_impl->participant = participant;
   node_impl->listener = listener;
   node_impl->graph_guard_condition = graph_guard_condition;
@@ -168,10 +172,10 @@ fail:
   rmw_node_free(node_handle);
   delete node_impl;
   if (graph_guard_condition) {
-    rmw_ret_t ret = rmw_destroy_guard_condition(graph_guard_condition);
+    rmw_ret_t ret = __rmw_destroy_guard_condition(graph_guard_condition);
     if (ret != RMW_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_cpp",
+        "rmw_fastrtps_shared_cpp",
         "failed to destroy guard condition during error handling")
     }
   }
@@ -217,7 +221,8 @@ get_security_file_paths(
 }
 
 rmw_node_t *
-rmw_create_node(
+__rmw_create_node(
+  const char * identifier,
   const char * name,
   const char * namespace_,
   size_t domain_id,
@@ -293,11 +298,13 @@ rmw_create_node(
     return nullptr;
 #endif
   }
-  return create_node(name, namespace_, participantAttrs);
+  return create_node(identifier, name, namespace_, participantAttrs);
 }
 
 rmw_ret_t
-rmw_destroy_node(rmw_node_t * node)
+__rmw_destroy_node(
+  const char * identifier,
+  rmw_node_t * node)
 {
   rmw_ret_t result_ret = RMW_RET_OK;
   if (!node) {
@@ -305,7 +312,7 @@ rmw_destroy_node(rmw_node_t * node)
     return RMW_RET_ERROR;
   }
 
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -318,7 +325,7 @@ rmw_destroy_node(rmw_node_t * node)
 
   Participant * participant = impl->participant;
 
-  // Begin deleting things in the same order they were created in rmw_create_node().
+  // Begin deleting things in the same order they were created in __rmw_create_node().
   std::pair<StatefulReader *, StatefulReader *> edp_readers = participant->getEDPReaders();
   if (!edp_readers.first || !edp_readers.second) {
     RMW_SET_ERROR_MSG("failed to get EDPReader listener");
@@ -342,7 +349,7 @@ rmw_destroy_node(rmw_node_t * node)
   node->namespace_ = nullptr;
   rmw_node_free(node);
 
-  if (RMW_RET_OK != rmw_destroy_guard_condition(impl->graph_guard_condition)) {
+  if (RMW_RET_OK != __rmw_destroy_guard_condition(impl->graph_guard_condition)) {
     RMW_SET_ERROR_MSG("failed to destroy graph guard condition");
     result_ret = RMW_RET_ERROR;
   }
@@ -357,7 +364,7 @@ rmw_destroy_node(rmw_node_t * node)
 }
 
 const rmw_guard_condition_t *
-rmw_node_get_graph_guard_condition(const rmw_node_t * node)
+__rmw_node_get_graph_guard_condition(const rmw_node_t * node)
 {
   auto impl = static_cast<CustomParticipantInfo *>(node->data);
   if (!impl) {
@@ -366,4 +373,4 @@ rmw_node_get_graph_guard_condition(const rmw_node_t * node)
   }
   return impl->graph_guard_condition;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

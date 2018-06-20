@@ -19,17 +19,17 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_cpp/custom_publisher_info.hpp"
-#include "rmw_fastrtps_cpp/identifier.hpp"
-#include "rmw_fastrtps_cpp/macros.hpp"
-#include "rmw_fastrtps_cpp/TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
-#include "./ros_message_serialization.hpp"
-
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
-rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
+__rmw_publish(
+  const char * identifier,
+  const rmw_publisher_t * publisher,
+  const void * ros_message)
 {
   auto error_allocator = rcutils_get_default_allocator();
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
@@ -37,7 +37,7 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     ros_message, "ros_message pointer is null", return RMW_RET_ERROR, error_allocator);
 
-  if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (publisher->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -46,7 +46,7 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     info, "publisher info pointer is null", return RMW_RET_ERROR, error_allocator);
 
-  rmw_fastrtps_cpp::SerializedData data;
+  rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = false;
   data.data = const_cast<void *>(ros_message);
   if (!info->publisher_->write(&data)) {
@@ -58,8 +58,10 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message)
 }
 
 rmw_ret_t
-rmw_publish_serialized_message(
-  const rmw_publisher_t * publisher, const rmw_serialized_message_t * serialized_message)
+__rmw_publish_serialized_message(
+  const char * identifier,
+  const rmw_publisher_t * publisher,
+  const rmw_serialized_message_t * serialized_message)
 {
   auto error_allocator = rcutils_get_default_allocator();
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
@@ -68,7 +70,7 @@ rmw_publish_serialized_message(
     serialized_message, "serialized_message pointer is null",
     return RMW_RET_ERROR, error_allocator);
 
-  if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (publisher->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -86,7 +88,7 @@ rmw_publish_serialized_message(
     return RMW_RET_ERROR;
   }
 
-  rmw_fastrtps_cpp::SerializedData data;
+  rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = true;
   data.data = &ser;
   if (!info->publisher_->write(&data)) {
@@ -96,4 +98,4 @@ rmw_publish_serialized_message(
 
   return RMW_RET_OK;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

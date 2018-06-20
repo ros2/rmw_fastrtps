@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__CUSTOM_SERVICE_INFO_HPP_
-#define RMW_FASTRTPS_CPP__CUSTOM_SERVICE_INFO_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_
 
 #include <atomic>
 #include <list>
@@ -26,14 +26,15 @@
 #include "fastrtps/subscriber/Subscriber.h"
 #include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/subscriber/SampleInfo.h"
-#include "rmw_fastrtps_cpp/TypeSupport.hpp"
+
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 class ServiceListener;
 
 typedef struct CustomServiceInfo
 {
-  void * request_type_support_;
-  void * response_type_support_;
+  rmw_fastrtps_shared_cpp::TypeSupport * request_type_support_;
+  rmw_fastrtps_shared_cpp::TypeSupport * response_type_support_;
   eprosima::fastrtps::Subscriber * request_subscriber_;
   eprosima::fastrtps::Publisher * response_publisher_;
   ServiceListener * listener_;
@@ -70,7 +71,7 @@ public:
     request.buffer_ = new eprosima::fastcdr::FastBuffer();
     eprosima::fastrtps::SampleInfo_t sinfo;
 
-    rmw_fastrtps_cpp::SerializedData data;
+    rmw_fastrtps_shared_cpp::SerializedData data;
     data.is_cdr_buffer = true;
     data.data = request.buffer_;
     if (sub->takeNextData(&data, &sinfo)) {
@@ -151,4 +152,4 @@ private:
   std::condition_variable * conditionVariable_;
 };
 
-#endif  // RMW_FASTRTPS_CPP__CUSTOM_SERVICE_INFO_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_

@@ -21,16 +21,16 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_cpp/custom_client_info.hpp"
-#include "rmw_fastrtps_cpp/custom_service_info.hpp"
-#include "rmw_fastrtps_cpp/identifier.hpp"
-#include "rmw_fastrtps_cpp/TypeSupport.hpp"
-#include "ros_message_serialization.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
-rmw_take_response(
+__rmw_take_response(
+  const char * identifier,
   const rmw_client_t * client,
   rmw_request_id_t * request_header,
   void * ros_response,
@@ -43,7 +43,7 @@ rmw_take_response(
 
   *taken = false;
 
-  if (client->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (client->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("service handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -58,8 +58,7 @@ rmw_take_response(
       *response.buffer_,
       eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::Cdr::DDS_CDR);
-    _deserialize_ros_message(
-      deser, ros_response, info->response_type_support_, info->typesupport_identifier_);
+    info->response_type_support_->deserializeROSmessage(deser, ros_response);
 
     request_header->sequence_number = ((int64_t)response.sample_identity_.sequence_number().high) <<
       32 | response.sample_identity_.sequence_number().low;
@@ -71,7 +70,8 @@ rmw_take_response(
 }
 
 rmw_ret_t
-rmw_send_response(
+__rmw_send_response(
+  const char * identifier,
   const rmw_service_t * service,
   rmw_request_id_t * request_header,
   void * ros_response)
@@ -82,7 +82,7 @@ rmw_send_response(
 
   rmw_ret_t returnedValue = RMW_RET_ERROR;
 
-  if (service->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (service->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("service handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -98,7 +98,7 @@ rmw_send_response(
   wparams.related_sample_identity().sequence_number().low =
     (int32_t)(request_header->sequence_number & 0xFFFFFFFF);
 
-  rmw_fastrtps_cpp::SerializedData data;
+  rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = false;
   data.data = const_cast<void *>(ros_response);
 
@@ -110,4 +110,4 @@ rmw_send_response(
 
   return returnedValue;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

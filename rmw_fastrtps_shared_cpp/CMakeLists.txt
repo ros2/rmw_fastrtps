@@ -14,7 +14,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 
-project(rmw_fastrtps_cpp)
+project(rmw_fastrtps_shared_cpp)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -35,38 +35,24 @@ find_package(fastrtps REQUIRED CONFIG)
 find_package(FastRTPS REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
-find_package(rosidl_generator_c REQUIRED)
-find_package(rosidl_typesupport_introspection_c REQUIRED)
-find_package(rosidl_typesupport_introspection_cpp REQUIRED)
-
 include_directories(include)
 
-add_library(rmw_fastrtps_cpp
-  src/client_service_common.cpp
+add_library(rmw_fastrtps_shared_cpp
   src/demangle.cpp
-  src/get_client.cpp
-  src/get_participant.cpp
-  src/get_publisher.cpp
-  src/get_service.cpp
-  src/get_subscriber.cpp
-  src/identifier.cpp
   src/namespace_prefix.cpp
   src/qos.cpp
-  src/rmw_logging.cpp
   src/rmw_client.cpp
   src/rmw_compare_gids_equal.cpp
   src/rmw_count.cpp
   src/rmw_get_gid_for_publisher.cpp
-  src/rmw_get_implementation_identifier.cpp
   src/rmw_guard_condition.cpp
-  src/rmw_init.cpp
+  src/rmw_logging.cpp
   src/rmw_node.cpp
   src/rmw_node_names.cpp
   src/rmw_publish.cpp
   src/rmw_publisher.cpp
   src/rmw_request.cpp
   src/rmw_response.cpp
-  src/rmw_serialize.cpp
   src/rmw_service.cpp
   src/rmw_service_names_and_types.cpp
   src/rmw_service_server_is_available.cpp
@@ -76,41 +62,28 @@ add_library(rmw_fastrtps_cpp
   src/rmw_trigger_guard_condition.cpp
   src/rmw_wait.cpp
   src/rmw_wait_set.cpp
-  src/ros_message_serialization.cpp
-  src/type_support_common.cpp
+  src/TypeSupport_impl.cpp
 )
-target_link_libraries(rmw_fastrtps_cpp
+target_link_libraries(rmw_fastrtps_shared_cpp
   fastcdr fastrtps)
 
 # specific order: dependents before dependencies
-ament_target_dependencies(rmw_fastrtps_cpp
+ament_target_dependencies(rmw_fastrtps_shared_cpp
   "rcutils"
-  "rosidl_typesupport_introspection_c"
-  "rosidl_typesupport_introspection_cpp"
   "rmw"
-  "rosidl_generator_c"
 )
-
-configure_rmw_library(rmw_fastrtps_cpp)
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME}
-PRIVATE "RMW_FASTRTPS_CPP_BUILDING_LIBRARY")
+PRIVATE "RMW_FASTRTPS_SHARED_CPP_BUILDING_LIBRARY")
 
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
-ament_export_libraries(rmw_fastrtps_cpp)
+ament_export_libraries(rmw_fastrtps_shared_cpp)
 
-ament_export_dependencies(rosidl_typesupport_introspection_cpp)
-ament_export_dependencies(rosidl_typesupport_introspection_c)
-ament_export_dependencies(rosidl_generator_c)
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rmw)
-
-register_rmw_implementation(
-  "c:rosidl_typesupport_c:rosidl_typesupport_introspection_c"
-  "cpp:rosidl_typesupport_cpp:rosidl_typesupport_introspection_cpp")
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
@@ -118,7 +91,7 @@ if(BUILD_TESTING)
 endif()
 
 ament_package(
-  CONFIG_EXTRAS_POST "rmw_fastrtps_cpp-extras.cmake"
+  CONFIG_EXTRAS_POST "rmw_fastrtps_shared_cpp-extras.cmake"
 )
 
 install(
@@ -127,7 +100,7 @@ install(
 )
 
 install(
-  TARGETS rmw_fastrtps_cpp
+  TARGETS rmw_fastrtps_shared_cpp
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin

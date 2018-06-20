@@ -19,12 +19,14 @@
 
 #include "fastrtps/log/Log.h"
 
-extern "C"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+
+namespace rmw_fastrtps_shared_cpp
 {
 using eprosima::fastrtps::Log;
 
 rmw_ret_t
-rmw_set_log_severity(rmw_log_severity_t severity)
+__rmw_set_log_severity(rmw_log_severity_t severity)
 {
   Log::Kind log_kind;
 
@@ -51,4 +53,4 @@ rmw_set_log_severity(rmw_log_severity_t severity)
 
   return RMW_RET_OK;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

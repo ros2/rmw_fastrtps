@@ -25,13 +25,14 @@
 #include "rmw/types.h"
 
 #include "demangle.hpp"
-#include "rmw_fastrtps_cpp/custom_client_info.hpp"
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
-rmw_service_server_is_available(
+__rmw_service_server_is_available(
+  const char * identifier,
   const rmw_node_t * node,
   const rmw_client_t * client,
   bool * is_available)
@@ -43,7 +44,7 @@ rmw_service_server_is_available(
 
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     node handle,
-    node->implementation_identifier, eprosima_fastrtps_identifier,
+    node->implementation_identifier, identifier,
     return RMW_RET_ERROR);
 
   if (!client) {
@@ -74,7 +75,8 @@ rmw_service_server_is_available(
 
   *is_available = false;
   size_t number_of_request_subscribers = 0;
-  rmw_ret_t ret = rmw_count_subscribers(
+  rmw_ret_t ret = __rmw_count_subscribers(
+    identifier,
     node,
     pub_fqdn.c_str(),
     &number_of_request_subscribers);
@@ -88,7 +90,8 @@ rmw_service_server_is_available(
   }
 
   size_t number_of_response_publishers = 0;
-  ret = rmw_count_publishers(
+  ret = __rmw_count_publishers(
+    identifier,
     node,
     sub_fqdn.c_str(),
     &number_of_response_publishers);
@@ -105,4 +108,4 @@ rmw_service_server_is_available(
   *is_available = true;
   return RMW_RET_OK;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

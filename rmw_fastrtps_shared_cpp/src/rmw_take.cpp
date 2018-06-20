@@ -24,22 +24,20 @@
 #include "fastcdr/Cdr.h"
 #include "fastcdr/FastBuffer.h"
 
-#include "rmw_fastrtps_cpp/custom_subscriber_info.hpp"
-#include "rmw_fastrtps_cpp/identifier.hpp"
-#include "rmw_fastrtps_cpp/macros.hpp"
-#include "rmw_fastrtps_cpp/TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
-#include "./ros_message_serialization.hpp"
-
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 void
 _assign_message_info(
+  const char * identifier,
   rmw_message_info_t * message_info,
   const eprosima::fastrtps::SampleInfo_t * sinfo)
 {
   rmw_gid_t * sender_gid = &message_info->publisher_gid;
-  sender_gid->implementation_identifier = eprosima_fastrtps_identifier;
+  sender_gid->implementation_identifier = identifier;
   memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
   memcpy(sender_gid->data, &sinfo->sample_identity.writer_guid(),
     sizeof(eprosima::fastrtps::rtps::GUID_t));
@@ -47,6 +45,7 @@ _assign_message_info(
 
 rmw_ret_t
 _take(
+  const char * identifier,
   const rmw_subscription_t * subscription,
   void * ros_message,
   bool * taken,
@@ -54,7 +53,7 @@ _take(
 {
   *taken = false;
 
-  if (subscription->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (subscription->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -66,7 +65,7 @@ _take(
 
   eprosima::fastrtps::SampleInfo_t sinfo;
 
-  rmw_fastrtps_cpp::SerializedData data;
+  rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = false;
   data.data = ros_message;
   if (info->subscriber_->takeNextData(&data, &sinfo)) {
@@ -74,7 +73,7 @@ _take(
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
       if (message_info) {
-        _assign_message_info(message_info, &sinfo);
+        _assign_message_info(identifier, message_info, &sinfo);
       }
       *taken = true;
     }
@@ -84,7 +83,11 @@ _take(
 }
 
 rmw_ret_t
-rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * taken)
+__rmw_take(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  void * ros_message,
+  bool * taken)
 {
   auto error_msg_allocator = rcutils_get_default_allocator();
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
@@ -94,11 +97,12 @@ rmw_take(const rmw_subscription_t * subscription, void * ros_message, bool * tak
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     taken, "boolean flag for taken is null", return RMW_RET_ERROR, error_msg_allocator);
 
-  return _take(subscription, ros_message, taken, nullptr);
+  return _take(identifier, subscription, ros_message, taken, nullptr);
 }
 
 rmw_ret_t
-rmw_take_with_info(
+__rmw_take_with_info(
+  const char * identifier,
   const rmw_subscription_t * subscription,
   void * ros_message,
   bool * taken,
@@ -114,11 +118,12 @@ rmw_take_with_info(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     message_info, "message info pointer is null", return RMW_RET_ERROR, error_msg_allocator);
 
-  return _take(subscription, ros_message, taken, message_info);
+  return _take(identifier, subscription, ros_message, taken, message_info);
 }
 
 rmw_ret_t
 _take_serialized_message(
+  const char * identifier,
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
   bool * taken,
@@ -126,7 +131,7 @@ _take_serialized_message(
 {
   *taken = false;
 
-  if (subscription->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (subscription->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -139,7 +144,7 @@ _take_serialized_message(
   eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastrtps::SampleInfo_t sinfo;
 
-  rmw_fastrtps_cpp::SerializedData data;
+  rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = true;
   data.data = &buffer;
   if (info->subscriber_->takeNextData(&data, &sinfo)) {
@@ -157,7 +162,7 @@ _take_serialized_message(
       memcpy(serialized_message->buffer, buffer.getBuffer(), serialized_message->buffer_length);
 
       if (message_info) {
-        _assign_message_info(message_info, &sinfo);
+        _assign_message_info(identifier, message_info, &sinfo);
       }
       *taken = true;
     }
@@ -167,7 +172,8 @@ _take_serialized_message(
 }
 
 rmw_ret_t
-rmw_take_serialized_message(
+__rmw_take_serialized_message(
+  const char * identifier,
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
   bool * taken)
@@ -180,11 +186,12 @@ rmw_take_serialized_message(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     taken, "boolean flag for taken is null", return RMW_RET_ERROR, error_msg_allocator);
 
-  return _take_serialized_message(subscription, serialized_message, taken, nullptr);
+  return _take_serialized_message(identifier, subscription, serialized_message, taken, nullptr);
 }
 
 rmw_ret_t
-rmw_take_serialized_message_with_info(
+__rmw_take_serialized_message_with_info(
+  const char * identifier,
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
   bool * taken,
@@ -200,6 +207,7 @@ rmw_take_serialized_message_with_info(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     message_info, "message info pointer is null", return RMW_RET_ERROR, error_msg_allocator);
 
-  return _take_serialized_message(subscription, serialized_message, taken, message_info);
+  return _take_serialized_message(
+    identifier, subscription, serialized_message, taken, message_info);
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

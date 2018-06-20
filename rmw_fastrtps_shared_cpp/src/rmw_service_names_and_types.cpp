@@ -25,14 +25,17 @@
 #include "rmw/names_and_types.h"
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
 #include "demangle.hpp"
-#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "reader_info.hpp"
+#include "writer_info.hpp"
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
-rmw_get_service_names_and_types(
+__rmw_get_service_names_and_types(
+  const char * identifier,
   const rmw_node_t * node,
   rcutils_allocator_t * allocator,
   rmw_names_and_types_t * service_names_and_types)
@@ -51,7 +54,7 @@ rmw_get_service_names_and_types(
   }
 
   // Get participant pointer from node
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (node->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG_ALLOC("node handle not from this implementation", *allocator);
     return RMW_RET_ERROR;
   }
@@ -112,7 +115,7 @@ rmw_get_service_names_and_types(
         rmw_ret_t rmw_ret = rmw_names_and_types_fini(service_names_and_types);
         if (rmw_ret != RMW_RET_OK) {
           RCUTILS_LOG_ERROR_NAMED(
-            "rmw_fastrtps_cpp",
+            "rmw_fastrtps_shared_cpp",
             "error during report of error: %s", rmw_get_error_string_safe())
         }
       };
@@ -156,4 +159,4 @@ rmw_get_service_names_and_types(
   }
   return RMW_RET_OK;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

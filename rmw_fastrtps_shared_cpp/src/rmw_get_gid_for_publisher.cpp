@@ -16,20 +16,23 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "rmw_fastrtps_cpp/custom_publisher_info.hpp"
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
-rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
+__rmw_get_gid_for_publisher(
+  const char * identifier,
+  const rmw_publisher_t * publisher,
+  rmw_gid_t * gid)
 {
   if (!publisher) {
     RMW_SET_ERROR_MSG("publisher is null");
     return RMW_RET_ERROR;
   }
 
-  if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
+  if (publisher->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
@@ -49,4 +52,4 @@ rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
   *gid = info->publisher_gid;
   return RMW_RET_OK;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp

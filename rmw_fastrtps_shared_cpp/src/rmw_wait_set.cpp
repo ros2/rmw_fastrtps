@@ -17,13 +17,14 @@
 #include "rmw/rmw.h"
 #include "rmw/impl/cpp/macros.hpp"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+
 #include "types/custom_wait_set_info.hpp"
 
-extern "C"
+namespace rmw_fastrtps_shared_cpp
 {
 rmw_wait_set_t *
-rmw_create_wait_set(size_t max_conditions)
+__rmw_create_wait_set(const char * identifier, size_t max_conditions)
 {
   (void)max_conditions;
   rmw_wait_set_t * wait_set = rmw_wait_set_allocate();
@@ -34,7 +35,7 @@ rmw_create_wait_set(size_t max_conditions)
     RMW_SET_ERROR_MSG("failed to allocate wait set");
     goto fail;
   }
-  wait_set->implementation_identifier = eprosima_fastrtps_identifier;
+  wait_set->implementation_identifier = identifier;
   wait_set->data = rmw_allocate(sizeof(CustomWaitsetInfo));
   // This should default-construct the fields of CustomWaitsetInfo
   wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
@@ -59,7 +60,7 @@ fail:
 }
 
 rmw_ret_t
-rmw_destroy_wait_set(rmw_wait_set_t * wait_set)
+__rmw_destroy_wait_set(const char * identifier, rmw_wait_set_t * wait_set)
 {
   if (!wait_set) {
     RMW_SET_ERROR_MSG("wait set handle is null");
@@ -67,7 +68,7 @@ rmw_destroy_wait_set(rmw_wait_set_t * wait_set)
   }
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     wait set handle,
-    wait_set->implementation_identifier, eprosima_fastrtps_identifier,
+    wait_set->implementation_identifier, identifier,
     return RMW_RET_ERROR)
 
   auto result = RMW_RET_OK;
@@ -92,4 +93,4 @@ rmw_destroy_wait_set(rmw_wait_set_t * wait_set)
   rmw_wait_set_free(wait_set);
   return result;
 }
-}  // extern "C"
+}  // namespace rmw_fastrtps_shared_cpp
