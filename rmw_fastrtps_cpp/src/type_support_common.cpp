@@ -12,79 +12,129 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+
 #include "rmw/error_handling.h"
-
-#include "rosidl_typesupport_introspection_cpp/identifier.hpp"
-
-#include "rosidl_typesupport_introspection_c/identifier.h"
 
 #include "type_support_common.hpp"
 
-bool
-using_introspection_c_typesupport(const char * typesupport_identifier)
+namespace rmw_fastrtps_cpp
 {
-  return typesupport_identifier == rosidl_typesupport_introspection_c__identifier;
+
+TypeSupport::TypeSupport()
+{
+  m_isGetKeyDefined = false;
+  max_size_bound_ = false;
 }
 
-bool
-using_introspection_cpp_typesupport(const char * typesupport_identifier)
+void TypeSupport::set_members(const message_type_support_callbacks_t * members)
 {
-  return typesupport_identifier ==
-         rosidl_typesupport_introspection_cpp::typesupport_identifier;
-}
+  members_ = members;
 
-rmw_fastrtps_shared_cpp::TypeSupport *
-_create_message_type_support(const void * untyped_members, const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_c__MessageMembers *>(
-      untyped_members);
-    return new MessageTypeSupport_c(members);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(
-      untyped_members);
-    return new MessageTypeSupport_cpp(members);
+  // Fully bound by default
+  max_size_bound_ = true;
+  auto data_size = static_cast<uint32_t>(members->max_serialized_size(max_size_bound_));
+
+  // A fully bound message of size 0 is an empty message
+  if (max_size_bound_ && (data_size == 0) ) {
+    has_data_ = false;
+    ++data_size;  // Dummy byte
+  } else {
+    has_data_ = true;
   }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return nullptr;
+
+  // Total size is encapsulation size + data size
+  m_typeSize = 4 + data_size;
 }
 
-rmw_fastrtps_shared_cpp::TypeSupport *
-_create_request_type_support(const void * untyped_members, const char * typesupport_identifier)
+size_t TypeSupport::getEstimatedSerializedSize(const void * ros_message)
 {
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(
-      untyped_members);
-    return new RequestTypeSupport_c(members);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers *>(
-      untyped_members);
-    return new RequestTypeSupport_cpp(members);
+  if (max_size_bound_) {
+    return m_typeSize;
   }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return nullptr;
+
+  assert(ros_message);
+
+  // Encapsulation size + message size
+  return 4 + members_->get_serialized_size(ros_message);
 }
 
-rmw_fastrtps_shared_cpp::TypeSupport *
-_create_response_type_support(const void * untyped_members, const char * typesupport_identifier)
+bool TypeSupport::serializeROSmessage(const void * ros_message, eprosima::fastcdr::Cdr & ser)
 {
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(
-      untyped_members);
-    return new ResponseTypeSupport_c(members);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers *>(
-      untyped_members);
-    return new ResponseTypeSupport_cpp(members);
+  assert(ros_message);
+
+  // Serialize encapsulation
+  ser.serialize_encapsulation();
+
+  // If type is not empty, serialize message
+  if (has_data_) {
+    return members_->cdr_serialize(ros_message, ser);
   }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return nullptr;
+
+  // Otherwise, add a dummy byte
+  ser << (uint8_t)0;
+  return true;
 }
 
-void
-_register_type(
-  eprosima::fastrtps::Participant * participant,
-  rmw_fastrtps_shared_cpp::TypeSupport * typed_typesupport)
+bool TypeSupport::deserializeROSmessage(eprosima::fastcdr::Cdr & deser, void * ros_message)
 {
-  eprosima::fastrtps::Domain::registerType(participant, typed_typesupport);
+  assert(ros_message);
+
+  // Deserialize encapsulation.
+  deser.read_encapsulation();
+
+  // If type is not empty, deserialize message
+  if (has_data_) {
+    return members_->cdr_deserialize(deser, ros_message);
+  }
+
+  // Otherwise, consume dummy byte
+  uint8_t dump = 0;
+  deser >> dump;
+  (void)dump;
+
+  return true;
 }
+
+MessageTypeSupport::MessageTypeSupport(const message_type_support_callbacks_t * members)
+{
+  assert(members);
+
+  std::string name = std::string(members->package_name_) + "::msg::dds_::" +
+    members->message_name_ + "_";
+  this->setName(name.c_str());
+
+  set_members(members);
+}
+
+ServiceTypeSupport::ServiceTypeSupport()
+{
+}
+
+RequestTypeSupport::RequestTypeSupport(const service_type_support_callbacks_t * members)
+{
+  assert(members);
+
+  std::string name = std::string(members->package_name_) + "::srv::dds_::" +
+    members->service_name_ + "_Request_";
+  this->setName(name.c_str());
+
+  auto msg = static_cast<const message_type_support_callbacks_t *>(
+    members->request_members_->data);
+  set_members(msg);
+}
+
+ResponseTypeSupport::ResponseTypeSupport(const service_type_support_callbacks_t * members)
+{
+  assert(members);
+
+  std::string name = std::string(members->package_name_) + "::srv::dds_::" +
+    members->service_name_ + "_Response_";
+  this->setName(name.c_str());
+
+  auto msg = static_cast<const message_type_support_callbacks_t *>(
+    members->response_members_->data);
+  set_members(msg);
+}
+
+}  // namespace rmw_fastrtps_cpp

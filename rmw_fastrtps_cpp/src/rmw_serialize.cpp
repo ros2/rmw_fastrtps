@@ -29,17 +29,18 @@ rmw_serialize(
   rmw_serialized_message_t * serialized_message)
 {
   const rosidl_message_type_support_t * ts = get_message_typesupport_handle(
-    type_support, rosidl_typesupport_introspection_c__identifier);
+    type_support, RMW_FASTRTPS_CPP_TYPESUPPORT_C);
   if (!ts) {
     ts = get_message_typesupport_handle(
-      type_support, rosidl_typesupport_introspection_cpp::typesupport_identifier);
+      type_support, RMW_FASTRTPS_CPP_TYPESUPPORT_CPP);
     if (!ts) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return RMW_RET_ERROR;
     }
   }
 
-  auto tss = _create_message_type_support(ts->data, ts->typesupport_identifier);
+  auto callbacks = static_cast<const message_type_support_callbacks_t *>(ts->data);
+  auto tss = new MessageTypeSupport_cpp(callbacks);
   auto data_length = tss->getEstimatedSerializedSize(ros_message);
   if (serialized_message->buffer_capacity < data_length) {
     if (rmw_serialized_message_resize(serialized_message, data_length) != RMW_RET_OK) {
@@ -66,17 +67,18 @@ rmw_deserialize(
   void * ros_message)
 {
   const rosidl_message_type_support_t * ts = get_message_typesupport_handle(
-    type_support, rosidl_typesupport_introspection_c__identifier);
+    type_support, RMW_FASTRTPS_CPP_TYPESUPPORT_C);
   if (!ts) {
     ts = get_message_typesupport_handle(
-      type_support, rosidl_typesupport_introspection_cpp::typesupport_identifier);
+      type_support, RMW_FASTRTPS_CPP_TYPESUPPORT_CPP);
     if (!ts) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return RMW_RET_ERROR;
     }
   }
 
-  auto tss = _create_message_type_support(ts->data, ts->typesupport_identifier);
+  auto callbacks = static_cast<const message_type_support_callbacks_t *>(ts->data);
+  auto tss = new MessageTypeSupport_cpp(callbacks);
   eprosima::fastcdr::FastBuffer buffer(
     serialized_message->buffer, serialized_message->buffer_length);
   eprosima::fastcdr::Cdr deser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,

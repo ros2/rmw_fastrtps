@@ -19,18 +19,15 @@
 #include "rmw/allocators.h"
 #include "rmw/rmw.h"
 
-#include "rosidl_typesupport_introspection_cpp/identifier.hpp"
-
-#include "rosidl_typesupport_introspection_c/identifier.h"
-
-#include "client_service_common.hpp"
-#include "rmw_fastrtps_cpp/identifier.hpp"
-#include "namespace_prefix.hpp"
-#include "qos.hpp"
-#include "type_support_common.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+
+#include "rmw_fastrtps_cpp/identifier.hpp"
+
+#include "./namespace_prefix.hpp"
+#include "./qos.hpp"
+#include "./type_support_common.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
@@ -77,10 +74,10 @@ rmw_create_client(
   }
 
   const rosidl_service_type_support_t * type_support = get_service_typesupport_handle(
-    type_supports, rosidl_typesupport_introspection_c__identifier);
+    type_supports, RMW_FASTRTPS_CPP_TYPESUPPORT_C);
   if (!type_support) {
     type_support = get_service_typesupport_handle(
-      type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
+      type_supports, RMW_FASTRTPS_CPP_TYPESUPPORT_CPP);
     if (!type_support) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return nullptr;
@@ -96,32 +93,30 @@ rmw_create_client(
   info->participant_ = participant;
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-  const void * untyped_request_members;
-  const void * untyped_response_members;
+  const service_type_support_callbacks_t * service_members;
+  const message_type_support_callbacks_t * request_members;
+  const message_type_support_callbacks_t * response_members;
 
-  untyped_request_members =
-    get_request_ptr(type_support->data, info->typesupport_identifier_);
-  untyped_response_members = get_response_ptr(type_support->data,
-      info->typesupport_identifier_);
+  service_members = static_cast<const service_type_support_callbacks_t *>(type_support->data);
+  request_members = static_cast<const message_type_support_callbacks_t *>(
+    service_members->request_members_->data);
+  response_members = static_cast<const message_type_support_callbacks_t *>(
+    service_members->response_members_->data);
 
-  std::string request_type_name = _create_type_name(untyped_request_members, "srv",
-      info->typesupport_identifier_);
-  std::string response_type_name = _create_type_name(untyped_response_members, "srv",
-      info->typesupport_identifier_);
+  std::string request_type_name = _create_type_name(request_members, "srv");
+  std::string response_type_name = _create_type_name(response_members, "srv");
 
   if (!Domain::getRegisteredType(participant, request_type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->request_type_support_)))
   {
-    info->request_type_support_ = _create_request_type_support(type_support->data,
-        info->typesupport_identifier_);
+    info->request_type_support_ = new RequestTypeSupport_cpp(service_members);
     _register_type(participant, info->request_type_support_);
   }
 
   if (!Domain::getRegisteredType(participant, response_type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->response_type_support_)))
   {
-    info->response_type_support_ = _create_response_type_support(type_support->data,
-        info->typesupport_identifier_);
+    info->response_type_support_ = new ResponseTypeSupport_cpp(service_members);
     _register_type(participant, info->response_type_support_);
   }
 
