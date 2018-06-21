@@ -15,28 +15,19 @@
 #ifndef RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_HPP_
 #define RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_HPP_
 
-#include <fastcdr/FastBuffer.h>
-#include <fastcdr/Cdr.h>
-
-#include <cassert>
-#include <memory>
+#include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"
 
 #include "TypeSupport.hpp"
-#include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
-#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
 namespace rmw_fastrtps_cpp
 {
 
-template<typename MembersType>
-class MessageTypeSupport : public TypeSupport<MembersType>
+class MessageTypeSupport : public TypeSupport
 {
 public:
-  explicit MessageTypeSupport(const MembersType * members);
+  explicit MessageTypeSupport(const message_type_support_callbacks_t * members);
 };
 
 }  // namespace rmw_fastrtps_cpp
-
-#include "MessageTypeSupport_impl.hpp"
 
 #endif  // RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_HPP_

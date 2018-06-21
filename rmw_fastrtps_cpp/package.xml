@@ -3,15 +3,17 @@
 <package format="3">
   <name>rmw_fastrtps_cpp</name>
   <version>0.5.1</version>
-  <description>Implement the ROS middleware interface using eProsima FastRTPS  static code generation in C++.</description>
+  <description>Implement the ROS middleware interface using eProsima FastRTPS static code generation in C++.</description>
   <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
   <license>Apache License 2.0</license>
   <author>Ricardo González</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
+  <buildtool_depend>rosidl_cmake</buildtool_depend>
   <buildtool_depend>fastrtps_cmake_module</buildtool_depend>
 
   <buildtool_export_depend>ament_cmake</buildtool_export_depend>
+  <buildtool_export_depend>rosidl_cmake</buildtool_export_depend>
 
   <build_depend>fastcdr</build_depend>
   <build_depend>fastrtps</build_depend>
@@ -20,18 +22,24 @@
   <build_depend>rmw</build_depend>
   <build_depend>rmw_fastrtps_shared_cpp</build_depend>
   <build_depend>rosidl_generator_c</build_depend>
-  <build_depend>rosidl_typesupport_introspection_c</build_depend>
-  <build_depend>rosidl_typesupport_introspection_cpp</build_depend>
+  <build_depend>rosidl_generator_cpp</build_depend>
+  <build_depend>rosidl_typesupport_fastrtps_c</build_depend>
+  <build_depend>rosidl_typesupport_fastrtps_cpp</build_depend>
 
   <build_export_depend>fastcdr</build_export_depend>
   <build_export_depend>fastrtps</build_export_depend>
   <build_export_depend>fastrtps_cmake_module</build_export_depend>
   <build_export_depend>rcutils</build_export_depend>
-  <build_export_depend>rmw</build_export_depend>
   <build_export_depend>rmw_fastrtps_shared_cpp</build_export_depend>
+  <build_export_depend>rmw</build_export_depend>
   <build_export_depend>rosidl_generator_c</build_export_depend>
-  <build_export_depend>rosidl_typesupport_introspection_c</build_export_depend>
-  <build_export_depend>rosidl_typesupport_introspection_cpp</build_export_depend>
+  <build_export_depend>rosidl_generator_cpp</build_export_depend>
+  <build_export_depend>rosidl_typesupport_fastrtps_c</build_export_depend>
+  <build_export_depend>rosidl_typesupport_fastrtps_cpp</build_export_depend>
+
+  <exec_depend>rcutils</exec_depend>
+  <exec_depend>rmw</exec_depend>
+  <exec_depend>rmw_fastrtps_shared_cpp</exec_depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>

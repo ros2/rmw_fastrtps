@@ -23,9 +23,10 @@
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
-#include "namespace_prefix.hpp"
-#include "qos.hpp"
-#include "type_support_common.hpp"
+
+#include "./namespace_prefix.hpp"
+#include "./qos.hpp"
+#include "./type_support_common.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
@@ -72,10 +73,10 @@ rmw_create_publisher(
   }
 
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
-    type_supports, rosidl_typesupport_introspection_c__identifier);
+    type_supports, RMW_FASTRTPS_CPP_TYPESUPPORT_C);
   if (!type_support) {
     type_support = get_message_typesupport_handle(
-      type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
+      type_supports, RMW_FASTRTPS_CPP_TYPESUPPORT_CPP);
     if (!type_support) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return nullptr;
@@ -94,13 +95,12 @@ rmw_create_publisher(
   info = new CustomPublisherInfo();
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-  std::string type_name = _create_type_name(
-    type_support->data, "msg", info->typesupport_identifier_);
+  auto callbacks = static_cast<const message_type_support_callbacks_t *>(type_support->data);
+  std::string type_name = _create_type_name(callbacks, "msg");
   if (!Domain::getRegisteredType(participant, type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->type_support_)))
   {
-    info->type_support_ = _create_message_type_support(type_support->data,
-        info->typesupport_identifier_);
+    info->type_support_ = new MessageTypeSupport_cpp(callbacks);
     _register_type(participant, info->type_support_);
   }
 

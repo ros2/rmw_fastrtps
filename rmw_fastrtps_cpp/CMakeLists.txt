@@ -37,13 +37,12 @@ find_package(FastRTPS REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
 find_package(rosidl_generator_c REQUIRED)
-find_package(rosidl_typesupport_introspection_c REQUIRED)
-find_package(rosidl_typesupport_introspection_cpp REQUIRED)
+find_package(rosidl_typesupport_fastrtps_c REQUIRED)
+find_package(rosidl_typesupport_fastrtps_cpp REQUIRED)
 
 include_directories(include)
 
 add_library(rmw_fastrtps_cpp
-  src/client_service_common.cpp
   src/get_client.cpp
   src/get_participant.cpp
   src/get_publisher.cpp
@@ -84,8 +83,8 @@ target_link_libraries(rmw_fastrtps_cpp
 # specific order: dependents before dependencies
 ament_target_dependencies(rmw_fastrtps_cpp
   "rcutils"
-  "rosidl_typesupport_introspection_c"
-  "rosidl_typesupport_introspection_cpp"
+  "rosidl_typesupport_fastrtps_c"
+  "rosidl_typesupport_fastrtps_cpp"
   "rmw_fastrtps_shared_cpp"
   "rmw"
   "rosidl_generator_c"
@@ -102,16 +101,16 @@ PRIVATE "RMW_FASTRTPS_CPP_BUILDING_LIBRARY")
 ament_export_include_directories(include)
 ament_export_libraries(rmw_fastrtps_cpp)
 
-ament_export_dependencies(rosidl_typesupport_introspection_cpp)
-ament_export_dependencies(rosidl_typesupport_introspection_c)
+ament_export_dependencies(rosidl_typesupport_fastrtps_cpp)
+ament_export_dependencies(rosidl_typesupport_fastrtps_c)
 ament_export_dependencies(rosidl_generator_c)
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rmw_fastrtps_shared_cpp)
 ament_export_dependencies(rmw)
 
 register_rmw_implementation(
-  "c:rosidl_typesupport_c:rosidl_typesupport_introspection_c"
-  "cpp:rosidl_typesupport_cpp:rosidl_typesupport_introspection_cpp")
+  "c:rosidl_typesupport_c:rosidl_typesupport_fastrtps_c"
+  "cpp:rosidl_typesupport_cpp:rosidl_typesupport_fastrtps_cpp")
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
