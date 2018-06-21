@@ -1,0 +1,44 @@
+#!/usr/bin/env python3
+
+import argparse
+import os
+import sys
+
+from rosidl_cmake import read_generator_arguments
+from rosidl_parser import UnknownMessageType
+from rosidl_typesupport_fastrtps_c import generate_typesupport_fastrtps_c
+
+
+def is_valid_file(parser, file_name):
+    if not os.path.exists(file_name):
+        parser.error("File does not exist: '{0}'".format(file_name))
+    file_name_abs = os.path.abspath(file_name)
+    if not os.path.isfile(file_name_abs):
+        parser.error("Path exists but is not a file: '{0}'".format(file_name_abs))
+    return file_name
+
+
+def main(argv=sys.argv[1:]):
+    parser = argparse.ArgumentParser(
+        description='Generate the C interfaces for fastrtps.',
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter)
+    parser.add_argument(
+        '--generator-arguments-file',
+        required=True,
+        help='The location of the file containing the generator arguments')
+    args = parser.parse_args(argv)
+
+    generator_args = read_generator_arguments(args.generator_arguments_file)
+
+    try:
+        rc = generate_typesupport_fastrtps_c(generator_args)
+    except UnknownMessageType as e:
+        print(str(e), file=sys.stderr)
+        return 1
+    if rc:
+        return rc
+    return 0
+
+
+if __name__ == '__main__':
+    sys.exit(main())
