@@ -47,7 +47,7 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
   // Encapsulation size
   this->m_typeSize = 4;
   if (this->members_->member_count_ != 0) {
-    this->m_typeSize += static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 4));
+    this->m_typeSize += static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 0));
   } else {
     this->m_typeSize++;
   }
@@ -69,7 +69,7 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
   // Encapsulation size
   this->m_typeSize = 4;
   if (this->members_->member_count_ != 0) {
-    this->m_typeSize += static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 4));
+    this->m_typeSize += static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 0));
   } else {
     this->m_typeSize++;
   }
