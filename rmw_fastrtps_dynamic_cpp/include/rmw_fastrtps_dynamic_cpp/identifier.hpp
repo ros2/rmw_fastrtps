@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__IDENTIFIER_HPP_
-#define RMW_FASTRTPS_CPP__IDENTIFIER_HPP_
+#ifndef RMW_FASTRTPS_DYNAMIC_CPP__IDENTIFIER_HPP_
+#define RMW_FASTRTPS_DYNAMIC_CPP__IDENTIFIER_HPP_
 
 extern const char * const eprosima_fastrtps_identifier;
 
-#endif  // RMW_FASTRTPS_CPP__IDENTIFIER_HPP_
+#endif  // RMW_FASTRTPS_DYNAMIC_CPP__IDENTIFIER_HPP_

@@ -24,39 +24,43 @@
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
-#include "rmw_fastrtps_cpp/MessageTypeSupport.hpp"
-#include "rmw_fastrtps_cpp/ServiceTypeSupport.hpp"
+#include "rmw_fastrtps_dynamic_cpp/MessageTypeSupport.hpp"
+#include "rmw_fastrtps_dynamic_cpp/ServiceTypeSupport.hpp"
 
 #include "rosidl_typesupport_introspection_c/visibility_control.h"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 
-using MessageTypeSupport_c =
-  rmw_fastrtps_cpp::MessageTypeSupport<rosidl_typesupport_introspection_c__MessageMembers>;
-using MessageTypeSupport_cpp =
-  rmw_fastrtps_cpp::MessageTypeSupport<rosidl_typesupport_introspection_cpp::MessageMembers>;
-using TypeSupport_c =
-  rmw_fastrtps_cpp::TypeSupport<rosidl_typesupport_introspection_c__MessageMembers>;
-using TypeSupport_cpp =
-  rmw_fastrtps_cpp::TypeSupport<rosidl_typesupport_introspection_cpp::MessageMembers>;
+using MessageTypeSupport_c = rmw_fastrtps_dynamic_cpp::MessageTypeSupport<
+  rosidl_typesupport_introspection_c__MessageMembers
+>;
+using MessageTypeSupport_cpp = rmw_fastrtps_dynamic_cpp::MessageTypeSupport<
+  rosidl_typesupport_introspection_cpp::MessageMembers
+>;
+using TypeSupport_c = rmw_fastrtps_dynamic_cpp::TypeSupport<
+  rosidl_typesupport_introspection_c__MessageMembers
+>;
+using TypeSupport_cpp = rmw_fastrtps_dynamic_cpp::TypeSupport<
+  rosidl_typesupport_introspection_cpp::MessageMembers
+>;
 
-using RequestTypeSupport_c = rmw_fastrtps_cpp::RequestTypeSupport<
+using RequestTypeSupport_c = rmw_fastrtps_dynamic_cpp::RequestTypeSupport<
   rosidl_typesupport_introspection_c__ServiceMembers,
   rosidl_typesupport_introspection_c__MessageMembers
-  >;
-using RequestTypeSupport_cpp = rmw_fastrtps_cpp::RequestTypeSupport<
+>;
+using RequestTypeSupport_cpp = rmw_fastrtps_dynamic_cpp::RequestTypeSupport<
   rosidl_typesupport_introspection_cpp::ServiceMembers,
   rosidl_typesupport_introspection_cpp::MessageMembers
-  >;
+>;
 
-using ResponseTypeSupport_c = rmw_fastrtps_cpp::ResponseTypeSupport<
+using ResponseTypeSupport_c = rmw_fastrtps_dynamic_cpp::ResponseTypeSupport<
   rosidl_typesupport_introspection_c__ServiceMembers,
   rosidl_typesupport_introspection_c__MessageMembers
-  >;
-using ResponseTypeSupport_cpp = rmw_fastrtps_cpp::ResponseTypeSupport<
+>;
+using ResponseTypeSupport_cpp = rmw_fastrtps_dynamic_cpp::ResponseTypeSupport<
   rosidl_typesupport_introspection_cpp::ServiceMembers,
   rosidl_typesupport_introspection_cpp::MessageMembers
-  >;
+>;
 
 bool
 using_introspection_c_typesupport(const char * typesupport_identifier);

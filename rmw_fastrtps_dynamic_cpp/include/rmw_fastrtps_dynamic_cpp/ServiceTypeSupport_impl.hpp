@@ -12,18 +12,18 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_IMPL_HPP_
-#define RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_IMPL_HPP_
+#ifndef RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_IMPL_HPP_
+#define RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_IMPL_HPP_
 
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
 #include <cassert>
 #include <string>
 
-#include "rmw_fastrtps_cpp/ServiceTypeSupport.hpp"
+#include "rmw_fastrtps_dynamic_cpp/ServiceTypeSupport.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
-namespace rmw_fastrtps_cpp
+namespace rmw_fastrtps_dynamic_cpp
 {
 
 template<typename MembersType>
@@ -75,6 +75,6 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
   }
 }
 
-}  // namespace rmw_fastrtps_cpp
+}  // namespace rmw_fastrtps_dynamic_cpp
 
-#endif  // RMW_FASTRTPS_CPP__SERVICETYPESUPPORT_IMPL_HPP_
+#endif  // RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_IMPL_HPP_

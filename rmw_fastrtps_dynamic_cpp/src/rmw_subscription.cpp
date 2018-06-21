@@ -26,7 +26,7 @@
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/subscriber/Subscriber.h"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 
 #include "namespace_prefix.hpp"
 #include "qos.hpp"

@@ -12,15 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__GET_CLIENT_HPP_
-#define RMW_FASTRTPS_CPP__GET_CLIENT_HPP_
+#ifndef RMW_FASTRTPS_DYNAMIC_CPP__GET_CLIENT_HPP_
+#define RMW_FASTRTPS_DYNAMIC_CPP__GET_CLIENT_HPP_
 
 #include "fastrtps/publisher/Publisher.h"
 #include "fastrtps/subscriber/Subscriber.h"
 #include "rmw/rmw.h"
-#include "rmw_fastrtps_cpp/visibility_control.h"
+#include "rmw_fastrtps_dynamic_cpp/visibility_control.h"
 
-namespace rmw_fastrtps_cpp
+namespace rmw_fastrtps_dynamic_cpp
 {
 
 /// Return a native FastRTPS publisher handle for the request.
@@ -30,7 +30,7 @@ namespace rmw_fastrtps_cpp
  *
  * \return native FastRTPS publisher handle if successful, otherwise `NULL`
  */
-RMW_FASTRTPS_CPP_PUBLIC
+RMW_FASTRTPS_DYNAMIC_CPP_PUBLIC
 eprosima::fastrtps::Publisher *
 get_request_publisher(rmw_client_t * client);
 
@@ -41,10 +41,10 @@ get_request_publisher(rmw_client_t * client);
  *
  * \return native FastRTPS subscriber handle if successful, otherwise `NULL`
  */
-RMW_FASTRTPS_CPP_PUBLIC
+RMW_FASTRTPS_DYNAMIC_CPP_PUBLIC
 eprosima::fastrtps::Subscriber *
 get_response_subscriber(rmw_client_t * client);
 
-}  // namespace rmw_fastrtps_cpp
+}  // namespace rmw_fastrtps_dynamic_cpp
 
-#endif  // RMW_FASTRTPS_CPP__GET_CLIENT_HPP_
+#endif  // RMW_FASTRTPS_DYNAMIC_CPP__GET_CLIENT_HPP_

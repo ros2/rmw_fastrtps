@@ -22,7 +22,7 @@
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 #include "namespace_prefix.hpp"
 #include "qos.hpp"
 #include "type_support_common.hpp"
@@ -138,7 +138,7 @@ rmw_create_publisher(
   info->publisher_gid.implementation_identifier = eprosima_fastrtps_identifier;
   static_assert(
     sizeof(eprosima::fastrtps::rtps::GUID_t) <= RMW_GID_STORAGE_SIZE,
-    "RMW_GID_STORAGE_SIZE insufficient to store the rmw_fastrtps_cpp GID implementation."
+    "RMW_GID_STORAGE_SIZE insufficient to store the rmw_fastrtps_dynamic_cpp GID implementation."
   );
 
   memset(info->publisher_gid.data, 0, RMW_GID_STORAGE_SIZE);
