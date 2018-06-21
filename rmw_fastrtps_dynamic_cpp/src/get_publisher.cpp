@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw_fastrtps_cpp/get_publisher.hpp"
+#include "rmw_fastrtps_dynamic_cpp/get_publisher.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 
-namespace rmw_fastrtps_cpp
+namespace rmw_fastrtps_dynamic_cpp
 {
 
 eprosima::fastrtps::Publisher *
@@ -33,4 +33,4 @@ get_publisher(rmw_publisher_t * publisher)
   return impl->publisher_;
 }
 
-}  // namespace rmw_fastrtps_cpp
+}  // namespace rmw_fastrtps_dynamic_cpp

@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw_fastrtps_cpp/get_subscriber.hpp"
+#include "rmw_fastrtps_dynamic_cpp/get_subscriber.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 
-namespace rmw_fastrtps_cpp
+namespace rmw_fastrtps_dynamic_cpp
 {
 
 eprosima::fastrtps::Subscriber *
@@ -33,4 +33,4 @@ get_subscriber(rmw_subscription_t * subscription)
   return impl->subscriber_;
 }
 
-}  // namespace rmw_fastrtps_cpp
+}  // namespace rmw_fastrtps_dynamic_cpp

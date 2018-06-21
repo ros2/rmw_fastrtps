@@ -14,7 +14,7 @@
 
 cmake_minimum_required(VERSION 3.5)
 
-project(rmw_fastrtps_cpp)
+project(rmw_fastrtps_dynamic_cpp)
 
 # Default to C++14
 if(NOT CMAKE_CXX_STANDARD)
@@ -42,7 +42,7 @@ find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 
 include_directories(include)
 
-add_library(rmw_fastrtps_cpp
+add_library(rmw_fastrtps_dynamic_cpp
   src/client_service_common.cpp
   src/get_client.cpp
   src/get_participant.cpp
@@ -78,11 +78,11 @@ add_library(rmw_fastrtps_cpp
   src/rmw_wait_set.cpp
   src/type_support_common.cpp
 )
-target_link_libraries(rmw_fastrtps_cpp
+target_link_libraries(rmw_fastrtps_dynamic_cpp
   fastcdr fastrtps)
 
 # specific order: dependents before dependencies
-ament_target_dependencies(rmw_fastrtps_cpp
+ament_target_dependencies(rmw_fastrtps_dynamic_cpp
   "rcutils"
   "rosidl_typesupport_introspection_c"
   "rosidl_typesupport_introspection_cpp"
@@ -91,16 +91,16 @@ ament_target_dependencies(rmw_fastrtps_cpp
   "rosidl_generator_c"
 )
 
-configure_rmw_library(rmw_fastrtps_cpp)
+configure_rmw_library(rmw_fastrtps_dynamic_cpp)
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME}
-PRIVATE "RMW_FASTRTPS_CPP_BUILDING_LIBRARY")
+PRIVATE "RMW_FASTRTPS_DYNAMIC_CPP_BUILDING_LIBRARY")
 
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
-ament_export_libraries(rmw_fastrtps_cpp)
+ament_export_libraries(rmw_fastrtps_dynamic_cpp)
 
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 ament_export_dependencies(rosidl_typesupport_introspection_c)
@@ -119,7 +119,7 @@ if(BUILD_TESTING)
 endif()
 
 ament_package(
-  CONFIG_EXTRAS_POST "rmw_fastrtps_cpp-extras.cmake"
+  CONFIG_EXTRAS_POST "rmw_fastrtps_dynamic_cpp-extras.cmake"
 )
 
 install(
@@ -128,7 +128,7 @@ install(
 )
 
 install(
-  TARGETS rmw_fastrtps_cpp
+  TARGETS rmw_fastrtps_dynamic_cpp
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin

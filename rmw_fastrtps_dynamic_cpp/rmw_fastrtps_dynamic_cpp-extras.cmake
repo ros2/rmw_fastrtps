@@ -12,13 +12,13 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# copied from rmw_fastrtps_cpp/rmw_fastrtps_cpp-extras.cmake
+# copied from rmw_fastrtps_dynamic_cpp/rmw_fastrtps_dynamic_cpp-extras.cmake
 
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr REQUIRED CONFIG)
 find_package(fastrtps REQUIRED CONFIG)
 find_package(FastRTPS REQUIRED MODULE)
 
-list(APPEND rmw_fastrtps_cpp_INCLUDE_DIRS ${FastRTPS_INCLUDE_DIR})
+list(APPEND rmw_fastrtps_dynamic_cpp_INCLUDE_DIRS ${FastRTPS_INCLUDE_DIR})
 # specific order: dependents before dependencies
-list(APPEND rmw_fastrtps_cpp_LIBRARIES fastrtps fastcdr)
+list(APPEND rmw_fastrtps_dynamic_cpp_LIBRARIES fastrtps fastcdr)

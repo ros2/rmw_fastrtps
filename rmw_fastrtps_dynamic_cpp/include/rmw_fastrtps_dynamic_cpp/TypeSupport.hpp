@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__TYPESUPPORT_HPP_
-#define RMW_FASTRTPS_CPP__TYPESUPPORT_HPP_
+#ifndef RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_HPP_
+#define RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_HPP_
 
 #include <rosidl_generator_c/string.h>
 #include <rosidl_generator_c/string_functions.h>
@@ -41,7 +41,7 @@
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
-namespace rmw_fastrtps_cpp
+namespace rmw_fastrtps_dynamic_cpp
 {
 
 // Helper class that uses template specialization to read/write string types to/from a
@@ -61,13 +61,13 @@ struct StringHelper<rosidl_typesupport_introspection_c__MessageMembers>
     auto c_string = static_cast<rosidl_generator_c__String *>(data);
     if (!c_string) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_cpp",
+        "rmw_fastrtps_dynamic_cpp",
         "Failed to cast data as rosidl_generator_c__String")
       return current_alignment;
     }
     if (!c_string->data) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_cpp",
+        "rmw_fastrtps_dynamic_cpp",
         "rosidl_generator_c_String had invalid data")
       return current_alignment;
     }
@@ -82,13 +82,13 @@ struct StringHelper<rosidl_typesupport_introspection_c__MessageMembers>
     auto c_string = static_cast<rosidl_generator_c__String *>(data);
     if (!c_string) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_cpp",
+        "rmw_fastrtps_dynamic_cpp",
         "Failed to cast data as rosidl_generator_c__String")
       return "";
     }
     if (!c_string->data) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_cpp",
+        "rmw_fastrtps_dynamic_cpp",
         "rosidl_generator_c_String had invalid data")
       return "";
     }
@@ -159,8 +159,8 @@ private:
     bool call_new);
 };
 
-}  // namespace rmw_fastrtps_cpp
+}  // namespace rmw_fastrtps_dynamic_cpp
 
 #include "TypeSupport_impl.hpp"
 
-#endif  // RMW_FASTRTPS_CPP__TYPESUPPORT_HPP_
+#endif  // RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_HPP_

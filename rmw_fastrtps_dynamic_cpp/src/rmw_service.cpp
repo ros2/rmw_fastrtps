@@ -37,7 +37,7 @@
 
 #include "type_support_common.hpp"
 #include "client_service_common.hpp"
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 #include "namespace_prefix.hpp"
 #include "qos.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
@@ -161,15 +161,15 @@ rmw_create_service(
   publisherParam.topic.topicName += "Reply";
 
   RCUTILS_LOG_DEBUG_NAMED(
-    "rmw_fastrtps_cpp",
+    "rmw_fastrtps_dynamic_cpp",
     "************ Service Details *********")
   RCUTILS_LOG_DEBUG_NAMED(
-    "rmw_fastrtps_cpp",
+    "rmw_fastrtps_dynamic_cpp",
     "Sub Topic %s", subscriberParam.topic.topicName.c_str())
   RCUTILS_LOG_DEBUG_NAMED(
-    "rmw_fastrtps_cpp",
+    "rmw_fastrtps_dynamic_cpp",
     "Pub Topic %s", publisherParam.topic.topicName.c_str())
-  RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_cpp", "***********")
+  RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_dynamic_cpp", "***********")
 
   // Create Service Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {

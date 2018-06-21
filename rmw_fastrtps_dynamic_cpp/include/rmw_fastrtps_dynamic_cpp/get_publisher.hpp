@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__GET_PUBLISHER_HPP_
-#define RMW_FASTRTPS_CPP__GET_PUBLISHER_HPP_
+#ifndef RMW_FASTRTPS_DYNAMIC_CPP__GET_PUBLISHER_HPP_
+#define RMW_FASTRTPS_DYNAMIC_CPP__GET_PUBLISHER_HPP_
 
 #include "fastrtps/publisher/Publisher.h"
 #include "rmw/rmw.h"
-#include "rmw_fastrtps_cpp/visibility_control.h"
+#include "rmw_fastrtps_dynamic_cpp/visibility_control.h"
 
-namespace rmw_fastrtps_cpp
+namespace rmw_fastrtps_dynamic_cpp
 {
 
 /// Return a native FastRTPS publisher handle.
@@ -29,10 +29,10 @@ namespace rmw_fastrtps_cpp
  *
  * \return native FastRTPS publisher handle if successful, otherwise `NULL`
  */
-RMW_FASTRTPS_CPP_PUBLIC
+RMW_FASTRTPS_DYNAMIC_CPP_PUBLIC
 eprosima::fastrtps::Publisher *
 get_publisher(rmw_publisher_t * publisher);
 
-}  // namespace rmw_fastrtps_cpp
+}  // namespace rmw_fastrtps_dynamic_cpp
 
-#endif  // RMW_FASTRTPS_CPP__GET_PUBLISHER_HPP_
+#endif  // RMW_FASTRTPS_DYNAMIC_CPP__GET_PUBLISHER_HPP_
