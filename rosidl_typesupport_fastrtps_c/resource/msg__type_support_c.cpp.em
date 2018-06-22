@@ -190,6 +190,8 @@ static bool __cdr_serialize(
       return false;
     }
     cdr << str->data;
+@[  elif field.type.type == 'bool']@
+    cdr << (ros_message->@(field.name) ? true : false);
 @[  elif field.type.is_primitive_type()]@
     cdr << ros_message->@(field.name);
 @[  else]@

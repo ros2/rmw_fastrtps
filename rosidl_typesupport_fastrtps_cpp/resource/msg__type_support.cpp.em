@@ -116,6 +116,8 @@ cdr_serialize(
 @[      end if]@
 @[    end if]@
   }
+@[  elif field.type.type == 'bool']@
+  cdr << (ros_message.@(field.name) ? true : false);
 @[  elif field.type.is_primitive_type()]@
   cdr << ros_message.@(field.name);
 @[  else]@
@@ -173,6 +175,12 @@ cdr_deserialize(
     }
 @[      end if]@
 @[    end if]@
+  }
+@[  elif field.type.type == 'bool']@
+  {
+    uint8_t tmp;
+    cdr >> tmp;
+    ros_message.@(field.name) = tmp ? true : false;
   }
 @[  elif field.type.is_primitive_type()]@
   cdr >> ros_message.@(field.name);
