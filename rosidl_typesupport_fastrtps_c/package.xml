@@ -2,10 +2,11 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>rosidl_typesupport_fastrtps_c</name>
-  <version>0.4.0</version>
+  <version>0.5.1</version>
   <description>Generate the C interfaces for eProsima FastRTPS.</description>
-  <maintainer email="ricardogonzalez@eprosima.com">Ricardo González</maintainer>
+  <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
   <license>Apache License 2.0</license>
+  <author>Ricardo González</author>
 
   <buildtool_depend>ament_cmake</buildtool_depend>
   <buildtool_depend>fastrtps_cmake_module</buildtool_depend>
