@@ -1,4 +1,4 @@
-// Copyright 2016 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -30,21 +30,20 @@
 #include "rmw/allocators.h"
 #include "rmw/rmw.h"
 
-#include "rosidl_typesupport_introspection_cpp/identifier.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
 
-#include "rosidl_typesupport_introspection_c/identifier.h"
-
-#include "client_service_common.hpp"
 #include "rmw_fastrtps_cpp/identifier.hpp"
-#include "namespace_prefix.hpp"
-#include "qos.hpp"
-#include "type_support_common.hpp"
-#include "rmw_fastrtps_cpp/custom_participant_info.hpp"
-#include "rmw_fastrtps_cpp/custom_service_info.hpp"
+
+#include "./type_support_common.hpp"
+#include "./namespace_prefix.hpp"
+#include "./qos.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
 using TopicDataType = eprosima::fastrtps::TopicDataType;
+using CustomParticipantInfo = CustomParticipantInfo;
 
 extern "C"
 {
@@ -87,10 +86,10 @@ rmw_create_service(
   }
 
   const rosidl_service_type_support_t * type_support = get_service_typesupport_handle(
-    type_supports, rosidl_typesupport_introspection_c__identifier);
+    type_supports, RMW_FASTRTPS_CPP_TYPESUPPORT_C);
   if (!type_support) {
     type_support = get_service_typesupport_handle(
-      type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
+      type_supports, RMW_FASTRTPS_CPP_TYPESUPPORT_CPP);
     if (!type_support) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return nullptr;
@@ -106,33 +105,31 @@ rmw_create_service(
   info->participant_ = participant;
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-  const void * untyped_request_members;
-  const void * untyped_response_members;
+  const service_type_support_callbacks_t * service_members;
+  const message_type_support_callbacks_t * request_members;
+  const message_type_support_callbacks_t * response_members;
 
-  untyped_request_members =
-    get_request_ptr(type_support->data, info->typesupport_identifier_);
-  untyped_response_members = get_response_ptr(type_support->data,
-      info->typesupport_identifier_);
+  service_members = static_cast<const service_type_support_callbacks_t *>(type_support->data);
+  request_members = static_cast<const message_type_support_callbacks_t *>(
+    service_members->request_members_->data);
+  response_members = static_cast<const message_type_support_callbacks_t *>(
+    service_members->response_members_->data);
 
-  std::string request_type_name = _create_type_name(untyped_request_members, "srv",
-      info->typesupport_identifier_);
-  std::string response_type_name = _create_type_name(untyped_response_members, "srv",
-      info->typesupport_identifier_);
+  std::string request_type_name = _create_type_name(request_members, "srv");
+  std::string response_type_name = _create_type_name(response_members, "srv");
 
   if (!Domain::getRegisteredType(participant, request_type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->request_type_support_)))
   {
-    info->request_type_support_ = _create_request_type_support(type_support->data,
-        info->typesupport_identifier_);
-    _register_type(participant, info->request_type_support_, info->typesupport_identifier_);
+    info->request_type_support_ = new RequestTypeSupport_cpp(service_members);
+    _register_type(participant, info->request_type_support_);
   }
 
   if (!Domain::getRegisteredType(participant, response_type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->response_type_support_)))
   {
-    info->response_type_support_ = _create_response_type_support(type_support->data,
-        info->typesupport_identifier_);
-    _register_type(participant, info->response_type_support_, info->typesupport_identifier_);
+    info->response_type_support_ = new ResponseTypeSupport_cpp(service_members);
+    _register_type(participant, info->response_type_support_);
   }
 
   subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
@@ -227,11 +224,11 @@ fail:
     }
 
     if (info->request_type_support_) {
-      _unregister_type(participant, info->request_type_support_, info->typesupport_identifier_);
+      rmw_fastrtps_shared_cpp::_unregister_type(participant, info->request_type_support_);
     }
 
     if (info->response_type_support_) {
-      _unregister_type(participant, info->response_type_support_, info->typesupport_identifier_);
+      rmw_fastrtps_shared_cpp::_unregister_type(participant, info->response_type_support_);
     }
 
     delete info;
@@ -249,44 +246,7 @@ fail:
 rmw_ret_t
 rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
 {
-  (void)node;
-  if (!service) {
-    RMW_SET_ERROR_MSG("service handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (service->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("publisher handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  CustomServiceInfo * info = static_cast<CustomServiceInfo *>(service->data);
-  if (info != nullptr) {
-    if (info->request_subscriber_ != nullptr) {
-      Domain::removeSubscriber(info->request_subscriber_);
-    }
-    if (info->response_publisher_ != nullptr) {
-      Domain::removePublisher(info->response_publisher_);
-    }
-    if (info->listener_ != nullptr) {
-      delete info->listener_;
-    }
-
-    if (info->request_type_support_ != nullptr) {
-      _unregister_type(info->participant_, info->request_type_support_,
-        info->typesupport_identifier_);
-    }
-    if (info->response_type_support_ != nullptr) {
-      _unregister_type(info->participant_, info->response_type_support_,
-        info->typesupport_identifier_);
-    }
-    delete info;
-  }
-  if (service->service_name != nullptr) {
-    rmw_free(const_cast<char *>(service->service_name));
-    service->service_name = nullptr;
-  }
-  rmw_service_free(service);
-
-  return RMW_RET_OK;
+  return rmw_fastrtps_shared_cpp::__rmw_destroy_service(
+    eprosima_fastrtps_identifier, node, service);
 }
 }  // extern "C"

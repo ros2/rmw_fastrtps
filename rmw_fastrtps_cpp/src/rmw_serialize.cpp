@@ -1,4 +1,4 @@
-// Copyright 2016 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -19,7 +19,6 @@
 #include "rmw/rmw.h"
 
 #include "./type_support_common.hpp"
-#include "./ros_message_serialization.hpp"
 
 extern "C"
 {
@@ -30,18 +29,19 @@ rmw_serialize(
   rmw_serialized_message_t * serialized_message)
 {
   const rosidl_message_type_support_t * ts = get_message_typesupport_handle(
-    type_support, rosidl_typesupport_introspection_c__identifier);
+    type_support, RMW_FASTRTPS_CPP_TYPESUPPORT_C);
   if (!ts) {
     ts = get_message_typesupport_handle(
-      type_support, rosidl_typesupport_introspection_cpp::typesupport_identifier);
+      type_support, RMW_FASTRTPS_CPP_TYPESUPPORT_CPP);
     if (!ts) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return RMW_RET_ERROR;
     }
   }
 
-  auto tss = _create_message_type_support(ts->data, ts->typesupport_identifier);
-  auto data_length = _get_serialized_size(ros_message, tss, ts->typesupport_identifier);
+  auto callbacks = static_cast<const message_type_support_callbacks_t *>(ts->data);
+  auto tss = new MessageTypeSupport_cpp(callbacks);
+  auto data_length = tss->getEstimatedSerializedSize(ros_message);
   if (serialized_message->buffer_capacity < data_length) {
     if (rmw_serialized_message_resize(serialized_message, data_length) != RMW_RET_OK) {
       RMW_SET_ERROR_MSG("unable to dynamically resize serialized message");
@@ -53,10 +53,10 @@ rmw_serialize(
   eprosima::fastcdr::Cdr ser(
     buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
 
-  auto ret = _serialize_ros_message(ros_message, buffer, ser, tss, ts->typesupport_identifier);
+  auto ret = tss->serializeROSmessage(ros_message, ser);
   serialized_message->buffer_length = data_length;
   serialized_message->buffer_capacity = data_length;
-  _delete_typesupport(tss, ts->typesupport_identifier);
+  delete tss;
   return ret == true ? RMW_RET_OK : RMW_RET_ERROR;
 }
 
@@ -67,24 +67,25 @@ rmw_deserialize(
   void * ros_message)
 {
   const rosidl_message_type_support_t * ts = get_message_typesupport_handle(
-    type_support, rosidl_typesupport_introspection_c__identifier);
+    type_support, RMW_FASTRTPS_CPP_TYPESUPPORT_C);
   if (!ts) {
     ts = get_message_typesupport_handle(
-      type_support, rosidl_typesupport_introspection_cpp::typesupport_identifier);
+      type_support, RMW_FASTRTPS_CPP_TYPESUPPORT_CPP);
     if (!ts) {
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return RMW_RET_ERROR;
     }
   }
 
-  auto tss = _create_message_type_support(ts->data, ts->typesupport_identifier);
+  auto callbacks = static_cast<const message_type_support_callbacks_t *>(ts->data);
+  auto tss = new MessageTypeSupport_cpp(callbacks);
   eprosima::fastcdr::FastBuffer buffer(
     serialized_message->buffer, serialized_message->buffer_length);
   eprosima::fastcdr::Cdr deser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
     eprosima::fastcdr::Cdr::DDS_CDR);
 
-  auto ret = _deserialize_ros_message(deser, ros_message, tss, ts->typesupport_identifier);
-  _delete_typesupport(tss, ts->typesupport_identifier);
+  auto ret = tss->deserializeROSmessage(deser, ros_message);
+  delete tss;
   return ret == true ? RMW_RET_OK : RMW_RET_ERROR;
 }
 }  // extern "C"

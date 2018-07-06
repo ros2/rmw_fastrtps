@@ -1,4 +1,4 @@
-// Copyright 2016 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -16,7 +16,8 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "rmw_fastrtps_cpp/custom_publisher_info.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+
 #include "rmw_fastrtps_cpp/identifier.hpp"
 
 extern "C"
@@ -24,29 +25,7 @@ extern "C"
 rmw_ret_t
 rmw_get_gid_for_publisher(const rmw_publisher_t * publisher, rmw_gid_t * gid)
 {
-  if (!publisher) {
-    RMW_SET_ERROR_MSG("publisher is null");
-    return RMW_RET_ERROR;
-  }
-
-  if (publisher->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("publisher handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  if (!gid) {
-    RMW_SET_ERROR_MSG("gid is null");
-    return RMW_RET_ERROR;
-  }
-
-  auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
-
-  if (!info) {
-    RMW_SET_ERROR_MSG("publisher info handle is null");
-    return RMW_RET_ERROR;
-  }
-
-  *gid = info->publisher_gid;
-  return RMW_RET_OK;
+  return rmw_fastrtps_shared_cpp::__rmw_get_gid_for_publisher(
+    eprosima_fastrtps_identifier, publisher, gid);
 }
 }  // extern "C"
