@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2018 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__IDENTIFIER_HPP_
-#define RMW_FASTRTPS_CPP__IDENTIFIER_HPP_
+#include "rmw/rmw.h"
 
-extern const char * const eprosima_fastrtps_identifier;
+#include "rmw_fastrtps_cpp/serialization_format.hpp"
 
-#endif  // RMW_FASTRTPS_CPP__IDENTIFIER_HPP_
+extern "C"
+{
+const char *
+rmw_get_serialization_format()
+{
+  return eprosima_fastrtps_serialization_format;
+}
+}  // extern "C"

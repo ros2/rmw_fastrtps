@@ -12,15 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw/rmw.h"
+#include "rmw_fastrtps_cpp/serialization_format.hpp"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
-
-extern "C"
-{
-const char *
-rmw_get_encoding_identifier()
-{
-  return eprosima_fastrtps_encoding_identifier;
-}
-}  // extern "C"
+const char * const eprosima_fastrtps_serialization_format = "cdr";
