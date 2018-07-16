@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2016 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,7 +12,15 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rmw/rmw.h"
+
 #include "rmw_fastrtps_cpp/identifier.hpp"
 
-const char * const eprosima_fastrtps_identifier = "rmw_fastrtps_cpp";
-const char * const eprosima_fastrtps_encoding_identifier = "cdr";
+extern "C"
+{
+const char *
+rmw_get_encoding_identifier()
+{
+  return eprosima_fastrtps_encoding_identifier;
+}
+}  // extern "C"
