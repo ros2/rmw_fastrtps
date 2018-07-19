@@ -23,6 +23,7 @@
 #include "rmw/types.h"
 
 #include "demangle.hpp"
+#include "namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "reader_info.hpp"
@@ -49,15 +50,28 @@ __rmw_count_publishers(
     return RMW_RET_ERROR;
   }
 
-  auto impl = static_cast<CustomParticipantInfo *>(node->data);
-
-  WriterInfo * slave_target = impl->secondaryPubListener;
-  slave_target->mapmutex.lock();
   *count = 0;
-  for (const auto & it : slave_target->topicNtypes) {
-    const auto topic_fqdn = _demangle_if_ros_topic(it.first);
-    if (topic_fqdn == topic_name) {
-      *count += it.second.size();
+  auto ros_prefixes = _get_all_ros_prefixes();
+
+  // Build the list of all possible topic FQDN
+  std::vector<std::string> topic_fqdns;
+  topic_fqdns.push_back(topic_name);
+  if (topic_name[0] == '/') {
+    std::for_each(ros_prefixes.begin(), ros_prefixes.end(),
+      [&topic_fqdns, &topic_name](const std::string & prefix) {
+        topic_fqdns.push_back(prefix + topic_name);
+      });
+  }
+
+  auto impl = static_cast<CustomParticipantInfo *>(node->data);
+  WriterInfo * slave_target = impl->secondaryPubListener;
+
+  slave_target->mapmutex.lock();
+  // Search and sum up the publisher counts
+  for (const auto & topic_fqdn : topic_fqdns) {
+    const auto & it = slave_target->topicNtypes.find(topic_fqdn);
+    if (it != slave_target->topicNtypes.end()) {
+      *count += it->second.size();
     }
   }
   slave_target->mapmutex.unlock();
@@ -89,15 +103,28 @@ __rmw_count_subscribers(
     return RMW_RET_ERROR;
   }
 
-  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
-
-  ReaderInfo * slave_target = impl->secondarySubListener;
   *count = 0;
+  auto ros_prefixes = _get_all_ros_prefixes();
+
+  // Build the list of all possible topic FQDN
+  std::vector<std::string> topic_fqdns;
+  topic_fqdns.push_back(topic_name);
+  if (topic_name[0] == '/') {
+    std::for_each(ros_prefixes.begin(), ros_prefixes.end(),
+      [&topic_fqdns, &topic_name](const std::string & prefix) {
+        topic_fqdns.push_back(prefix + topic_name);
+      });
+  }
+
+  CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  ReaderInfo * slave_target = impl->secondarySubListener;
+
   slave_target->mapmutex.lock();
-  for (const auto & it : slave_target->topicNtypes) {
-    const auto topic_fqdn = _demangle_if_ros_topic(it.first);
-    if (topic_fqdn == topic_name) {
-      *count += it.second.size();
+  // Search and sum up the subscriber counts
+  for (const auto & topic_fqdn : topic_fqdns) {
+    const auto & it = slave_target->topicNtypes.find(topic_fqdn);
+    if (it != slave_target->topicNtypes.end()) {
+      *count += it->second.size();
     }
   }
   slave_target->mapmutex.unlock();
