@@ -1,4 +1,4 @@
-// Copyright 2016 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -25,118 +25,14 @@
 #include <cassert>
 #include <string>
 
-#include "rcutils/logging_macros.h"
+#include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"
 
-#include "rosidl_typesupport_introspection_cpp/field_types.hpp"
-#include "rosidl_typesupport_introspection_cpp/identifier.hpp"
-#include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
-#include "rosidl_typesupport_introspection_cpp/service_introspection.hpp"
-#include "rosidl_typesupport_introspection_cpp/visibility_control.h"
-
-#include "rosidl_typesupport_introspection_c/field_types.h"
-#include "rosidl_typesupport_introspection_c/identifier.h"
-#include "rosidl_typesupport_introspection_c/message_introspection.h"
-#include "rosidl_typesupport_introspection_c/service_introspection.h"
-#include "rosidl_typesupport_introspection_c/visibility_control.h"
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 namespace rmw_fastrtps_cpp
 {
 
-// Publishers write method will receive a pointer to this struct
-struct SerializedData
-{
-  bool is_cdr_buffer;  // Whether next field is a pointer to a Cdr or to a plain ros message
-  void * data;
-};
-
-// Helper class that uses template specialization to read/write string types to/from a
-// eprosima::fastcdr::Cdr
-template<typename MembersType>
-struct StringHelper;
-
-// For C introspection typesupport we create intermediate instances of std::string so that
-// eprosima::fastcdr::Cdr can handle the string properly.
-template<>
-struct StringHelper<rosidl_typesupport_introspection_c__MessageMembers>
-{
-  using type = rosidl_generator_c__String;
-
-  static size_t next_field_align(void * data, size_t current_alignment)
-  {
-    auto c_string = static_cast<rosidl_generator_c__String *>(data);
-    if (!c_string) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_cpp",
-        "Failed to cast data as rosidl_generator_c__String")
-      return current_alignment;
-    }
-    if (!c_string->data) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_cpp",
-        "rosidl_generator_c_String had invalid data")
-      return current_alignment;
-    }
-
-    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
-    current_alignment += 4;
-    return current_alignment + strlen(c_string->data) + 1;
-  }
-
-  static std::string convert_to_std_string(void * data)
-  {
-    auto c_string = static_cast<rosidl_generator_c__String *>(data);
-    if (!c_string) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_cpp",
-        "Failed to cast data as rosidl_generator_c__String")
-      return "";
-    }
-    if (!c_string->data) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_cpp",
-        "rosidl_generator_c_String had invalid data")
-      return "";
-    }
-    return std::string(c_string->data);
-  }
-
-  static std::string convert_to_std_string(rosidl_generator_c__String & data)
-  {
-    return std::string(data.data);
-  }
-
-  static void assign(eprosima::fastcdr::Cdr & deser, void * field, bool)
-  {
-    std::string str;
-    deser >> str;
-    rosidl_generator_c__String * c_str = static_cast<rosidl_generator_c__String *>(field);
-    rosidl_generator_c__String__assign(c_str, str.c_str());
-  }
-};
-
-// For C++ introspection typesupport we just reuse the same std::string transparently.
-template<>
-struct StringHelper<rosidl_typesupport_introspection_cpp::MessageMembers>
-{
-  using type = std::string;
-
-  static std::string & convert_to_std_string(void * data)
-  {
-    return *(static_cast<std::string *>(data));
-  }
-
-  static void assign(eprosima::fastcdr::Cdr & deser, void * field, bool call_new)
-  {
-    std::string & str = *(std::string *)field;
-    if (call_new) {
-      new(&str) std::string;
-    }
-    deser >> str;
-  }
-};
-
-template<typename MembersType>
-class TypeSupport : public eprosima::fastrtps::TopicDataType
+class TypeSupport : public rmw_fastrtps_shared_cpp::TypeSupport
 {
 public:
   size_t getEstimatedSerializedSize(const void * ros_message);
@@ -145,38 +41,16 @@ public:
 
   bool deserializeROSmessage(eprosima::fastcdr::Cdr & deser, void * ros_message);
 
-  bool serialize(void * data, eprosima::fastrtps::rtps::SerializedPayload_t * payload);
-
-  bool deserialize(eprosima::fastrtps::rtps::SerializedPayload_t * payload, void * data);
-
-  std::function<uint32_t()> getSerializedSizeProvider(void * data);
-
-  void * createData();
-
-  void deleteData(void * data);
-
 protected:
   TypeSupport();
 
-  size_t calculateMaxSerializedSize(const MembersType * members, size_t current_alignment);
-
-  const MembersType * members_;
-  bool max_size_bound_;
+  void set_members(const message_type_support_callbacks_t * members);
 
 private:
-  size_t getEstimatedSerializedSize(
-    const MembersType * members, const void * ros_message, size_t current_alignment);
-
-  bool serializeROSmessage(
-    eprosima::fastcdr::Cdr & ser, const MembersType * members, const void * ros_message);
-
-  bool deserializeROSmessage(
-    eprosima::fastcdr::Cdr & deser, const MembersType * members, void * ros_message,
-    bool call_new);
+  const message_type_support_callbacks_t * members_;
+  bool has_data_;
 };
 
 }  // namespace rmw_fastrtps_cpp
-
-#include "TypeSupport_impl.hpp"
 
 #endif  // RMW_FASTRTPS_CPP__TYPESUPPORT_HPP_
