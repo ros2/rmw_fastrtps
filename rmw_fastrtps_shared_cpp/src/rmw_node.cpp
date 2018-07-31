@@ -245,6 +245,12 @@ __rmw_create_node(
   participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
   // since the participant name is not part of the DDS spec
   participantAttrs.rtps.setName(name);
+
+  // allow reallocation to support discovery messages bigger than 5000 bytes
+  participantAttrs.rtps.builtin.readerHistoryMemoryPolicy =
+    eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  participantAttrs.rtps.builtin.writerHistoryMemoryPolicy =
+    eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   // the node name is also set in the user_data
   size_t name_length = strlen(name);
   const char prefix[6] = "name=";
