@@ -51,3 +51,10 @@ _strip_ros_prefix_if_exists(const std::string & topic_name)
   }
   return topic_name;
 }
+
+/// Returns the list of ros prefixes
+const std::vector<std::string> &
+_get_all_ros_prefixes()
+{
+  return _ros_prefixes;
+}

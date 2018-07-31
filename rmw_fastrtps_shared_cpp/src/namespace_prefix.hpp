@@ -34,4 +34,8 @@ _get_ros_prefix_if_exists(const std::string & topic_name);
 /// Returns the topic name stripped of and ROS specific prefix if exists.
 std::string
 _strip_ros_prefix_if_exists(const std::string & topic_name);
+
+/// Returns the list of ros prefixes
+const std::vector<std::string> &
+_get_all_ros_prefixes();
 #endif  // NAMESPACE_PREFIX_HPP_
