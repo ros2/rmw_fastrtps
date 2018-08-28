@@ -38,13 +38,17 @@ rmw_ret_t
 __rmw_get_node_names(
   const char * identifier,
   const rmw_node_t * node,
-  rcutils_string_array_t * node_names)
+  rcutils_string_array_t * node_names,
+  rcutils_string_array_t * node_namespaces)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("null node handle");
     return RMW_RET_ERROR;
   }
   if (rmw_check_zero_rmw_string_array(node_names) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
+  if (rmw_check_zero_rmw_string_array(node_namespaces) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
 
@@ -56,6 +60,7 @@ __rmw_get_node_names(
 
   auto impl = static_cast<CustomParticipantInfo *>(node->data);
   auto participant_names = impl->listener->get_discovered_names();
+  auto participant_ns = impl->listener->get_discovered_namespaces();
 
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
   rcutils_ret_t rcutils_ret =
@@ -64,15 +69,26 @@ __rmw_get_node_names(
     RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
     return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
   }
+
+  rcutils_ret =
+    rcutils_string_array_init(node_namespaces, participant_names.size() + 1, &allocator);
+  if (rcutils_ret != RCUTILS_RET_OK) {
+    RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+    return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+  }
+
   for (size_t i = 0; i < participant_names.size() + 1; ++i) {
     if (0 == i) {
       node_names->data[i] = rcutils_strdup(node->name, allocator);
+      node_namespaces->data[i] = rcutils_strdup(node->namespace_, allocator);
     } else {
       node_names->data[i] = rcutils_strdup(participant_names[i - 1].c_str(), allocator);
+      node_namespaces->data[i] = rcutils_strdup(participant_ns[i - 1].c_str(), allocator);
     }
-    if (!node_names->data[i]) {
+    if (!node_names->data[i] || !node_namespaces->data[i]) {
       RMW_SET_ERROR_MSG("failed to allocate memory for node name")
       rcutils_ret = rcutils_string_array_fini(node_names);
+      rcutils_ret = rcutils_string_array_fini(node_namespaces);
       if (rcutils_ret != RCUTILS_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           "rmw_fastrtps_shared_cpp",

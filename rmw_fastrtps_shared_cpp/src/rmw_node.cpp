@@ -251,15 +251,12 @@ __rmw_create_node(
     eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   participantAttrs.rtps.builtin.writerHistoryMemoryPolicy =
     eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-  // the node name is also set in the user_data
-  size_t name_length = strlen(name);
-  const char prefix[6] = "name=";
-  participantAttrs.rtps.userData.resize(name_length + sizeof(prefix));
-  memcpy(participantAttrs.rtps.userData.data(), prefix, sizeof(prefix) - 1);
-  for (size_t i = 0; i < name_length; ++i) {
-    participantAttrs.rtps.userData[sizeof(prefix) - 1 + i] = name[i];
-  }
-  participantAttrs.rtps.userData[sizeof(prefix) - 1 + name_length] = ';';
+
+  size_t length = strlen(name) + strlen("name=;") +
+    strlen(namespace_) + strlen("namespace=;") + 1;
+  participantAttrs.rtps.userData.resize(length);
+  snprintf(reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
+    length, "name=%s;namespace=%s;", name, namespace_);
 
   if (security_options->security_root_path) {
     // if security_root_path provided, try to find the key and certificate files
