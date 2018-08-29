@@ -71,8 +71,6 @@ public:
           namespace_ = std::string(ns_found->second.begin(), ns_found->second.end());
         }
 
-        fprintf(stderr, "%s %s\n", name.c_str(), namespace_.c_str());
-
         if (name.empty()) {
           // use participant name if no name was found in the user data
           name = info.rtps.m_RTPSParticipantName;
