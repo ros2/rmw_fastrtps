@@ -67,14 +67,14 @@ __rmw_get_node_names(
     rcutils_string_array_init(node_names, participant_names.size() + 1, &allocator);
   if (rcutils_ret != RCUTILS_RET_OK) {
     RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
-    return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+    goto fail;
   }
 
   rcutils_ret =
     rcutils_string_array_init(node_namespaces, participant_names.size() + 1, &allocator);
   if (rcutils_ret != RCUTILS_RET_OK) {
     RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
-    return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
+    goto fail;
   }
 
   for (size_t i = 0; i < participant_names.size() + 1; ++i) {
@@ -87,16 +87,29 @@ __rmw_get_node_names(
     }
     if (!node_names->data[i] || !node_namespaces->data[i]) {
       RMW_SET_ERROR_MSG("failed to allocate memory for node name")
-      rcutils_ret = rcutils_string_array_fini(node_names);
-      rcutils_ret = rcutils_string_array_fini(node_namespaces);
-      if (rcutils_ret != RCUTILS_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          "rmw_fastrtps_shared_cpp",
-          "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
-      }
-      return RMW_RET_BAD_ALLOC;
+      goto fail;
     }
   }
   return RMW_RET_OK;
+fail:
+  if (node_names) {
+    rcutils_ret = rcutils_string_array_fini(node_names);
+    if (rcutils_ret != RCUTILS_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_connext_cpp",
+        "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
+      rcutils_reset_error();
+    }
+  }
+  if (node_namesspaces) {
+    rcutils_ret = rcutils_string_array_fini(node_namespaces);
+    if (rcutils_ret != RCUTILS_RET_OK) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_connext_cpp",
+        "failed to cleanup during error handling: %s", rcutils_get_error_string_safe())
+      rcutils_reset_error();
+    }
+  }
+  return RMW_RET_BAD_ALLOC;
 }
 }  // namespace rmw_fastrtps_shared_cpp

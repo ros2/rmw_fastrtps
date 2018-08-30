@@ -255,8 +255,12 @@ __rmw_create_node(
   size_t length = strlen(name) + strlen("name=;") +
     strlen(namespace_) + strlen("namespace=;") + 1;
   participantAttrs.rtps.userData.resize(length);
-  snprintf(reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
-    length, "name=%s;namespace=%s;", name, namespace_);
+  size_t written = snprintf(reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
+      length, "name=%s;namespace=%s;", name, namespace_);
+  if (written < 0) {
+    RMW_SET_ERROR_MSG("failed to populate user_data buffer");
+    return nullptr;
+  }
 
   if (security_options->security_root_path) {
     // if security_root_path provided, try to find the key and certificate files
