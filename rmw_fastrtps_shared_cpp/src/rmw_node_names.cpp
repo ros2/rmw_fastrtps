@@ -101,7 +101,7 @@ fail:
       rcutils_reset_error();
     }
   }
-  if (node_namesspaces) {
+  if (node_namespaces) {
     rcutils_ret = rcutils_string_array_fini(node_namespaces);
     if (rcutils_ret != RCUTILS_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(

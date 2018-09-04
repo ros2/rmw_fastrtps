@@ -255,9 +255,9 @@ __rmw_create_node(
   size_t length = strlen(name) + strlen("name=;") +
     strlen(namespace_) + strlen("namespace=;") + 1;
   participantAttrs.rtps.userData.resize(length);
-  size_t written = snprintf(reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
+  int written = snprintf(reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
       length, "name=%s;namespace=%s;", name, namespace_);
-  if (written < 0) {
+  if (written < 0 || written > length - 1) {
     RMW_SET_ERROR_MSG("failed to populate user_data buffer");
     return nullptr;
   }
