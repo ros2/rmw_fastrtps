@@ -116,7 +116,7 @@ __rmw_get_topic_names_and_types(
         if (rmw_ret != RMW_RET_OK) {
           RCUTILS_LOG_ERROR_NAMED(
             "rmw_fastrtps_shared_cpp",
-            "error during report of error: %s", rmw_get_error_string_safe())
+            "error during report of error: %s", rmw_get_error_string_safe());
         }
       };
     // Setup demangling functions based on no_demangle option

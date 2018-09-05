@@ -157,14 +157,14 @@ rmw_create_service(
 
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
-    "************ Service Details *********")
+    "************ Service Details *********");
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
-    "Sub Topic %s", subscriberParam.topic.topicName.c_str())
+    "Sub Topic %s", subscriberParam.topic.topicName.c_str());
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
-    "Pub Topic %s", publisherParam.topic.topicName.c_str())
-  RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_cpp", "***********")
+    "Pub Topic %s", publisherParam.topic.topicName.c_str());
+  RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_cpp", "***********");
 
   // Create Service Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
