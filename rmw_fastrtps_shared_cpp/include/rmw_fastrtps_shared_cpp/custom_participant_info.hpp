@@ -58,11 +58,19 @@ public:
       // ignore already known GUIDs
       if (discovered_names.find(info.rtps.m_guid) == discovered_names.end()) {
         auto map = rmw::impl::cpp::parse_key_value(info.rtps.m_userData);
-        auto found = map.find("name");
+        auto name_found = map.find("name");
+        auto ns_found = map.find("namespace");
+
         std::string name;
-        if (found != map.end()) {
-          name = std::string(found->second.begin(), found->second.end());
+        if (name_found != map.end()) {
+          name = std::string(name_found->second.begin(), name_found->second.end());
         }
+
+        std::string namespace_;
+        if (ns_found != map.end()) {
+          namespace_ = std::string(ns_found->second.begin(), ns_found->second.end());
+        }
+
         if (name.empty()) {
           // use participant name if no name was found in the user data
           name = info.rtps.m_RTPSParticipantName;
@@ -70,13 +78,23 @@ public:
         // ignore discovered participants without a name
         if (!name.empty()) {
           discovered_names[info.rtps.m_guid] = name;
+          discovered_namespaces[info.rtps.m_guid] = namespace_;
         }
       }
     } else {
-      auto it = discovered_names.find(info.rtps.m_guid);
-      // only consider known GUIDs
-      if (it != discovered_names.end()) {
-        discovered_names.erase(it);
+      {
+        auto it = discovered_names.find(info.rtps.m_guid);
+        // only consider known GUIDs
+        if (it != discovered_names.end()) {
+          discovered_names.erase(it);
+        }
+      }
+      {
+        auto it = discovered_namespaces.find(info.rtps.m_guid);
+        // only consider known GUIDs
+        if (it != discovered_namespaces.end()) {
+          discovered_namespaces.erase(it);
+        }
       }
     }
   }
@@ -91,7 +109,19 @@ public:
     return names;
   }
 
+  std::vector<std::string> get_discovered_namespaces() const
+  {
+    std::vector<std::string> namespaces(discovered_namespaces.size());
+    size_t i = 0;
+    for (auto it : discovered_namespaces) {
+      namespaces[i++] = it.second;
+    }
+    return namespaces;
+  }
+
+
   std::map<eprosima::fastrtps::rtps::GUID_t, std::string> discovered_names;
+  std::map<eprosima::fastrtps::rtps::GUID_t, std::string> discovered_namespaces;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
