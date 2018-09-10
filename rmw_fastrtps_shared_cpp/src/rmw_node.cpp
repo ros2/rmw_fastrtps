@@ -192,8 +192,8 @@ get_security_file_paths(
 {
   // here assume only 6 files for security
   const char * file_names[6] = {
-    "ca.cert.pem", "cert.pem", "key.pem",
-    "ca.cert.pem", "governance.p7s", "permissions.p7s"
+    "identity_ca.cert.pem", "cert.pem", "key.pem",
+    "permissions_ca.cert.pem", "governance.p7s", "permissions.p7s"
   };
   size_t num_files = sizeof(file_names) / sizeof(char *);
 
