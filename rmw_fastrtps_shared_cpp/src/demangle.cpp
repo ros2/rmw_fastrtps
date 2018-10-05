@@ -82,7 +82,7 @@ _demangle_service_from_topic(const std::string & topic_name)
       if (topic_name.length() - suffix_position - suffix.length() != 0) {
         RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_shared_cpp",
           "service topic has service prefix and a suffix, but not at the end"
-          ", report this: '%s'", topic_name.c_str())
+          ", report this: '%s'", topic_name.c_str());
         continue;
       }
       found_suffix = suffix;
@@ -92,7 +92,7 @@ _demangle_service_from_topic(const std::string & topic_name)
   if (std::string::npos == suffix_position) {
     RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_shared_cpp",
       "service topic has prefix but no suffix"
-      ", report this: '%s'", topic_name.c_str())
+      ", report this: '%s'", topic_name.c_str());
     return "";
   }
   // strip off the suffix first
@@ -124,7 +124,7 @@ _demangle_service_type_only(const std::string & dds_type_name)
       if (dds_type_name.length() - suffix_position - suffix.length() != 0) {
         RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_shared_cpp",
           "service type contains '::srv::dds_::' and a suffix, but not at the end"
-          ", report this: '%s'", dds_type_name.c_str())
+          ", report this: '%s'", dds_type_name.c_str());
         continue;
       }
       found_suffix = suffix;
@@ -134,7 +134,7 @@ _demangle_service_type_only(const std::string & dds_type_name)
   if (std::string::npos == suffix_position) {
     RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_shared_cpp",
       "service type contains '::srv::dds_::' but does not have a suffix"
-      ", report this: '%s'", dds_type_name.c_str())
+      ", report this: '%s'", dds_type_name.c_str());
     return "";
   }
   // everything checks out, reformat it from '<pkg>::srv::dds_::<type><suffix>' to '<pkg>/<type>'

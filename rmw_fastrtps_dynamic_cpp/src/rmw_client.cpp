@@ -150,14 +150,14 @@ rmw_create_client(
 
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_dynamic_cpp",
-    "************ Client Details *********")
+    "************ Client Details *********");
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_dynamic_cpp",
-    "Sub Topic %s", subscriberParam.topic.topicName.c_str())
+    "Sub Topic %s", subscriberParam.topic.topicName.c_str());
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_dynamic_cpp",
-    "Pub Topic %s", publisherParam.topic.topicName.c_str())
-  RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_dynamic_cpp", "***********")
+    "Pub Topic %s", publisherParam.topic.topicName.c_str());
+  RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_dynamic_cpp", "***********");
 
   // Create Client Subscriber and set QoS
   if (!get_datareader_qos(*qos_policies, subscriberParam)) {
@@ -229,7 +229,7 @@ fail:
     } else {
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_dynamic_cpp",
-        "leaking type support objects because node impl is null")
+        "leaking type support objects because node impl is null");
     }
 
     delete info;

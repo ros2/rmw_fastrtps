@@ -176,7 +176,7 @@ fail:
     if (ret != RMW_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_shared_cpp",
-        "failed to destroy guard condition during error handling")
+        "failed to destroy guard condition during error handling");
     }
   }
   rmw_free(listener);

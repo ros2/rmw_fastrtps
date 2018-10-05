@@ -79,7 +79,7 @@ __rmw_count_publishers(
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_shared_cpp",
     "looking for subscriber topic: %s, number of matches: %zu",
-    topic_name, *count)
+    topic_name, *count);
 
   return RMW_RET_OK;
 }
@@ -132,7 +132,7 @@ __rmw_count_subscribers(
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_shared_cpp",
     "looking for subscriber topic: %s, number of matches: %zu",
-    topic_name, *count)
+    topic_name, *count);
 
   return RMW_RET_OK;
 }
