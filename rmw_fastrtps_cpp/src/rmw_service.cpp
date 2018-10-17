@@ -132,9 +132,13 @@ rmw_create_service(
     _register_type(participant, info->response_type_support_);
   }
 
+  if (!qos_policies->config_only_from_xml)
+  {
+    subscriberParam.historyMemoryPolicy =
+      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  }
+
   subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
-  subscriberParam.historyMemoryPolicy =
-    eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   subscriberParam.topic.topicDataType = request_type_name;
   if (!qos_policies->avoid_ros_namespace_conventions) {
     subscriberParam.topic.topicName = std::string(ros_service_requester_prefix) + service_name;
@@ -143,11 +147,15 @@ rmw_create_service(
   }
   subscriberParam.topic.topicName += "Request";
 
+  if (!qos_policies->config_only_from_xml)
+  {
+    publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
+    publisherParam.historyMemoryPolicy =
+      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  }
+
   publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   publisherParam.topic.topicDataType = response_type_name;
-  publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
-  publisherParam.historyMemoryPolicy =
-    eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   if (!qos_policies->avoid_ros_namespace_conventions) {
     publisherParam.topic.topicName = std::string(ros_service_response_prefix) + service_name;
   } else {
