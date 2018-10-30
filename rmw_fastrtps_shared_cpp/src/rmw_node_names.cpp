@@ -66,14 +66,14 @@ __rmw_get_node_names(
   rcutils_ret_t rcutils_ret =
     rcutils_string_array_init(node_names, participant_names.size() + 1, &allocator);
   if (rcutils_ret != RCUTILS_RET_OK) {
-    RMW_SET_ERROR_MSG(rcutils_get_error_string().str)
+    RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
     goto fail;
   }
 
   rcutils_ret =
     rcutils_string_array_init(node_namespaces, participant_names.size() + 1, &allocator);
   if (rcutils_ret != RCUTILS_RET_OK) {
-    RMW_SET_ERROR_MSG(rcutils_get_error_string().str)
+    RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
     goto fail;
   }
 
@@ -86,7 +86,7 @@ __rmw_get_node_names(
       node_namespaces->data[i] = rcutils_strdup(participant_ns[i - 1].c_str(), allocator);
     }
     if (!node_names->data[i] || !node_namespaces->data[i]) {
-      RMW_SET_ERROR_MSG("failed to allocate memory for node name")
+      RMW_SET_ERROR_MSG("failed to allocate memory for node name");
       goto fail;
     }
   }
