@@ -41,11 +41,11 @@ __rmw_get_service_names_and_types(
   rmw_names_and_types_t * service_names_and_types)
 {
   if (!allocator) {
-    RMW_SET_ERROR_MSG("allocator is null")
+    RMW_SET_ERROR_MSG("allocator is null");
     return RMW_RET_INVALID_ARGUMENT;
   }
   if (!node) {
-    RMW_SET_ERROR_MSG_ALLOC("null node handle", *allocator)
+    RMW_SET_ERROR_MSG("null node handle");
     return RMW_RET_INVALID_ARGUMENT;
   }
   rmw_ret_t ret = rmw_names_and_types_check_zero(service_names_and_types);
@@ -55,7 +55,7 @@ __rmw_get_service_names_and_types(
 
   // Get participant pointer from node
   if (node->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG_ALLOC("node handle not from this implementation", *allocator);
+    RMW_SET_ERROR_MSG("node handle not from this implementation");
     return RMW_RET_ERROR;
   }
 
@@ -116,7 +116,7 @@ __rmw_get_service_names_and_types(
         if (rmw_ret != RMW_RET_OK) {
           RCUTILS_LOG_ERROR_NAMED(
             "rmw_fastrtps_shared_cpp",
-            "error during report of error: %s", rmw_get_error_string_safe());
+            "error during report of error: %s", rmw_get_error_string().str);
         }
       };
     // For each service, store the name, initialize the string array for types, and store all types
@@ -125,7 +125,7 @@ __rmw_get_service_names_and_types(
       // Duplicate and store the service_name
       char * service_name = rcutils_strdup(service_n_types.first.c_str(), *allocator);
       if (!service_name) {
-        RMW_SET_ERROR_MSG_ALLOC("failed to allocate memory for service name", *allocator);
+        RMW_SET_ERROR_MSG("failed to allocate memory for service name");
         fail_cleanup();
         return RMW_RET_BAD_ALLOC;
       }
@@ -137,7 +137,7 @@ __rmw_get_service_names_and_types(
           service_n_types.second.size(),
           allocator);
         if (rcutils_ret != RCUTILS_RET_OK) {
-          RMW_SET_ERROR_MSG(rcutils_get_error_string_safe())
+          RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
           fail_cleanup();
           return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
         }
@@ -147,7 +147,7 @@ __rmw_get_service_names_and_types(
       for (const auto & type : service_n_types.second) {
         char * type_name = rcutils_strdup(type.c_str(), *allocator);
         if (!type_name) {
-          RMW_SET_ERROR_MSG_ALLOC("failed to allocate memory for type name", *allocator)
+          RMW_SET_ERROR_MSG("failed to allocate memory for type name");
           fail_cleanup();
           return RMW_RET_BAD_ALLOC;
         }

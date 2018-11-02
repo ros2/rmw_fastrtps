@@ -31,11 +31,9 @@ __rmw_publish(
   const rmw_publisher_t * publisher,
   const void * ros_message)
 {
-  auto error_allocator = rcutils_get_default_allocator();
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(publisher, "publisher pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    publisher, "publisher pointer is null", return RMW_RET_ERROR, error_allocator);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    ros_message, "ros_message pointer is null", return RMW_RET_ERROR, error_allocator);
+    ros_message, "ros_message pointer is null", return RMW_RET_ERROR);
 
   if (publisher->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
@@ -43,8 +41,7 @@ __rmw_publish(
   }
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    info, "publisher info pointer is null", return RMW_RET_ERROR, error_allocator);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "publisher info pointer is null", return RMW_RET_ERROR);
 
   rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = false;
@@ -63,12 +60,9 @@ __rmw_publish_serialized_message(
   const rmw_publisher_t * publisher,
   const rmw_serialized_message_t * serialized_message)
 {
-  auto error_allocator = rcutils_get_default_allocator();
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(publisher, "publisher pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    publisher, "publisher pointer is null", return RMW_RET_ERROR, error_allocator);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    serialized_message, "serialized_message pointer is null",
-    return RMW_RET_ERROR, error_allocator);
+    serialized_message, "serialized_message pointer is null", return RMW_RET_ERROR);
 
   if (publisher->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
@@ -76,8 +70,7 @@ __rmw_publish_serialized_message(
   }
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    info, "publisher info pointer is null", return RMW_RET_ERROR, error_allocator);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "publisher info pointer is null", return RMW_RET_ERROR);
 
   eprosima::fastcdr::FastBuffer buffer(
     serialized_message->buffer, serialized_message->buffer_length);

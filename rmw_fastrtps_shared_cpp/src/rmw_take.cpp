@@ -59,9 +59,7 @@ _take(
   }
 
   CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  auto error_msg_allocator = rcutils_get_default_allocator();
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    info, "custom subscriber info is null", return RMW_RET_ERROR, error_msg_allocator);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
   eprosima::fastrtps::SampleInfo_t sinfo;
 
@@ -89,13 +87,11 @@ __rmw_take(
   void * ros_message,
   bool * taken)
 {
-  auto error_msg_allocator = rcutils_get_default_allocator();
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    subscription, "subscription pointer is null", return RMW_RET_ERROR, error_msg_allocator);
+    subscription, "subscription pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    ros_message, "ros_message pointer is null", return RMW_RET_ERROR, error_msg_allocator);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    taken, "boolean flag for taken is null", return RMW_RET_ERROR, error_msg_allocator);
+    ros_message, "ros_message pointer is null", return RMW_RET_ERROR);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(taken, "boolean flag for taken is null", return RMW_RET_ERROR);
 
   return _take(identifier, subscription, ros_message, taken, nullptr);
 }
@@ -108,15 +104,13 @@ __rmw_take_with_info(
   bool * taken,
   rmw_message_info_t * message_info)
 {
-  auto error_msg_allocator = rcutils_get_default_allocator();
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    subscription, "subscription pointer is null", return RMW_RET_ERROR, error_msg_allocator);
+    subscription, "subscription pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    ros_message, "ros_message pointer is null", return RMW_RET_ERROR, error_msg_allocator);
+    ros_message, "ros_message pointer is null", return RMW_RET_ERROR);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(taken, "boolean flag for taken is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    taken, "boolean flag for taken is null", return RMW_RET_ERROR, error_msg_allocator);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    message_info, "message info pointer is null", return RMW_RET_ERROR, error_msg_allocator);
+    message_info, "message info pointer is null", return RMW_RET_ERROR);
 
   return _take(identifier, subscription, ros_message, taken, message_info);
 }
@@ -137,9 +131,7 @@ _take_serialized_message(
   }
 
   CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  auto error_msg_allocator = rcutils_get_default_allocator();
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    info, "custom subscriber info is null", return RMW_RET_ERROR, error_msg_allocator);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
   eprosima::fastcdr::FastBuffer buffer;
   eprosima::fastrtps::SampleInfo_t sinfo;
@@ -178,13 +170,11 @@ __rmw_take_serialized_message(
   rmw_serialized_message_t * serialized_message,
   bool * taken)
 {
-  auto error_msg_allocator = rcutils_get_default_allocator();
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    subscription, "subscription pointer is null", return RMW_RET_ERROR, error_msg_allocator);
+    subscription, "subscription pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    serialized_message, "ros_message pointer is null", return RMW_RET_ERROR, error_msg_allocator);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    taken, "boolean flag for taken is null", return RMW_RET_ERROR, error_msg_allocator);
+    serialized_message, "ros_message pointer is null", return RMW_RET_ERROR);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(taken, "boolean flag for taken is null", return RMW_RET_ERROR);
 
   return _take_serialized_message(identifier, subscription, serialized_message, taken, nullptr);
 }
@@ -197,15 +187,13 @@ __rmw_take_serialized_message_with_info(
   bool * taken,
   rmw_message_info_t * message_info)
 {
-  auto error_msg_allocator = rcutils_get_default_allocator();
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    subscription, "subscription pointer is null", return RMW_RET_ERROR, error_msg_allocator);
+    subscription, "subscription pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    serialized_message, "ros_message pointer is null", return RMW_RET_ERROR, error_msg_allocator);
+    serialized_message, "ros_message pointer is null", return RMW_RET_ERROR);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(taken, "boolean flag for taken is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    taken, "boolean flag for taken is null", return RMW_RET_ERROR, error_msg_allocator);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    message_info, "message info pointer is null", return RMW_RET_ERROR, error_msg_allocator);
+    message_info, "message info pointer is null", return RMW_RET_ERROR);
 
   return _take_serialized_message(
     identifier, subscription, serialized_message, taken, message_info);
