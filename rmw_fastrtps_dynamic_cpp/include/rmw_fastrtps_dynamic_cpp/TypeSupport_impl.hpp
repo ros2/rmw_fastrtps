@@ -36,37 +36,37 @@ namespace rmw_fastrtps_dynamic_cpp
 {
 
 template<typename T>
-struct GenericCArray;
+struct GenericCSequence;
 
 // multiple definitions of ambiguous primitive types
-SPECIALIZE_GENERIC_C_ARRAY(bool, bool)
-SPECIALIZE_GENERIC_C_ARRAY(byte, uint8_t)
-SPECIALIZE_GENERIC_C_ARRAY(char, char)
-SPECIALIZE_GENERIC_C_ARRAY(float32, float)
-SPECIALIZE_GENERIC_C_ARRAY(float64, double)
-SPECIALIZE_GENERIC_C_ARRAY(int8, int8_t)
-SPECIALIZE_GENERIC_C_ARRAY(int16, int16_t)
-SPECIALIZE_GENERIC_C_ARRAY(uint16, uint16_t)
-SPECIALIZE_GENERIC_C_ARRAY(int32, int32_t)
-SPECIALIZE_GENERIC_C_ARRAY(uint32, uint32_t)
-SPECIALIZE_GENERIC_C_ARRAY(int64, int64_t)
-SPECIALIZE_GENERIC_C_ARRAY(uint64, uint64_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(bool, bool)
+SPECIALIZE_GENERIC_C_SEQUENCE(byte, uint8_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(char, char)
+SPECIALIZE_GENERIC_C_SEQUENCE(float32, float)
+SPECIALIZE_GENERIC_C_SEQUENCE(float64, double)
+SPECIALIZE_GENERIC_C_SEQUENCE(int8, int8_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(int16, int16_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(uint16, uint16_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(int32, int32_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(uint32, uint32_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(int64, int64_t)
+SPECIALIZE_GENERIC_C_SEQUENCE(uint64, uint64_t)
 
-typedef struct rosidl_generator_c__void__Array
+typedef struct rosidl_generator_c__void__Sequence
 {
   void * data;
   /// The number of valid items in data
   size_t size;
   /// The number of allocated items in data
   size_t capacity;
-} rosidl_generator_c__void__Array;
+} rosidl_generator_c__void__Sequence;
 
 inline
 bool
-rosidl_generator_c__void__Array__init(
-  rosidl_generator_c__void__Array * array, size_t size, size_t member_size)
+rosidl_generator_c__void__Sequence__init(
+  rosidl_generator_c__void__Sequence * sequence, size_t size, size_t member_size)
 {
-  if (!array) {
+  if (!sequence) {
     return false;
   }
   void * data = nullptr;
@@ -76,31 +76,31 @@ rosidl_generator_c__void__Array__init(
       return false;
     }
   }
-  array->data = data;
-  array->size = size;
-  array->capacity = size;
+  sequence->data = data;
+  sequence->size = size;
+  sequence->capacity = size;
   return true;
 }
 
 inline
 void
-rosidl_generator_c__void__Array__fini(rosidl_generator_c__void__Array * array)
+rosidl_generator_c__void__Sequence__fini(rosidl_generator_c__void__Sequence * sequence)
 {
-  if (!array) {
+  if (!sequence) {
     return;
   }
-  if (array->data) {
+  if (sequence->data) {
     // ensure that data and capacity values are consistent
-    assert(array->capacity > 0);
-    // finalize all array elements
-    free(array->data);
-    array->data = nullptr;
-    array->size = 0;
-    array->capacity = 0;
+    assert(sequence->capacity > 0);
+    // finalize all sequence elements
+    free(sequence->data);
+    sequence->data = nullptr;
+    sequence->size = 0;
+    sequence->capacity = 0;
   } else {
     // ensure that data, size, and capacity values are consistent
-    assert(0 == array->size);
-    assert(0 == array->capacity);
+    assert(0 == sequence->size);
+    assert(0 == sequence->capacity);
   }
 }
 
@@ -224,7 +224,7 @@ void serialize_field(
   } else if (member->array_size_ && !member->is_upper_bound_) {
     ser.serializeArray(static_cast<T *>(field), member->array_size_);
   } else {
-    auto & data = *reinterpret_cast<typename GenericCArray<T>::type *>(field);
+    auto & data = *reinterpret_cast<typename GenericCSequence<T>::type *>(field);
     ser.serializeSequence(reinterpret_cast<T *>(data.data), data.size);
   }
 }
@@ -257,11 +257,11 @@ void serialize_field<std::string>(
         ser.serialize(tmpstring);
       }
     } else {
-      auto & string_array_field = *reinterpret_cast<rosidl_generator_c__String__Array *>(field);
+      auto & string_sequence_field = *reinterpret_cast<rosidl_generator_c__String__Sequence *>(field);
       std::vector<std::string> cpp_string_vector;
-      for (size_t i = 0; i < string_array_field.size; ++i) {
+      for (size_t i = 0; i < string_sequence_field.size; ++i) {
         cpp_string_vector.push_back(
-          CStringHelper::convert_to_std_string(string_array_field.data[i]));
+          CStringHelper::convert_to_std_string(string_sequence_field.data[i]));
       }
       ser << cpp_string_vector;
     }
@@ -293,12 +293,12 @@ size_t get_array_size_and_assign_field(
   void * & subros_message,
   size_t, size_t)
 {
-  auto tmparray = static_cast<rosidl_generator_c__void__Array *>(field);
-  if (member->is_upper_bound_ && tmparray->size > member->array_size_) {
+  auto tmpsequence = static_cast<rosidl_generator_c__void__Sequence *>(field);
+  if (member->is_upper_bound_ && tmpsequence->size > member->array_size_) {
     throw std::runtime_error("vector overcomes the maximum length");
   }
-  subros_message = reinterpret_cast<void *>(tmparray->data);
-  return tmparray->size;
+  subros_message = reinterpret_cast<void *>(tmpsequence->data);
+  return tmpsequence->size;
 }
 
 template<typename MembersType>
@@ -474,7 +474,7 @@ size_t next_field_align(
     current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
     current_alignment += padding;
 
-    auto & data = *reinterpret_cast<typename GenericCArray<T>::type *>(field);
+    auto & data = *reinterpret_cast<typename GenericCSequence<T>::type *>(field);
     current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
     current_alignment += item_size * data.size;
   }
@@ -503,10 +503,10 @@ size_t next_field_align<std::string>(
     } else {
       current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       current_alignment += padding;
-      auto & string_array_field = *reinterpret_cast<rosidl_generator_c__String__Array *>(field);
-      for (size_t i = 0; i < string_array_field.size; ++i) {
+      auto & string_sequence_field = *reinterpret_cast<rosidl_generator_c__String__Sequence *>(field);
+      for (size_t i = 0; i < string_sequence_field.size; ++i) {
         current_alignment = CStringHelper::next_field_align(
-          &(string_array_field.data[i]), current_alignment);
+          &(string_sequence_field.data[i]), current_alignment);
       }
     }
   }
@@ -662,10 +662,10 @@ void deserialize_field(
   } else if (member->array_size_ && !member->is_upper_bound_) {
     deser.deserializeArray(static_cast<T *>(field), member->array_size_);
   } else {
-    auto & data = *reinterpret_cast<typename GenericCArray<T>::type *>(field);
+    auto & data = *reinterpret_cast<typename GenericCSequence<T>::type *>(field);
     int32_t dsize = 0;
     deser >> dsize;
-    GenericCArray<T>::init(&data, dsize);
+    GenericCSequence<T>::init(&data, dsize);
     deser.deserializeArray(reinterpret_cast<T *>(data.data), dsize);
   }
 }
@@ -697,13 +697,13 @@ inline void deserialize_field<std::string>(
       std::vector<std::string> cpp_string_vector;
       deser >> cpp_string_vector;
 
-      auto & string_array_field = *reinterpret_cast<rosidl_generator_c__String__Array *>(field);
-      if (!rosidl_generator_c__String__Array__init(&string_array_field, cpp_string_vector.size())) {
+      auto & string_sequence_field = *reinterpret_cast<rosidl_generator_c__String__Sequence *>(field);
+      if (!rosidl_generator_c__String__Sequence__init(&string_sequence_field, cpp_string_vector.size())) {
         throw std::runtime_error("unable to initialize rosidl_generator_c__String array");
       }
 
       for (size_t i = 0; i < cpp_string_vector.size(); ++i) {
-        if (!rosidl_generator_c__String__assign(&string_array_field.data[i],
+        if (!rosidl_generator_c__String__assign(&string_sequence_field.data[i],
           cpp_string_vector[i].c_str()))
         {
           throw std::runtime_error("unable to assign rosidl_generator_c__String");
@@ -749,9 +749,9 @@ inline size_t get_submessage_array_deserialize(
   // Deserialize length
   uint32_t vsize = 0;
   deser >> vsize;
-  auto tmparray = static_cast<rosidl_generator_c__void__Array *>(field);
-  rosidl_generator_c__void__Array__init(tmparray, vsize, sub_members_size);
-  subros_message = reinterpret_cast<void *>(tmparray->data);
+  auto tmpsequence = static_cast<rosidl_generator_c__void__Sequence *>(field);
+  rosidl_generator_c__void__Sequence__init(tmpsequence, vsize, sub_members_size);
+  subros_message = reinterpret_cast<void *>(tmpsequence->data);
   return vsize;
 }
 
