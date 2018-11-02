@@ -18,18 +18,18 @@
 #include <limits>
 #include <string>
 
-#define SPECIALIZE_GENERIC_C_ARRAY(C_NAME, C_TYPE) \
+#define SPECIALIZE_GENERIC_C_SEQUENCE(C_NAME, C_TYPE) \
   template<> \
-  struct GenericCArray<C_TYPE> \
+  struct GenericCSequence<C_TYPE> \
   { \
-    using type = rosidl_generator_c__ ## C_NAME ## __Array; \
+    using type = rosidl_generator_c__ ## C_NAME ## __Sequence; \
  \
     static void fini(type * array) { \
-      rosidl_generator_c__ ## C_NAME ## __Array__fini(array); \
+      rosidl_generator_c__ ## C_NAME ## __Sequence__fini(array); \
     } \
  \
     static bool init(type * array, size_t size) { \
-      return rosidl_generator_c__ ## C_NAME ## __Array__init(array, size); \
+      return rosidl_generator_c__ ## C_NAME ## __Sequence__init(array, size); \
     } \
   };
 
