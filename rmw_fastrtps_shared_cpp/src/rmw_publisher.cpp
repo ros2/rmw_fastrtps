@@ -64,6 +64,9 @@ __rmw_destroy_publisher(
     if (info->publisher_ != nullptr) {
       Domain::removePublisher(info->publisher_);
     }
+    if (info->listener_ != nullptr) {
+      delete info->listener_;
+    }
     if (info->type_support_ != nullptr) {
       auto impl = static_cast<CustomParticipantInfo *>(node->data);
       if (!impl) {
@@ -79,6 +82,29 @@ __rmw_destroy_publisher(
   rmw_free(const_cast<char *>(publisher->topic_name));
   publisher->topic_name = nullptr;
   rmw_publisher_free(publisher);
+
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+__rmw_count_matched_subscriptions(
+  const rmw_publisher_t * publisher,
+  size_t * subscription_count)
+{
+  if (!publisher) {
+    RMW_SET_ERROR_MSG("publisher handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  if (!subscription_count) {
+    RMW_SET_ERROR_MSG("subscription_count is null");
+    return RMW_RET_ERROR;
+  }
+
+  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
+  if (info != nullptr) {
+    *subscription_count = info->listener_->subscriptionCount();
+  }
 
   return RMW_RET_OK;
 }

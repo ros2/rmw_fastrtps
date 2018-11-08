@@ -91,4 +91,27 @@ __rmw_destroy_subscription(
 
   return RMW_RET_OK;
 }
+
+rmw_ret_t
+__rmw_count_matched_publishers(
+  const rmw_subscription_t * subscription,
+  size_t * publisher_count)
+{
+  if (!subscription) {
+    RMW_SET_ERROR_MSG("subscription handle is null");
+    return RMW_RET_ERROR;
+  }
+
+  if (!publisher_count) {
+    RMW_SET_ERROR_MSG("publisher_count is null");
+    return RMW_RET_ERROR;
+  }
+
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  if (info != nullptr) {
+    *publisher_count = info->listener_->publisherCount();
+  }
+  return RMW_RET_OK;
+}
+
 }  // namespace rmw_fastrtps_shared_cpp

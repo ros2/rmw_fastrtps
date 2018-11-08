@@ -15,18 +15,57 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 
+#include <mutex>
+#include <set>
+
 #include "fastrtps/publisher/Publisher.h"
+#include "fastrtps/publisher/PublisherListener.h"
 
 #include "rmw/rmw.h"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
+class PubListener;
+
 typedef struct CustomPublisherInfo
 {
   eprosima::fastrtps::Publisher * publisher_;
+  PubListener * listener_;
   rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
   rmw_gid_t publisher_gid;
   const char * typesupport_identifier_;
 } CustomPublisherInfo;
+
+class PubListener : public eprosima::fastrtps::PublisherListener
+{
+public:
+  explicit PubListener(CustomPublisherInfo * info)
+  {
+    (void) info;
+  }
+
+  void
+  onPublicationMatched(
+    eprosima::fastrtps::Publisher * pub, eprosima::fastrtps::rtps::MatchingInfo & info)
+  {
+    (void) pub;
+    std::lock_guard<std::mutex> lock(internalMutex_);
+    if (info.status == eprosima::fastrtps::rtps::MATCHED_MATCHING) {
+      subscriptions_.insert(info.remoteEndpointGuid);
+    } else if (info.status == eprosima::fastrtps::rtps::REMOVED_MATCHING) {
+      subscriptions_.erase(info.remoteEndpointGuid);
+    }
+  }
+
+  size_t subscriptionCount()
+  {
+    std::lock_guard<std::mutex> lock(internalMutex_);
+    return subscriptions_.size();
+  }
+
+private:
+  std::mutex internalMutex_;
+  std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_;
+};
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_

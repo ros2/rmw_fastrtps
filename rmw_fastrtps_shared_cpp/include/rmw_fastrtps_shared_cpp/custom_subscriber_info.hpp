@@ -18,6 +18,7 @@
 #include <atomic>
 #include <condition_variable>
 #include <mutex>
+#include <set>
 #include <utility>
 
 #include "fastrtps/subscriber/Subscriber.h"
@@ -51,7 +52,13 @@ public:
     eprosima::fastrtps::Subscriber * sub, eprosima::fastrtps::rtps::MatchingInfo & info)
   {
     (void)sub;
-    (void)info;
+
+    std::lock_guard<std::mutex> lock(internalMutex_);
+    if (info.status == eprosima::fastrtps::rtps::MATCHED_MATCHING) {
+      publishers_.insert(info.remoteEndpointGuid);
+    } else if (info.status == eprosima::fastrtps::rtps::REMOVED_MATCHING) {
+      publishers_.erase(info.remoteEndpointGuid);
+    }
   }
 
   void
@@ -107,11 +114,19 @@ public:
     }
   }
 
+  size_t publisherCount()
+  {
+    std::lock_guard<std::mutex> lock(internalMutex_);
+    return publishers_.size();
+  }
+
 private:
   std::mutex internalMutex_;
   std::atomic_size_t data_;
   std::mutex * conditionMutex_;
   std::condition_variable * conditionVariable_;
+
+  std::set<eprosima::fastrtps::rtps::GUID_t> publishers_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_

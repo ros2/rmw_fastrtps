@@ -128,7 +128,8 @@ rmw_create_publisher(
     goto fail;
   }
 
-  info->publisher_ = Domain::createPublisher(participant, publisherParam, nullptr);
+  info->listener_ = new PubListener(info);
+  info->publisher_ = Domain::createPublisher(participant, publisherParam, info->listener_);
 
   if (!info->publisher_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
@@ -179,6 +180,15 @@ fail:
   }
 
   return nullptr;
+}
+
+rmw_ret_t
+rmw_count_matched_subscriptions(
+  const rmw_publisher_t * publisher,
+  size_t * subscription_count)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_count_matched_subscriptions(
+    publisher, subscription_count);
 }
 
 rmw_ret_t
