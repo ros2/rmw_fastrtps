@@ -131,7 +131,7 @@ __rmw_destroy_publisher(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
-__rmw_count_matched_subscriptions(
+__rmw_publisher_count_matched_subscriptions(
   const rmw_publisher_t * publisher,
   size_t * subscription_count);
 
@@ -201,7 +201,7 @@ __rmw_destroy_subscription(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
-__rmw_count_matched_publishers(
+__rmw_subscription_count_matched_publishers(
   const rmw_subscription_t * subscription,
   size_t * publisher_count);
 

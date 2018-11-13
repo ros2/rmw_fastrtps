@@ -182,6 +182,15 @@ fail:
 }
 
 rmw_ret_t
+rmw_publisher_count_matched_subscriptions(
+  const rmw_publisher_t * publisher,
+  size_t * subscription_count)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_publisher_count_matched_subscriptions(
+    publisher, subscription_count);
+}
+
+rmw_ret_t
 rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 {
   return rmw_fastrtps_shared_cpp::__rmw_destroy_publisher(

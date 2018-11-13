@@ -93,18 +93,18 @@ __rmw_destroy_subscription(
 }
 
 rmw_ret_t
-__rmw_count_matched_publishers(
+__rmw_subscription_count_matched_publishers(
   const rmw_subscription_t * subscription,
   size_t * publisher_count)
 {
   if (!subscription) {
     RMW_SET_ERROR_MSG("subscription handle is null");
-    return RMW_RET_ERROR;
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   if (!publisher_count) {
     RMW_SET_ERROR_MSG("publisher_count is null");
-    return RMW_RET_ERROR;
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);

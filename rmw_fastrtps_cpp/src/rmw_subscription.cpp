@@ -165,11 +165,11 @@ fail:
 }
 
 rmw_ret_t
-rmw_count_matched_publishers(
+rmw_subscription_count_matched_publishers(
   const rmw_subscription_t * subscription,
   size_t * publisher_count)
 {
-  return rmw_fastrtps_shared_cpp::__rmw_count_matched_publishers(
+  return rmw_fastrtps_shared_cpp::__rmw_subscription_count_matched_publishers(
     subscription, publisher_count);
 }
 
