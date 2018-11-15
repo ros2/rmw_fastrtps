@@ -26,8 +26,6 @@
 #include "namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
-#include "reader_info.hpp"
-#include "writer_info.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -64,13 +62,13 @@ __rmw_count_publishers(
   }
 
   auto impl = static_cast<CustomParticipantInfo *>(node->data);
-  WriterInfo * slave_target = impl->secondaryPubListener;
+  ::ParticipantListener * slave_target = impl->listener;
 
   slave_target->mapmutex.lock();
   // Search and sum up the publisher counts
   for (const auto & topic_fqdn : topic_fqdns) {
-    const auto & it = slave_target->topicNtypes.find(topic_fqdn);
-    if (it != slave_target->topicNtypes.end()) {
+    const auto & it = slave_target->writer_topic_and_types.find(topic_fqdn);
+    if (it != slave_target->writer_topic_and_types.end()) {
       *count += it->second.size();
     }
   }
@@ -117,13 +115,13 @@ __rmw_count_subscribers(
   }
 
   CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
-  ReaderInfo * slave_target = impl->secondarySubListener;
+  ::ParticipantListener * slave_target = impl->listener;
 
   slave_target->mapmutex.lock();
   // Search and sum up the subscriber counts
   for (const auto & topic_fqdn : topic_fqdns) {
-    const auto & it = slave_target->topicNtypes.find(topic_fqdn);
-    if (it != slave_target->topicNtypes.end()) {
+    const auto & it = slave_target->reader_topic_and_types.find(topic_fqdn);
+    if (it != slave_target->reader_topic_and_types.end()) {
       *count += it->second.size();
     }
   }

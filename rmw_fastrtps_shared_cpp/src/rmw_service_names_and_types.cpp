@@ -15,6 +15,7 @@
 #include <map>
 #include <set>
 #include <string>
+#include <vector>
 
 #include "rcutils/strdup.h"
 
@@ -28,8 +29,6 @@
 #include "demangle.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
-#include "reader_info.hpp"
-#include "writer_info.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -65,42 +64,29 @@ __rmw_get_service_names_and_types(
   // Get info from publisher and subscriber
   // Combined results from the two lists
   std::map<std::string, std::set<std::string>> services;
-  {
-    ReaderInfo * slave_target = impl->secondarySubListener;
-    slave_target->mapmutex.lock();
-    for (auto it : slave_target->topicNtypes) {
-      std::string service_name = _demangle_service_from_topic(it.first);
-      if (!service_name.length()) {
-        // not a service
-        continue;
-      }
-      for (auto & itt : it.second) {
-        std::string service_type = _demangle_service_type_only(itt);
-        if (service_type.length()) {
-          services[service_name].insert(service_type);
+
+  // Setup processing function, will be used with two maps
+  auto map_process = [&services](const std::map<std::string, std::vector<std::string>> & map) {
+      for (auto it : map) {
+        std::string service_name = _demangle_service_from_topic(it.first);
+        if (!service_name.length()) {
+          // not a service
+          continue;
+        }
+        for (auto & itt : it.second) {
+          std::string service_type = _demangle_service_type_only(itt);
+          if (service_type.length()) {
+            services[service_name].insert(service_type);
+          }
         }
       }
-    }
-    slave_target->mapmutex.unlock();
-  }
-  {
-    WriterInfo * slave_target = impl->secondaryPubListener;
-    slave_target->mapmutex.lock();
-    for (auto it : slave_target->topicNtypes) {
-      std::string service_name = _demangle_service_from_topic(it.first);
-      if (!service_name.length()) {
-        // not a service
-        continue;
-      }
-      for (auto & itt : it.second) {
-        std::string service_type = _demangle_service_type_only(itt);
-        if (service_type.length()) {
-          services[service_name].insert(service_type);
-        }
-      }
-    }
-    slave_target->mapmutex.unlock();
-  }
+    };
+
+  ::ParticipantListener * slave_target = impl->listener;
+  slave_target->mapmutex.lock();
+  map_process(slave_target->reader_topic_and_types);
+  map_process(slave_target->writer_topic_and_types);
+  slave_target->mapmutex.unlock();
 
   // Fill out service_names_and_types
   if (services.size()) {
