@@ -56,6 +56,9 @@ __rmw_destroy_client(
     if (info->request_publisher_ != nullptr) {
       Domain::removePublisher(info->request_publisher_);
     }
+    if (info->pub_listener_ != nullptr) {
+      delete info->pub_listener_;
+    }
     if (info->listener_ != nullptr) {
       delete info->listener_;
     }
