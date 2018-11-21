@@ -26,7 +26,7 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
 endif()
 
 if(SECURITY)
-    find_package(OpenSSL REQUIRED)
+  find_package(OpenSSL REQUIRED)
 endif()
 
 find_package(ament_cmake_ros REQUIRED)
