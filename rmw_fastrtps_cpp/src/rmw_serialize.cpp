@@ -49,7 +49,8 @@ rmw_serialize(
     }
   }
 
-  eprosima::fastcdr::FastBuffer buffer(serialized_message->buffer, data_length);
+  eprosima::fastcdr::FastBuffer buffer(
+    reinterpret_cast<char *>(serialized_message->buffer), data_length);
   eprosima::fastcdr::Cdr ser(
     buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
 
@@ -80,7 +81,7 @@ rmw_deserialize(
   auto callbacks = static_cast<const message_type_support_callbacks_t *>(ts->data);
   auto tss = new MessageTypeSupport_cpp(callbacks);
   eprosima::fastcdr::FastBuffer buffer(
-    serialized_message->buffer, serialized_message->buffer_length);
+    reinterpret_cast<char *>(serialized_message->buffer), serialized_message->buffer_length);
   eprosima::fastcdr::Cdr deser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
     eprosima::fastcdr::Cdr::DDS_CDR);
 

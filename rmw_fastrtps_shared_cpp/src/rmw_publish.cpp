@@ -73,7 +73,7 @@ __rmw_publish_serialized_message(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "publisher info pointer is null", return RMW_RET_ERROR);
 
   eprosima::fastcdr::FastBuffer buffer(
-    serialized_message->buffer, serialized_message->buffer_length);
+    reinterpret_cast<char *>(serialized_message->buffer), serialized_message->buffer_length);
   eprosima::fastcdr::Cdr ser(
     buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
   if (!ser.jump(serialized_message->buffer_length)) {
