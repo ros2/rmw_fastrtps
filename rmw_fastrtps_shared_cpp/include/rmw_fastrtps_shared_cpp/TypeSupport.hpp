@@ -57,19 +57,19 @@ public:
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  bool serialize(void * data, eprosima::fastrtps::rtps::SerializedPayload_t * payload);
+  bool serialize(void * data, eprosima::fastrtps::rtps::SerializedPayload_t * payload) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  bool deserialize(eprosima::fastrtps::rtps::SerializedPayload_t * payload, void * data);
+  bool deserialize(eprosima::fastrtps::rtps::SerializedPayload_t * payload, void * data) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  std::function<uint32_t()> getSerializedSizeProvider(void * data);
+  std::function<uint32_t()> getSerializedSizeProvider(void * data) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void * createData();
+  void * createData() override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void deleteData(void * data);
+  void deleteData(void * data) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   virtual ~TypeSupport() {}
