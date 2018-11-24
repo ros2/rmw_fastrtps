@@ -257,7 +257,8 @@ void serialize_field<std::string>(
         ser.serialize(tmpstring);
       }
     } else {
-      auto & string_sequence_field = *reinterpret_cast<rosidl_generator_c__String__Sequence *>(field);
+      auto & string_sequence_field =
+        *reinterpret_cast<rosidl_generator_c__String__Sequence *>(field);
       std::vector<std::string> cpp_string_vector;
       for (size_t i = 0; i < string_sequence_field.size; ++i) {
         cpp_string_vector.push_back(
@@ -503,7 +504,8 @@ size_t next_field_align<std::string>(
     } else {
       current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       current_alignment += padding;
-      auto & string_sequence_field = *reinterpret_cast<rosidl_generator_c__String__Sequence *>(field);
+      auto & string_sequence_field =
+        *reinterpret_cast<rosidl_generator_c__String__Sequence *>(field);
       for (size_t i = 0; i < string_sequence_field.size; ++i) {
         current_alignment = CStringHelper::next_field_align(
           &(string_sequence_field.data[i]), current_alignment);
@@ -697,8 +699,12 @@ inline void deserialize_field<std::string>(
       std::vector<std::string> cpp_string_vector;
       deser >> cpp_string_vector;
 
-      auto & string_sequence_field = *reinterpret_cast<rosidl_generator_c__String__Sequence *>(field);
-      if (!rosidl_generator_c__String__Sequence__init(&string_sequence_field, cpp_string_vector.size())) {
+      auto & string_sequence_field =
+        *reinterpret_cast<rosidl_generator_c__String__Sequence *>(field);
+      if (
+        !rosidl_generator_c__String__Sequence__init(
+          &string_sequence_field, cpp_string_vector.size()))
+      {
         throw std::runtime_error("unable to initialize rosidl_generator_c__String array");
       }
 
