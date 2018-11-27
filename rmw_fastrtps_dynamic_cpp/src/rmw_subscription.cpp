@@ -95,7 +95,11 @@ rmw_create_subscription(
   // Load default XML profile.
   Domain::getDefaultSubscriberAttributes(subscriberParam);
 
-  info = new CustomSubscriberInfo();
+  info = new (std::nothrow) CustomSubscriberInfo();
+  if (!info) {
+    RMW_SET_ERROR_MSG("failed to allocate CustomSubscriberInfo");
+    return nullptr;
+  }
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
   std::string type_name = _create_type_name(
@@ -123,7 +127,7 @@ rmw_create_subscription(
     goto fail;
   }
 
-  info->listener_ = new SubListener(info);
+  info->listener_ = new (std::nothrow) SubListener(info);
   if (!info->listener_) {
     RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber listener");
     goto fail;

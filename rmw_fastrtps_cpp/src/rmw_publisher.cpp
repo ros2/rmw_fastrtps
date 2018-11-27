@@ -92,7 +92,12 @@ rmw_create_publisher(
   Domain::getDefaultPublisherAttributes(publisherParam);
 
   // TODO(karsten1987) Verify consequences for std::unique_ptr?
-  info = new CustomPublisherInfo();
+  info = new (std::nothrow) CustomPublisherInfo();
+  if (!info) {
+    RMW_SET_ERROR_MSG("failed to allocate CustomPublisherInfo");
+    return nullptr;
+  }
+
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
   auto callbacks = static_cast<const message_type_support_callbacks_t *>(type_support->data);
@@ -100,7 +105,11 @@ rmw_create_publisher(
   if (!Domain::getRegisteredType(participant, type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->type_support_)))
   {
-    info->type_support_ = new MessageTypeSupport_cpp(callbacks);
+    info->type_support_ = new (std::nothrow) MessageTypeSupport_cpp(callbacks);
+    if (!info->type_support_) {
+      RMW_SET_ERROR_MSG("Failed to allocate MessageTypeSupport");
+      goto fail;
+    }
     _register_type(participant, info->type_support_);
   }
 
@@ -128,7 +137,7 @@ rmw_create_publisher(
     goto fail;
   }
 
-  info->listener_ = new PubListener(info);
+  info->listener_ = new (std::nothrow) PubListener(info);
   if (!info->listener_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher listener");
     goto fail;
