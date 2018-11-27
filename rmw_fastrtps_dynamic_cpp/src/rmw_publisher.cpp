@@ -135,7 +135,6 @@ rmw_create_publisher(
   }
 
   info->publisher_ = Domain::createPublisher(participant, publisherParam, info->listener_);
-
   if (!info->publisher_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
     goto fail;

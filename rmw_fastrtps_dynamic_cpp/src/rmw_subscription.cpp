@@ -124,14 +124,12 @@ rmw_create_subscription(
   }
 
   info->listener_ = new SubListener(info);
-
   if (!info->listener_) {
     RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber listener");
     goto fail;
   }
 
   info->subscriber_ = Domain::createSubscriber(participant, subscriberParam, info->listener_);
-
   if (!info->subscriber_) {
     RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber");
     goto fail;
