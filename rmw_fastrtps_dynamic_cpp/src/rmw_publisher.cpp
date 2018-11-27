@@ -128,7 +128,13 @@ rmw_create_publisher(
     goto fail;
   }
 
-  info->publisher_ = Domain::createPublisher(participant, publisherParam, nullptr);
+  info->listener_ = new PubListener(info);
+  if (!info->listener_) {
+    RMW_SET_ERROR_MSG("create_publisher() could not create publisher listener");
+    goto fail;
+  }
+
+  info->publisher_ = Domain::createPublisher(participant, publisherParam, info->listener_);
 
   if (!info->publisher_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
@@ -170,6 +176,9 @@ fail:
   if (info) {
     if (info->type_support_ != nullptr) {
       delete info->type_support_;
+    }
+    if (info->listener_ != nullptr) {
+      delete info->listener_;
     }
     delete info;
   }

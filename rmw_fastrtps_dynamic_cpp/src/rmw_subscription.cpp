@@ -124,6 +124,12 @@ rmw_create_subscription(
   }
 
   info->listener_ = new SubListener(info);
+
+  if (!info->listener_) {
+    RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber listener");
+    goto fail;
+  }
+
   info->subscriber_ = Domain::createSubscriber(participant, subscriberParam, info->listener_);
 
   if (!info->subscriber_) {
@@ -154,6 +160,9 @@ fail:
   if (info != nullptr) {
     if (info->type_support_ != nullptr) {
       delete info->type_support_;
+    }
+    if (info->listener_ != nullptr) {
+      delete info->listener_;
     }
     delete info;
   }
