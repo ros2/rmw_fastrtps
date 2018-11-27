@@ -50,9 +50,9 @@ public:
   {
     (void) pub;
     std::lock_guard<std::mutex> lock(internalMutex_);
-    if (info.status == eprosima::fastrtps::rtps::MATCHED_MATCHING) {
+    if (eprosima::fastrtps::rtps::MATCHED_MATCHING == info.status) {
       subscriptions_.insert(info.remoteEndpointGuid);
-    } else if (info.status == eprosima::fastrtps::rtps::REMOVED_MATCHING) {
+    } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == info.status) {
       subscriptions_.erase(info.remoteEndpointGuid);
     }
   }
