@@ -641,7 +641,13 @@ inline void deserialize_field<std::string>(
     }
     deser >> *static_cast<std::string *>(field);
   } else if (member->array_size_ && !member->is_upper_bound_) {
-    deser.deserializeArray(static_cast<std::string *>(field), member->array_size_);
+    std::string * array = static_cast<std::string *>(field);
+    if (call_new) {
+      for (size_t i = 0; i < member->array_size_; ++i) {
+        new(&array[i]) std::string();
+      }
+    }
+    deser.deserializeArray(array, member->array_size_);
   } else {
     auto & vector = *reinterpret_cast<std::vector<std::string> *>(field);
     if (call_new) {

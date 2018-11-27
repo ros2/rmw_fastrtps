@@ -48,7 +48,8 @@ rmw_serialize(
     }
   }
 
-  eprosima::fastcdr::FastBuffer buffer(reinterpret_cast<char *>(serialized_message->buffer), data_length);
+  eprosima::fastcdr::FastBuffer buffer(reinterpret_cast<char *>(serialized_message->buffer),
+    data_length);
   eprosima::fastcdr::Cdr ser(
     buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
 
