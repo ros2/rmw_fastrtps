@@ -116,7 +116,7 @@ rmw_create_subscription(
     _register_type(participant, info->type_support_);
   }
 
-  if (!qos_policies->config_only_from_xml)
+  if (!impl->leave_middleware_default_qos)
   {
     subscriberParam.historyMemoryPolicy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;

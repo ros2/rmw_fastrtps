@@ -132,7 +132,7 @@ rmw_create_service(
     _register_type(participant, info->response_type_support_);
   }
 
-  if (!qos_policies->config_only_from_xml)
+  if (!impl->leave_middleware_default_qos)
   {
     subscriberParam.historyMemoryPolicy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
@@ -147,7 +147,7 @@ rmw_create_service(
   }
   subscriberParam.topic.topicName += "Request";
 
-  if (!qos_policies->config_only_from_xml)
+  if (!impl->leave_middleware_default_qos)
   {
     publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
     publisherParam.historyMemoryPolicy =

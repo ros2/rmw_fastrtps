@@ -113,7 +113,7 @@ rmw_create_publisher(
     _register_type(participant, info->type_support_);
   }
 
-  if (!qos_policies->config_only_from_xml)
+  if (!impl->leave_middleware_default_qos)
   {
     publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
     publisherParam.historyMemoryPolicy =
