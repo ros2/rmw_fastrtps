@@ -260,12 +260,6 @@ __rmw_create_node(
     return nullptr;
   }
 
-  auto impl = static_cast<CustomParticipantInfo *>(node->data);
-  if (!impl) {
-    RMW_SET_ERROR_MSG("node impl is null");
-    return RMW_RET_ERROR;
-  }
-
   ParticipantAttributes participantAttrs;
 
   // Load default XML profile.
@@ -275,7 +269,29 @@ __rmw_create_node(
   // since the participant name is not part of the DDS spec
   participantAttrs.rtps.setName(name);
 
-  if (!impl->leave_middleware_default_qos)
+  bool leave_middleware_default_qos = false;
+  const char * env_var = "RMW_FASTRTPS_LEAVE_MIDDLEWARE_DEFAULT_QOS";
+
+  // Check if the configuration from XML has been enabled from 
+  // the RMW_FASTRTPS_LEAVE_MIDDLEWARE_DEFAULT_QOS env variable.
+  char * config_env_val = nullptr;
+#ifndef _WIN32
+  config_env_val = getenv(env_var);
+  if (config_env_val != nullptr)
+  {
+    leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
+  }
+#else
+  size_t config_env_val_size;
+  _dupenv_s(&config_env_val, &config_env_val_size, env_var);
+  if (config_env_val != nullptr)
+  {
+    leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
+  }
+  free(config_env_val);
+#endif
+  
+  if (!leave_middleware_default_qos)
   {
     // allow reallocation to support discovery messages bigger than 5000 bytes
     participantAttrs.rtps.builtin.readerHistoryMemoryPolicy =
