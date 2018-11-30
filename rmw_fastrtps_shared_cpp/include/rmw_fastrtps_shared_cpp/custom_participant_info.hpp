@@ -37,6 +37,7 @@ typedef struct CustomParticipantInfo
   ReaderInfo * secondarySubListener;
   WriterInfo * secondaryPubListener;
   rmw_guard_condition_t * graph_guard_condition;
+  bool leave_middleware_default_qos;
 } CustomParticipantInfo;
 
 class ParticipantListener : public eprosima::fastrtps::ParticipantListener

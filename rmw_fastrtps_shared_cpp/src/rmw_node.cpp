@@ -104,6 +104,27 @@ create_node(
 
   try {
     node_impl = new CustomParticipantInfo();
+
+    node_impl->leave_middleware_default_qos = false;
+    const char * env_var = "RMW_FASTRTPS_LEAVE_MIDDLEWARE_DEFAULT_QOS";
+     // Check if the configuration from XML has been enabled from 
+    // the RMW_FASTRTPS_LEAVE_MIDDLEWARE_DEFAULT_QOS env variable.
+    char * config_env_val = nullptr;
+#ifndef _WIN32
+    config_env_val = getenv(env_var);
+    if (config_env_val != nullptr)
+    {
+      node_impl->leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
+    }
+#else
+    size_t config_env_val_size;
+    _dupenv_s(&config_env_val, &config_env_val_size, env_var);
+    if (config_env_val != nullptr)
+    {
+      node_impl->leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
+    }
+    free(config_env_val);
+#endif
   } catch (std::bad_alloc &) {
     RMW_SET_ERROR_MSG("failed to allocate node impl struct");
     goto fail;
@@ -246,11 +267,35 @@ __rmw_create_node(
   // since the participant name is not part of the DDS spec
   participantAttrs.rtps.setName(name);
 
+  bool leave_middleware_default_qos = false;
+  const char * env_var = "RMW_FASTRTPS_LEAVE_MIDDLEWARE_DEFAULT_QOS";
+   // Check if the configuration from XML has been enabled from 
+  // the RMW_FASTRTPS_LEAVE_MIDDLEWARE_DEFAULT_QOS env variable.
+  char * config_env_val = nullptr;
+#ifndef _WIN32
+  config_env_val = getenv(env_var);
+  if (config_env_val != nullptr)
+  {
+    leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
+  }
+#else
+  size_t config_env_val_size;
+  _dupenv_s(&config_env_val, &config_env_val_size, env_var);
+  if (config_env_val != nullptr)
+  {
+    leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
+  }
+  free(config_env_val);
+#endif
+
   // allow reallocation to support discovery messages bigger than 5000 bytes
-  participantAttrs.rtps.builtin.readerHistoryMemoryPolicy =
-    eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-  participantAttrs.rtps.builtin.writerHistoryMemoryPolicy =
-    eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  if (!leave_middleware_default_qos)
+  {
+    participantAttrs.rtps.builtin.readerHistoryMemoryPolicy =
+      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+    participantAttrs.rtps.builtin.writerHistoryMemoryPolicy =
+      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  }
 
   size_t length = strlen(name) + strlen("name=;") +
     strlen(namespace_) + strlen("namespace=;") + 1;
