@@ -22,6 +22,7 @@
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
@@ -32,11 +33,19 @@ extern "C"
 {
 rmw_node_t *
 rmw_create_node(
+  rmw_context_t * context,
   const char * name,
   const char * namespace_,
   size_t domain_id,
   const rmw_node_security_options_t * security_options)
 {
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    init context,
+    context->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
+    return NULL);
   return rmw_fastrtps_shared_cpp::__rmw_create_node(
     eprosima_fastrtps_identifier, name, namespace_, domain_id, security_options);
 }
