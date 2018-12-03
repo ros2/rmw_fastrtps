@@ -106,9 +106,9 @@ create_node(
     node_impl = new CustomParticipantInfo();
 
     node_impl->leave_middleware_default_qos = false;
-    const char * env_var = "RMW_FASTRTPS_LEAVE_MIDDLEWARE_DEFAULT_QOS";
+    const char * env_var = "RMW_FASTRTPS_USE_QOS_FROM_XML";
      // Check if the configuration from XML has been enabled from 
-    // the RMW_FASTRTPS_LEAVE_MIDDLEWARE_DEFAULT_QOS env variable.
+    // the RMW_FASTRTPS_USE_QOS_FROM_XML env variable.
     char * config_env_val = nullptr;
 #ifndef _WIN32
     config_env_val = getenv(env_var);
@@ -268,9 +268,9 @@ __rmw_create_node(
   participantAttrs.rtps.setName(name);
 
   bool leave_middleware_default_qos = false;
-  const char * env_var = "RMW_FASTRTPS_LEAVE_MIDDLEWARE_DEFAULT_QOS";
+  const char * env_var = "RMW_FASTRTPS_USE_QOS_FROM_XML";
    // Check if the configuration from XML has been enabled from 
-  // the RMW_FASTRTPS_LEAVE_MIDDLEWARE_DEFAULT_QOS env variable.
+  // the RMW_FASTRTPS_USE_QOS_FROM_XML env variable.
   char * config_env_val = nullptr;
 #ifndef _WIN32
   config_env_val = getenv(env_var);
