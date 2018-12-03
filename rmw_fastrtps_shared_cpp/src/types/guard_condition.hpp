@@ -72,10 +72,7 @@ public:
   bool
   getHasTriggered()
   {
-    std::lock_guard<std::mutex> lock(internalMutex_);
-    bool ret = hasTriggered_;
-    hasTriggered_ = false;
-    return ret;
+    return hasTriggered_.exchange(false);
   }
 
 private:
