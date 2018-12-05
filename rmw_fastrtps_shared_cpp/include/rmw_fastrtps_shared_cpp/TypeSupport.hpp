@@ -47,19 +47,29 @@ public:
   virtual bool deserializeROSmessage(eprosima::fastcdr::Cdr & deser, void * ros_message) = 0;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  bool serialize(void * data, eprosima::fastrtps::rtps::SerializedPayload_t * payload);
+  bool getKey(
+    void * data,
+    eprosima::fastrtps::rtps::InstanceHandle_t * ihandle,
+    bool force_md5 = false) override
+  {
+    (void)data; (void)ihandle; (void)force_md5;
+    return false;
+  }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  bool deserialize(eprosima::fastrtps::rtps::SerializedPayload_t * payload, void * data);
+  bool serialize(void * data, eprosima::fastrtps::rtps::SerializedPayload_t * payload) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  std::function<uint32_t()> getSerializedSizeProvider(void * data);
+  bool deserialize(eprosima::fastrtps::rtps::SerializedPayload_t * payload, void * data) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void * createData();
+  std::function<uint32_t()> getSerializedSizeProvider(void * data) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void deleteData(void * data);
+  void * createData() override;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void deleteData(void * data) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   virtual ~TypeSupport() {}
