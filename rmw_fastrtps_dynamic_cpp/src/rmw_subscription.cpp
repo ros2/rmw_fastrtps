@@ -112,10 +112,9 @@ rmw_create_subscription(
     _register_type(participant, info->type_support_);
   }
 
-  if (!impl->leave_middleware_default_qos)
-  {
+  if (!impl->leave_middleware_default_qos) {
     subscriberParam.historyMemoryPolicy =
-      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;    
+      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
   
   subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;

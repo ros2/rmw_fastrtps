@@ -107,20 +107,18 @@ create_node(
 
     node_impl->leave_middleware_default_qos = false;
     const char * env_var = "RMW_FASTRTPS_USE_QOS_FROM_XML";
-     // Check if the configuration from XML has been enabled from 
+    // Check if the configuration from XML has been enabled from
     // the RMW_FASTRTPS_USE_QOS_FROM_XML env variable.
     char * config_env_val = nullptr;
 #ifndef _WIN32
     config_env_val = getenv(env_var);
-    if (config_env_val != nullptr)
-    {
+    if (config_env_val != nullptr) {
       node_impl->leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
     }
 #else
     size_t config_env_val_size;
     _dupenv_s(&config_env_val, &config_env_val_size, env_var);
-    if (config_env_val != nullptr)
-    {
+    if (config_env_val != nullptr) {
       node_impl->leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
     }
     free(config_env_val);
@@ -269,28 +267,25 @@ __rmw_create_node(
 
   bool leave_middleware_default_qos = false;
   const char * env_var = "RMW_FASTRTPS_USE_QOS_FROM_XML";
-   // Check if the configuration from XML has been enabled from 
+  // Check if the configuration from XML has been enabled from
   // the RMW_FASTRTPS_USE_QOS_FROM_XML env variable.
   char * config_env_val = nullptr;
 #ifndef _WIN32
   config_env_val = getenv(env_var);
-  if (config_env_val != nullptr)
-  {
+  if (config_env_val != nullptr) {
     leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
   }
 #else
   size_t config_env_val_size;
   _dupenv_s(&config_env_val, &config_env_val_size, env_var);
-  if (config_env_val != nullptr)
-  {
+  if (config_env_val != nullptr) {
     leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
   }
   free(config_env_val);
 #endif
 
   // allow reallocation to support discovery messages bigger than 5000 bytes
-  if (!leave_middleware_default_qos)
-  {
+  if (!leave_middleware_default_qos) {
     participantAttrs.rtps.builtin.readerHistoryMemoryPolicy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
     participantAttrs.rtps.builtin.writerHistoryMemoryPolicy =
