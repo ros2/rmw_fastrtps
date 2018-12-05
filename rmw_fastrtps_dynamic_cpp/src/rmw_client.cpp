@@ -144,7 +144,7 @@ rmw_create_client(
     publisherParam.historyMemoryPolicy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
-  
+
   publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   publisherParam.topic.topicDataType = request_type_name;
   if (!qos_policies->avoid_ros_namespace_conventions) {

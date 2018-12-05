@@ -116,7 +116,7 @@ rmw_create_subscription(
     subscriberParam.historyMemoryPolicy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
-  
+
   subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   subscriberParam.topic.topicDataType = type_name;
   if (!qos_policies->avoid_ros_namespace_conventions) {
