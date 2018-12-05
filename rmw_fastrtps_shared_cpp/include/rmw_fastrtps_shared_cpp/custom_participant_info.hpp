@@ -37,6 +37,13 @@ typedef struct CustomParticipantInfo
   ReaderInfo * secondarySubListener;
   WriterInfo * secondaryPubListener;
   rmw_guard_condition_t * graph_guard_condition;
+
+  // Flag to establish if the QoS of the participant,
+  // its publishers and its subscribers are going
+  // to be configured only from an XML file or if 
+  // their settings are going to be overwritten by code 
+  // with the default configuration.
+  bool leave_middleware_default_qos;
 } CustomParticipantInfo;
 
 class ParticipantListener : public eprosima::fastrtps::ParticipantListener
