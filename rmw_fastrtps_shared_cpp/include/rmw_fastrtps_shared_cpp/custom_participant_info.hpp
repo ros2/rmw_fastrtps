@@ -43,8 +43,8 @@ typedef struct CustomParticipantInfo
 
   // Flag to establish if the QoS of the participant,
   // its publishers and its subscribers are going
-  // to be configured only from an XML file or if 
-  // their settings are going to be overwritten by code 
+  // to be configured only from an XML file or if
+  // their settings are going to be overwritten by code
   // with the default configuration.
   bool leave_middleware_default_qos;
 } CustomParticipantInfo;
