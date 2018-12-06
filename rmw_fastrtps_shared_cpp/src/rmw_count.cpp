@@ -15,6 +15,8 @@
 #include <map>
 #include <string>
 #include <vector>
+#include <mutex>
+#include <numeric>
 
 #include "rcutils/logging_macros.h"
 
@@ -29,6 +31,7 @@
 
 namespace rmw_fastrtps_shared_cpp
 {
+
 rmw_ret_t
 __rmw_count_publishers(
   const char * identifier,
@@ -48,7 +51,7 @@ __rmw_count_publishers(
     return RMW_RET_ERROR;
   }
 
-  *count = 0;
+
   auto ros_prefixes = _get_all_ros_prefixes();
 
   // Build the list of all possible topic FQDN
@@ -62,17 +65,19 @@ __rmw_count_publishers(
   }
 
   auto impl = static_cast<CustomParticipantInfo *>(node->data);
+  *count = 0;
   ::ParticipantListener * slave_target = impl->listener;
-
-  slave_target->mapmutex.lock();
-  // Search and sum up the publisher counts
-  for (const auto & topic_fqdn : topic_fqdns) {
-    const auto & it = slave_target->writer_topic_and_types.find(topic_fqdn);
-    if (it != slave_target->writer_topic_and_types.end()) {
-      *count += it->second.size();
+  {
+    std::lock_guard<std::mutex> guard(slave_target->writer_topic_cache.getMutex());
+    // Search and sum up the publisher counts
+    auto & topic_types = slave_target->writer_topic_cache.getTopicToTypes();
+    for (const auto & topic_fqdn : topic_fqdns) {
+      const auto & it = topic_types.find(topic_fqdn);
+      if (it != topic_types.end()) {
+        *count += it->second.size();
+      }
     }
   }
-  slave_target->mapmutex.unlock();
 
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_shared_cpp",
@@ -101,7 +106,7 @@ __rmw_count_subscribers(
     return RMW_RET_ERROR;
   }
 
-  *count = 0;
+
   auto ros_prefixes = _get_all_ros_prefixes();
 
   // Build the list of all possible topic FQDN
@@ -115,17 +120,19 @@ __rmw_count_subscribers(
   }
 
   CustomParticipantInfo * impl = static_cast<CustomParticipantInfo *>(node->data);
+  *count = 0;
   ::ParticipantListener * slave_target = impl->listener;
-
-  slave_target->mapmutex.lock();
-  // Search and sum up the subscriber counts
-  for (const auto & topic_fqdn : topic_fqdns) {
-    const auto & it = slave_target->reader_topic_and_types.find(topic_fqdn);
-    if (it != slave_target->reader_topic_and_types.end()) {
-      *count += it->second.size();
+  {
+    std::lock_guard<std::mutex> guard(slave_target->reader_topic_cache.getMutex());
+    // Search and sum up the subscriber counts
+    auto & topic_types = slave_target->reader_topic_cache.getTopicToTypes();
+    for (const auto & topic_fqdn : topic_fqdns) {
+      const auto & it = topic_types.find(topic_fqdn);
+      if (it != topic_types.end()) {
+        *count += it->second.size();
+      }
     }
   }
-  slave_target->mapmutex.unlock();
 
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_shared_cpp",

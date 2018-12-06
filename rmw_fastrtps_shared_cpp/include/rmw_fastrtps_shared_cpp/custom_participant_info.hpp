@@ -31,9 +31,9 @@
 
 #include "rmw_common.hpp"
 
+#include "topic_cache.hpp"
+
 class ParticipantListener;
-class ReaderInfo;
-class WriterInfo;
 
 typedef struct CustomParticipantInfo
 {
@@ -158,33 +158,21 @@ public:
   template<class T>
   void process_discovery_info(T & proxyData, bool is_alive, bool is_reader)
   {
-    std::map<std::string, std::vector<std::string>> & topicNtypes =
-      is_reader ? reader_topic_and_types : writer_topic_and_types;
+    auto & topic_cache =
+      is_reader ? reader_topic_cache : writer_topic_cache;
 
     auto fqdn = proxyData.topicName();
-    bool trigger = false;
-    mapmutex.lock();
-    if (is_alive) {
-      topicNtypes[fqdn].push_back(proxyData.typeName());
-      trigger = true;
-    } else {
-      auto it = topicNtypes.find(fqdn);
-      if (it != topicNtypes.end()) {
-        const auto & loc =
-          std::find(std::begin(it->second), std::end(it->second), proxyData.typeName());
-        if (loc != std::end(it->second)) {
-          topicNtypes[fqdn].erase(loc, loc + 1);
-          trigger = true;
-        } else {
-          RCUTILS_LOG_DEBUG_NAMED(
-            "rmw_fastrtps_shared_cpp",
-            "unexpected removal of subscription on topic '%s' with type '%s'",
-            fqdn.c_str(), proxyData.typeName().c_str());
-        }
+    bool trigger;
+    {
+      std::lock_guard<std::mutex> guard(topic_cache.getMutex());
+      if (is_alive) {
+        trigger = topic_cache.addTopic(proxyData.RTPSParticipantKey(),
+            proxyData.topicName(), proxyData.typeName());
+      } else {
+        trigger = topic_cache.removeTopic(proxyData.RTPSParticipantKey(),
+            proxyData.topicName(), proxyData.typeName());
       }
     }
-    mapmutex.unlock();
-
     if (trigger) {
       rmw_fastrtps_shared_cpp::__rmw_trigger_guard_condition(
         graph_guard_condition_->implementation_identifier,
@@ -194,9 +182,8 @@ public:
 
   std::map<eprosima::fastrtps::rtps::GUID_t, std::string> discovered_names;
   std::map<eprosima::fastrtps::rtps::GUID_t, std::string> discovered_namespaces;
-  std::map<std::string, std::vector<std::string>> reader_topic_and_types;
-  std::map<std::string, std::vector<std::string>> writer_topic_and_types;
-  std::mutex mapmutex;
+  LockedObject<TopicCache> reader_topic_cache;
+  LockedObject<TopicCache> writer_topic_cache;
   rmw_guard_condition_t * graph_guard_condition_;
 };
 

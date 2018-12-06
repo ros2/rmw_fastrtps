@@ -15,6 +15,8 @@
 #include <map>
 #include <set>
 #include <string>
+
+#include <functional>
 #include <vector>
 
 #include "rcutils/allocator.h"
@@ -35,6 +37,8 @@
 #include "namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+
+#include "rmw_fastrtps_shared_cpp/topic_cache.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -75,8 +79,9 @@ __rmw_get_topic_names_and_types(
 
   // Setup processing function, will be used with two maps
   auto map_process =
-    [&topics, no_demangle](const std::map<std::string, std::vector<std::string>> & map) {
-      for (auto it : map) {
+    [&topics, no_demangle](const LockedObject<TopicCache> & topic_cache) {
+      std::lock_guard<std::mutex> guard(topic_cache.getMutex());
+      for (auto it : topic_cache.getTopicToTypes()) {
         if (!no_demangle && _get_ros_prefix_if_exists(it.first) != ros_topic_prefix) {
           // if we are demangling and this is not prefixed with rt/, skip it
           continue;
@@ -88,10 +93,8 @@ __rmw_get_topic_names_and_types(
     };
 
   ::ParticipantListener * slave_target = impl->listener;
-  slave_target->mapmutex.lock();
-  map_process(slave_target->reader_topic_and_types);
-  map_process(slave_target->writer_topic_and_types);
-  slave_target->mapmutex.unlock();
+  map_process(slave_target->reader_topic_cache);
+  map_process(slave_target->writer_topic_cache);
 
   // Copy data to results handle
   if (topics.size() > 0) {
