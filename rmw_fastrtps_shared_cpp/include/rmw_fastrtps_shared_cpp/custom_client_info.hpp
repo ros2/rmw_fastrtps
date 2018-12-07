@@ -146,16 +146,19 @@ public:
     return list_has_data_.load();
   }
 
-  void onSubscriptionMatched(eprosima::fastrtps::Subscriber * sub,
-      eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
+  void onSubscriptionMatched(
+    eprosima::fastrtps::Subscriber * sub,
+    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
   {
-    if (info_ == nullptr || sub == nullptr)
+    if (info_ == nullptr || sub == nullptr) {
       return;
+    }
 
-    if (matchingInfo.status == eprosima::fastrtps::rtps::MATCHED_MATCHING)
+    if (matchingInfo.status == eprosima::fastrtps::rtps::MATCHED_MATCHING) {
       info_->response_subscriber_matched_count_++;
-    else
+    } else {
       info_->response_subscriber_matched_count_--;
+    }
   }
 
 private:
@@ -170,20 +173,24 @@ private:
 class ClientPubListener : public eprosima::fastrtps::PublisherListener
 {
 public:
-  explicit ClientPubListener(CustomClientInfo *info) : info_(info)
+  explicit ClientPubListener(CustomClientInfo * info)
+  : info_(info)
   {
   }
 
-  void onPublicationMatched(eprosima::fastrtps::Publisher * pub,
-      eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
+  void onPublicationMatched(
+    eprosima::fastrtps::Publisher * pub,
+    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
   {
-    if (info_ == nullptr || pub == nullptr)
+    if (info_ == nullptr || pub == nullptr) {
       return;
+    }
 
-    if (matchingInfo.status == eprosima::fastrtps::rtps::MATCHED_MATCHING)
+    if (matchingInfo.status == eprosima::fastrtps::rtps::MATCHED_MATCHING) {
       info_->request_publisher_matched_count_++;
-    else
+    } else {
       info_->request_publisher_matched_count_--;
+    }
   }
 
 private:
