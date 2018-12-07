@@ -30,6 +30,8 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 
+#include "rmw_fastrtps_shared_cpp/topic_cache.hpp"
+
 namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
@@ -66,8 +68,9 @@ __rmw_get_service_names_and_types(
   std::map<std::string, std::set<std::string>> services;
 
   // Setup processing function, will be used with two maps
-  auto map_process = [&services](const std::map<std::string, std::vector<std::string>> & map) {
-      for (auto it : map) {
+  auto map_process = [&services](const LockedObject<TopicCache> & topic_cache) {
+      std::lock_guard<std::mutex> guard(topic_cache.getMutex());
+      for (auto it : topic_cache.getTopicToTypes()) {
         std::string service_name = _demangle_service_from_topic(it.first);
         if (!service_name.length()) {
           // not a service
@@ -83,10 +86,8 @@ __rmw_get_service_names_and_types(
     };
 
   ::ParticipantListener * slave_target = impl->listener;
-  slave_target->mapmutex.lock();
-  map_process(slave_target->reader_topic_and_types);
-  map_process(slave_target->writer_topic_and_types);
-  slave_target->mapmutex.unlock();
+  map_process(slave_target->reader_topic_cache);
+  map_process(slave_target->writer_topic_cache);
 
   // Fill out service_names_and_types
   if (services.size()) {
