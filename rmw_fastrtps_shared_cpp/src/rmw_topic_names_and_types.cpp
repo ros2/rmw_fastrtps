@@ -97,7 +97,7 @@ __rmw_get_topic_names_and_types(
   map_process(slave_target->writer_topic_cache);
 
   // Copy data to results handle
-  if (topics.size() > 0) {
+  if (!topics.empty()) {
     // Setup string array to store names
     rmw_ret_t rmw_ret = rmw_names_and_types_init(topic_names_and_types, topics.size(), allocator);
     if (rmw_ret != RMW_RET_OK) {

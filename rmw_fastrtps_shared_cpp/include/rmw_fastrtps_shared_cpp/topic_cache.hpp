@@ -156,7 +156,7 @@ public:
     {
       auto & type_vec = topic_to_types_[topic_name];
       type_vec.erase(std::find(type_vec.begin(), type_vec.end(), type_name));
-      if (type_vec.size() == 0) {
+      if (type_vec.empty()) {
         topic_to_types_.erase(topic_name);
       }
     }
@@ -168,10 +168,10 @@ public:
     {
       auto & type_vec = guid_topics_pair->second[topic_name];
       type_vec.erase(std::find(type_vec.begin(), type_vec.end(), type_name));
-      if (type_vec.size() == 0) {
+      if (type_vec.empty()) {
         participant_to_topics_[guid].erase(topic_name);
       }
-      if (participant_to_topics_[guid].size() == 0) {
+      if (participant_to_topics_[guid].empty()) {
         participant_to_topics_.erase(guid);
       }
     } else {

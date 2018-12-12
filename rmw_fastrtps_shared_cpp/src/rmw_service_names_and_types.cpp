@@ -90,7 +90,7 @@ __rmw_get_service_names_and_types(
   map_process(slave_target->writer_topic_cache);
 
   // Fill out service_names_and_types
-  if (services.size()) {
+  if (!services.empty()) {
     // Setup string array to store names
     rmw_ret_t rmw_ret =
       rmw_names_and_types_init(service_names_and_types, services.size(), allocator);
