@@ -65,7 +65,7 @@ rmw_ret_t __get_guid_by_name(
     std::set<GUID_t> nodes_in_desired_namespace;
     auto namespaces = impl->listener->discovered_namespaces;
     for (auto & guid_to_namespace : impl->listener->discovered_namespaces) {
-      if (strcmp(guid_to_namespace.second.c_str(), node_namespace) == 0) {
+      if (guid_to_namespace.second == node_namespace) {
         nodes_in_desired_namespace.insert(guid_to_namespace.first);
       }
     }
@@ -74,7 +74,7 @@ rmw_ret_t __get_guid_by_name(
         impl->listener->discovered_names.end(),
         [node_name, &nodes_in_desired_namespace](const std::pair<const GUID_t,
         std::string> & pair) {
-          return strcmp(pair.second.c_str(), node_name) == 0 &&
+          return pair.second == node_name &&
           nodes_in_desired_namespace.find(pair.first) != nodes_in_desired_namespace.end();
         });
 
