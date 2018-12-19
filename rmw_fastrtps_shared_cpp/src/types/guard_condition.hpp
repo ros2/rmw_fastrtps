@@ -72,9 +72,7 @@ public:
   bool
   getHasTriggered()
   {
-    bool ret = hasTriggered_;
-    hasTriggered_ = false;
-    return ret;
+    return hasTriggered_.exchange(false);
   }
 
 private:
