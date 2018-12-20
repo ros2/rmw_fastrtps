@@ -96,7 +96,7 @@ fail:
     rcutils_ret = rcutils_string_array_fini(node_names);
     if (rcutils_ret != RCUTILS_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rmw_connext_cpp",
+        "rmw_fastrtps_cpp",
         "failed to cleanup during error handling: %s", rcutils_get_error_string().str);
       rcutils_reset_error();
     }
@@ -105,7 +105,7 @@ fail:
     rcutils_ret = rcutils_string_array_fini(node_namespaces);
     if (rcutils_ret != RCUTILS_RET_OK) {
       RCUTILS_LOG_ERROR_NAMED(
-        "rmw_connext_cpp",
+        "rmw_fastrtps_cpp",
         "failed to cleanup during error handling: %s", rcutils_get_error_string().str);
       rcutils_reset_error();
     }

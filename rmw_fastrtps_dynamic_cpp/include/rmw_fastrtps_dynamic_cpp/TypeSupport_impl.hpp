@@ -414,8 +414,7 @@ size_t next_field_align(
     std::vector<T> & data = *reinterpret_cast<std::vector<T> *>(field);
     current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
     current_alignment += padding;
-    auto num_elems = data.size();
-    if (num_elems > 0) {
+    if (!data.empty()) {
       current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, item_size);
       current_alignment += item_size * data.size();
     }

@@ -194,7 +194,7 @@ __copy_data_to_results(
   rmw_names_and_types_t * topic_names_and_types)
 {
   // Copy data to results handle
-  if (topics.size() > 0) {
+  if (!topics.empty()) {
     // Setup string array to store names
     rmw_ret_t rmw_ret = rmw_names_and_types_init(topic_names_and_types, topics.size(), allocator);
     if (rmw_ret != RMW_RET_OK) {
