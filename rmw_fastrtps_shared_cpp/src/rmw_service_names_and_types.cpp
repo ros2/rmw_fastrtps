@@ -72,13 +72,13 @@ __rmw_get_service_names_and_types(
       std::lock_guard<std::mutex> guard(topic_cache.getMutex());
       for (auto it : topic_cache.getTopicToTypes()) {
         std::string service_name = _demangle_service_from_topic(it.first);
-        if (!service_name.length()) {
+        if (service_name.empty()) {
           // not a service
           continue;
         }
         for (auto & itt : it.second) {
           std::string service_type = _demangle_service_type_only(itt);
-          if (service_type.length()) {
+          if (!service_type.empty()) {
             services[service_name].insert(service_type);
           }
         }

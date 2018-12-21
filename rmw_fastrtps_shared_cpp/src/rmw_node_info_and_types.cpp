@@ -416,13 +416,13 @@ __rmw_get_service_names_and_types_by_node(
     if (node_topics != topic_cache.getParticipantToTopics().end()) {
       for (auto & topic_pair : node_topics->second) {
         std::string service_name = _demangle_service_from_topic(topic_pair.first);
-        if (!service_name.length()) {
+        if (service_name.empty()) {
           // not a service
           continue;
         }
         for (auto & itt : topic_pair.second) {
           std::string service_type = _demangle_service_type_only(itt);
-          if (service_type.length()) {
+          if (!service_type.empty()) {
             services[service_name].insert(service_type);
           }
         }
