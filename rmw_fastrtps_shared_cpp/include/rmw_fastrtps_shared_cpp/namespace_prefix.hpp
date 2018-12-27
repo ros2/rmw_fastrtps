@@ -12,19 +12,21 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef NAMESPACE_PREFIX_HPP_
-#define NAMESPACE_PREFIX_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__NAMESPACE_PREFIX_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__NAMESPACE_PREFIX_HPP_
 
 #include <vector>
 #include <string>
 
+#include "rmw_fastrtps_shared_cpp/visibility_control.h"
+
 extern "C"
 {
-extern const char * const ros_topic_prefix;
-extern const char * const ros_service_requester_prefix;
-extern const char * const ros_service_response_prefix;
+RMW_FASTRTPS_SHARED_CPP_PUBLIC extern const char * const ros_topic_prefix;
+RMW_FASTRTPS_SHARED_CPP_PUBLIC extern const char * const ros_service_requester_prefix;
+RMW_FASTRTPS_SHARED_CPP_PUBLIC extern const char * const ros_service_response_prefix;
 
-extern const std::vector<std::string> _ros_prefixes;
+RMW_FASTRTPS_SHARED_CPP_PUBLIC extern const std::vector<std::string> _ros_prefixes;
 }  // extern "C"
 
 /// Return the ROS specific prefix if it exists, otherwise "".
@@ -38,4 +40,4 @@ _strip_ros_prefix_if_exists(const std::string & topic_name);
 /// Returns the list of ros prefixes
 const std::vector<std::string> &
 _get_all_ros_prefixes();
-#endif  // NAMESPACE_PREFIX_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__NAMESPACE_PREFIX_HPP_

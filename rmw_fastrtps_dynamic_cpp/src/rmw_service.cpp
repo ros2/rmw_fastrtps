@@ -38,10 +38,10 @@
 #include "type_support_common.hpp"
 #include "client_service_common.hpp"
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
-#include "namespace_prefix.hpp"
 #include "qos.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
+#include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
