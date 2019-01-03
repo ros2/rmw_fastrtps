@@ -22,13 +22,13 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
+#include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/subscriber/Subscriber.h"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
 
-#include "./namespace_prefix.hpp"
 #include "./qos.hpp"
 #include "./type_support_common.hpp"
 

@@ -15,11 +15,10 @@
 #include <string>
 #include <vector>
 
-#include "namespace_prefix.hpp"
+#include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 
 extern "C"
 {
-// static for internal linkage
 const char * const ros_topic_prefix = "rt";
 const char * const ros_service_requester_prefix = "rq";
 const char * const ros_service_response_prefix = "rr";

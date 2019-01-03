@@ -19,7 +19,7 @@
 #include "rcutils/logging_macros.h"
 #include "rcutils/types.h"
 
-#include "namespace_prefix.hpp"
+#include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 
 /// Return the demangle ROS topic or the original if not a ROS topic.
 std::string

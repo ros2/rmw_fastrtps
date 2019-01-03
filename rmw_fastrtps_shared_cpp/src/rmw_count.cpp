@@ -25,8 +25,8 @@
 #include "rmw/types.h"
 
 #include "demangle.hpp"
-#include "namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
 namespace rmw_fastrtps_shared_cpp
