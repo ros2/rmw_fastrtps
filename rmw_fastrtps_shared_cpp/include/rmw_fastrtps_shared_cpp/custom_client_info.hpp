@@ -27,10 +27,12 @@
 #include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/publisher/Publisher.h"
+#include "fastrtps/publisher/PublisherListener.h"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 class ClientListener;
+class ClientPubListener;
 
 typedef struct CustomClientInfo
 {
@@ -42,6 +44,9 @@ typedef struct CustomClientInfo
   eprosima::fastrtps::rtps::GUID_t writer_guid_;
   eprosima::fastrtps::Participant * participant_;
   const char * typesupport_identifier_;
+  ClientPubListener * pub_listener_;
+  uint32_t response_subscriber_matched_count_;
+  uint32_t request_publisher_matched_count_;
 } CustomClientInfo;
 
 typedef struct CustomClientResponse
@@ -141,6 +146,21 @@ public:
     return list_has_data_.load();
   }
 
+  void onSubscriptionMatched(
+    eprosima::fastrtps::Subscriber * sub,
+    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
+  {
+    if (info_ == nullptr || sub == nullptr) {
+      return;
+    }
+
+    if (matchingInfo.status == eprosima::fastrtps::rtps::MATCHED_MATCHING) {
+      info_->response_subscriber_matched_count_++;
+    } else {
+      info_->response_subscriber_matched_count_--;
+    }
+  }
+
 private:
   CustomClientInfo * info_;
   std::mutex internalMutex_;
@@ -148,6 +168,33 @@ private:
   std::atomic_bool list_has_data_;
   std::mutex * conditionMutex_;
   std::condition_variable * conditionVariable_;
+};
+
+class ClientPubListener : public eprosima::fastrtps::PublisherListener
+{
+public:
+  explicit ClientPubListener(CustomClientInfo * info)
+  : info_(info)
+  {
+  }
+
+  void onPublicationMatched(
+    eprosima::fastrtps::Publisher * pub,
+    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
+  {
+    if (info_ == nullptr || pub == nullptr) {
+      return;
+    }
+
+    if (matchingInfo.status == eprosima::fastrtps::rtps::MATCHED_MATCHING) {
+      info_->request_publisher_matched_count_++;
+    } else {
+      info_->request_publisher_matched_count_--;
+    }
+  }
+
+private:
+  CustomClientInfo * info_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_CLIENT_INFO_HPP_

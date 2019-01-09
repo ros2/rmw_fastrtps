@@ -104,6 +104,15 @@ __rmw_service_server_is_available(
     return RMW_RET_OK;
   }
 
+  if (0 == client_info->request_publisher_matched_count_) {
+    // not ready
+    return RMW_RET_OK;
+  }
+  if (0 == client_info->response_subscriber_matched_count_) {
+    // not ready
+    return RMW_RET_OK;
+  }
+
   // all conditions met, there is a service server available
   *is_available = true;
   return RMW_RET_OK;
