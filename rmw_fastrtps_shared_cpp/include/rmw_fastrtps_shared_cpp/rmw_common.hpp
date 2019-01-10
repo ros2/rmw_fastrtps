@@ -292,7 +292,7 @@ __rmw_wait(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_wait_set_t *
-__rmw_create_wait_set(const char * identifier, size_t max_conditions);
+__rmw_create_wait_set(const char * identifier, rmw_context_t * context, size_t max_conditions);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t

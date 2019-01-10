@@ -23,10 +23,10 @@
 extern "C"
 {
 rmw_wait_set_t *
-rmw_create_wait_set(size_t max_conditions)
+rmw_create_wait_set(rmw_context_t * context, size_t max_conditions)
 {
   return rmw_fastrtps_shared_cpp::__rmw_create_wait_set(
-    eprosima_fastrtps_identifier, max_conditions);
+    eprosima_fastrtps_identifier, context, max_conditions);
 }
 
 rmw_ret_t

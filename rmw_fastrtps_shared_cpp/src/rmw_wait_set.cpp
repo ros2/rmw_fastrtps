@@ -24,8 +24,16 @@
 namespace rmw_fastrtps_shared_cpp
 {
 rmw_wait_set_t *
-__rmw_create_wait_set(const char * identifier, size_t max_conditions)
+__rmw_create_wait_set(const char * identifier, rmw_context_t * context, size_t max_conditions)
 {
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    init context,
+    context->implementation_identifier,
+    identifier,
+    // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
+    return NULL);
+
   (void)max_conditions;
   rmw_wait_set_t * wait_set = rmw_wait_set_allocate();
   CustomWaitsetInfo * wait_set_info = nullptr;
