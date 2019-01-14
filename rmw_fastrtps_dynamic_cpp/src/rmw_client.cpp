@@ -95,6 +95,8 @@ rmw_create_client(
   info = new CustomClientInfo();
   info->participant_ = participant;
   info->typesupport_identifier_ = type_support->typesupport_identifier;
+  info->request_publisher_matched_count_ = 0;
+  info->response_subscriber_matched_count_ = 0;
 
   const void * untyped_request_members;
   const void * untyped_response_members;
@@ -183,8 +185,9 @@ rmw_create_client(
     RMW_SET_ERROR_MSG("failed to get datawriter qos");
     goto fail;
   }
+  info->pub_listener_ = new ClientPubListener(info);
   info->request_publisher_ =
-    Domain::createPublisher(participant, publisherParam, nullptr);
+    Domain::createPublisher(participant, publisherParam, info->pub_listener_);
   if (!info->request_publisher_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
     goto fail;
@@ -218,6 +221,10 @@ fail:
 
     if (info->response_subscriber_ != nullptr) {
       Domain::removeSubscriber(info->response_subscriber_);
+    }
+
+    if (info->pub_listener_ != nullptr) {
+      delete info->pub_listener_;
     }
 
     if (info->listener_ != nullptr) {
