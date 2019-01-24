@@ -32,7 +32,7 @@ __rmw_create_wait_set(const char * identifier, rmw_context_t * context, size_t m
     context->implementation_identifier,
     identifier,
     // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
-    return NULL);
+    return nullptr);
 
   (void)max_conditions;
   rmw_wait_set_t * wait_set = rmw_wait_set_allocate();
