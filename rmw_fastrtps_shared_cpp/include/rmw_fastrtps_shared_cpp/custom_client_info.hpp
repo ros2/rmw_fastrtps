@@ -16,8 +16,10 @@
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_CLIENT_INFO_HPP_
 
 #include <atomic>
+#include <condition_variable>
 #include <list>
 #include <memory>
+#include <mutex>
 #include <utility>
 
 #include "fastcdr/FastBuffer.h"
