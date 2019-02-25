@@ -23,6 +23,8 @@
 #include "fastrtps/attributes/ParticipantAttributes.h"
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/participant/ParticipantListener.h"
+#include "fastrtps/participant/ParticipantDiscoveryInfo.h"
+
 
 #include "rcutils/logging_macros.h"
 
@@ -74,6 +76,12 @@ public:
         auto map = rmw::impl::cpp::parse_key_value(info.info.m_userData);
         auto name_found = map.find("name");
         auto ns_found = map.find("namespace");
+        
+        std::ostringstream unicast_ip;
+        unicast_ip << info.rtps.m_defaultUnicastLocatorList;
+        std::string participant_ip = unicast_ip.str();
+        std::string name;        
+        
 
         std::string name;
         if (name_found != map.end()) {
@@ -94,14 +102,23 @@ public:
           discovered_names[info.info.m_guid] = name;
           discovered_namespaces[info.info.m_guid] = namespace_;
         }
+
+        discovered_locator_and_names[name] = participant_ip;
+        
       }
     } else {
       {
         auto it = discovered_names.find(info.info.m_guid);
+        std::string erase_name = discovered_names[info.rtps.m_guid];
+        auto it_discard_locator = discovered_locator_and_names.find(erase_name);        
         // only consider known GUIDs
         if (it != discovered_names.end()) {
           discovered_names.erase(it);
         }
+        
+        if(it_discard_locator != discovered_locator_and_names.end()) {
+          discovered_locator_and_names.erase(it_discard_locator);
+      }        
       }
       {
         auto it = discovered_namespaces.find(info.info.m_guid);
@@ -122,6 +139,12 @@ public:
     }
     return names;
   }
+
+  std::map<std::string, std::string> get_discovered_node_and_locator_names() const
+  {
+    std::map<std::string, std::string> current_locator_and_names(discovered_locator_and_names);
+    return current_locator_and_names;
+  } 
 
   std::vector<std::string> get_discovered_namespaces() const
   {
@@ -182,6 +205,7 @@ public:
 
   std::map<eprosima::fastrtps::rtps::GUID_t, std::string> discovered_names;
   std::map<eprosima::fastrtps::rtps::GUID_t, std::string> discovered_namespaces;
+  std::map<std::string, std::string> discovered_locator_and_names;  
   LockedObject<TopicCache> reader_topic_cache;
   LockedObject<TopicCache> writer_topic_cache;
   rmw_guard_condition_t * graph_guard_condition_;
