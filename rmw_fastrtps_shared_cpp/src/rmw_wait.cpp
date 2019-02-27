@@ -83,6 +83,7 @@ __rmw_wait(
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
   rmw_clients_t * clients,
+  rmw_events_t * events,
   rmw_wait_set_t * wait_set,
   const rmw_time_t * wait_timeout)
 {
@@ -127,6 +128,14 @@ __rmw_wait(
       void * data = services->services[i];
       auto custom_service_info = static_cast<CustomServiceInfo *>(data);
       custom_service_info->listener_->attachCondition(conditionMutex, conditionVariable);
+    }
+  }
+
+  if (events) {
+    for (size_t i = 0; i < events->event_count; ++i) {
+      void * data = events->events[i];
+      auto custom_event_info = static_cast<CustomEventInfo *>(data);
+      custom_event_info->getListener()->attachCondition(conditionMutex, conditionVariable);
     }
   }
 
@@ -198,6 +207,17 @@ __rmw_wait(
       auto custom_service_info = static_cast<CustomServiceInfo *>(data);
       custom_service_info->listener_->detachCondition();
       if (!custom_service_info->listener_->hasData()) {
+        services->services[i] = 0;
+      }
+    }
+  }
+
+  if (events) {
+    for (size_t i = 0; i < events->event_count; ++i) {
+      void * data = events->events[i];
+      auto custom_event_info = static_cast<CustomEventInfo *>(data);
+      custom_event_info->getListener()->detachCondition();
+      if (!custom_event_info->getListener()->hasEvent()) {
         services->services[i] = 0;
       }
     }
