@@ -28,9 +28,21 @@
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
 
 
-struct CustomSubscriberInfo;
+class SubListener;
 
-class SubListener : public DataListenerInterface, public eprosima::fastrtps::SubscriberListener
+typedef struct CustomSubscriberInfo : public CustomEventInfo
+{
+  virtual ~CustomSubscriberInfo() = default;
+
+  eprosima::fastrtps::Subscriber * subscriber_;
+  SubListener * listener_;
+  rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
+  const char * typesupport_identifier_;
+
+  EventListenerInterface * getListener();
+} CustomSubscriberInfo;
+
+class SubListener : public EventListenerInterface, public eprosima::fastrtps::SubscriberListener
 {
 public:
   explicit SubListener(CustomSubscriberInfo * info)
@@ -128,19 +140,9 @@ private:
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_;
 };
 
-typedef struct CustomSubscriberInfo : public CustomEventInfo
+inline EventListenerInterface * CustomSubscriberInfo::getListener()
 {
-  virtual ~CustomSubscriberInfo() = default;
-
-  eprosima::fastrtps::Subscriber * subscriber_;
-  SubListener * listener_;
-  rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
-  const char * typesupport_identifier_;
-
-  DataListenerInterface * getListener() {
-    return listener_;
-  }
-} CustomSubscriberInfo;
-
+  return listener_;
+}
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_

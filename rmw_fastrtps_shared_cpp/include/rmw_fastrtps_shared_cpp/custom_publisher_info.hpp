@@ -16,6 +16,7 @@
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 
 #include <mutex>
+#include <condition_variable>
 #include <set>
 
 #include "fastrtps/publisher/Publisher.h"
@@ -24,19 +25,25 @@
 #include "rmw/rmw.h"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
+
 
 class PubListener;
 
-typedef struct CustomPublisherInfo
+typedef struct CustomPublisherInfo :  public CustomEventInfo
 {
+  virtual ~CustomPublisherInfo() = default;
+
   eprosima::fastrtps::Publisher * publisher_;
   PubListener * listener_;
   rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
   rmw_gid_t publisher_gid;
   const char * typesupport_identifier_;
+
+  EventListenerInterface * getListener();
 } CustomPublisherInfo;
 
-class PubListener : public eprosima::fastrtps::PublisherListener
+class PubListener : public EventListenerInterface, public eprosima::fastrtps::PublisherListener
 {
 public:
   explicit PubListener(CustomPublisherInfo * info)
@@ -63,9 +70,38 @@ public:
     return subscriptions_.size();
   }
 
+  void
+  attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable)
+  {
+    std::lock_guard<std::mutex> lock(internalMutex_);
+    conditionMutex_ = conditionMutex;
+    conditionVariable_ = conditionVariable;
+  }
+
+  void
+  detachCondition()
+  {
+    std::lock_guard<std::mutex> lock(internalMutex_);
+    conditionMutex_ = nullptr;
+    conditionVariable_ = nullptr;
+  }
+
+  bool
+  hasEvent() const override
+  {
+    return false;
+  }
+
 private:
   std::mutex internalMutex_;
   std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_;
+  std::mutex * conditionMutex_;
+  std::condition_variable * conditionVariable_;
 };
+
+inline EventListenerInterface * CustomPublisherInfo::getListener()
+{
+  return listener_;
+}
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_

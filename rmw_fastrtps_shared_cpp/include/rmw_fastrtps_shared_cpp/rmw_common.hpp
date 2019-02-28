@@ -26,6 +26,10 @@ namespace rmw_fastrtps_shared_cpp
 {
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_event_t *
+__rmw_create_client_event(const char * identifier, const rmw_client_t * client);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 __rmw_destroy_client(
   const char * identifier,
@@ -123,6 +127,10 @@ __rmw_publish_serialized_message(
   const rmw_serialized_message_t * serialized_message);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_event_t *
+__rmw_create_publisher_event(const char * identifier, const rmw_publisher_t * publisher);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 __rmw_destroy_publisher(
   const char * identifier,
@@ -168,6 +176,10 @@ __rmw_send_response(
   const rmw_service_t * service,
   rmw_request_id_t * request_header,
   void * ros_response);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_event_t *
+__rmw_create_service_event(const char * identifier, const rmw_service_t * service);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
@@ -225,6 +237,10 @@ __rmw_service_server_is_available(
   bool * is_available);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_event_t *
+__rmw_create_subscription_event(const char * identifier, const rmw_subscription_t * subscription);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 __rmw_destroy_subscription(
   const char * identifier,
@@ -270,6 +286,10 @@ __rmw_take_serialized_message_with_info(
   rmw_serialized_message_t * serialized_message,
   bool * taken,
   rmw_message_info_t * message_info);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_destroy_event(const char * identifier, rmw_event_t * event);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t

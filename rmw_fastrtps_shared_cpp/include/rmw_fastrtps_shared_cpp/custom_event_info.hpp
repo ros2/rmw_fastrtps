@@ -34,7 +34,7 @@
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 
-class DataListenerInterface
+class EventListenerInterface
 {
 public:
   virtual void attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable) = 0;
@@ -46,7 +46,7 @@ public:
 
 typedef struct CustomEventInfo
 {
-  virtual DataListenerInterface * getListener() = 0;
+  virtual EventListenerInterface * getListener() = 0;
 } CustomEventInfo;
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_EVENT_INFO_HPP_

@@ -62,6 +62,7 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_service_names_and_types.cpp
   src/rmw_service_server_is_available.cpp
   src/rmw_subscription.cpp
+  src/rmw_event.cpp
   src/rmw_take.cpp
   src/rmw_topic_names_and_types.cpp
   src/rmw_trigger_guard_condition.cpp

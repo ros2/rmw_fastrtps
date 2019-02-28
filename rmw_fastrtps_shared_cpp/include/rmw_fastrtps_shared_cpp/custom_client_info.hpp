@@ -54,7 +54,7 @@ typedef struct CustomClientInfo : public CustomEventInfo
   uint32_t response_subscriber_matched_count_;
   uint32_t request_publisher_matched_count_;
 
-  DataListenerInterface * getListener();
+  EventListenerInterface * getListener();
 } CustomClientInfo;
 
 
@@ -64,7 +64,7 @@ typedef struct CustomClientResponse
   std::unique_ptr<eprosima::fastcdr::FastBuffer> buffer_;
 } CustomClientResponse;
 
-class ClientListener : public DataListenerInterface, public eprosima::fastrtps::SubscriberListener
+class ClientListener : public EventListenerInterface, public eprosima::fastrtps::SubscriberListener
 {
 public:
   explicit ClientListener(CustomClientInfo * info)
@@ -210,7 +210,7 @@ private:
   CustomClientInfo * info_;
 };
 
-inline DataListenerInterface * CustomClientInfo::getListener()
+inline EventListenerInterface * CustomClientInfo::getListener()
 {
   return listener_;
 }
