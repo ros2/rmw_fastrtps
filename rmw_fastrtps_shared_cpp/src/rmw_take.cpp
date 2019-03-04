@@ -81,6 +81,27 @@ _take(
 }
 
 rmw_ret_t
+_take_event(
+  const char * identifier,
+  const rmw_event_t * event_handle,
+  void * event,
+  bool * taken)
+{
+  *taken = false;
+
+  if (event_handle->implementation_identifier != identifier) {
+    RMW_SET_ERROR_MSG("event handle not from this implementation");
+    return RMW_RET_ERROR;
+  }
+
+  CustomEventInfo * info = static_cast<CustomEventInfo *>(event_handle->data);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "Custom Event Info is null", return RMW_RET_ERROR);
+
+  *taken = info->getListener()->takeNextEvent(event);
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
 __rmw_take(
   const char * identifier,
   const rmw_subscription_t * subscription,

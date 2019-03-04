@@ -86,6 +86,10 @@ public:
     conditionVariable_ = nullptr;
   }
 
+  bool takeNextEvent(void *event) override {
+    return false;
+  }
+
   bool
   hasEvent() const override
   {

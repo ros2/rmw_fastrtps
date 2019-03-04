@@ -42,6 +42,9 @@ public:
   virtual void detachCondition() = 0;
 
   virtual bool hasEvent() const = 0;
+
+  virtual bool takeNextEvent(void * event) = 0;
+
 };
 
 typedef struct CustomEventInfo

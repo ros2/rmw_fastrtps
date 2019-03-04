@@ -263,6 +263,14 @@ __rmw_take(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_take_event(
+  const char * identifier,
+  const rmw_event_t * event_handle,
+  void * event,
+  bool * taken);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_take_with_info(
   const char * identifier,
   const rmw_subscription_t * subscription,

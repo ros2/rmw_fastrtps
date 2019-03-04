@@ -107,6 +107,10 @@ public:
     return data_ > 0;
   }
 
+  bool takeNextEvent(void *event) override {
+    return false;
+  }
+
   bool hasEvent() const override
   {
     return false;

@@ -61,4 +61,11 @@ rmw_take_serialized_message_with_info(
   return rmw_fastrtps_shared_cpp::__rmw_take_serialized_message_with_info(
     eprosima_fastrtps_identifier, subscription, serialized_message, taken, message_info);
 }
+
+rmw_ret_t
+rmw_take_event(const rmw_event_t * event_handle, void * event, bool * taken)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_take_event(
+          eprosima_fastrtps_identifier, event_handle, event, taken);
+}
 }  // extern "C"
