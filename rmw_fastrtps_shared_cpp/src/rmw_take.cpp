@@ -81,12 +81,19 @@ _take(
 }
 
 rmw_ret_t
-_take_event(
+__rmw_take_event(
   const char * identifier,
   const rmw_event_t * event_handle,
   void * event,
   bool * taken)
 {
+
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+          event_handle, "event_handle pointer is null", return RMW_RET_ERROR);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+          event, "event pointer is null", return RMW_RET_ERROR);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(taken, "boolean flag for taken is null", return RMW_RET_ERROR);
+
   *taken = false;
 
   if (event_handle->implementation_identifier != identifier) {
