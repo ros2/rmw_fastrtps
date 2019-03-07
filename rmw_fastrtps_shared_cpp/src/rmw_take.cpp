@@ -67,7 +67,7 @@ _take(
   data.is_cdr_buffer = false;
   data.data = ros_message;
   if (info->subscriber_->takeNextData(&data, &sinfo)) {
-    info->listener_->data_taken();
+    info->listener_->data_taken(info->subscriber_);
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
       if (message_info) {
@@ -140,7 +140,7 @@ _take_serialized_message(
   data.is_cdr_buffer = true;
   data.data = &buffer;
   if (info->subscriber_->takeNextData(&data, &sinfo)) {
-    info->listener_->data_taken();
+    info->listener_->data_taken(info->subscriber_);
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
       auto buffer_size = static_cast<size_t>(buffer.getBufferSize());
