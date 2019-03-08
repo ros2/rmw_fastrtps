@@ -155,8 +155,8 @@ __accumulate_topics(
   bool no_demangle)
 {
   std::lock_guard<std::mutex> guard(topic_cache.getMutex());
-  const auto & node_topics = topic_cache.getParticipantToTopics().find(node_guid_);
-  if (node_topics == topic_cache.getParticipantToTopics().end()) {
+  const auto & node_topics = topic_cache().getParticipantToTopics().find(node_guid_);
+  if (node_topics == topic_cache().getParticipantToTopics().end()) {
     RCUTILS_LOG_DEBUG_NAMED(
       kLoggerTag,
       "No topics found for node");
@@ -268,7 +268,7 @@ __log_debug_information(const CustomParticipantInfo & impl)
       auto & topic_cache = impl.listener->writer_topic_cache;
       std::lock_guard<std::mutex> guard(topic_cache.getMutex());
       std::stringstream map_ss;
-      map_ss << topic_cache;
+      map_ss << topic_cache();
       RCUTILS_LOG_DEBUG_NAMED(
         kLoggerTag,
         "Publisher Topic cache is: %s", map_ss.str().c_str());
@@ -277,7 +277,7 @@ __log_debug_information(const CustomParticipantInfo & impl)
       auto & topic_cache = impl.listener->reader_topic_cache;
       std::lock_guard<std::mutex> guard(topic_cache.getMutex());
       std::stringstream map_ss;
-      map_ss << topic_cache;
+      map_ss << topic_cache();
       RCUTILS_LOG_DEBUG_NAMED(
         kLoggerTag,
         "Subscriber Topic cache is: %s", map_ss.str().c_str());
@@ -412,8 +412,8 @@ __rmw_get_service_names_and_types_by_node(
   {
     auto & topic_cache = impl->listener->reader_topic_cache;
     std::lock_guard<std::mutex> guard(topic_cache.getMutex());
-    const auto & node_topics = topic_cache.getParticipantToTopics().find(guid);
-    if (node_topics != topic_cache.getParticipantToTopics().end()) {
+    const auto & node_topics = topic_cache().getParticipantToTopics().find(guid);
+    if (node_topics != topic_cache().getParticipantToTopics().end()) {
       for (auto & topic_pair : node_topics->second) {
         std::string service_name = _demangle_service_from_topic(topic_pair.first);
         if (service_name.empty()) {

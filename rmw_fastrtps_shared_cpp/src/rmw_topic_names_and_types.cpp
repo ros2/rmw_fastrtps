@@ -81,7 +81,7 @@ __rmw_get_topic_names_and_types(
   auto map_process =
     [&topics, no_demangle](const LockedObject<TopicCache> & topic_cache) {
       std::lock_guard<std::mutex> guard(topic_cache.getMutex());
-      for (auto it : topic_cache.getTopicToTypes()) {
+      for (auto it : topic_cache().getTopicToTypes()) {
         if (!no_demangle && _get_ros_prefix_if_exists(it.first) != ros_topic_prefix) {
           // if we are demangling and this is not prefixed with rt/, skip it
           continue;

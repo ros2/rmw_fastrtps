@@ -16,12 +16,14 @@
   <build_depend>fastcdr</build_depend>
   <build_depend>fastrtps</build_depend>
   <build_depend>fastrtps_cmake_module</build_depend>
+  <build_depend>rcpputils</build_depend>
   <build_depend>rcutils</build_depend>
   <build_depend>rmw</build_depend>
 
   <build_export_depend>fastcdr</build_export_depend>
   <build_export_depend>fastrtps</build_export_depend>
   <build_export_depend>fastrtps_cmake_module</build_export_depend>
+  <build_export_depend>rcpputils</build_export_depend>
   <build_export_depend>rcutils</build_export_depend>
   <build_export_depend>rmw</build_export_depend>
 
