@@ -151,7 +151,7 @@ public:
     return list_has_data_.load();
   }
 
-  bool takeNextEvent(void *event) override {
+  bool takeNextEvent(void * /*event*/) override {
     return false;
   }
 

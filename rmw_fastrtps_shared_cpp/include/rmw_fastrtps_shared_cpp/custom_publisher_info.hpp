@@ -86,7 +86,7 @@ public:
     conditionVariable_ = nullptr;
   }
 
-  bool takeNextEvent(void *event) override {
+  bool takeNextEvent(void * /*event*/) override {
     return false;
   }
 
