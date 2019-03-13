@@ -47,8 +47,8 @@ typedef struct CustomClientInfo
   eprosima::fastrtps::Participant * participant_;
   const char * typesupport_identifier_;
   ClientPubListener * pub_listener_;
-  uint32_t response_subscriber_matched_count_;
-  uint32_t request_publisher_matched_count_;
+  std::atomic_uint32_t response_subscriber_matched_count_;
+  std::atomic_uint32_t request_publisher_matched_count_;
 } CustomClientInfo;
 
 typedef struct CustomClientResponse
@@ -152,15 +152,18 @@ public:
     eprosima::fastrtps::Subscriber * sub,
     eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
   {
-    if (info_ == nullptr || sub == nullptr) {
+    (void)sub;
+    if (info_ == nullptr) {
       return;
     }
-
-    if (matchingInfo.status == eprosima::fastrtps::rtps::MATCHED_MATCHING) {
-      info_->response_subscriber_matched_count_++;
+    if (eprosima::fastrtps::rtps::MATCHED_MATCHING == matchingInfo.status) {
+      publishers_.insert(matchingInfo.remoteEndpointGuid);
+    } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == matchingInfo.status) {
+      publishers_.erase(matchingInfo.remoteEndpointGuid);
     } else {
-      info_->response_subscriber_matched_count_--;
+      return;
     }
+    info_->response_subscriber_matched_count_.store(publishers_.size());
   }
 
 private:
@@ -170,6 +173,7 @@ private:
   std::atomic_bool list_has_data_;
   std::mutex * conditionMutex_;
   std::condition_variable * conditionVariable_;
+  std::set<eprosima::fastrtps::rtps::GUID_t> publishers_;
 };
 
 class ClientPubListener : public eprosima::fastrtps::PublisherListener
@@ -184,19 +188,23 @@ public:
     eprosima::fastrtps::Publisher * pub,
     eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
   {
-    if (info_ == nullptr || pub == nullptr) {
+    (void) pub;
+    if (info_ == nullptr) {
       return;
     }
-
-    if (matchingInfo.status == eprosima::fastrtps::rtps::MATCHED_MATCHING) {
-      info_->request_publisher_matched_count_++;
+    if (eprosima::fastrtps::rtps::MATCHED_MATCHING == matchingInfo.status) {
+      subscriptions_.insert(matchingInfo.remoteEndpointGuid);
+    } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == matchingInfo.status) {
+      subscriptions_.erase(matchingInfo.remoteEndpointGuid);
     } else {
-      info_->request_publisher_matched_count_--;
+      return;
     }
+    info_->request_publisher_matched_count_.store(subscriptions_.size());
   }
 
 private:
   CustomClientInfo * info_;
+  std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_CLIENT_INFO_HPP_
