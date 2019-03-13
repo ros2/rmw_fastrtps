@@ -43,9 +43,6 @@ rmw_get_node_and_locator_names(
     RMW_SET_ERROR_MSG("null node handle");
     return RMW_RET_ERROR;
   }
-  /*if (rmw_check_zero_rmw_string_array(node_names) != RMW_RET_OK) {
-    return RMW_RET_ERROR;
-  }*/
 
   // Get participant pointer from node
   if (node->implementation_identifier != eprosima_fastrtps_identifier) {
