@@ -88,9 +88,9 @@ __rmw_take_event(
   bool * taken)
 {
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-          event_handle, "event_handle pointer is null", return RMW_RET_ERROR);
+    event_handle, "event_handle pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-          event, "event pointer is null", return RMW_RET_ERROR);
+    event, "event pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(taken, "boolean flag for taken is null", return RMW_RET_ERROR);
 
   *taken = false;

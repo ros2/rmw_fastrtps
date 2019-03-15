@@ -66,6 +66,6 @@ rmw_ret_t
 rmw_take_event(const rmw_event_t * event_handle, void * event, bool * taken)
 {
   return rmw_fastrtps_shared_cpp::__rmw_take_event(
-          eprosima_fastrtps_identifier, event_handle, event, taken);
+    eprosima_fastrtps_identifier, event_handle, event, taken);
 }
 }  // extern "C"

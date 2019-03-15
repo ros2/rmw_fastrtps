@@ -30,7 +30,7 @@
 
 class PubListener;
 
-typedef struct CustomPublisherInfo :  public CustomEventInfo
+typedef struct CustomPublisherInfo : public CustomEventInfo
 {
   virtual ~CustomPublisherInfo() = default;
 
@@ -86,7 +86,8 @@ public:
     conditionVariable_ = nullptr;
   }
 
-  bool takeNextEvent(void * /*event*/) override {
+  bool takeNextEvent(void * /*event*/) override
+  {
     return false;
   }
 
