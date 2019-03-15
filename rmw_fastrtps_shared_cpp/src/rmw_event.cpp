@@ -71,7 +71,8 @@ __rmw_create_publisher_event(const char * identifier, const rmw_publisher_t * pu
   }
 
   rmw_event->implementation_identifier = publisher->implementation_identifier;
-  rmw_event->data = static_cast<CustomEventInfo*>(static_cast<CustomPublisherInfo*>(publisher->data));
+  rmw_event->data = static_cast<CustomEventInfo*>(
+    static_cast<CustomPublisherInfo*>(publisher->data));
 
   return rmw_event;
 }
@@ -111,7 +112,8 @@ __rmw_create_subscription_event(const char * identifier, const rmw_subscription_
   }
 
   rmw_event->implementation_identifier = subscription->implementation_identifier;
-  rmw_event->data = static_cast<CustomEventInfo*>(static_cast<CustomSubscriberInfo*>(subscription->data));
+  rmw_event->data = static_cast<CustomEventInfo*>(
+    static_cast<CustomSubscriberInfo*>(subscription->data));
 
   return rmw_event;
 }

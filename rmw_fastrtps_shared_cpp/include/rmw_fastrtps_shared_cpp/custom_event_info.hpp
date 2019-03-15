@@ -37,14 +37,15 @@
 class EventListenerInterface
 {
 public:
-  virtual void attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable) = 0;
+  virtual void attachCondition(
+    std::mutex * conditionMutex,
+    std::condition_variable * conditionVariable) = 0;
 
   virtual void detachCondition() = 0;
 
   virtual bool hasEvent() const = 0;
 
   virtual bool takeNextEvent(void * event) = 0;
-
 };
 
 typedef struct CustomEventInfo
