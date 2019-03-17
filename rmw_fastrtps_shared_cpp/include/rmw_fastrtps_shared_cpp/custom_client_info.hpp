@@ -47,8 +47,8 @@ typedef struct CustomClientInfo
   eprosima::fastrtps::Participant * participant_;
   const char * typesupport_identifier_;
   ClientPubListener * pub_listener_;
-  std::atomic_uint32_t response_subscriber_matched_count_;
-  std::atomic_uint32_t request_publisher_matched_count_;
+  std::atomic_size_t response_subscriber_matched_count_;
+  std::atomic_size_t request_publisher_matched_count_;
 } CustomClientInfo;
 
 typedef struct CustomClientResponse
