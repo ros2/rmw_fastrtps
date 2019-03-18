@@ -20,6 +20,7 @@
 #include <list>
 #include <memory>
 #include <mutex>
+#include <set>
 #include <utility>
 
 #include "fastcdr/FastBuffer.h"
