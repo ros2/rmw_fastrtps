@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include <algorithm>
+#include <cassert>
+#include <regex>
 #include <string>
 #include <vector>
 
@@ -32,19 +34,24 @@ _demangle_if_ros_topic(const std::string & topic_name)
 std::string
 _demangle_if_ros_type(const std::string & dds_type_string)
 {
-  std::string substring = "::msg::dds_::";
-  size_t substring_position = dds_type_string.find(substring);
+  std::regex dds_namespace_pattern("[^:]+((::.+::)+dds_::).*");
+  std::smatch match;
   if (
-    dds_type_string[dds_type_string.size() - 1] == '_' &&
-    substring_position != std::string::npos)
+    dds_type_string[dds_type_string.size() - 1] != '_' ||
+    !std::regex_match(dds_type_string, match, dds_namespace_pattern))
   {
-    std::string pkg = dds_type_string.substr(0, substring_position);
-    size_t start = substring_position + substring.size();
-    std::string type_name = dds_type_string.substr(start, dds_type_string.length() - 1 - start);
-    return pkg + "/" + type_name;
+    // not a ROS type
+    return dds_type_string;
   }
-  // not a ROS type
-  return dds_type_string;
+
+  // The first submatch is the whole string and the second is the parenthesized expression
+  assert(2u == match.size());
+  std::string substring = match[1].str();
+  size_t substring_position = dds_type_string.find(substring);
+  std::string pkg = dds_type_string.substr(0, substring_position);
+  size_t start = substring_position + substring.size();
+  std::string type_name = dds_type_string.substr(start, dds_type_string.length() - 1 - start);
+  return pkg + "/" + type_name;
 }
 
 /// Return the service name for a given topic if it is part of one, else "".
@@ -106,12 +113,16 @@ _demangle_service_from_topic(const std::string & topic_name)
 std::string
 _demangle_service_type_only(const std::string & dds_type_name)
 {
-  std::string ns_substring = "::srv::dds_::";
-  size_t ns_substring_position = dds_type_name.find(ns_substring);
-  if (std::string::npos == ns_substring_position) {
+  std::regex dds_namespace_pattern(".*(::.*::dds_::).*");
+  std::smatch match;
+  if (!std::regex_match(dds_type_name, match, dds_namespace_pattern)) {
     // not a ROS service type
     return "";
   }
+  // The first submatch is the whole string and the second is the parenthesized expression
+  assert(2u == match.size());
+  std::string ns_substring = match[1].str();
+  size_t ns_substring_position = dds_type_name.find(ns_substring);
   auto suffixes = {
     std::string("_Response_"),
     std::string("_Request_"),
@@ -123,7 +134,7 @@ _demangle_service_type_only(const std::string & dds_type_name)
     if (suffix_position != std::string::npos) {
       if (dds_type_name.length() - suffix_position - suffix.length() != 0) {
         RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_shared_cpp",
-          "service type contains '::srv::dds_::' and a suffix, but not at the end"
+          "service type contains '::*::dds_::' and a suffix, but not at the end"
           ", report this: '%s'", dds_type_name.c_str());
         continue;
       }
@@ -133,7 +144,7 @@ _demangle_service_type_only(const std::string & dds_type_name)
   }
   if (std::string::npos == suffix_position) {
     RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_shared_cpp",
-      "service type contains '::srv::dds_::' but does not have a suffix"
+      "service type contains '::*::dds_::' but does not have a suffix"
       ", report this: '%s'", dds_type_name.c_str());
     return "";
   }
