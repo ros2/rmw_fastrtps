@@ -53,7 +53,7 @@ _create_type_name(
   std::ostringstream ss;
   ss << members->package_name_
      << "::"
-     << members->type_namespace_
+     << members->message_namespace_
      << "::dds_::"
      << members->message_name_
      << "_";
