@@ -115,8 +115,8 @@ rmw_create_service(
   response_members = static_cast<const message_type_support_callbacks_t *>(
     service_members->response_members_->data);
 
-  std::string request_type_name = _create_type_name(request_members, "srv");
-  std::string response_type_name = _create_type_name(response_members, "srv");
+  std::string request_type_name = _create_type_name(request_members);
+  std::string response_type_name = _create_type_name(response_members);
 
   if (!Domain::getRegisteredType(participant, request_type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->request_type_support_)))

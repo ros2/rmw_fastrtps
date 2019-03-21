@@ -15,6 +15,7 @@
 #ifndef TYPE_SUPPORT_COMMON_HPP_
 #define TYPE_SUPPORT_COMMON_HPP_
 
+#include <sstream>
 #include <string>
 
 #include "fastrtps/Domain.h"
@@ -43,15 +44,20 @@ using ResponseTypeSupport_cpp = rmw_fastrtps_cpp::ResponseTypeSupport;
 
 inline std::string
 _create_type_name(
-  const message_type_support_callbacks_t * members,
-  const std::string & sep)
+  const message_type_support_callbacks_t * members)
 {
   if (!members) {
     RMW_SET_ERROR_MSG("members handle is null");
     return "";
   }
-  return
-    std::string(members->package_name_) + "::" + sep + "::dds_::" + members->message_name_ + "_";
+  std::ostringstream ss;
+  ss << members->package_name_
+     << "::"
+     << members->type_namespace_
+     << "::dds_::"
+     << members->message_name_
+     << "_";
+  return ss.str();
 }
 
 inline void
