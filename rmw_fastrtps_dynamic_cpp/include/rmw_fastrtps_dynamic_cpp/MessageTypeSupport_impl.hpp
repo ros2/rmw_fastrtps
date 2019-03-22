@@ -34,8 +34,8 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType * members)
   assert(members);
   this->members_ = members;
 
-  std::string name = std::string(members->package_name_) + "::msg::dds_::" +
-    members->message_name_ + "_";
+  std::string name = std::string(this->members_->package_name_) + "::" +
+    this->members_->message_namespace_ + "::dds_::" + this->members_->message_name_ + "_";
   this->setName(name.c_str());
 
   // Fully bound by default

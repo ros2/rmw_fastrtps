@@ -38,8 +38,8 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
   assert(members);
   this->members_ = members->request_members_;
 
-  std::string name = std::string(members->package_name_) + "::srv::dds_::" +
-    members->service_name_ + "_Request_";
+  std::string name = std::string(this->members_->package_name_) + "::" +
+    this->members_->message_namespace_ + "::dds_::" + this->members_->message_name_ + "_";
   this->setName(name.c_str());
 
   // Fully bound by default
@@ -60,8 +60,8 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
   assert(members);
   this->members_ = members->response_members_;
 
-  std::string name = std::string(members->package_name_) + "::srv::dds_::" +
-    members->service_name_ + "_Response_";
+  std::string name = std::string(this->members_->package_name_) + "::" +
+    this->members_->message_namespace_ + "::dds_::" + this->members_->message_name_ + "_";
   this->setName(name.c_str());
 
   // Fully bound by default
