@@ -44,8 +44,9 @@ _demangle_if_ros_type(const std::string & dds_type_string)
     return dds_type_string;
   }
 
-  // The first submatch is the whole string and the second is the parenthesized expression
-  assert(2u == match.size());
+  // The first submatch is the whole string, the second is the outer parenthesized expression
+  // and the third is the inner parenthesized expression
+  assert(3u == match.size());
   std::string substring = match[1].str();
   size_t substring_position = dds_type_string.find(substring);
   std::string pkg = dds_type_string.substr(0, substring_position);
