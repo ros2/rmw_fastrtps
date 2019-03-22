@@ -102,15 +102,15 @@ public:
   }
 
   void
-  data_taken()
+  data_taken(eprosima::fastrtps::Subscriber * sub)
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
 
     if (conditionMutex_ != nullptr) {
       std::unique_lock<std::mutex> clock(*conditionMutex_);
-      --data_;
+      data_ = sub->getUnreadCount();
     } else {
-      --data_;
+      data_ = sub->getUnreadCount();
     }
   }
 
