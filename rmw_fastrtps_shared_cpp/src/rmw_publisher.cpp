@@ -118,7 +118,7 @@ __rmw_publisher_get_actual_qos(
   if (fastrtps_pub == nullptr) {
     return RMW_RET_ERROR;
   }
-  const eprosima::fastrtps::PublisherAttributes attributes =
+  const eprosima::fastrtps::PublisherAttributes & attributes =
     fastrtps_pub->getAttributes();
 
   switch (attributes.topic.historyQos.kind) {
@@ -129,7 +129,7 @@ __rmw_publisher_get_actual_qos(
       qos->history = RMW_QOS_POLICY_HISTORY_KEEP_ALL;
       break;
     default:
-      qos->history = RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT;
+      qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
       break;
   }
   switch (attributes.qos.m_durability.kind) {
@@ -140,7 +140,7 @@ __rmw_publisher_get_actual_qos(
       qos->durability = RMW_QOS_POLICY_DURABILITY_VOLATILE;
       break;
     default:
-      qos->durability = RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT;
+      qos->durability = RMW_QOS_POLICY_DURABILITY_UNKNOWN;
       break;
   }
   switch (attributes.qos.m_reliability.kind) {
@@ -151,7 +151,7 @@ __rmw_publisher_get_actual_qos(
       qos->reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
       break;
     default:
-      qos->reliability = RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT;
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_UNKNOWN;
       break;
   }
   qos->depth = static_cast<size_t>(attributes.topic.historyQos.depth);
