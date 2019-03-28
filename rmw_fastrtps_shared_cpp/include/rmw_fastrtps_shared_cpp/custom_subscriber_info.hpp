@@ -24,7 +24,7 @@
 #include "fastrtps/subscriber/Subscriber.h"
 #include "fastrtps/subscriber/SubscriberListener.h"
 
-#include "rcpputils/thread_safety_annotations.h"
+#include "rcpputils/thread_safety_annotations.hpp"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 

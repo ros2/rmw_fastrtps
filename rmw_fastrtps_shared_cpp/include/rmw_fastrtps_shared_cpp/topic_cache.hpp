@@ -28,7 +28,7 @@
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/rtps/common/Guid.h"
 #include "fastrtps/rtps/common/InstanceHandle.h"
-#include "rcpputils/thread_safety_annotations.h"
+#include "rcpputils/thread_safety_annotations.hpp"
 #include "rcutils/logging_macros.h"
 
 typedef eprosima::fastrtps::rtps::GUID_t GUID_t;

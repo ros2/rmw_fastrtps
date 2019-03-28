@@ -22,7 +22,7 @@
 #include <mutex>
 #include <utility>
 
-#include "rcpputils/thread_safety_annotations.h"
+#include "rcpputils/thread_safety_annotations.hpp"
 
 class GuardCondition
 {

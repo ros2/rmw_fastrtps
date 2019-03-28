@@ -29,7 +29,7 @@
 #include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/subscriber/SampleInfo.h"
 
-#include "rcpputils/thread_safety_annotations.h"
+#include "rcpputils/thread_safety_annotations.hpp"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 

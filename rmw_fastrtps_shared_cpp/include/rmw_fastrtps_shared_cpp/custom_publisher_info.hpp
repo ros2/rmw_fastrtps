@@ -21,7 +21,7 @@
 #include "fastrtps/publisher/Publisher.h"
 #include "fastrtps/publisher/PublisherListener.h"
 
-#include "rcpputils/thread_safety_annotations.h"
+#include "rcpputils/thread_safety_annotations.hpp"
 #include "rmw/rmw.h"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
