@@ -39,7 +39,16 @@ bool
 get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
   eprosima::fastrtps::PublisherAttributes & pattr);
-}
-// extern "C"
+
+RMW_LOCAL
+bool
+is_time_default(
+  const rmw_time_t & time);
+
+RMW_LOCAL
+bool
+is_valid_qos(
+  const rmw_qos_profile_t & qos_policies);
+}  // extern "C"
 
 #endif  // QOS_HPP_

@@ -88,6 +88,10 @@ rmw_create_publisher(
   eprosima::fastrtps::PublisherAttributes publisherParam;
   const eprosima::fastrtps::rtps::GUID_t * guid = nullptr;
 
+  if (!is_valid_qos(*qos_policies)) {
+    return nullptr;
+  }
+
   // Load default XML profile.
   Domain::getDefaultPublisherAttributes(publisherParam);
 

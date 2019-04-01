@@ -82,6 +82,10 @@ rmw_create_publisher(
     }
   }
 
+  if (!is_valid_qos(*qos_policies)) {
+    return nullptr;
+  }
+
   CustomPublisherInfo * info = nullptr;
   rmw_publisher_t * rmw_publisher = nullptr;
   eprosima::fastrtps::PublisherAttributes publisherParam;

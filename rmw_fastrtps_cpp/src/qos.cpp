@@ -157,4 +157,32 @@ get_datawriter_qos(
 
   return true;
 }
+
+bool
+is_time_default(
+  const rmw_time_t & time)
+{
+  return time.sec == 0 && time.nsec == 0;
+}
+
+bool
+is_valid_qos(
+  const rmw_qos_profile_t & qos_policies)
+{
+  if (!is_time_default(qos_policies.deadline)) {
+    RMW_SET_ERROR_MSG("Deadline unsupported for fastrtps");
+    return false;
+  }
+  if (!is_time_default(qos_policies.lifespan)) {
+    RMW_SET_ERROR_MSG("Lifespan unsupported for fastrtps");
+    return false;
+  }
+  if (qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE ||
+    qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC)
+  {
+    RMW_SET_ERROR_MSG("Liveliness unsupported for fastrtps");
+    return false;
+  }
+  return true;
+}
 }  // extern "C"

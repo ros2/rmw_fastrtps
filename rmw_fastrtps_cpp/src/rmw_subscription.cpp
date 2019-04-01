@@ -87,6 +87,10 @@ rmw_create_subscription(
     }
   }
 
+  if (!is_valid_qos(*qos_policies)) {
+    return nullptr;
+  }
+
   (void)ignore_local_publications;
   CustomSubscriberInfo * info = nullptr;
   rmw_subscription_t * rmw_subscription = nullptr;
