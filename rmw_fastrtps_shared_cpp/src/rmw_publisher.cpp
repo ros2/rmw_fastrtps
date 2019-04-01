@@ -101,4 +101,61 @@ __rmw_publisher_count_matched_subscriptions(
 
   return RMW_RET_OK;
 }
+
+rmw_ret_t
+__rmw_publisher_get_actual_qos(
+  const rmw_publisher_t * publisher,
+  rmw_qos_profile_t * qos)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
+
+  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
+  if (info == nullptr) {
+    return RMW_RET_ERROR;
+  }
+  eprosima::fastrtps::Publisher * fastrtps_pub = info->publisher_;
+  if (fastrtps_pub == nullptr) {
+    return RMW_RET_ERROR;
+  }
+  const eprosima::fastrtps::PublisherAttributes & attributes =
+    fastrtps_pub->getAttributes();
+
+  switch (attributes.topic.historyQos.kind) {
+    case eprosima::fastrtps::KEEP_LAST_HISTORY_QOS:
+      qos->history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
+      break;
+    case eprosima::fastrtps::KEEP_ALL_HISTORY_QOS:
+      qos->history = RMW_QOS_POLICY_HISTORY_KEEP_ALL;
+      break;
+    default:
+      qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
+      break;
+  }
+  switch (attributes.qos.m_durability.kind) {
+    case eprosima::fastrtps::TRANSIENT_LOCAL_DURABILITY_QOS:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
+      break;
+    case eprosima::fastrtps::VOLATILE_DURABILITY_QOS:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_VOLATILE;
+      break;
+    default:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_UNKNOWN;
+      break;
+  }
+  switch (attributes.qos.m_reliability.kind) {
+    case eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+      break;
+    case eprosima::fastrtps::RELIABLE_RELIABILITY_QOS:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
+      break;
+    default:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_UNKNOWN;
+      break;
+  }
+  qos->depth = static_cast<size_t>(attributes.topic.historyQos.depth);
+
+  return RMW_RET_OK;
+}
 }  // namespace rmw_fastrtps_shared_cpp
