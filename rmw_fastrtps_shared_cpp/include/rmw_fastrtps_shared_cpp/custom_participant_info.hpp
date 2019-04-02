@@ -166,10 +166,10 @@ public:
     {
       std::lock_guard<std::mutex> guard(topic_cache.getMutex());
       if (is_alive) {
-        trigger = topic_cache.addTopic(proxyData.RTPSParticipantKey(),
+        trigger = topic_cache().addTopic(proxyData.RTPSParticipantKey(),
             proxyData.topicName(), proxyData.typeName());
       } else {
-        trigger = topic_cache.removeTopic(proxyData.RTPSParticipantKey(),
+        trigger = topic_cache().removeTopic(proxyData.RTPSParticipantKey(),
             proxyData.topicName(), proxyData.typeName());
       }
     }

@@ -25,12 +25,17 @@ if(CMAKE_COMPILER_IS_GNUCXX OR CMAKE_CXX_COMPILER_ID MATCHES "Clang")
   add_compile_options(-Wall -Wextra -Wpedantic)
 endif()
 
+if(CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+  add_compile_options(-Wthread-safety)
+endif()
+
 if(SECURITY)
   find_package(OpenSSL REQUIRED)
 endif()
 
 find_package(ament_cmake_ros REQUIRED)
 
+find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
@@ -76,6 +81,7 @@ target_link_libraries(rmw_fastrtps_shared_cpp
 
 # specific order: dependents before dependencies
 ament_target_dependencies(rmw_fastrtps_shared_cpp
+  "rcpputils"
   "rcutils"
   "rmw"
 )
@@ -89,6 +95,7 @@ PRIVATE "RMW_FASTRTPS_SHARED_CPP_BUILDING_LIBRARY")
 ament_export_include_directories(include)
 ament_export_libraries(rmw_fastrtps_shared_cpp)
 
+ament_export_dependencies(rcpputils)
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rmw)
 

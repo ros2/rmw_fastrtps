@@ -21,6 +21,7 @@
 #include "fastrtps/publisher/Publisher.h"
 #include "fastrtps/publisher/PublisherListener.h"
 
+#include "rcpputils/thread_safety_annotations.hpp"
 #include "rmw/rmw.h"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
@@ -65,7 +66,8 @@ public:
 
 private:
   std::mutex internalMutex_;
-  std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_;
+  std::set<eprosima::fastrtps::rtps::GUID_t>
+  subscriptions_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_

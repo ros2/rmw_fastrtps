@@ -28,6 +28,7 @@
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/rtps/common/Guid.h"
 #include "fastrtps/rtps/common/InstanceHandle.h"
+#include "rcpputils/thread_safety_annotations.hpp"
 #include "rcutils/logging_macros.h"
 
 typedef eprosima::fastrtps::rtps::GUID_t GUID_t;
@@ -214,18 +215,29 @@ inline std::ostream & operator<<(
 }
 
 template<class T>
-class LockedObject : public T
+class LockedObject
 {
 private:
-  mutable std::mutex cache_mutex_;
+  mutable std::mutex mutex_;
+  T object_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
 
 public:
   /**
   * @return a reference to this object to lock.
   */
-  std::mutex & getMutex() const
+  std::mutex & getMutex() const RCPPUTILS_TSA_RETURN_CAPABILITY(mutex_)
   {
-    return cache_mutex_;
+    return mutex_;
+  }
+
+  T & operator()()
+  {
+    return object_;
+  }
+
+  const T & operator()() const
+  {
+    return object_;
   }
 };
 

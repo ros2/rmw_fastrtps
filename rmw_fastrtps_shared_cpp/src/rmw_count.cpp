@@ -70,7 +70,7 @@ __rmw_count_publishers(
   {
     std::lock_guard<std::mutex> guard(slave_target->writer_topic_cache.getMutex());
     // Search and sum up the publisher counts
-    auto & topic_types = slave_target->writer_topic_cache.getTopicToTypes();
+    auto & topic_types = slave_target->writer_topic_cache().getTopicToTypes();
     for (const auto & topic_fqdn : topic_fqdns) {
       const auto & it = topic_types.find(topic_fqdn);
       if (it != topic_types.end()) {
@@ -125,7 +125,7 @@ __rmw_count_subscribers(
   {
     std::lock_guard<std::mutex> guard(slave_target->reader_topic_cache.getMutex());
     // Search and sum up the subscriber counts
-    auto & topic_types = slave_target->reader_topic_cache.getTopicToTypes();
+    auto & topic_types = slave_target->reader_topic_cache().getTopicToTypes();
     for (const auto & topic_fqdn : topic_fqdns) {
       const auto & it = topic_types.find(topic_fqdn);
       if (it != topic_types.end()) {
