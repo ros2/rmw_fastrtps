@@ -166,7 +166,6 @@ public:
     {
       std::lock_guard<std::mutex> guard(topic_cache.getMutex());
       if (is_alive) {
-
         trigger = topic_cache().addTopic(proxyData.RTPSParticipantKey(),
             proxyData.topicName(), proxyData.typeName());
       } else {

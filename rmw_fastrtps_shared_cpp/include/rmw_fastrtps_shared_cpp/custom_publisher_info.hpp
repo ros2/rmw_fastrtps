@@ -66,7 +66,8 @@ public:
 
 private:
   std::mutex internalMutex_;
-  std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  std::set<eprosima::fastrtps::rtps::GUID_t>
+  subscriptions_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
