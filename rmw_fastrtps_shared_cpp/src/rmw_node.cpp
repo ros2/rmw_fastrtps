@@ -22,6 +22,7 @@
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
 #include "fastrtps/config.h"
@@ -361,6 +362,33 @@ __rmw_destroy_node(
   delete impl;
 
   return result_ret;
+}
+
+rmw_ret_t
+__rmw_node_assert_liveliness(
+  const char * identifier,
+  const rmw_node_t * node)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
+  auto node_info = static_cast<CustomParticipantInfo *>(node->data);
+  if (nullptr == node_info) {
+    RMW_SET_ERROR_MSG("node info handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (nullptr == node_info->participant) {
+    RMW_SET_ERROR_MSG("node internal participant is invalid");
+    return RMW_RET_ERROR;
+  }
+
+  // node_info->participant->assert_liveliness();
+
+  return RMW_RET_UNSUPPORTED;
 }
 
 const rmw_guard_condition_t *

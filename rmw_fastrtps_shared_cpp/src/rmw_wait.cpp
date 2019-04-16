@@ -204,6 +204,12 @@ __rmw_wait(
     }
   }
 
+  if (events) {
+    for (size_t i = 0; i < events->event_count; ++i) {
+      // no-op
+    }
+  }
+
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
       void * data = guard_conditions->guard_conditions[i];
