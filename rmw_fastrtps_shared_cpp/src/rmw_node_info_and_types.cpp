@@ -206,7 +206,7 @@ __copy_data_to_results(
         if (rmw_ret != RMW_RET_OK) {
           RCUTILS_LOG_ERROR_NAMED(
             kLoggerTag,
-            "error during report of error: %s", rmw_get_error_string());
+            "error during report of error: %s", rmw_get_error_string().str);
         }
       };
     // Setup demangling functions based on no_demangle option
@@ -444,7 +444,7 @@ __rmw_get_service_names_and_types_by_node(
       if (rmw_ret != RMW_RET_OK) {
         RCUTILS_LOG_ERROR_NAMED(
           kLoggerTag,
-          "error during report of error: %s", rmw_get_error_string());
+          "error during report of error: %s", rmw_get_error_string().str);
       }
     };
   // For each service, store the name, initialize the string array for types, and store all types
