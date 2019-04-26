@@ -14,15 +14,13 @@
 
 #include <limits>
 
-#include "qos.hpp"
+#include "rmw_fastrtps_shared_cpp/qos.hpp"
 
 #include "fastrtps/attributes/PublisherAttributes.h"
 #include "fastrtps/attributes/SubscriberAttributes.h"
 
 #include "rmw/error_handling.h"
 
-extern "C"
-{
 bool
 get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
@@ -185,4 +183,3 @@ is_valid_qos(
   }
   return true;
 }
-}  // extern "C"

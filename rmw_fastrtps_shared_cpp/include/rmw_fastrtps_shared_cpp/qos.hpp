@@ -26,29 +26,26 @@ class PublisherAttributes;
 }  // namespace fastrtps
 }  // namespace eprosima
 
-extern "C"
-{
-RMW_LOCAL
+RMW_PUBLIC
 bool
 get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
   eprosima::fastrtps::SubscriberAttributes & sattr);
 
-RMW_LOCAL
+RMW_PUBLIC
 bool
 get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
   eprosima::fastrtps::PublisherAttributes & pattr);
 
-RMW_LOCAL
+RMW_PUBLIC
 bool
 is_time_default(
   const rmw_time_t & time);
 
-RMW_LOCAL
+RMW_PUBLIC
 bool
 is_valid_qos(
   const rmw_qos_profile_t & qos_policies);
-}  // extern "C"
 
 #endif  // QOS_HPP_
