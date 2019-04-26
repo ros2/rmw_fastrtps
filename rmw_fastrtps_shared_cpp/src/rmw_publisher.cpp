@@ -122,6 +122,7 @@ __rmw_publisher_assert_liveliness(
   }
 
   // info->publisher_->assert_liveliness();
+  RMW_SET_ERROR_MSG("assert_liveliness() of publisher is currently not supported");
 
   return RMW_RET_UNSUPPORTED;
 }
