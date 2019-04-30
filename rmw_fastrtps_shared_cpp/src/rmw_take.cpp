@@ -49,8 +49,10 @@ _take(
   const rmw_subscription_t * subscription,
   void * ros_message,
   bool * taken,
-  rmw_message_info_t * message_info)
+  rmw_message_info_t * message_info,
+  rmw_subscription_allocation_t * allocation)
 {
+  (void) allocation;
   *taken = false;
 
   if (subscription->implementation_identifier != identifier) {
@@ -85,7 +87,8 @@ __rmw_take(
   const char * identifier,
   const rmw_subscription_t * subscription,
   void * ros_message,
-  bool * taken)
+  bool * taken,
+  rmw_subscription_allocation_t * allocation)
 {
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     subscription, "subscription pointer is null", return RMW_RET_ERROR);
@@ -93,7 +96,7 @@ __rmw_take(
     ros_message, "ros_message pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(taken, "boolean flag for taken is null", return RMW_RET_ERROR);
 
-  return _take(identifier, subscription, ros_message, taken, nullptr);
+  return _take(identifier, subscription, ros_message, taken, nullptr, allocation);
 }
 
 rmw_ret_t
@@ -102,7 +105,8 @@ __rmw_take_with_info(
   const rmw_subscription_t * subscription,
   void * ros_message,
   bool * taken,
-  rmw_message_info_t * message_info)
+  rmw_message_info_t * message_info,
+  rmw_subscription_allocation_t * allocation)
 {
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     subscription, "subscription pointer is null", return RMW_RET_ERROR);
@@ -112,7 +116,7 @@ __rmw_take_with_info(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     message_info, "message info pointer is null", return RMW_RET_ERROR);
 
-  return _take(identifier, subscription, ros_message, taken, message_info);
+  return _take(identifier, subscription, ros_message, taken, message_info, allocation);
 }
 
 rmw_ret_t

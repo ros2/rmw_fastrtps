@@ -33,6 +33,27 @@ using TopicDataType = eprosima::fastrtps::TopicDataType;
 
 extern "C"
 {
+rmw_ret_t
+rmw_init_publisher_allocation(
+  const rosidl_message_type_support_t * type_supports,
+  const rosidl_message_bounds_t * message_bounds,
+  rmw_publisher_allocation_t * allocation)
+{
+  (void) type_supports;
+  (void) message_bounds;
+  (void) allocation;
+  RMW_SET_ERROR_MSG("not implemented.");
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_fini_publisher_allocation(rmw_publisher_allocation_t * allocation)
+{
+  (void) allocation;
+  RMW_SET_ERROR_MSG("not implemented.");
+  return RMW_RET_ERROR;
+}
+
 rmw_publisher_t *
 rmw_create_publisher(
   const rmw_node_t * node,
