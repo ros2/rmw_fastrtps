@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef QOS_HPP_
-#define QOS_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
 
 #include "rmw/rmw.h"
 
@@ -48,4 +48,4 @@ bool
 is_valid_qos(
   const rmw_qos_profile_t & qos_policies);
 
-#endif  // QOS_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
