@@ -48,7 +48,8 @@ rmw_init_subscription_allocation(
   (void) type_support;
   (void) message_bounds;
   (void) allocation;
-  return RMW_RET_OK;
+  RMW_SET_ERROR_MSG("unimplemented");
+  return RMW_RET_ERROR;
 }
 
 rmw_ret_t
@@ -56,7 +57,8 @@ rmw_fini_subscription_allocation(rmw_subscription_allocation_t * allocation)
 {
   // Unused in current implementation.
   (void) allocation;
-  return RMW_RET_OK;
+  RMW_SET_ERROR_MSG("unimplemented");
+  return RMW_RET_ERROR;
 }
 
 rmw_subscription_t *

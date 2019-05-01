@@ -31,7 +31,6 @@ rmw_publish(
   const void * ros_message,
   rmw_publisher_allocation_t * allocation)
 {
-  (void) allocation;
   return rmw_fastrtps_shared_cpp::__rmw_publish(
     eprosima_fastrtps_identifier, publisher, ros_message, allocation);
 }

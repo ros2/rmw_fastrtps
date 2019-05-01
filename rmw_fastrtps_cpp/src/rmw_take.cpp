@@ -30,7 +30,6 @@ rmw_take(
   bool * taken,
   rmw_subscription_allocation_t * allocation)
 {
-  (void) allocation;
   return rmw_fastrtps_shared_cpp::__rmw_take(
     eprosima_fastrtps_identifier, subscription, ros_message, taken, allocation);
 }
@@ -43,7 +42,6 @@ rmw_take_with_info(
   rmw_message_info_t * message_info,
   rmw_subscription_allocation_t * allocation)
 {
-  (void) allocation;
   return rmw_fastrtps_shared_cpp::__rmw_take_with_info(
     eprosima_fastrtps_identifier, subscription, ros_message, taken, message_info, allocation);
 }
