@@ -26,7 +26,10 @@
 extern "C"
 {
 rmw_ret_t
-rmw_publish(const rmw_publisher_t * publisher, const void * ros_message, rmw_publisher_allocation_t * allocation)
+rmw_publish(
+  const rmw_publisher_t * publisher,
+  const void * ros_message,
+  rmw_publisher_allocation_t * allocation)
 {
   (void) allocation;
   return rmw_fastrtps_shared_cpp::__rmw_publish(
@@ -35,9 +38,11 @@ rmw_publish(const rmw_publisher_t * publisher, const void * ros_message, rmw_pub
 
 rmw_ret_t
 rmw_publish_serialized_message(
-  const rmw_publisher_t * publisher, const rmw_serialized_message_t * serialized_message)
+  const rmw_publisher_t * publisher,
+  const rmw_serialized_message_t * serialized_message,
+  rmw_publisher_allocation_t * allocation)
 {
   return rmw_fastrtps_shared_cpp::__rmw_publish_serialized_message(
-    eprosima_fastrtps_identifier, publisher, serialized_message);
+    eprosima_fastrtps_identifier, publisher, serialized_message, allocation);
 }
 }  // extern "C"

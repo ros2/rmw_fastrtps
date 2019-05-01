@@ -36,23 +36,23 @@ extern "C"
 {
 rmw_ret_t
 rmw_init_publisher_allocation(
-  const rosidl_message_type_support_t * type_supports,
+  const rosidl_message_type_support_t * type_support,
   const rosidl_message_bounds_t * message_bounds,
   rmw_publisher_allocation_t * allocation)
 {
-  (void) type_supports;
+  // Unused in current implementation.
+  (void) type_support;
   (void) message_bounds;
   (void) allocation;
-  RMW_SET_ERROR_MSG("not implemented.");
-  return RMW_RET_ERROR;
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
 rmw_fini_publisher_allocation(rmw_publisher_allocation_t * allocation)
 {
+  // Unused in current implementation.
   (void) allocation;
-  RMW_SET_ERROR_MSG("not implemented.");
-  return RMW_RET_ERROR;
+  return RMW_RET_OK;
 }
 
 rmw_publisher_t *

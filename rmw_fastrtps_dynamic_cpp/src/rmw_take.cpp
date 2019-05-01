@@ -50,10 +50,11 @@ rmw_ret_t
 rmw_take_serialized_message(
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
-  bool * taken)
+  bool * taken,
+  rmw_subscription_allocation_t * allocation)
 {
   return rmw_fastrtps_shared_cpp::__rmw_take_serialized_message(
-    eprosima_fastrtps_identifier, subscription, serialized_message, taken);
+    eprosima_fastrtps_identifier, subscription, serialized_message, taken, allocation);
 }
 
 rmw_ret_t
@@ -61,9 +62,11 @@ rmw_take_serialized_message_with_info(
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
   bool * taken,
-  rmw_message_info_t * message_info)
+  rmw_message_info_t * message_info,
+  rmw_subscription_allocation_t * allocation)
 {
   return rmw_fastrtps_shared_cpp::__rmw_take_serialized_message_with_info(
-    eprosima_fastrtps_identifier, subscription, serialized_message, taken, message_info);
+    eprosima_fastrtps_identifier, subscription, serialized_message, taken, message_info,
+    allocation);
 }
 }  // extern "C"
