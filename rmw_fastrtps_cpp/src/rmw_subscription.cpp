@@ -46,10 +46,7 @@ rmw_init_subscription_allocation(
 {
   (void) type_support;
   (void) message_bounds;
-  // Since this feature is currently not implemented in FastRTPS, set the
-  // allocation pointer to NULL. The downstream `rmw_take` methods will
-  // ignore the value.
-  allocation = nullptr;
+  (void) allocation;
   return RMW_RET_OK;
 }
 

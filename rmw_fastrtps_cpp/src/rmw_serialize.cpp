@@ -89,4 +89,14 @@ rmw_deserialize(
   delete tss;
   return ret == true ? RMW_RET_OK : RMW_RET_ERROR;
 }
+
+rmw_ret_t
+rmw_get_serialized_message_size(
+  const rosidl_message_type_support_t * /*type_support*/,
+  const rosidl_message_bounds_t * /*message_bounds*/,
+  size_t * /*size*/)
+{
+  RMW_SET_ERROR_MSG("unimplemented");
+  return RMW_RET_ERROR;
+}
 }  // extern "C"
