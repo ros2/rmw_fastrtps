@@ -21,141 +21,14 @@
 
 #include "rmw/error_handling.h"
 
-bool
-get_datareader_qos(
-  const rmw_qos_profile_t & qos_policies,
-  eprosima::fastrtps::SubscriberAttributes & sattr)
+static
+eprosima::fastrtps::Duration_t
+rmw_time_to_fastrtps(const rmw_time_t & time)
 {
-  switch (qos_policies.history) {
-    case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
-      sattr.topic.historyQos.kind = eprosima::fastrtps::KEEP_LAST_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
-      sattr.topic.historyQos.kind = eprosima::fastrtps::KEEP_ALL_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS history policy");
-      return false;
-  }
-
-  switch (qos_policies.reliability) {
-    case RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT:
-      sattr.qos.m_reliability.kind = eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_RELIABILITY_RELIABLE:
-      sattr.qos.m_reliability.kind = eprosima::fastrtps::RELIABLE_RELIABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
-      return false;
-  }
-
-  switch (qos_policies.durability) {
-    case RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL:
-      sattr.qos.m_durability.kind = eprosima::fastrtps::TRANSIENT_LOCAL_DURABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_DURABILITY_VOLATILE:
-      sattr.qos.m_durability.kind = eprosima::fastrtps::VOLATILE_DURABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS durability policy");
-      return false;
-  }
-
-  if (qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
-    sattr.topic.historyQos.depth = static_cast<int32_t>(qos_policies.depth);
-  }
-
-  // ensure the history depth is at least the requested queue size
-  assert(sattr.topic.historyQos.depth >= 0);
-  if (
-    eprosima::fastrtps::KEEP_LAST_HISTORY_QOS == sattr.topic.historyQos.kind &&
-    static_cast<size_t>(sattr.topic.historyQos.depth) < qos_policies.depth)
-  {
-    if (qos_policies.depth > (std::numeric_limits<int32_t>::max)()) {
-      RMW_SET_ERROR_MSG(
-        "failed to set history depth since the requested queue size exceeds the DDS type");
-      return false;
-    }
-    sattr.topic.historyQos.depth = static_cast<int32_t>(qos_policies.depth);
-  }
-
-  return true;
+  return eprosima::fastrtps::Duration_t(time.sec, time.nsec);
 }
 
-bool
-get_datawriter_qos(
-  const rmw_qos_profile_t & qos_policies, eprosima::fastrtps::PublisherAttributes & pattr)
-{
-  switch (qos_policies.history) {
-    case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
-      pattr.topic.historyQos.kind = eprosima::fastrtps::KEEP_LAST_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
-      pattr.topic.historyQos.kind = eprosima::fastrtps::KEEP_ALL_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS history policy");
-      return false;
-  }
-
-  switch (qos_policies.durability) {
-    case RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL:
-      pattr.qos.m_durability.kind = eprosima::fastrtps::TRANSIENT_LOCAL_DURABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_DURABILITY_VOLATILE:
-      pattr.qos.m_durability.kind = eprosima::fastrtps::VOLATILE_DURABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS durability policy");
-      return false;
-  }
-
-  switch (qos_policies.reliability) {
-    case RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT:
-      pattr.qos.m_reliability.kind = eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_RELIABILITY_RELIABLE:
-      pattr.qos.m_reliability.kind = eprosima::fastrtps::RELIABLE_RELIABILITY_QOS;
-      break;
-    case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
-      return false;
-  }
-
-  if (qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
-    pattr.topic.historyQos.depth = static_cast<int32_t>(qos_policies.depth);
-  }
-
-  // ensure the history depth is at least the requested queue size
-  assert(pattr.topic.historyQos.depth >= 0);
-  if (
-    eprosima::fastrtps::KEEP_LAST_HISTORY_QOS == pattr.topic.historyQos.kind &&
-    static_cast<size_t>(pattr.topic.historyQos.depth) < qos_policies.depth)
-  {
-    if (qos_policies.depth > (std::numeric_limits<int32_t>::max)()) {
-      RMW_SET_ERROR_MSG(
-        "failed to set history depth since the requested queue size exceeds the DDS type");
-      return false;
-    }
-    pattr.topic.historyQos.depth = static_cast<int32_t>(qos_policies.depth);
-  }
-
-  return true;
-}
-
+static
 bool
 is_time_default(
   const rmw_time_t & time)
@@ -163,22 +36,135 @@ is_time_default(
   return time.sec == 0 && time.nsec == 0;
 }
 
+template<typename DDSEntityQos>
+bool fill_entity_qos_from_profile(
+  const rmw_qos_profile_t & qos_policies,
+  DDSEntityQos & entity_qos,
+  eprosima::fastrtps::HistoryQosPolicy & history_qos)
+{
+  switch (qos_policies.history) {
+    case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
+      history_qos.kind = eprosima::fastrtps::KEEP_LAST_HISTORY_QOS;
+      break;
+    case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
+      history_qos.kind = eprosima::fastrtps::KEEP_ALL_HISTORY_QOS;
+      break;
+    case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
+      break;
+    default:
+      RMW_SET_ERROR_MSG("Unknown QoS history policy");
+      return false;
+  }
+
+  switch (qos_policies.durability) {
+    case RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL:
+      entity_qos.m_durability.kind = eprosima::fastrtps::TRANSIENT_LOCAL_DURABILITY_QOS;
+      break;
+    case RMW_QOS_POLICY_DURABILITY_VOLATILE:
+      entity_qos.m_durability.kind = eprosima::fastrtps::VOLATILE_DURABILITY_QOS;
+      break;
+    case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
+      break;
+    default:
+      RMW_SET_ERROR_MSG("Unknown QoS durability policy");
+      return false;
+  }
+
+  switch (qos_policies.reliability) {
+    case RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT:
+      entity_qos.m_reliability.kind = eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS;
+      break;
+    case RMW_QOS_POLICY_RELIABILITY_RELIABLE:
+      entity_qos.m_reliability.kind = eprosima::fastrtps::RELIABLE_RELIABILITY_QOS;
+      break;
+    case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
+      break;
+    default:
+      RMW_SET_ERROR_MSG("Unknown QoS reliability policy");
+      return false;
+  }
+
+  if (qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
+    history_qos.depth = static_cast<int32_t>(qos_policies.depth);
+  }
+
+  // ensure the history depth is at least the requested queue size
+  assert(history_qos.depth >= 0);
+  if (
+    eprosima::fastrtps::KEEP_LAST_HISTORY_QOS == history_qos.kind &&
+    static_cast<size_t>(history_qos.depth) < qos_policies.depth)
+  {
+    if (qos_policies.depth > (std::numeric_limits<int32_t>::max)()) {
+      RMW_SET_ERROR_MSG(
+        "failed to set history depth since the requested queue size exceeds the DDS type");
+      return false;
+    }
+    history_qos.depth = static_cast<int32_t>(qos_policies.depth);
+  }
+
+  if (!is_time_default(qos_policies.lifespan)) {
+    entity_qos.m_lifespan.duration = rmw_time_to_fastrtps(qos_policies.lifespan);
+  }
+
+  if (!is_time_default(qos_policies.deadline)) {
+    entity_qos.m_deadline.period = rmw_time_to_fastrtps(qos_policies.deadline);
+  }
+
+  switch (qos_policies.liveliness) {
+    case RMW_QOS_POLICY_LIVELINESS_AUTOMATIC:
+      entity_qos.m_liveliness.kind = eprosima::fastrtps::AUTOMATIC_LIVELINESS_QOS;
+      break;
+    case RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE:
+      entity_qos.m_liveliness.kind = eprosima::fastrtps::MANUAL_BY_PARTICIPANT_LIVELINESS_QOS;
+      break;
+    case RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC:
+      entity_qos.m_liveliness.kind = eprosima::fastrtps::MANUAL_BY_TOPIC_LIVELINESS_QOS;
+      break;
+    case RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT:
+      break;
+    default:
+      RMW_SET_ERROR_MSG("Unknown QoS Liveliness policy");
+      return false;
+  }
+  if (!is_time_default(qos_policies.liveliness_lease_duration)) {
+    entity_qos.m_liveliness.lease_duration =
+      rmw_time_to_fastrtps(qos_policies.liveliness_lease_duration);
+
+    // Docs suggest setting no higher than 0.7 * lease_duration, choosing 2/3 to give safe buffer.
+    uint64_t total_nanos = entity_qos.m_liveliness.lease_duration.to_ns() * 2 / 3;
+    uint32_t seconds = RCUTILS_NS_TO_S(total_nanos);
+    uint32_t remainder_nanos = total_nanos - RCUTILS_S_TO_NS(seconds);
+    fprintf(stderr, "WE DOING IT %d %d\n", seconds, remainder_nanos);
+    entity_qos.m_liveliness.announcement_period =
+      eprosima::fastrtps::Duration_t(seconds, remainder_nanos);
+  }
+
+  return true;
+}
+
+bool
+get_datareader_qos(
+  const rmw_qos_profile_t & qos_policies,
+  eprosima::fastrtps::SubscriberAttributes & sattr)
+{
+  return fill_entity_qos_from_profile(qos_policies, sattr.qos, sattr.topic.historyQos);
+}
+
+bool
+get_datawriter_qos(
+  const rmw_qos_profile_t & qos_policies, eprosima::fastrtps::PublisherAttributes & pattr)
+{
+  return fill_entity_qos_from_profile(qos_policies, pattr.qos, pattr.topic.historyQos);
+}
+
 bool
 is_valid_qos(
   const rmw_qos_profile_t & qos_policies)
 {
-  if (!is_time_default(qos_policies.deadline)) {
-    RMW_SET_ERROR_MSG("Deadline unsupported for fastrtps");
-    return false;
-  }
-  if (!is_time_default(qos_policies.lifespan)) {
-    RMW_SET_ERROR_MSG("Lifespan unsupported for fastrtps");
-    return false;
-  }
   if (qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE ||
     qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC)
   {
-    RMW_SET_ERROR_MSG("Liveliness unsupported for fastrtps");
+    RMW_SET_ERROR_MSG("Manual liveliness unsupported for fastrtps");
     return false;
   }
   return true;

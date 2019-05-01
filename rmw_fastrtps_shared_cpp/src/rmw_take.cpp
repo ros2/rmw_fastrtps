@@ -89,21 +89,27 @@ __rmw_take_event(
   void * event_info,
   bool * taken)
 {
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    event_handle, "event_handle pointer is null", return RMW_RET_ERROR);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    event_info, "event info output pointer is null", return RMW_RET_ERROR);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(taken, "boolean flag for taken is null", return RMW_RET_ERROR);
+  RMW_CHECK_ARGUMENT_FOR_NULL(event_handle, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(event_info, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(taken, RMW_RET_INVALID_ARGUMENT);
 
   *taken = false;
 
-  if (event_handle->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("event handle not from this implementation");
-    return RMW_RET_ERROR;
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    event handle,
+    event_handle->implementation_identifier,
+    identifier,
+    return RMW_RET_ERROR);
+
+  rmw_ret_t ret = RMW_RET_ERROR;
+
+  auto event = static_cast<CustomEventInfo *>(event_handle->data);
+  if (event->getListener()->takeNextEvent(event_handle->event_type, event_info)) {
+    *taken = true;
+    ret = RMW_RET_OK;
   }
 
-  RMW_SET_ERROR_MSG("take_event is not yet implemented by rmw_fastrtps yet");
-  return RMW_RET_UNSUPPORTED;
+  return ret;
 }
 
 rmw_ret_t

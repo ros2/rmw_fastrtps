@@ -26,19 +26,27 @@
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
+#include "rmw/impl/cpp/macros.hpp"
+
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
+
 
 class SubListener;
 
-typedef struct CustomSubscriberInfo
+typedef struct CustomSubscriberInfo : public CustomEventInfo
 {
+  virtual ~CustomSubscriberInfo() = default;
+
   eprosima::fastrtps::Subscriber * subscriber_;
   SubListener * listener_;
   rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
   const char * typesupport_identifier_;
+
+  EventListenerInterface * getListener() override;
 } CustomSubscriberInfo;
 
-class SubListener : public eprosima::fastrtps::SubscriberListener
+class SubListener : public EventListenerInterface, public eprosima::fastrtps::SubscriberListener
 {
 public:
   explicit SubListener(CustomSubscriberInfo * info)
@@ -49,9 +57,10 @@ public:
     (void)info;
   }
 
+  // SubscriberListener implementation
   void
   onSubscriptionMatched(
-    eprosima::fastrtps::Subscriber * sub, eprosima::fastrtps::rtps::MatchingInfo & info)
+    eprosima::fastrtps::Subscriber * sub, eprosima::fastrtps::rtps::MatchingInfo & info) override
   {
     (void)sub;
 
@@ -64,7 +73,7 @@ public:
   }
 
   void
-  onNewDataMessage(eprosima::fastrtps::Subscriber * sub)
+  onNewDataMessage(eprosima::fastrtps::Subscriber * sub) override
   {
     (void)sub;
     std::lock_guard<std::mutex> lock(internalMutex_);
@@ -81,6 +90,24 @@ public:
     }
   }
 
+  void on_requested_deadline_missed(
+    eprosima::fastrtps::Subscriber *,
+    const eprosima::fastrtps::RequestedDeadlineMissedStatus &) override;
+
+  void on_liveliness_changed(
+    eprosima::fastrtps::Subscriber *,
+    const eprosima::fastrtps::LivelinessChangedStatus &) override;
+
+  // EventListenerInterface implementation
+  bool
+  hasEvent(rmw_event_type_t event_type) const
+  override;
+
+  bool
+  takeNextEvent(rmw_event_type_t event_type, void * event_data)
+  override;
+
+  // SubListener API
   void
   attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable)
   {
@@ -98,7 +125,7 @@ public:
   }
 
   bool
-  hasData()
+  hasData() const
   {
     return data_ > 0;
   }
@@ -125,6 +152,11 @@ public:
 private:
   std::mutex internalMutex_;
   std::atomic_size_t data_;
+  eprosima::fastrtps::LivelinessChangedStatus liveliness_changed_status_
+    RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  eprosima::fastrtps::RequestedDeadlineMissedStatus requested_deadline_missed_status_
+    RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
