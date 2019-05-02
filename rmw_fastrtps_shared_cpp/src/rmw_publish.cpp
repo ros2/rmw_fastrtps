@@ -29,8 +29,10 @@ rmw_ret_t
 __rmw_publish(
   const char * identifier,
   const rmw_publisher_t * publisher,
-  const void * ros_message)
+  const void * ros_message,
+  rmw_publisher_allocation_t * allocation)
 {
+  (void) allocation;
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(publisher, "publisher pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     ros_message, "ros_message pointer is null", return RMW_RET_ERROR);
@@ -58,8 +60,10 @@ rmw_ret_t
 __rmw_publish_serialized_message(
   const char * identifier,
   const rmw_publisher_t * publisher,
-  const rmw_serialized_message_t * serialized_message)
+  const rmw_serialized_message_t * serialized_message,
+  rmw_publisher_allocation_t * allocation)
 {
+  (void) allocation;
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(publisher, "publisher pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     serialized_message, "serialized_message pointer is null", return RMW_RET_ERROR);
