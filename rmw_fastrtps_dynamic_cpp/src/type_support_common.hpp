@@ -80,13 +80,14 @@ _create_type_name(
     RMW_SET_ERROR_MSG("members handle is null");
     return "";
   }
+
   std::ostringstream ss;
-  ss << members->package_name_
-     << "::"
-     << members->message_namespace_
-     << "::dds_::"
-     << members->message_name_
-     << "_";
+  std::string message_namespace(members->message_namespace_);
+  std::string message_name(members->message_name_);
+  if (!message_namespace.empty()) {
+    ss << message_namespace << "::";
+  }
+  ss << "dds_::" << message_name << "_";
   return ss.str();
 }
 

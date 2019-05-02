@@ -18,6 +18,7 @@
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
 #include <cassert>
+#include <sstream>
 #include <string>
 
 #include "rmw_fastrtps_dynamic_cpp/ServiceTypeSupport.hpp"
@@ -38,9 +39,14 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
   assert(members);
   this->members_ = members->request_members_;
 
-  std::string name = std::string(this->members_->package_name_) + "::" +
-    this->members_->message_namespace_ + "::dds_::" + this->members_->message_name_ + "_";
-  this->setName(name.c_str());
+  std::ostringstream ss;
+  std::string message_namespace(this->members_->message_namespace_);
+  std::string message_name(this->members_->message_name_);
+  if (!message_namespace.empty()) {
+    ss << message_namespace << "::";
+  }
+  ss << "dds_::" << message_name << "_";
+  this->setName(ss.str().c_str());
 
   // Fully bound by default
   this->max_size_bound_ = true;
@@ -60,9 +66,14 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
   assert(members);
   this->members_ = members->response_members_;
 
-  std::string name = std::string(this->members_->package_name_) + "::" +
-    this->members_->message_namespace_ + "::dds_::" + this->members_->message_name_ + "_";
-  this->setName(name.c_str());
+  std::ostringstream ss;
+  std::string message_namespace(this->members_->message_namespace_);
+  std::string message_name(this->members_->message_name_);
+  if (!message_namespace.empty()) {
+    ss << message_namespace << "::";
+  }
+  ss << "dds_::" << message_name << "_";
+  this->setName(ss.str().c_str());
 
   // Fully bound by default
   this->max_size_bound_ = true;
