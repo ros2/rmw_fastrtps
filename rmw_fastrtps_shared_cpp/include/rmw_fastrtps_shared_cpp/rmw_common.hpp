@@ -120,14 +120,16 @@ rmw_ret_t
 __rmw_publish(
   const char * identifier,
   const rmw_publisher_t * publisher,
-  const void * ros_message);
+  const void * ros_message,
+  rmw_publisher_allocation_t * allocation);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 __rmw_publish_serialized_message(
   const char * identifier,
   const rmw_publisher_t * publisher,
-  const rmw_serialized_message_t * serialized_message);
+  const rmw_serialized_message_t * serialized_message,
+  rmw_publisher_allocation_t * allocation);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
@@ -262,7 +264,8 @@ __rmw_take(
   const char * identifier,
   const rmw_subscription_t * subscription,
   void * ros_message,
-  bool * taken);
+  bool * taken,
+  rmw_subscription_allocation_t * allocation);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
@@ -279,7 +282,8 @@ __rmw_take_with_info(
   const rmw_subscription_t * subscription,
   void * ros_message,
   bool * taken,
-  rmw_message_info_t * message_info);
+  rmw_message_info_t * message_info,
+  rmw_subscription_allocation_t * allocation);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
@@ -287,7 +291,8 @@ __rmw_take_serialized_message(
   const char * identifier,
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
-  bool * taken);
+  bool * taken,
+  rmw_subscription_allocation_t * allocation);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
@@ -296,7 +301,8 @@ __rmw_take_serialized_message_with_info(
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,
   bool * taken,
-  rmw_message_info_t * message_info);
+  rmw_message_info_t * message_info,
+  rmw_subscription_allocation_t * allocation);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
