@@ -102,6 +102,7 @@ __rmw_take_event(
     return RMW_RET_ERROR;
   }
 
+  RMW_SET_ERROR_MSG("take_event is not yet implemented by rmw_fastrtps yet");
   return RMW_RET_UNSUPPORTED;
 }
 
