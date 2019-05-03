@@ -17,6 +17,8 @@
 
 #include "rmw/rmw.h"
 
+#include "./visibility_control.h"
+
 namespace eprosima
 {
 namespace fastrtps
@@ -26,24 +28,24 @@ class PublisherAttributes;
 }  // namespace fastrtps
 }  // namespace eprosima
 
-RMW_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
   eprosima::fastrtps::SubscriberAttributes & sattr);
 
-RMW_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
   eprosima::fastrtps::PublisherAttributes & pattr);
 
-RMW_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 is_time_default(
   const rmw_time_t & time);
 
-RMW_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 is_valid_qos(
   const rmw_qos_profile_t & qos_policies);
