@@ -19,17 +19,17 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
+#include "rmw_fastrtps_shared_cpp/qos.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/subscriber/Subscriber.h"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
 
-#include "./qos.hpp"
 #include "./type_support_common.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
@@ -108,6 +108,10 @@ rmw_create_subscription(
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return nullptr;
     }
+  }
+
+  if (!is_valid_qos(*qos_policies)) {
+    return nullptr;
   }
 
   (void)ignore_local_publications;

@@ -18,14 +18,14 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
+#include "rmw_fastrtps_shared_cpp/qos.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
 
-#include "./qos.hpp"
 #include "./type_support_common.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
@@ -110,6 +110,10 @@ rmw_create_publisher(
   rmw_publisher_t * rmw_publisher = nullptr;
   eprosima::fastrtps::PublisherAttributes publisherParam;
   const eprosima::fastrtps::rtps::GUID_t * guid = nullptr;
+
+  if (!is_valid_qos(*qos_policies)) {
+    return nullptr;
+  }
 
   // Load default XML profile.
   Domain::getDefaultPublisherAttributes(publisherParam);
@@ -231,6 +235,13 @@ rmw_publisher_count_matched_subscriptions(
 {
   return rmw_fastrtps_shared_cpp::__rmw_publisher_count_matched_subscriptions(
     publisher, subscription_count);
+}
+
+rmw_ret_t
+rmw_publisher_assert_liveliness(const rmw_publisher_t * publisher)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_publisher_assert_liveliness(
+    eprosima_fastrtps_identifier, publisher);
 }
 
 rmw_ret_t

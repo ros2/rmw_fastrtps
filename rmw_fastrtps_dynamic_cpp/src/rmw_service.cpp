@@ -35,13 +35,15 @@
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
 #include "rosidl_typesupport_introspection_c/identifier.h"
 
-#include "type_support_common.hpp"
-#include "client_service_common.hpp"
-#include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
-#include "qos.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
+#include "rmw_fastrtps_shared_cpp/qos.hpp"
+
+#include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
+
+#include "type_support_common.hpp"
+#include "client_service_common.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;

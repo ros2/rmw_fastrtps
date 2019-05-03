@@ -14,15 +14,13 @@
 
 #include <limits>
 
-#include "qos.hpp"
+#include "rmw_fastrtps_shared_cpp/qos.hpp"
 
 #include "fastrtps/attributes/PublisherAttributes.h"
 #include "fastrtps/attributes/SubscriberAttributes.h"
 
 #include "rmw/error_handling.h"
 
-extern "C"
-{
 bool
 get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
@@ -157,4 +155,31 @@ get_datawriter_qos(
 
   return true;
 }
-}  // extern "C"
+
+bool
+is_time_default(
+  const rmw_time_t & time)
+{
+  return time.sec == 0 && time.nsec == 0;
+}
+
+bool
+is_valid_qos(
+  const rmw_qos_profile_t & qos_policies)
+{
+  if (!is_time_default(qos_policies.deadline)) {
+    RMW_SET_ERROR_MSG("Deadline unsupported for fastrtps");
+    return false;
+  }
+  if (!is_time_default(qos_policies.lifespan)) {
+    RMW_SET_ERROR_MSG("Lifespan unsupported for fastrtps");
+    return false;
+  }
+  if (qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE ||
+    qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC)
+  {
+    RMW_SET_ERROR_MSG("Liveliness unsupported for fastrtps");
+    return false;
+  }
+  return true;
+}
