@@ -20,6 +20,7 @@
 
 #include <cassert>
 #include <memory>
+#include <regex>
 #include <sstream>
 #include <string>
 
@@ -39,6 +40,8 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType * members)
   std::string message_namespace(this->members_->message_namespace_);
   std::string message_name(this->members_->message_name_);
   if (!message_namespace.empty()) {
+    // Find and replace C namespace separator with C++, in case this is using C typesupport
+    message_namespace = std::regex_replace(message_namespace, std::regex("__"), "::");
     ss << message_namespace << "::";
   }
   ss << "dds_::" << message_name << "_";

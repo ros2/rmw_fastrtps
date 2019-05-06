@@ -18,6 +18,7 @@
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
 #include <cassert>
+#include <regex>
 #include <sstream>
 #include <string>
 
@@ -40,12 +41,14 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
   this->members_ = members->request_members_;
 
   std::ostringstream ss;
-  std::string message_namespace(this->members_->message_namespace_);
-  std::string message_name(this->members_->message_name_);
-  if (!message_namespace.empty()) {
-    ss << message_namespace << "::";
+  std::string service_namespace(members->service_namespace_);
+  std::string service_name(members->service_name_);
+  if (!service_namespace.empty()) {
+    // Find and replace C namespace separator with C++, in case this is using C typesupport
+    service_namespace = std::regex_replace(service_namespace, std::regex("__"), "::");
+    ss << service_namespace << "::";
   }
-  ss << "dds_::" << message_name << "_";
+  ss << "dds_::" << service_name << "_Request_";
   this->setName(ss.str().c_str());
 
   // Fully bound by default
@@ -67,12 +70,14 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
   this->members_ = members->response_members_;
 
   std::ostringstream ss;
-  std::string message_namespace(this->members_->message_namespace_);
-  std::string message_name(this->members_->message_name_);
-  if (!message_namespace.empty()) {
-    ss << message_namespace << "::";
+  std::string service_namespace(members->service_namespace_);
+  std::string service_name(members->service_name_);
+  if (!service_namespace.empty()) {
+    // Find and replace C namespace separator with C++, in case this is using C typesupport
+    service_namespace = std::regex_replace(service_namespace, std::regex("__"), "::");
+    ss << service_namespace << "::";
   }
-  ss << "dds_::" << message_name << "_";
+  ss << "dds_::" << service_name << "_Response_";
   this->setName(ss.str().c_str());
 
   // Fully bound by default
