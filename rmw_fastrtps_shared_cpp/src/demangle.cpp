@@ -13,7 +13,6 @@
 // limitations under the License.
 
 #include <algorithm>
-#include <cassert>
 #include <regex>
 #include <string>
 #include <vector>
@@ -34,11 +33,14 @@ _demangle_if_ros_topic(const std::string & topic_name)
 std::string
 _demangle_if_ros_type(const std::string & dds_type_string)
 {
+  if (dds_type_string[dds_type_string.size() - 1] != '_') {
+   // not a ROS type
+   return dds_type_string;
+  }
+
   std::string substring = "dds_::";
   size_t substring_position = dds_type_string.find(substring);
-  if (
-    dds_type_string[dds_type_string.size() - 1] != '_' ||
-    substring_position == std::string::npos)
+  if (substring_position == std::string::npos)
   {
     // not a ROS type
     return dds_type_string;
