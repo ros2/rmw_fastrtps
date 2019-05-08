@@ -15,6 +15,8 @@
 #ifndef TYPE_SUPPORT_COMMON_HPP_
 #define TYPE_SUPPORT_COMMON_HPP_
 
+#include <regex>
+#include <sstream>
 #include <string>
 
 #include "fastrtps/Domain.h"
@@ -72,31 +74,38 @@ template<typename MembersType>
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
 inline std::string
 _create_type_name(
-  const void * untyped_members,
-  const std::string & sep)
+  const void * untyped_members)
 {
   auto members = static_cast<const MembersType *>(untyped_members);
   if (!members) {
     RMW_SET_ERROR_MSG("members handle is null");
     return "";
   }
-  return
-    std::string(members->package_name_) + "::" + sep + "::dds_::" + members->message_name_ + "_";
+
+  std::ostringstream ss;
+  std::string message_namespace(members->message_namespace_);
+  // Find and replace C namespace separator with C++, in case this is using C typesupport
+  message_namespace = std::regex_replace(message_namespace, std::regex("__"), "::");
+  std::string message_name(members->message_name_);
+  if (!message_namespace.empty()) {
+    ss << message_namespace << "::";
+  }
+  ss << "dds_::" << message_name << "_";
+  return ss.str();
 }
 
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
 inline std::string
 _create_type_name(
   const void * untyped_members,
-  const std::string & sep,
   const char * typesupport)
 {
   if (using_introspection_c_typesupport(typesupport)) {
     return _create_type_name<rosidl_typesupport_introspection_c__MessageMembers>(
-      untyped_members, sep);
+      untyped_members);
   } else if (using_introspection_cpp_typesupport(typesupport)) {
     return _create_type_name<rosidl_typesupport_introspection_cpp::MessageMembers>(
-      untyped_members, sep);
+      untyped_members);
   }
   RMW_SET_ERROR_MSG("Unknown typesupport identifier");
   return "";

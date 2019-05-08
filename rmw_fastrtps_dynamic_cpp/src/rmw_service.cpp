@@ -118,9 +118,9 @@ rmw_create_service(
   untyped_response_members = get_response_ptr(type_support->data,
       info->typesupport_identifier_);
 
-  std::string request_type_name = _create_type_name(untyped_request_members, "srv",
+  std::string request_type_name = _create_type_name(untyped_request_members,
       info->typesupport_identifier_);
-  std::string response_type_name = _create_type_name(untyped_response_members, "srv",
+  std::string response_type_name = _create_type_name(untyped_response_members,
       info->typesupport_identifier_);
 
   if (!Domain::getRegisteredType(participant, request_type_name.c_str(),

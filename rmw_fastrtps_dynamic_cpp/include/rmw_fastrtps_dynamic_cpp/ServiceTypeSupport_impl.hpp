@@ -18,6 +18,8 @@
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
 #include <cassert>
+#include <regex>
+#include <sstream>
 #include <string>
 
 #include "rmw_fastrtps_dynamic_cpp/ServiceTypeSupport.hpp"
@@ -38,9 +40,16 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
   assert(members);
   this->members_ = members->request_members_;
 
-  std::string name = std::string(members->package_name_) + "::srv::dds_::" +
-    members->service_name_ + "_Request_";
-  this->setName(name.c_str());
+  std::ostringstream ss;
+  std::string service_namespace(members->service_namespace_);
+  std::string service_name(members->service_name_);
+  if (!service_namespace.empty()) {
+    // Find and replace C namespace separator with C++, in case this is using C typesupport
+    service_namespace = std::regex_replace(service_namespace, std::regex("__"), "::");
+    ss << service_namespace << "::";
+  }
+  ss << "dds_::" << service_name << "_Request_";
+  this->setName(ss.str().c_str());
 
   // Fully bound by default
   this->max_size_bound_ = true;
@@ -60,9 +69,16 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
   assert(members);
   this->members_ = members->response_members_;
 
-  std::string name = std::string(members->package_name_) + "::srv::dds_::" +
-    members->service_name_ + "_Response_";
-  this->setName(name.c_str());
+  std::ostringstream ss;
+  std::string service_namespace(members->service_namespace_);
+  std::string service_name(members->service_name_);
+  if (!service_namespace.empty()) {
+    // Find and replace C namespace separator with C++, in case this is using C typesupport
+    service_namespace = std::regex_replace(service_namespace, std::regex("__"), "::");
+    ss << service_namespace << "::";
+  }
+  ss << "dds_::" << service_name << "_Response_";
+  this->setName(ss.str().c_str());
 
   // Fully bound by default
   this->max_size_bound_ = true;

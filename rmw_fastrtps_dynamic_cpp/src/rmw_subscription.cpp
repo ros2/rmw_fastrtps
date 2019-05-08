@@ -130,7 +130,7 @@ rmw_create_subscription(
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
   std::string type_name = _create_type_name(
-    type_support->data, "msg", info->typesupport_identifier_);
+    type_support->data, info->typesupport_identifier_);
   if (!Domain::getRegisteredType(participant, type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->type_support_)))
   {

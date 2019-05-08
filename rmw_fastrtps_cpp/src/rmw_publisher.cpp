@@ -128,7 +128,7 @@ rmw_create_publisher(
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
   auto callbacks = static_cast<const message_type_support_callbacks_t *>(type_support->data);
-  std::string type_name = _create_type_name(callbacks, "msg");
+  std::string type_name = _create_type_name(callbacks);
   if (!Domain::getRegisteredType(participant, type_name.c_str(),
     reinterpret_cast<TopicDataType **>(&info->type_support_)))
   {

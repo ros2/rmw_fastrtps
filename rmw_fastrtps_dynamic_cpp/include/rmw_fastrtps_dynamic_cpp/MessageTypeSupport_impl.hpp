@@ -20,6 +20,8 @@
 
 #include <cassert>
 #include <memory>
+#include <regex>
+#include <sstream>
 #include <string>
 
 #include "rmw_fastrtps_dynamic_cpp/MessageTypeSupport.hpp"
@@ -34,9 +36,16 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType * members)
   assert(members);
   this->members_ = members;
 
-  std::string name = std::string(members->package_name_) + "::msg::dds_::" +
-    members->message_name_ + "_";
-  this->setName(name.c_str());
+  std::ostringstream ss;
+  std::string message_namespace(this->members_->message_namespace_);
+  std::string message_name(this->members_->message_name_);
+  if (!message_namespace.empty()) {
+    // Find and replace C namespace separator with C++, in case this is using C typesupport
+    message_namespace = std::regex_replace(message_namespace, std::regex("__"), "::");
+    ss << message_namespace << "::";
+  }
+  ss << "dds_::" << message_name << "_";
+  this->setName(ss.str().c_str());
 
   // Fully bound by default
   this->max_size_bound_ = true;
