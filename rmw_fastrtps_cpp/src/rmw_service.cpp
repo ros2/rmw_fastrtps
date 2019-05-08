@@ -32,6 +32,7 @@
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
+#include "rmw_fastrtps_shared_cpp/names.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
@@ -139,12 +140,8 @@ rmw_create_service(
 
   subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   subscriberParam.topic.topicDataType = request_type_name;
-  if (!qos_policies->avoid_ros_namespace_conventions) {
-    subscriberParam.topic.topicName = std::string(ros_service_requester_prefix) + service_name;
-  } else {
-    subscriberParam.topic.topicName = service_name;
-  }
-  subscriberParam.topic.topicName += "Request";
+  subscriberParam.topic.topicName = _create_topic_name(
+    qos_policies, ros_service_requester_prefix, service_name, "Request");
 
   if (!impl->leave_middleware_default_qos) {
     publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
@@ -154,12 +151,8 @@ rmw_create_service(
 
   publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   publisherParam.topic.topicDataType = response_type_name;
-  if (!qos_policies->avoid_ros_namespace_conventions) {
-    publisherParam.topic.topicName = std::string(ros_service_response_prefix) + service_name;
-  } else {
-    publisherParam.topic.topicName = service_name;
-  }
-  publisherParam.topic.topicName += "Reply";
+  publisherParam.topic.topicName = _create_topic_name(
+    qos_policies, ros_service_response_prefix, service_name, "Reply");
 
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
