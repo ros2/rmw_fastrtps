@@ -43,7 +43,7 @@ typedef struct CustomSubscriberInfo : public CustomEventInfo
   rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
   const char * typesupport_identifier_;
 
-  EventListenerInterface * getListener() override;
+  EventListenerInterface * getListener() const final;
 } CustomSubscriberInfo;
 
 class SubListener : public EventListenerInterface, public eprosima::fastrtps::SubscriberListener
@@ -60,7 +60,7 @@ public:
   // SubscriberListener implementation
   void
   onSubscriptionMatched(
-    eprosima::fastrtps::Subscriber * sub, eprosima::fastrtps::rtps::MatchingInfo & info) override
+    eprosima::fastrtps::Subscriber * sub, eprosima::fastrtps::rtps::MatchingInfo & info) final
   {
     (void)sub;
 
@@ -73,7 +73,7 @@ public:
   }
 
   void
-  onNewDataMessage(eprosima::fastrtps::Subscriber * sub) override
+  onNewDataMessage(eprosima::fastrtps::Subscriber * sub) final
   {
     (void)sub;
     std::lock_guard<std::mutex> lock(internalMutex_);
@@ -92,20 +92,18 @@ public:
 
   void on_requested_deadline_missed(
     eprosima::fastrtps::Subscriber *,
-    const eprosima::fastrtps::RequestedDeadlineMissedStatus &) override;
+    const eprosima::fastrtps::RequestedDeadlineMissedStatus &) final;
 
   void on_liveliness_changed(
     eprosima::fastrtps::Subscriber *,
-    const eprosima::fastrtps::LivelinessChangedStatus &) override;
+    const eprosima::fastrtps::LivelinessChangedStatus &) final;
 
   // EventListenerInterface implementation
   bool
-  hasEvent(rmw_event_type_t event_type) const
-  override;
+  hasEvent(rmw_event_type_t event_type) const final;
 
   bool
-  takeNextEvent(rmw_event_type_t event_type, void * event_data)
-  override;
+  takeNextEvent(rmw_event_type_t event_type, void * event_info) final;
 
   // SubListener API
   void

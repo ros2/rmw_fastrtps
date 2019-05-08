@@ -15,7 +15,7 @@
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 
 EventListenerInterface *
-CustomSubscriberInfo::getListener()
+CustomSubscriberInfo::getListener() const
 {
   return listener_;
 }
@@ -26,23 +26,15 @@ SubListener::on_requested_deadline_missed(
   const eprosima::fastrtps::RequestedDeadlineMissedStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
-  if (conditionMutex_ != nullptr) {
-    {
-      // the change to requested_deadline_missed_count_ needs to be mutually exclusive with
-      // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
-      std::unique_lock<std::mutex> clock(*conditionMutex_);
-      // Assign absolute values
-      requested_deadline_missed_status_.total_count = status.total_count;
-      // Accumulate deltas
-      requested_deadline_missed_status_.total_count_change += status.total_count_change;
-    }
-    conditionVariable_->notify_one();
-  } else {
-    // Assign absolute values
-    requested_deadline_missed_status_.total_count = status.total_count;
-    // Accumulate deltas
-    requested_deadline_missed_status_.total_count_change += status.total_count_change;
-  }
+
+  // the change to liveliness_lost_count_ needs to be mutually exclusive with
+  // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
+  ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
+
+  // Assign absolute values
+  requested_deadline_missed_status_.total_count = status.total_count;
+  // Accumulate deltas
+  requested_deadline_missed_status_.total_count_change += status.total_count_change;
 }
 
 void SubListener::on_liveliness_changed(
@@ -50,27 +42,17 @@ void SubListener::on_liveliness_changed(
   const eprosima::fastrtps::LivelinessChangedStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
-  if (conditionMutex_ != nullptr) {
-    {
-      // the change to liveliness_changed_count_ needs to be mutually exclusive with
-      // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
-      std::unique_lock<std::mutex> clock(*conditionMutex_);
-      // Assign absolute values
-      liveliness_changed_status_.alive_count = status.alive_count;
-      liveliness_changed_status_.not_alive_count = status.not_alive_count;
-      // Accumulate deltas
-      liveliness_changed_status_.alive_count_change += status.alive_count_change;
-      liveliness_changed_status_.not_alive_count_change += status.not_alive_count_change;
-    }
-    conditionVariable_->notify_one();
-  } else {
-    // Assign absolute values
-    liveliness_changed_status_.alive_count = status.alive_count;
-    liveliness_changed_status_.not_alive_count = status.not_alive_count;
-    // Accumulate deltas
-    liveliness_changed_status_.alive_count_change += status.alive_count_change;
-    liveliness_changed_status_.not_alive_count_change += status.not_alive_count_change;
-  }
+
+  // the change to liveliness_lost_count_ needs to be mutually exclusive with
+  // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
+  ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
+
+  // Assign absolute values
+  liveliness_changed_status_.alive_count = status.alive_count;
+  liveliness_changed_status_.not_alive_count = status.not_alive_count;
+  // Accumulate deltas
+  liveliness_changed_status_.alive_count_change += status.alive_count_change;
+  liveliness_changed_status_.not_alive_count_change += status.not_alive_count_change;
 }
 
 bool SubListener::hasEvent(rmw_event_type_t event_type) const
@@ -87,7 +69,7 @@ bool SubListener::hasEvent(rmw_event_type_t event_type) const
   return false;
 }
 
-bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_data)
+bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
 {
   if (!hasEvent(event_type)) {
     return false;
@@ -96,7 +78,7 @@ bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_data)
   switch (event_type) {
     case RMW_EVENT_LIVELINESS_CHANGED: {
       rmw_liveliness_changed_status_t * rmw_data =
-        static_cast<rmw_liveliness_changed_status_t *>(event_data);
+        static_cast<rmw_liveliness_changed_status_t *>(event_info);
       rmw_data->alive_count = liveliness_changed_status_.alive_count;
       rmw_data->not_alive_count = liveliness_changed_status_.not_alive_count;
       rmw_data->alive_count_change = liveliness_changed_status_.alive_count_change;
@@ -106,7 +88,7 @@ bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_data)
     } break;
     case RMW_EVENT_REQUESTED_DEADLINE_MISSED: {
       rmw_requested_deadline_missed_status_t * rmw_data =
-        static_cast<rmw_requested_deadline_missed_status_t *>(event_data);
+        static_cast<rmw_requested_deadline_missed_status_t *>(event_info);
       rmw_data->total_count = requested_deadline_missed_status_.total_count;
       rmw_data->total_count_change = requested_deadline_missed_status_.total_count_change;
       requested_deadline_missed_status_.total_count_change = 0;

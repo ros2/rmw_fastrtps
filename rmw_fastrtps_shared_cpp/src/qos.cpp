@@ -131,12 +131,11 @@ bool fill_entity_qos_from_profile(
       rmw_time_to_fastrtps(qos_policies.liveliness_lease_duration);
 
     // Docs suggest setting no higher than 0.7 * lease_duration, choosing 2/3 to give safe buffer.
-    uint64_t total_nanos = entity_qos.m_liveliness.lease_duration.to_ns() * 2 / 3;
-    uint32_t seconds = RCUTILS_NS_TO_S(total_nanos);
-    uint32_t remainder_nanos = total_nanos - RCUTILS_S_TO_NS(seconds);
-    fprintf(stderr, "WE DOING IT %d %d\n", seconds, remainder_nanos);
-    entity_qos.m_liveliness.announcement_period =
-      eprosima::fastrtps::Duration_t(seconds, remainder_nanos);
+    // See doc at https://github.com/eProsima/Fast-RTPS/blob/
+    //   a8691a40be6b8460b01edde36ad8563170a3a35a/include/fastrtps/qos/QosPolicies.h#L223-L232
+    double period_in_ns = entity_qos.m_liveliness.lease_duration.to_ns() * 2.0 / 3.0;
+    double period_in_s = RCUTILS_NS_TO_S(period_in_ns);
+    entity_qos.m_liveliness.announcement_period = eprosima::fastrtps::Duration_t(period_in_s);
   }
 
   return true;

@@ -41,7 +41,7 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   rmw_gid_t publisher_gid;
   const char * typesupport_identifier_;
 
-  EventListenerInterface * getListener();
+  EventListenerInterface * getListener() const final;
 } CustomPublisherInfo;
 
 class PubListener : public EventListenerInterface, public eprosima::fastrtps::PublisherListener
@@ -55,7 +55,7 @@ public:
   // PublisherListener implementation
   void
   onPublicationMatched(
-    eprosima::fastrtps::Publisher * pub, eprosima::fastrtps::rtps::MatchingInfo & info) override
+    eprosima::fastrtps::Publisher * pub, eprosima::fastrtps::rtps::MatchingInfo & info) final
   {
     (void) pub;
     std::lock_guard<std::mutex> lock(internalMutex_);
@@ -68,19 +68,19 @@ public:
 
   void on_offered_deadline_missed(
     eprosima::fastrtps::Publisher * publisher,
-    const eprosima::fastrtps::OfferedDeadlineMissedStatus & status) override;
+    const eprosima::fastrtps::OfferedDeadlineMissedStatus & status) final;
 
   void on_liveliness_lost(
     eprosima::fastrtps::Publisher * publisher,
-    const eprosima::fastrtps::LivelinessLostStatus & status) override;
+    const eprosima::fastrtps::LivelinessLostStatus & status) final;
 
 
   // EventListenerInterface implementation
   bool
-  hasEvent(rmw_event_type_t /* event_type */) const override;
+  hasEvent(rmw_event_type_t /* event_type */) const final;
 
   bool
-  takeNextEvent(rmw_event_type_t /* event_type */, void * /* event_data */) override;
+  takeNextEvent(rmw_event_type_t /* event_type */, void * /* event_info */) final;
 
   // PubListener API
   size_t subscriptionCount()

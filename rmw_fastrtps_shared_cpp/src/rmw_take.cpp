@@ -101,15 +101,13 @@ __rmw_take_event(
     identifier,
     return RMW_RET_ERROR);
 
-  rmw_ret_t ret = RMW_RET_ERROR;
-
   auto event = static_cast<CustomEventInfo *>(event_handle->data);
   if (event->getListener()->takeNextEvent(event_handle->event_type, event_info)) {
     *taken = true;
-    ret = RMW_RET_OK;
+    return RMW_RET_OK;
   }
 
-  return ret;
+  return RMW_RET_ERROR;
 }
 
 rmw_ret_t

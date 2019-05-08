@@ -38,6 +38,33 @@
 
 class EventListenerInterface
 {
+protected:
+  class ConditionalScopedLock
+  {
+  public:
+    ConditionalScopedLock(std::mutex * mutex, std::condition_variable * condition_variable)
+      : mutex_(mutex), cv_(condition_variable)
+    {
+      if (nullptr != mutex_) {
+        mutex_->lock();
+      }
+    }
+
+    ~ConditionalScopedLock()
+    {
+      if (nullptr != mutex_) {
+        mutex_->unlock();
+        if (nullptr != cv_) {
+          cv_->notify_all();
+        }
+      }
+    }
+
+  private:
+    std::mutex * mutex_;
+    std::condition_variable * cv_;
+  };
+
 public:
   /// Connect a condition variable so a waiter can be notified of new data.
   virtual void attachCondition(
@@ -57,16 +84,16 @@ public:
   /// Take ready data for an event type.
   /**
     * \param event_type The event type to get data for.
-    * \param event_data A preallocated event information (from rmw/types.h) to fill with data
+    * \param event_info A preallocated event information (from rmw/types.h) to fill with data
     * \return `true` if data was successfully taken.
-    * \return `false` if data was not available, in this case nothing was written to event_data.
+    * \return `false` if data was not available, in this case nothing was written to event_info.
     */
-  virtual bool takeNextEvent(rmw_event_type_t event_type, void * event_data) = 0;
+  virtual bool takeNextEvent(rmw_event_type_t event_type, void * event_info) = 0;
 };
 
-typedef struct CustomEventInfo
+struct CustomEventInfo
 {
-  virtual EventListenerInterface * getListener() = 0;
-} CustomEventInfo;
+  virtual EventListenerInterface * getListener() const = 0;
+};
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_EVENT_INFO_HPP_
