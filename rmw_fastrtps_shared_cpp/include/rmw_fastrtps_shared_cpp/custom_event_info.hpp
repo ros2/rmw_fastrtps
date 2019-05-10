@@ -42,8 +42,10 @@ protected:
   class ConditionalScopedLock
   {
   public:
-    ConditionalScopedLock(std::mutex * mutex, std::condition_variable * condition_variable)
-      : mutex_(mutex), cv_(condition_variable)
+    ConditionalScopedLock(
+      std::mutex * mutex,
+      std::condition_variable * condition_variable = nullptr)
+    : mutex_(mutex), cv_(condition_variable)
     {
       if (nullptr != mutex_) {
         mutex_->lock();

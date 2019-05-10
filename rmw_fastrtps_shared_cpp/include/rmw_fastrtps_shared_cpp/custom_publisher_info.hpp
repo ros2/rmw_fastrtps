@@ -15,6 +15,7 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 
+#include <atomic>
 #include <mutex>
 #include <condition_variable>
 #include <set>
@@ -48,6 +49,10 @@ class PubListener : public EventListenerInterface, public eprosima::fastrtps::Pu
 {
 public:
   explicit PubListener(CustomPublisherInfo * info)
+  : deadline_changes_(false),
+    liveliness_changes_(false),
+    conditionMutex_(nullptr),
+    conditionVariable_(nullptr)
   {
     (void) info;
   }
@@ -77,10 +82,10 @@ public:
 
   // EventListenerInterface implementation
   bool
-  hasEvent(rmw_event_type_t /* event_type */) const final;
+  hasEvent(rmw_event_type_t event_type) const final;
 
   bool
-  takeNextEvent(rmw_event_type_t /* event_type */, void * /* event_info */) final;
+  takeNextEvent(rmw_event_type_t event_type, void * event_info) final;
 
   // PubListener API
   size_t subscriptionCount()
@@ -106,13 +111,19 @@ public:
   }
 
 private:
-  std::mutex internalMutex_;
+  mutable std::mutex internalMutex_;
+
   std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_
     RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
+  std::atomic_bool deadline_changes_;
   eprosima::fastrtps::OfferedDeadlineMissedStatus offered_deadline_missed_status_
     RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
+  std::atomic_bool liveliness_changes_;
   eprosima::fastrtps::LivelinessLostStatus liveliness_lost_status_
     RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 };

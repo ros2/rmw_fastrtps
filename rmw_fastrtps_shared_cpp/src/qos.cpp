@@ -157,14 +157,13 @@ get_datawriter_qos(
 }
 
 bool
-is_valid_qos(
-  const rmw_qos_profile_t & qos_policies)
+is_valid_qos(const rmw_qos_profile_t & /*qos_policies*/)
 {
-  if (qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE ||
-    qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC)
-  {
-    RMW_SET_ERROR_MSG("Manual liveliness unsupported for fastrtps");
-    return false;
-  }
+  // if (qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE ||
+  //   qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC)
+  // {
+  //   RMW_SET_ERROR_MSG("Manual liveliness unsupported for fastrtps");
+  //   return false;
+  // }
   return true;
 }

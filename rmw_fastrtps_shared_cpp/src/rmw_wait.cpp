@@ -68,7 +68,7 @@ check_wait_set_for_data(
     for (size_t i = 0; i < events->event_count; ++i) {
       auto event = static_cast<rmw_event_t *>(events->events[i]);
       auto custom_event_info = static_cast<CustomEventInfo *>(event->data);
-      if (!custom_event_info->getListener()->hasEvent(event->event_type)) {
+      if (custom_event_info->getListener()->hasEvent(event->event_type)) {
         return true;
       }
     }

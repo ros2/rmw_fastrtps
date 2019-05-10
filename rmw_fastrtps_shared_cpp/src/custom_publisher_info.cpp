@@ -35,6 +35,8 @@ PubListener::on_offered_deadline_missed(
   offered_deadline_missed_status_.total_count = status.total_count;
   // Accumulate deltas
   offered_deadline_missed_status_.total_count_change += status.total_count_change;
+
+  deadline_changes_.store(true, std::memory_order_relaxed);
 }
 
 void PubListener::on_liveliness_lost(
@@ -51,15 +53,17 @@ void PubListener::on_liveliness_lost(
   liveliness_lost_status_.total_count = status.total_count;
   // Accumulate deltas
   liveliness_lost_status_.total_count_change += status.total_count_change;
+
+  liveliness_changes_.store(true, std::memory_order_relaxed);
 }
 
 bool PubListener::hasEvent(rmw_event_type_t event_type) const
 {
   switch (event_type) {
     case RMW_EVENT_LIVELINESS_LOST:
-      return liveliness_lost_status_.total_count_change != 0;
+      return liveliness_changes_.load(std::memory_order_relaxed);
     case RMW_EVENT_OFFERED_DEADLINE_MISSED:
-      return offered_deadline_missed_status_.total_count_change != 0;
+      return deadline_changes_.load(std::memory_order_relaxed);
     default:
       break;
   }
@@ -68,9 +72,6 @@ bool PubListener::hasEvent(rmw_event_type_t event_type) const
 
 bool PubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
 {
-  if (!hasEvent(event_type)) {
-    return false;
-  }
   std::lock_guard<std::mutex> lock(internalMutex_);
   switch (event_type) {
     case RMW_EVENT_LIVELINESS_LOST: {
@@ -79,6 +80,7 @@ bool PubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
       rmw_data->total_count = liveliness_lost_status_.total_count;
       rmw_data->total_count_change = liveliness_lost_status_.total_count_change;
       liveliness_lost_status_.total_count_change = 0;
+      liveliness_changes_.store(false, std::memory_order_relaxed);
     } break;
     case RMW_EVENT_OFFERED_DEADLINE_MISSED: {
       rmw_offered_deadline_missed_status_t * rmw_data =
@@ -86,6 +88,7 @@ bool PubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
       rmw_data->total_count = offered_deadline_missed_status_.total_count;
       rmw_data->total_count_change = offered_deadline_missed_status_.total_count_change;
       offered_deadline_missed_status_.total_count_change = 0;
+      deadline_changes_.store(false, std::memory_order_relaxed);
     } break;
     default:
       return false;
