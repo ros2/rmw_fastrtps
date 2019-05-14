@@ -20,6 +20,7 @@
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
+#include "rmw_fastrtps_shared_cpp/names.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
@@ -148,11 +149,7 @@ rmw_create_publisher(
 
   publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   publisherParam.topic.topicDataType = type_name;
-  if (!qos_policies->avoid_ros_namespace_conventions) {
-    publisherParam.topic.topicName = std::string(ros_topic_prefix) + topic_name;
-  } else {
-    publisherParam.topic.topicName = topic_name;
-  }
+  publisherParam.topic.topicName = _create_topic_name(qos_policies, ros_topic_prefix, topic_name);
 
   // 1 Heartbeat every 10ms
   // publisherParam.times.heartbeatPeriod.seconds = 0;
