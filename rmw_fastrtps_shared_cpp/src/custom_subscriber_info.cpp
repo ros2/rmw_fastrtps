@@ -76,25 +76,29 @@ bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
   switch (event_type) {
-    case RMW_EVENT_LIVELINESS_CHANGED: {
-      rmw_liveliness_changed_status_t * rmw_data =
-        static_cast<rmw_liveliness_changed_status_t *>(event_info);
-      rmw_data->alive_count = liveliness_changed_status_.alive_count;
-      rmw_data->not_alive_count = liveliness_changed_status_.not_alive_count;
-      rmw_data->alive_count_change = liveliness_changed_status_.alive_count_change;
-      rmw_data->not_alive_count_change = liveliness_changed_status_.not_alive_count_change;
-      liveliness_changed_status_.alive_count_change = 0;
-      liveliness_changed_status_.not_alive_count_change = 0;
-      liveliness_changes_.store(false, std::memory_order_relaxed);
-    } break;
-    case RMW_EVENT_REQUESTED_DEADLINE_MISSED: {
-      rmw_requested_deadline_missed_status_t * rmw_data =
-        static_cast<rmw_requested_deadline_missed_status_t *>(event_info);
-      rmw_data->total_count = requested_deadline_missed_status_.total_count;
-      rmw_data->total_count_change = requested_deadline_missed_status_.total_count_change;
-      requested_deadline_missed_status_.total_count_change = 0;
-      deadline_changes_.store(false, std::memory_order_relaxed);
-    } break;
+    case RMW_EVENT_LIVELINESS_CHANGED:
+      {
+        rmw_liveliness_changed_status_t * rmw_data =
+          static_cast<rmw_liveliness_changed_status_t *>(event_info);
+        rmw_data->alive_count = liveliness_changed_status_.alive_count;
+        rmw_data->not_alive_count = liveliness_changed_status_.not_alive_count;
+        rmw_data->alive_count_change = liveliness_changed_status_.alive_count_change;
+        rmw_data->not_alive_count_change = liveliness_changed_status_.not_alive_count_change;
+        liveliness_changed_status_.alive_count_change = 0;
+        liveliness_changed_status_.not_alive_count_change = 0;
+        liveliness_changes_.store(false, std::memory_order_relaxed);
+      }
+      break;
+    case RMW_EVENT_REQUESTED_DEADLINE_MISSED:
+      {
+        rmw_requested_deadline_missed_status_t * rmw_data =
+          static_cast<rmw_requested_deadline_missed_status_t *>(event_info);
+        rmw_data->total_count = requested_deadline_missed_status_.total_count;
+        rmw_data->total_count_change = requested_deadline_missed_status_.total_count_change;
+        requested_deadline_missed_status_.total_count_change = 0;
+        deadline_changes_.store(false, std::memory_order_relaxed);
+      }
+      break;
     default:
       return false;
   }

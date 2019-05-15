@@ -39,33 +39,7 @@
 class EventListenerInterface
 {
 protected:
-  class ConditionalScopedLock
-  {
-  public:
-    ConditionalScopedLock(
-      std::mutex * mutex,
-      std::condition_variable * condition_variable = nullptr)
-    : mutex_(mutex), cv_(condition_variable)
-    {
-      if (nullptr != mutex_) {
-        mutex_->lock();
-      }
-    }
-
-    ~ConditionalScopedLock()
-    {
-      if (nullptr != mutex_) {
-        mutex_->unlock();
-        if (nullptr != cv_) {
-          cv_->notify_all();
-        }
-      }
-    }
-
-  private:
-    std::mutex * mutex_;
-    std::condition_variable * cv_;
-  };
+  class ConditionalScopedLock;
 
 public:
   /// Connect a condition variable so a waiter can be notified of new data.
@@ -91,6 +65,34 @@ public:
     * \return `false` if data was not available, in this case nothing was written to event_info.
     */
   virtual bool takeNextEvent(rmw_event_type_t event_type, void * event_info) = 0;
+};
+
+class EventListenerInterface::ConditionalScopedLock
+{
+public:
+  ConditionalScopedLock(
+    std::mutex * mutex,
+    std::condition_variable * condition_variable = nullptr)
+  : mutex_(mutex), cv_(condition_variable)
+  {
+    if (nullptr != mutex_) {
+      mutex_->lock();
+    }
+  }
+
+  ~ConditionalScopedLock()
+  {
+    if (nullptr != mutex_) {
+      mutex_->unlock();
+      if (nullptr != cv_) {
+        cv_->notify_all();
+      }
+    }
+  }
+
+private:
+  std::mutex * mutex_;
+  std::condition_variable * cv_;
 };
 
 struct CustomEventInfo
