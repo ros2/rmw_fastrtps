@@ -789,7 +789,7 @@ inline void deserialize_field<std::wstring>(
   } else {
     uint32_t size;
     if (member->array_size_ && !member->is_upper_bound_) {
-      size = member->array_size_;
+      size = static_cast<uint32_t>(member->array_size_);
     } else {
       deser >> size;
       member->resize_function(field, size);
