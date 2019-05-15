@@ -42,7 +42,9 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   rmw_gid_t publisher_gid;
   const char * typesupport_identifier_;
 
-  EventListenerInterface * getListener() const final;
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  EventListenerInterface *
+  getListener() const final;
 } CustomPublisherInfo;
 
 class PubListener : public EventListenerInterface, public eprosima::fastrtps::PublisherListener
@@ -58,6 +60,7 @@ public:
   }
 
   // PublisherListener implementation
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void
   onPublicationMatched(
     eprosima::fastrtps::Publisher * pub, eprosima::fastrtps::rtps::MatchingInfo & info) final
@@ -71,19 +74,25 @@ public:
     }
   }
 
-  void on_offered_deadline_missed(
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_offered_deadline_missed(
     eprosima::fastrtps::Publisher * publisher,
     const eprosima::fastrtps::OfferedDeadlineMissedStatus & status) final;
 
-  void on_liveliness_lost(
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_liveliness_lost(
     eprosima::fastrtps::Publisher * publisher,
     const eprosima::fastrtps::LivelinessLostStatus & status) final;
 
 
   // EventListenerInterface implementation
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool
   hasEvent(rmw_event_type_t event_type) const final;
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool
   takeNextEvent(rmw_event_type_t event_type, void * event_info) final;
 

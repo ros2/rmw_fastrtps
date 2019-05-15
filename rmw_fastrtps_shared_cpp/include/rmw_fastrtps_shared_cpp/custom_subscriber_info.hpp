@@ -43,7 +43,9 @@ typedef struct CustomSubscriberInfo : public CustomEventInfo
   rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
   const char * typesupport_identifier_;
 
-  EventListenerInterface * getListener() const final;
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  EventListenerInterface *
+  getListener() const final;
 } CustomSubscriberInfo;
 
 class SubListener : public EventListenerInterface, public eprosima::fastrtps::SubscriberListener
@@ -85,18 +87,24 @@ public:
     data_.store(sub->getUnreadCount(), std::memory_order_relaxed);
   }
 
-  void on_requested_deadline_missed(
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_requested_deadline_missed(
     eprosima::fastrtps::Subscriber *,
     const eprosima::fastrtps::RequestedDeadlineMissedStatus &) final;
 
-  void on_liveliness_changed(
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_liveliness_changed(
     eprosima::fastrtps::Subscriber *,
     const eprosima::fastrtps::LivelinessChangedStatus &) final;
 
   // EventListenerInterface implementation
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool
   hasEvent(rmw_event_type_t event_type) const final;
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool
   takeNextEvent(rmw_event_type_t event_type, void * event_info) final;
 
