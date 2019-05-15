@@ -23,6 +23,8 @@
 
 #include "rmw_fastrtps_dynamic_cpp/TypeSupport.hpp"
 #include "rmw_fastrtps_dynamic_cpp/macros.hpp"
+#include "rosidl_typesupport_fastrtps_c/wstring_conversion.hpp"
+#include "rosidl_typesupport_fastrtps_cpp/wstring_conversion.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
 #include "rosidl_typesupport_introspection_cpp/service_introspection.hpp"
@@ -31,6 +33,7 @@
 #include "rosidl_typesupport_introspection_c/service_introspection.h"
 
 #include "rosidl_generator_c/primitives_sequence_functions.h"
+#include "rosidl_generator_c/u16string_functions.h"
 
 namespace rmw_fastrtps_dynamic_cpp
 {
@@ -178,6 +181,15 @@ static size_t calculateMaxAlign(const MembersType * members)
             alignment = alignof(std::string);
           }
           break;
+        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING:
+          if (std::is_same<MembersType,
+            rosidl_typesupport_introspection_c__MessageMembers>::value)
+          {
+            alignment = alignof(rosidl_generator_c__U16String);
+          } else {
+            alignment = alignof(std::u16string);
+          }
+          break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
             auto sub_members = (const MembersType *)member.members_->data;
@@ -209,6 +221,35 @@ void serialize_field(
   } else {
     std::vector<T> & data = *reinterpret_cast<std::vector<T> *>(field);
     ser << data;
+  }
+}
+
+template<>
+inline
+void serialize_field<std::wstring>(
+  const rosidl_typesupport_introspection_cpp::MessageMember * member,
+  void * field,
+  eprosima::fastcdr::Cdr & ser)
+{
+  std::wstring wstr;
+  if (!member->is_array_) {
+    auto u16str = static_cast<std::u16string *>(field);
+    rosidl_typesupport_fastrtps_cpp::u16string_to_wstring(*u16str, wstr);
+    ser << wstr;
+  } else {
+    size_t size;
+    if (member->array_size_ && !member->is_upper_bound_) {
+      size = member->array_size_;
+    } else {
+      size = member->size_function(field);
+      ser << static_cast<uint32_t>(size);
+    }
+    for (size_t i = 0; i < size; ++i) {
+      const void * element = member->get_const_function(field, i);
+      auto u16str = static_cast<const std::u16string *>(element);
+      rosidl_typesupport_fastrtps_cpp::u16string_to_wstring(*u16str, wstr);
+      ser << wstr;
+    }
   }
 }
 
@@ -269,6 +310,33 @@ void serialize_field<std::string>(
   }
 }
 
+template<>
+inline
+void serialize_field<std::wstring>(
+  const rosidl_typesupport_introspection_c__MessageMember * member,
+  void * field,
+  eprosima::fastcdr::Cdr & ser)
+{
+  std::wstring wstr;
+  if (!member->is_array_) {
+    auto u16str = static_cast<rosidl_generator_c__U16String *>(field);
+    rosidl_typesupport_fastrtps_c::u16string_to_wstring(*u16str, wstr);
+    ser << wstr;
+  } else if (member->array_size_ && !member->is_upper_bound_) {
+    auto array = static_cast<rosidl_generator_c__U16String *>(field);
+    for (size_t i = 0; i < member->array_size_; ++i) {
+      rosidl_typesupport_fastrtps_c::u16string_to_wstring(array[i], wstr);
+      ser << wstr;
+    }
+  } else {
+    auto sequence = static_cast<rosidl_generator_c__U16String__Sequence *>(field);
+    ser << static_cast<uint32_t>(sequence->size);
+    for (size_t i = 0; i < sequence->size; ++i) {
+      rosidl_typesupport_fastrtps_c::u16string_to_wstring(sequence->data[i], wstr);
+      ser << wstr;
+    }
+  }
+}
 inline
 size_t get_array_size_and_assign_field(
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
@@ -357,6 +425,9 @@ bool TypeSupport<MembersType>::serializeROSmessage(
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
         serialize_field<std::string>(member, field, ser);
         break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING:
+        serialize_field<std::wstring>(member, field, ser);
+        break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
           auto sub_members = static_cast<const MembersType *>(member->members_->data);
@@ -422,34 +493,35 @@ size_t next_field_align(
   return current_alignment;
 }
 
-template<>
-inline
-size_t next_field_align<std::string>(
+template<typename T>
+size_t next_field_align_string(
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
   void * field,
   size_t current_alignment)
 {
   const size_t padding = 4;
+  size_t character_size =
+    (member->type_id_ == rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING) ? 4 : 1;
   if (!member->is_array_) {
     current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
     current_alignment += padding;
-    auto & str = *static_cast<std::string *>(field);
-    current_alignment += str.size() + 1;
+    auto & str = *static_cast<T *>(field);
+    current_alignment += character_size * (str.size() + 1);
   } else if (member->array_size_ && !member->is_upper_bound_) {
-    auto str_arr = static_cast<std::string *>(field);
+    auto str_arr = static_cast<T *>(field);
     for (size_t index = 0; index < member->array_size_; ++index) {
       current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       current_alignment += padding;
-      current_alignment += str_arr[index].size() + 1;
+      current_alignment += character_size * (str_arr[index].size() + 1);
     }
   } else {
-    auto & data = *reinterpret_cast<std::vector<std::string> *>(field);
+    auto & data = *reinterpret_cast<std::vector<T> *>(field);
     current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
     current_alignment += padding;
     for (auto & it : data) {
       current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       current_alignment += padding;
-      current_alignment += it.size() + 1;
+      current_alignment += character_size * (it.size() + 1);
     }
   }
   return current_alignment;
@@ -481,9 +553,15 @@ size_t next_field_align(
   return current_alignment;
 }
 
+template<typename T>
+size_t next_field_align_string(
+  const rosidl_typesupport_introspection_c__MessageMember * member,
+  void * field,
+  size_t current_alignment);
+
 template<>
 inline
-size_t next_field_align<std::string>(
+size_t next_field_align_string<std::string>(
   const rosidl_typesupport_introspection_c__MessageMember * member,
   void * field,
   size_t current_alignment)
@@ -508,6 +586,42 @@ size_t next_field_align<std::string>(
       for (size_t i = 0; i < string_sequence_field.size; ++i) {
         current_alignment = CStringHelper::next_field_align(
           &(string_sequence_field.data[i]), current_alignment);
+      }
+    }
+  }
+  return current_alignment;
+}
+
+template<>
+inline
+size_t next_field_align_string<std::wstring>(
+  const rosidl_typesupport_introspection_c__MessageMember * member,
+  void * field,
+  size_t current_alignment)
+{
+  const size_t padding = 4;
+  if (!member->is_array_) {
+    auto u16str = static_cast<rosidl_generator_c__U16String *>(field);
+    current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+    current_alignment += padding;
+    current_alignment += 4 * (u16str->size + 1);
+  } else {
+    if (member->array_size_ && !member->is_upper_bound_) {
+      auto string_field = static_cast<rosidl_generator_c__U16String *>(field);
+      for (size_t i = 0; i < member->array_size_; ++i) {
+        current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+        current_alignment += padding;
+        current_alignment += 4 * (string_field[i].size + 1);
+      }
+    } else {
+      current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+      current_alignment += padding;
+      auto & string_sequence_field =
+        *reinterpret_cast<rosidl_generator_c__U16String__Sequence *>(field);
+      for (size_t i = 0; i < string_sequence_field.size; ++i) {
+        current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
+        current_alignment += padding;
+        current_alignment += 4 * (string_sequence_field.data[i].size + 1);
       }
     }
   }
@@ -563,7 +677,10 @@ size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
         current_alignment = next_field_align<uint64_t>(member, field, current_alignment);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-        current_alignment = next_field_align<std::string>(member, field, current_alignment);
+        current_alignment = next_field_align_string<std::string>(member, field, current_alignment);
+        break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING:
+        current_alignment = next_field_align_string<std::wstring>(member, field, current_alignment);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
@@ -656,6 +773,36 @@ inline void deserialize_field<std::string>(
   }
 }
 
+template<>
+inline void deserialize_field<std::wstring>(
+  const rosidl_typesupport_introspection_cpp::MessageMember * member,
+  void * field,
+  eprosima::fastcdr::Cdr & deser,
+  bool call_new)
+{
+  (void)call_new;
+  std::wstring wstr;
+  if (!member->is_array_) {
+    deser >> wstr;
+    rosidl_typesupport_fastrtps_cpp::wstring_to_u16string(
+      wstr, *static_cast<std::u16string *>(field));
+  } else {
+    uint32_t size;
+    if (member->array_size_ && !member->is_upper_bound_) {
+      size = static_cast<uint32_t>(member->array_size_);
+    } else {
+      deser >> size;
+      member->resize_function(field, size);
+    }
+    for (size_t i = 0; i < size; ++i) {
+      void * element = member->get_function(field, i);
+      auto u16str = static_cast<std::u16string *>(element);
+      deser >> wstr;
+      rosidl_typesupport_fastrtps_cpp::wstring_to_u16string(wstr, *u16str);
+    }
+  }
+}
+
 template<typename T>
 void deserialize_field(
   const rosidl_typesupport_introspection_c__MessageMember * member,
@@ -720,6 +867,39 @@ inline void deserialize_field<std::string>(
           throw std::runtime_error("unable to assign rosidl_generator_c__String");
         }
       }
+    }
+  }
+}
+
+template<>
+inline void deserialize_field<std::wstring>(
+  const rosidl_typesupport_introspection_c__MessageMember * member,
+  void * field,
+  eprosima::fastcdr::Cdr & deser,
+  bool call_new)
+{
+  (void)call_new;
+  std::wstring wstr;
+  if (!member->is_array_) {
+    deser >> wstr;
+    rosidl_typesupport_fastrtps_c::wstring_to_u16string(
+      wstr, *static_cast<rosidl_generator_c__U16String *>(field));
+  } else if (member->array_size_ && !member->is_upper_bound_) {
+    auto array = static_cast<rosidl_generator_c__U16String *>(field);
+    for (size_t i = 0; i < member->array_size_; ++i) {
+      deser >> wstr;
+      rosidl_typesupport_fastrtps_c::wstring_to_u16string(wstr, array[i]);
+    }
+  } else {
+    uint32_t size;
+    deser >> size;
+    auto sequence = static_cast<rosidl_generator_c__U16String__Sequence *>(field);
+    if (!rosidl_generator_c__U16String__Sequence__init(sequence, size)) {
+      throw std::runtime_error("unable to initialize rosidl_generator_c__U16String sequence");
+    }
+    for (size_t i = 0; i < sequence->size; ++i) {
+      deser >> wstr;
+      rosidl_typesupport_fastrtps_c::wstring_to_u16string(wstr, sequence->data[i]);
     }
   }
 }
@@ -815,6 +995,9 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
         deserialize_field<std::string>(member, field, deser, call_new);
         break;
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING:
+        deserialize_field<std::wstring>(member, field, deser, call_new);
+        break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
           auto sub_members = (const MembersType *)member->members_->data;
@@ -903,12 +1086,15 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
           eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint64_t));
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
+      case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING:
         {
           this->max_size_bound_ = false;
+          size_t character_size =
+            (member->type_id_ == rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING) ? 4 : 1;
           for (size_t index = 0; index < array_size; ++index) {
             current_alignment += padding +
               eprosima::fastcdr::Cdr::alignment(current_alignment, padding) +
-              member->string_upper_bound_ + 1;
+              character_size * (member->string_upper_bound_ + 1);
           }
         }
         break;

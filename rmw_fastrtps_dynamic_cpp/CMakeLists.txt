@@ -41,6 +41,8 @@ find_package(FastRTPS REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
 find_package(rosidl_generator_c REQUIRED)
+find_package(rosidl_typesupport_fastrtps_c REQUIRED)
+find_package(rosidl_typesupport_fastrtps_cpp REQUIRED)
 find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 
@@ -89,6 +91,8 @@ target_link_libraries(rmw_fastrtps_dynamic_cpp
 # specific order: dependents before dependencies
 ament_target_dependencies(rmw_fastrtps_dynamic_cpp
   "rcutils"
+  "rosidl_typesupport_fastrtps_c"
+  "rosidl_typesupport_fastrtps_cpp"
   "rosidl_typesupport_introspection_c"
   "rosidl_typesupport_introspection_cpp"
   "rmw_fastrtps_shared_cpp"
