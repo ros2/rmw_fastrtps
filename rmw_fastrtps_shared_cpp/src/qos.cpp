@@ -25,13 +25,14 @@ static
 eprosima::fastrtps::Duration_t
 rmw_time_to_fastrtps(const rmw_time_t & time)
 {
-  return eprosima::fastrtps::Duration_t(time.sec, time.nsec);
+  return eprosima::fastrtps::Duration_t(
+    static_cast<int32_t>(time.sec),
+    static_cast<uint32_t>(time.nsec));
 }
 
 static
 bool
-is_time_default(
-  const rmw_time_t & time)
+is_time_default(const rmw_time_t & time)
 {
   return time.sec == 0 && time.nsec == 0;
 }
