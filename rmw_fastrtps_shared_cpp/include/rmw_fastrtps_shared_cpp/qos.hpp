@@ -42,12 +42,6 @@ get_datawriter_qos(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
-is_time_default(
-  const rmw_time_t & time);
-
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
-bool
-is_valid_qos(
-  const rmw_qos_profile_t & qos_policies);
+is_valid_qos(const rmw_qos_profile_t & qos_policies);
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__QOS_HPP_

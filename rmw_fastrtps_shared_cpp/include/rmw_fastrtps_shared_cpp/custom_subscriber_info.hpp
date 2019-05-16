@@ -26,35 +26,47 @@
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
+#include "rmw/impl/cpp/macros.hpp"
+
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
+
 
 class SubListener;
 
-typedef struct CustomSubscriberInfo
+typedef struct CustomSubscriberInfo : public CustomEventInfo
 {
+  virtual ~CustomSubscriberInfo() = default;
+
   eprosima::fastrtps::Subscriber * subscriber_;
   SubListener * listener_;
   rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
   const char * typesupport_identifier_;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  EventListenerInterface *
+  getListener() const final;
 } CustomSubscriberInfo;
 
-class SubListener : public eprosima::fastrtps::SubscriberListener
+class SubListener : public EventListenerInterface, public eprosima::fastrtps::SubscriberListener
 {
 public:
   explicit SubListener(CustomSubscriberInfo * info)
   : data_(0),
-    conditionMutex_(nullptr), conditionVariable_(nullptr)
+    deadline_changes_(false),
+    liveliness_changes_(false),
+    conditionMutex_(nullptr),
+    conditionVariable_(nullptr)
   {
     // Field is not used right now
     (void)info;
   }
 
+  // SubscriberListener implementation
   void
   onSubscriptionMatched(
-    eprosima::fastrtps::Subscriber * sub, eprosima::fastrtps::rtps::MatchingInfo & info)
+    eprosima::fastrtps::Subscriber * /*sub*/, eprosima::fastrtps::rtps::MatchingInfo & info) final
   {
-    (void)sub;
-
     std::lock_guard<std::mutex> lock(internalMutex_);
     if (eprosima::fastrtps::rtps::MATCHED_MATCHING == info.status) {
       publishers_.insert(info.remoteEndpointGuid);
@@ -64,23 +76,39 @@ public:
   }
 
   void
-  onNewDataMessage(eprosima::fastrtps::Subscriber * sub)
+  onNewDataMessage(eprosima::fastrtps::Subscriber * sub) final
   {
-    (void)sub;
     std::lock_guard<std::mutex> lock(internalMutex_);
 
-    if (conditionMutex_ != nullptr) {
-      std::unique_lock<std::mutex> clock(*conditionMutex_);
-      // the change to data_ needs to be mutually exclusive with rmw_wait()
-      // which checks hasData() and decides if wait() needs to be called
-      data_ = sub->getUnreadCount();
-      clock.unlock();
-      conditionVariable_->notify_one();
-    } else {
-      data_ = sub->getUnreadCount();
-    }
+    // the change to liveliness_lost_count_ needs to be mutually exclusive with
+    // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
+    ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
+
+    data_.store(sub->getUnreadCount(), std::memory_order_relaxed);
   }
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_requested_deadline_missed(
+    eprosima::fastrtps::Subscriber *,
+    const eprosima::fastrtps::RequestedDeadlineMissedStatus &) final;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_liveliness_changed(
+    eprosima::fastrtps::Subscriber *,
+    const eprosima::fastrtps::LivelinessChangedStatus &) final;
+
+  // EventListenerInterface implementation
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  bool
+  hasEvent(rmw_event_type_t event_type) const final;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  bool
+  takeNextEvent(rmw_event_type_t event_type, void * event_info) final;
+
+  // SubListener API
   void
   attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable)
   {
@@ -98,22 +126,17 @@ public:
   }
 
   bool
-  hasData()
+  hasData() const
   {
-    return data_ > 0;
+    return data_.load(std::memory_order_relaxed) > 0;
   }
 
   void
   data_taken(eprosima::fastrtps::Subscriber * sub)
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
-
-    if (conditionMutex_ != nullptr) {
-      std::unique_lock<std::mutex> clock(*conditionMutex_);
-      data_ = sub->getUnreadCount();
-    } else {
-      data_ = sub->getUnreadCount();
-    }
+    ConditionalScopedLock clock(conditionMutex_);
+    data_.store(sub->getUnreadCount(), std::memory_order_relaxed);
   }
 
   size_t publisherCount()
@@ -123,8 +146,18 @@ public:
   }
 
 private:
-  std::mutex internalMutex_;
+  mutable std::mutex internalMutex_;
+
   std::atomic_size_t data_;
+
+  std::atomic_bool deadline_changes_;
+  eprosima::fastrtps::RequestedDeadlineMissedStatus requested_deadline_missed_status_
+    RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
+  std::atomic_bool liveliness_changes_;
+  eprosima::fastrtps::LivelinessChangedStatus liveliness_changed_status_
+    RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
