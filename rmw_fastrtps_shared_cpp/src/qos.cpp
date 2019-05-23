@@ -161,9 +161,10 @@ bool
 is_valid_qos(const rmw_qos_profile_t & qos_policies)
 {
   if (qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE ||
-    qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC)
+    qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC ||
+    !is_time_default(qos_policies.liveliness_lease_duration))
   {
-    RMW_SET_ERROR_MSG("Manual liveliness unsupported for fastrtps");
+    RMW_SET_ERROR_MSG("Liveliness QoS is not yet supported for fastrtps.");
     return false;
   }
   return true;
