@@ -24,6 +24,7 @@
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/participant/ParticipantListener.h"
 
+#include "rcpputils/thread_safety_annotations.hpp"
 #include "rcutils/logging_macros.h"
 
 #include "rmw/impl/cpp/key_value.hpp"
@@ -68,6 +69,7 @@ public:
       return;
     }
 
+    std::lock_guard<std::mutex> guard(names_mutex_);
     if (eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DISCOVERED_PARTICIPANT == info.status) {
       // ignore already known GUIDs
       if (discovered_names.find(info.info.m_guid) == discovered_names.end()) {
@@ -115,6 +117,7 @@ public:
 
   std::vector<std::string> get_discovered_names() const
   {
+    std::lock_guard<std::mutex> guard(names_mutex_);
     std::vector<std::string> names(discovered_names.size());
     size_t i = 0;
     for (auto it : discovered_names) {
@@ -125,6 +128,7 @@ public:
 
   std::vector<std::string> get_discovered_namespaces() const
   {
+    std::lock_guard<std::mutex> guard(names_mutex_);
     std::vector<std::string> namespaces(discovered_namespaces.size());
     size_t i = 0;
     for (auto it : discovered_namespaces) {
@@ -179,8 +183,10 @@ public:
     }
   }
 
-  std::map<eprosima::fastrtps::rtps::GUID_t, std::string> discovered_names;
-  std::map<eprosima::fastrtps::rtps::GUID_t, std::string> discovered_namespaces;
+  using guid_map_t = std::map<eprosima::fastrtps::rtps::GUID_t, std::string>;
+  mutable std::mutex names_mutex_;
+  guid_map_t discovered_names RCPPUTILS_TSA_GUARDED_BY(names_mutex_);
+  guid_map_t discovered_namespaces RCPPUTILS_TSA_GUARDED_BY(names_mutex_);
   LockedObject<TopicCache> reader_topic_cache;
   LockedObject<TopicCache> writer_topic_cache;
   rmw_guard_condition_t * graph_guard_condition_;
