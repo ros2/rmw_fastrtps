@@ -78,13 +78,17 @@ public:
   void
   onNewDataMessage(eprosima::fastrtps::Subscriber * sub) final
   {
+    // Make sure to call into Fast-RTPS before taking the lock to avoid an
+    // ABBA deadlock between internalMutex_ and mutexes inside of Fast-RTPS.
+    uint64_t unread_count = sub->getUnreadCount();
+
     std::lock_guard<std::mutex> lock(internalMutex_);
 
     // the change to liveliness_lost_count_ needs to be mutually exclusive with
     // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
     ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
 
-    data_.store(sub->getUnreadCount(), std::memory_order_relaxed);
+    data_.store(unread_count, std::memory_order_relaxed);
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -134,9 +138,13 @@ public:
   void
   data_taken(eprosima::fastrtps::Subscriber * sub)
   {
+    // Make sure to call into Fast-RTPS before taking the lock to avoid an
+    // ABBA deadlock between internalMutex_ and mutexes inside of Fast-RTPS.
+    uint64_t unread_count = sub->getUnreadCount();
+
     std::lock_guard<std::mutex> lock(internalMutex_);
     ConditionalScopedLock clock(conditionMutex_);
-    data_.store(sub->getUnreadCount(), std::memory_order_relaxed);
+    data_.store(unread_count, std::memory_order_relaxed);
   }
 
   size_t publisherCount()
