@@ -213,6 +213,15 @@ rmw_subscription_count_matched_publishers(
 }
 
 rmw_ret_t
+rmw_subscription_get_actual_qos(
+  const rmw_subscription_t * subscription,
+  rmw_qos_profile_t * qos)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_subscription_get_actual_qos(
+    subscription, qos);
+}
+
+rmw_ret_t
 rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 {
   return rmw_fastrtps_shared_cpp::__rmw_destroy_subscription(
