@@ -174,7 +174,7 @@ rmw_create_service(
   info->request_subscriber_ =
     Domain::createSubscriber(participant, subscriberParam, info->listener_);
   if (!info->request_subscriber_) {
-    RMW_SET_ERROR_MSG("create_client() could not create subscriber");
+    RMW_SET_ERROR_MSG("create_service() could not create subscriber");
     goto fail;
   }
 
@@ -186,7 +186,7 @@ rmw_create_service(
   info->response_publisher_ =
     Domain::createPublisher(participant, publisherParam, nullptr);
   if (!info->response_publisher_) {
-    RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
+    RMW_SET_ERROR_MSG("create_service() could not create publisher");
     goto fail;
   }
 
