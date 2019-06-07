@@ -168,7 +168,7 @@ rmw_create_client(
     goto fail;
   }
 
-  // Create Client Subscriber and set QoS
+  // Create Client Publisher and set QoS
   if (!get_datawriter_qos(*qos_policies, publisherParam)) {
     RMW_SET_ERROR_MSG("failed to get datawriter qos");
     goto fail;
@@ -177,7 +177,7 @@ rmw_create_client(
   info->request_publisher_ =
     Domain::createPublisher(participant, publisherParam, info->pub_listener_);
   if (!info->request_publisher_) {
-    RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
+    RMW_SET_ERROR_MSG("create_client() could not create publisher");
     goto fail;
   }
 
