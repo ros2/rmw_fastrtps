@@ -18,9 +18,10 @@
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
 #include <cassert>
-#include <regex>
 #include <sstream>
 #include <string>
+
+#include "rcpputils/find_and_replace.hpp"
 
 #include "rmw_fastrtps_dynamic_cpp/ServiceTypeSupport.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
@@ -45,7 +46,7 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
   std::string service_name(members->service_name_);
   if (!service_namespace.empty()) {
     // Find and replace C namespace separator with C++, in case this is using C typesupport
-    service_namespace = std::regex_replace(service_namespace, std::regex("__"), "::");
+    service_namespace = rcpputils::find_and_replace(service_namespace, "__", "::");
     ss << service_namespace << "::";
   }
   ss << "dds_::" << service_name << "_Request_";
@@ -74,7 +75,7 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
   std::string service_name(members->service_name_);
   if (!service_namespace.empty()) {
     // Find and replace C namespace separator with C++, in case this is using C typesupport
-    service_namespace = std::regex_replace(service_namespace, std::regex("__"), "::");
+    service_namespace = rcpputils::find_and_replace(service_namespace, "__", "::");
     ss << service_namespace << "::";
   }
   ss << "dds_::" << service_name << "_Response_";
