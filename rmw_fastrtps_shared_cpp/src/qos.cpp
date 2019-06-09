@@ -169,3 +169,78 @@ is_valid_qos(const rmw_qos_profile_t & qos_policies)
   }
   return true;
 }
+
+template<typename AttributeT>
+void
+dds_qos_to_rmw_qos(
+  const AttributeT & dds_qos,
+  rmw_qos_profile_t * qos)
+{
+  switch (dds_qos.topic.historyQos.kind) {
+    case eprosima::fastrtps::KEEP_LAST_HISTORY_QOS:
+      qos->history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
+      break;
+    case eprosima::fastrtps::KEEP_ALL_HISTORY_QOS:
+      qos->history = RMW_QOS_POLICY_HISTORY_KEEP_ALL;
+      break;
+    default:
+      qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
+      break;
+  }
+  qos->depth = static_cast<size_t>(dds_qos.topic.historyQos.depth);
+
+  switch (dds_qos.qos.m_reliability.kind) {
+    case eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+      break;
+    case eprosima::fastrtps::RELIABLE_RELIABILITY_QOS:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
+      break;
+    default:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_UNKNOWN;
+      break;
+  }
+
+  switch (dds_qos.qos.m_durability.kind) {
+    case eprosima::fastrtps::TRANSIENT_LOCAL_DURABILITY_QOS:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
+      break;
+    case eprosima::fastrtps::VOLATILE_DURABILITY_QOS:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_VOLATILE;
+      break;
+    default:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_UNKNOWN;
+      break;
+  }
+
+  qos->deadline.sec = dds_qos.qos.m_deadline.period.seconds;
+  qos->deadline.nsec = dds_qos.qos.m_deadline.period.nanosec;
+
+  qos->lifespan.sec = dds_qos.qos.m_lifespan.duration.seconds;
+  qos->lifespan.nsec = dds_qos.qos.m_lifespan.duration.nanosec;
+
+  switch (dds_qos.qos.m_liveliness.kind) {
+    case eprosima::fastrtps::AUTOMATIC_LIVELINESS_QOS:
+      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
+      break;
+    case eprosima::fastrtps::MANUAL_BY_PARTICIPANT_LIVELINESS_QOS:
+      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE;
+      break;
+    case eprosima::fastrtps::MANUAL_BY_TOPIC_LIVELINESS_QOS:
+      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC;
+      break;
+    default:
+      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_UNKNOWN;
+      break;
+  }
+  qos->liveliness_lease_duration.sec = dds_qos.qos.m_liveliness.lease_duration.seconds;
+  qos->liveliness_lease_duration.nsec = dds_qos.qos.m_liveliness.lease_duration.nanosec;
+}
+
+template void dds_qos_to_rmw_qos<eprosima::fastrtps::PublisherAttributes>(
+  const eprosima::fastrtps::PublisherAttributes & dds_qos,
+  rmw_qos_profile_t * qos);
+
+template void dds_qos_to_rmw_qos<eprosima::fastrtps::SubscriberAttributes>(
+  const eprosima::fastrtps::SubscriberAttributes & dds_qos,
+  rmw_qos_profile_t * qos);
