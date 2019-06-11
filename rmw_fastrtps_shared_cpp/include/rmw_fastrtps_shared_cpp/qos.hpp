@@ -50,4 +50,16 @@ dds_qos_to_rmw_qos(
   const AttributeT & dds_qos,
   rmw_qos_profile_t * qos);
 
+extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
+void
+dds_qos_to_rmw_qos<eprosima::fastrtps::PublisherAttributes>(
+  const eprosima::fastrtps::PublisherAttributes & dds_qos,
+  rmw_qos_profile_t * qos);
+
+extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
+void
+dds_qos_to_rmw_qos<eprosima::fastrtps::SubscriberAttributes>(
+  const eprosima::fastrtps::SubscriberAttributes & dds_qos,
+  rmw_qos_profile_t * qos);
+
 #endif  // RMW_FASTRTPS_SHARED_CPP__QOS_HPP_

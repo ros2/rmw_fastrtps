@@ -237,10 +237,12 @@ dds_qos_to_rmw_qos(
   qos->liveliness_lease_duration.nsec = dds_qos.qos.m_liveliness.lease_duration.nanosec;
 }
 
-template void dds_qos_to_rmw_qos<eprosima::fastrtps::PublisherAttributes>(
+template
+void dds_qos_to_rmw_qos<eprosima::fastrtps::PublisherAttributes>(
   const eprosima::fastrtps::PublisherAttributes & dds_qos,
   rmw_qos_profile_t * qos);
 
-template void dds_qos_to_rmw_qos<eprosima::fastrtps::SubscriberAttributes>(
+template
+void dds_qos_to_rmw_qos<eprosima::fastrtps::SubscriberAttributes>(
   const eprosima::fastrtps::SubscriberAttributes & dds_qos,
   rmw_qos_profile_t * qos);
