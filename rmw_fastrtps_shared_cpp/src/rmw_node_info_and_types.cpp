@@ -385,15 +385,18 @@ __rmw_get_publisher_names_and_types_by_node(
            node_namespace, no_demangle, retrieve_pub_cache, topic_names_and_types);
 }
 
+static
 rmw_ret_t
-__rmw_get_service_names_and_types_by_node(
+__get_service_names_and_types_by_node(
   const char * identifier,
   const rmw_node_t * node,
   rcutils_allocator_t * allocator,
   const char * node_name,
   const char * node_namespace,
-  rmw_names_and_types_t * service_names_and_types)
+  rmw_names_and_types_t * service_names_and_types,
+  const char * topic_suffix)
 {
+  const std::string topic_suffix_stdstr(topic_suffix);
   rmw_ret_t valid_input = __validate_input(identifier, node, allocator, node_name,
       node_namespace, service_names_and_types);
   if (valid_input != RMW_RET_OK) {
@@ -420,6 +423,15 @@ __rmw_get_service_names_and_types_by_node(
           // not a service
           continue;
         }
+        // Check if the topic suffix matches and is at the end of the name
+        const std::string & topic_name = topic_pair.first;
+        auto suffix_position = topic_name.rfind(topic_suffix_stdstr);
+        if (suffix_position == std::string::npos ||
+          topic_name.length() - suffix_position - topic_suffix_stdstr.length() != 0)
+        {
+          continue;
+        }
+
         for (auto & itt : topic_pair.second) {
           std::string service_type = _demangle_service_type_only(itt);
           if (!service_type.empty()) {
@@ -484,4 +496,43 @@ __rmw_get_service_names_and_types_by_node(
   }      // for each service
   return RMW_RET_OK;
 }
+
+rmw_ret_t
+__rmw_get_service_names_and_types_by_node(
+  const char * identifier,
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * node_name,
+  const char * node_namespace,
+  rmw_names_and_types_t * service_names_and_types)
+{
+  return __get_service_names_and_types_by_node(
+    identifier,
+    node,
+    allocator,
+    node_name,
+    node_namespace,
+    service_names_and_types,
+    "Request");
+}
+
+rmw_ret_t
+__rmw_get_client_names_and_types_by_node(
+  const char * identifier,
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * node_name,
+  const char * node_namespace,
+  rmw_names_and_types_t * service_names_and_types)
+{
+  return __get_service_names_and_types_by_node(
+    identifier,
+    node,
+    allocator,
+    node_name,
+    node_namespace,
+    service_names_and_types,
+    "Reply");
+}
+
 }  // namespace rmw_fastrtps_shared_cpp

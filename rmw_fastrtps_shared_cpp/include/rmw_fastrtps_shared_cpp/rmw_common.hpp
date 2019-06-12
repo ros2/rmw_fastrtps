@@ -228,6 +228,16 @@ __rmw_get_service_names_and_types_by_node(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_get_client_names_and_types_by_node(
+  const char * identifier,
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * node_name,
+  const char * node_namespace,
+  rmw_names_and_types_t * service_names_and_types);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_get_subscriber_names_and_types_by_node(
   const char * identifier,
   const rmw_node_t * node,

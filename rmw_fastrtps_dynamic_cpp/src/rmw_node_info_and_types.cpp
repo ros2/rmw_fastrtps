@@ -80,4 +80,21 @@ rmw_get_service_names_and_types_by_node(
     node_namespace,
     service_names_and_types);
 }
+
+rmw_ret_t
+rmw_get_client_names_and_types_by_node(
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * node_name,
+  const char * node_namespace,
+  rmw_names_and_types_t * service_names_and_types)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_get_client_names_and_types_by_node(
+    eprosima_fastrtps_identifier,
+    node,
+    allocator,
+    node_name,
+    node_namespace,
+    service_names_and_types);
+}
 }  // extern "C"
