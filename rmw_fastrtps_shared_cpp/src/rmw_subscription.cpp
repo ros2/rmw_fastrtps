@@ -106,4 +106,27 @@ __rmw_subscription_count_matched_publishers(
   return RMW_RET_OK;
 }
 
+rmw_ret_t
+__rmw_subscription_get_actual_qos(
+  const rmw_subscription_t * subscription,
+  rmw_qos_profile_t * qos)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(subscription, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
+
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  if (info == nullptr) {
+    return RMW_RET_ERROR;
+  }
+  eprosima::fastrtps::Subscriber * fastrtps_sub = info->subscriber_;
+  if (fastrtps_sub == nullptr) {
+    return RMW_RET_ERROR;
+  }
+  const eprosima::fastrtps::SubscriberAttributes & attributes =
+    fastrtps_sub->getAttributes();
+
+  dds_qos_to_rmw_qos(attributes, qos);
+
+  return RMW_RET_OK;
+}
 }  // namespace rmw_fastrtps_shared_cpp
