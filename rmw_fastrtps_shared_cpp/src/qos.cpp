@@ -95,7 +95,7 @@ bool fill_entity_qos_from_profile(
     eprosima::fastrtps::KEEP_LAST_HISTORY_QOS == history_qos.kind &&
     static_cast<size_t>(history_qos.depth) < qos_policies.depth)
   {
-    if (qos_policies.depth > (std::numeric_limits<int32_t>::max)()) {
+    if (qos_policies.depth > static_cast<size_t>((std::numeric_limits<int32_t>::max)())) {
       RMW_SET_ERROR_MSG(
         "failed to set history depth since the requested queue size exceeds the DDS type");
       return false;
