@@ -158,12 +158,8 @@ get_datawriter_qos(
 }
 
 bool
-is_valid_qos(const rmw_qos_profile_t & qos_policies)
+is_valid_qos(const rmw_qos_profile_t & /* qos_policies */)
 {
-  if (qos_policies.liveliness == RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE) {
-    RMW_SET_ERROR_MSG("Liveliness policy MANUAL_BY_NODE is not yet supported for fastrtps.");
-    return false;
-  }
   return true;
 }
 
