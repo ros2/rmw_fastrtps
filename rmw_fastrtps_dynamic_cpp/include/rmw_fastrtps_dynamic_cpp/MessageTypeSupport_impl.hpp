@@ -20,9 +20,10 @@
 
 #include <cassert>
 #include <memory>
-#include <regex>
 #include <sstream>
 #include <string>
+
+#include "rcpputils/find_and_replace.hpp"
 
 #include "rmw_fastrtps_dynamic_cpp/MessageTypeSupport.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
@@ -41,7 +42,7 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType * members)
   std::string message_name(this->members_->message_name_);
   if (!message_namespace.empty()) {
     // Find and replace C namespace separator with C++, in case this is using C typesupport
-    message_namespace = std::regex_replace(message_namespace, std::regex("__"), "::");
+    message_namespace = rcpputils::find_and_replace(message_namespace, "__", "::");
     ss << message_namespace << "::";
   }
   ss << "dds_::" << message_name << "_";
