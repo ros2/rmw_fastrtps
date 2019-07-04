@@ -47,8 +47,6 @@ find_package(rosidl_typesupport_fastrtps_cpp REQUIRED)
 find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 
-include_directories(include)
-
 add_library(rmw_fastrtps_dynamic_cpp
   src/client_service_common.cpp
   src/get_client.cpp
@@ -85,6 +83,11 @@ add_library(rmw_fastrtps_dynamic_cpp
   src/rmw_wait_set.cpp
   src/type_support_common.cpp
   src/serialization_format.cpp
+)
+target_include_directories(rmw_fastrtps_dynamic_cpp
+  INTERFACE ${fastcdr_INCLUDE_DIR}
+  INTERFACE ${fastrtps_INCLUDE_DIR}
+  PRIVATE include
 )
 target_link_libraries(rmw_fastrtps_dynamic_cpp
   fastcdr fastrtps)

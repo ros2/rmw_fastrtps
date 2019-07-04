@@ -44,7 +44,6 @@ find_package(fastrtps REQUIRED CONFIG)
 find_package(FastRTPS REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
-include_directories(include)
 
 add_library(rmw_fastrtps_shared_cpp
   src/custom_publisher_info.cpp
@@ -76,7 +75,11 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_wait_set.cpp
   src/TypeSupport_impl.cpp
 )
-
+target_include_directories(rmw_fastrtps_shared_cpp
+  INTERFACE ${fastcdr_INCLUDE_DIR}
+  INTERFACE ${fastrtps_INCLUDE_DIR}
+  PRIVATE include
+)
 target_link_libraries(rmw_fastrtps_shared_cpp
   fastcdr fastrtps
 )
