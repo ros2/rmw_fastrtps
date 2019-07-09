@@ -63,6 +63,8 @@ rmw_ret_t __get_guid_by_name(
     guid = impl->participant->getGuid();
   } else {
     std::set<GUID_t> nodes_in_desired_namespace;
+    std::lock_guard<std::mutex> guard(impl->listener->names_mutex_);
+
     auto namespaces = impl->listener->discovered_namespaces;
     for (auto & guid_to_namespace : impl->listener->discovered_namespaces) {
       if (guid_to_namespace.second == node_namespace) {
@@ -284,6 +286,7 @@ __log_debug_information(const CustomParticipantInfo & impl)
     }
     {
       std::stringstream ss;
+      std::lock_guard<std::mutex> guard(impl.listener->names_mutex_);
       for (auto & node_pair : impl.listener->discovered_names) {
         ss << node_pair.first << " : " << node_pair.second << " ";
       }
@@ -291,6 +294,7 @@ __log_debug_information(const CustomParticipantInfo & impl)
     }
     {
       std::stringstream ss;
+      std::lock_guard<std::mutex> guard(impl.listener->names_mutex_);
       for (auto & node_pair : impl.listener->discovered_namespaces) {
         ss << node_pair.first << " : " << node_pair.second << " ";
       }
