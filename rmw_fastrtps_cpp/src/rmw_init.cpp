@@ -12,10 +12,46 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <fastrtps/log/Log.h>
+#include <memory>
+
+#include "rcutils/logging_macros.h"
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
-
 #include "rmw_fastrtps_cpp/identifier.hpp"
+
+using eprosima::fastrtps::LogConsumer;
+using eprosima::fastrtps::Log;
+
+class RcutilsLogConsumer : public LogConsumer
+{
+public:
+  RcutilsLogConsumer()
+  {
+  }
+
+  virtual ~RcutilsLogConsumer()
+  {
+  }
+
+  virtual void Consume(const Log::Entry & entry)
+  {
+    const char * logger_name = "rmw_fastrtps";
+    switch (entry.kind) {
+      case Log::Kind::Error:
+        RCUTILS_LOG_ERROR_NAMED(logger_name, "%s", entry.message.c_str());
+        break;
+
+      case Log::Kind::Warning:
+        RCUTILS_LOG_WARN_NAMED(logger_name, "%s", entry.message.c_str());
+        break;
+
+      case Log::Kind::Info:
+        RCUTILS_LOG_DEBUG_NAMED(logger_name, "%s", entry.message.c_str());
+        break;
+    }
+  }
+};
 
 extern "C"
 {
@@ -77,6 +113,14 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     options->implementation_identifier,
     eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
+  // Forward fastrtps log messages into rcl logging system.
+  LogConsumer * my_consumer = new RcutilsLogConsumer();
+  Log::Reset();
+  Log::ClearConsumers();
+  Log::RegisterConsumer(std::unique_ptr<LogConsumer>(my_consumer));
+  Log::SetVerbosity(Log::Info);
+
   context->instance_id = options->instance_id;
   context->implementation_identifier = eprosima_fastrtps_identifier;
   context->impl = nullptr;
