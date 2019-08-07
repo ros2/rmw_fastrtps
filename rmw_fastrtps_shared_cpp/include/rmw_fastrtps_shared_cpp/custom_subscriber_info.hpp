@@ -80,7 +80,11 @@ public:
   {
     // Make sure to call into Fast-RTPS before taking the lock to avoid an
     // ABBA deadlock between internalMutex_ and mutexes inside of Fast-RTPS.
+#if FASTRTPS_VERSION_MAJOR == 1 && FASTRTPS_VERSION_MINOR < 9
     uint64_t unread_count = sub->getUnreadCount();
+#else
+    uint64_t unread_count = sub->get_unread_count();
+#endif
 
     std::lock_guard<std::mutex> lock(internalMutex_);
 
@@ -140,7 +144,11 @@ public:
   {
     // Make sure to call into Fast-RTPS before taking the lock to avoid an
     // ABBA deadlock between internalMutex_ and mutexes inside of Fast-RTPS.
+#if FASTRTPS_VERSION_MAJOR == 1 && FASTRTPS_VERSION_MINOR < 9
     uint64_t unread_count = sub->getUnreadCount();
+#else
+    uint64_t unread_count = sub->get_unread_count();
+#endif
 
     std::lock_guard<std::mutex> lock(internalMutex_);
     ConditionalScopedLock clock(conditionMutex_);
