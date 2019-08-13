@@ -198,6 +198,7 @@ rmw_create_publisher(
     RMW_SET_ERROR_MSG("failed to allocate publisher");
     goto fail;
   }
+  rmw_publisher->can_loan_messages = false;
   rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_publisher->data = info;
   rmw_publisher->topic_name = reinterpret_cast<char *>(rmw_allocate(strlen(topic_name) + 1));
@@ -254,6 +255,30 @@ rmw_publisher_get_actual_qos(
 {
   return rmw_fastrtps_shared_cpp::__rmw_publisher_get_actual_qos(
     publisher, qos);
+}
+
+void *
+rmw_allocate_loaned_message(
+  const rmw_publisher_t * publisher,
+  const rosidl_message_type_support_t * type_support,
+  size_t message_size)
+{
+  (void) publisher;
+  (void) type_support;
+  (void) message_size;
+
+  return nullptr;
+}
+
+rmw_ret_t
+rmw_deallocate_loaned_message(
+  const rmw_publisher_t * publisher,
+  void * loaned_message)
+{
+  (void) publisher;
+  (void) loaned_message;
+
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
