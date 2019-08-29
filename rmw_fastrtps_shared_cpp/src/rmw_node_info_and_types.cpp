@@ -85,7 +85,7 @@ rmw_ret_t __get_guid_by_name(
         kLoggerTag,
         "Unable to find GUID for node: %s", node_name);
       RMW_SET_ERROR_MSG("Unable to find GUID for node ");
-      return RMW_RET_ERROR;
+      return RMW_RET_NON_EXISTENT_NODE_NAME;
     }
     guid = guid_node_pair->first;
   }
