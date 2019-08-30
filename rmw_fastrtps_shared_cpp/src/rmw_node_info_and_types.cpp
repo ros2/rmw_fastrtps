@@ -81,7 +81,11 @@ rmw_ret_t __get_guid_by_name(
         });
 
     if (guid_node_pair == impl->listener->discovered_names.end()) {
-      RMW_SET_ERROR_MSG("Node name not found: ns='%s', name='%s", node_namespace, node_name);
+      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+        "Node name not found: ns='%s', name='%s",
+        node_namespace,
+        node_name
+      );
       return RMW_RET_NODE_NAME_NON_EXISTENT;
     }
     guid = guid_node_pair->first;
