@@ -37,6 +37,7 @@ find_package(ament_cmake_ros REQUIRED)
 
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
+find_package(rmw_dds_common REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr REQUIRED CONFIG)
@@ -49,8 +50,11 @@ include_directories(include)
 add_library(rmw_fastrtps_shared_cpp
   src/custom_publisher_info.cpp
   src/custom_subscriber_info.cpp
+  src/create_rmw_gid.cpp
   src/demangle.cpp
   src/namespace_prefix.cpp
+  src/participant.cpp
+  src/publisher.cpp
   src/qos.cpp
   src/rmw_client.cpp
   src/rmw_compare_gids_equal.cpp
@@ -76,6 +80,7 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_trigger_guard_condition.cpp
   src/rmw_wait.cpp
   src/rmw_wait_set.cpp
+  src/subscription.cpp
   src/TypeSupport_impl.cpp
 )
 
@@ -88,6 +93,7 @@ ament_target_dependencies(rmw_fastrtps_shared_cpp
   "rcpputils"
   "rcutils"
   "rmw"
+  "rmw_dds_common"
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,

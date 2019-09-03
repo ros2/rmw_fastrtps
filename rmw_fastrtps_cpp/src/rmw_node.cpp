@@ -1,3 +1,4 @@
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 // Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -23,11 +24,13 @@
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
+#include "rmw/ret_types.h"
 #include "rmw/rmw.h"
 
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_cpp/register_node.hpp"
 
 extern "C"
 {
@@ -37,25 +40,37 @@ rmw_create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
-  const rmw_node_security_options_t * security_options,
+  const rmw_security_options_t * security_options,
   bool localhost_only)
 {
+  (void)domain_id;
+  (void)security_options;
+  (void)localhost_only;
   RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     init context,
     context->implementation_identifier,
     eprosima_fastrtps_identifier,
     // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
-    return NULL);
+    return nullptr);
+
+  if (RMW_RET_OK != rmw_fastrtps_cpp::register_node(context)) {
+    return nullptr;
+  }
+
   return rmw_fastrtps_shared_cpp::__rmw_create_node(
-    eprosima_fastrtps_identifier, name, namespace_, domain_id, security_options, localhost_only);
+    context, eprosima_fastrtps_identifier, name, namespace_);
 }
 
 rmw_ret_t
 rmw_destroy_node(rmw_node_t * node)
 {
-  return rmw_fastrtps_shared_cpp::__rmw_destroy_node(
+  rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_destroy_node(
     eprosima_fastrtps_identifier, node);
+  if (RMW_RET_OK != ret) {
+    return ret;
+  }
+  return rmw_fastrtps_cpp::unregister_node(node->context);
 }
 
 rmw_ret_t

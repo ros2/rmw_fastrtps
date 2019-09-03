@@ -1,3 +1,4 @@
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 // Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,9 +15,6 @@
 
 #include <string>
 
-#include "fastrtps/Domain.h"
-#include "fastrtps/participant/Participant.h"
-
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
@@ -25,19 +23,18 @@
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
+#include "rmw_fastrtps_shared_cpp/publisher.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
-
-using Domain = eprosima::fastrtps::Domain;
-using Participant = eprosima::fastrtps::Participant;
 
 namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
 __rmw_destroy_publisher(
   const char * identifier,
-  rmw_node_t * node,
+  const rmw_node_t * node,
   rmw_publisher_t * publisher)
 {
   if (!node) {
@@ -50,41 +47,30 @@ __rmw_destroy_publisher(
     return RMW_RET_ERROR;
   }
 
-  if (!publisher) {
-    RMW_SET_ERROR_MSG("publisher handle is null");
-    return RMW_RET_ERROR;
+  auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
+  auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
+  {
+    // Update graph
+    std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
+    rmw_dds_common::msg::ParticipantEntitiesInfo msg =
+      common_context->graph_cache.dissociate_writer(
+      info->publisher_gid, common_context->gid, node->name, node->namespace_);
+    rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
+      identifier,
+      common_context->pub,
+      &msg,
+      nullptr);
+    if (RMW_RET_OK != rmw_ret) {
+      return rmw_ret;
+    }
   }
 
-  if (publisher->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("publisher handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  if (info != nullptr) {
-    if (info->publisher_ != nullptr) {
-      Domain::removePublisher(info->publisher_);
-    }
-    if (info->listener_ != nullptr) {
-      delete info->listener_;
-    }
-    if (info->type_support_ != nullptr) {
-      auto impl = static_cast<CustomParticipantInfo *>(node->data);
-      if (!impl) {
-        RMW_SET_ERROR_MSG("node impl is null");
-        return RMW_RET_ERROR;
-      }
-
-      Participant * participant = impl->participant;
-      _unregister_type(participant, info->type_support_);
-    }
-    delete info;
-  }
-  rmw_free(const_cast<char *>(publisher->topic_name));
-  publisher->topic_name = nullptr;
-  rmw_publisher_free(publisher);
-
-  return RMW_RET_OK;
+  auto participant_info =
+    static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
+  return destroy_publisher(
+    identifier,
+    participant_info,
+    publisher);
 }
 
 rmw_ret_t

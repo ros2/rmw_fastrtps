@@ -32,6 +32,7 @@ endif()
 find_package(ament_cmake_ros REQUIRED)
 
 find_package(rcutils REQUIRED)
+find_package(rmw_dds_common REQUIRED)
 find_package(rmw_fastrtps_shared_cpp REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
@@ -53,6 +54,9 @@ add_library(rmw_fastrtps_cpp
   src/get_service.cpp
   src/get_subscriber.cpp
   src/identifier.cpp
+  src/listener_thread.cpp
+  src/publisher.cpp
+  src/register_node.cpp
   src/rmw_logging.cpp
   src/rmw_client.cpp
   src/rmw_compare_gids_equal.cpp
@@ -71,6 +75,7 @@ add_library(rmw_fastrtps_cpp
   src/rmw_publisher.cpp
   src/rmw_request.cpp
   src/rmw_response.cpp
+  src/rmw_security.cpp
   src/rmw_serialize.cpp
   src/rmw_service.cpp
   src/rmw_service_names_and_types.cpp
@@ -82,7 +87,11 @@ add_library(rmw_fastrtps_cpp
   src/rmw_wait.cpp
   src/rmw_wait_set.cpp
   src/serialization_format.cpp
+  src/subscription.cpp
   src/type_support_common.cpp
+  src/gid__type_support.cpp
+  src/node_entities_info__type_support.cpp
+  src/participant_entities_info__type_support.cpp
 )
 target_link_libraries(rmw_fastrtps_cpp
   fastcdr fastrtps)
@@ -92,6 +101,7 @@ ament_target_dependencies(rmw_fastrtps_cpp
   "rcutils"
   "rosidl_typesupport_fastrtps_c"
   "rosidl_typesupport_fastrtps_cpp"
+  "rmw_dds_common"
   "rmw_fastrtps_shared_cpp"
   "rmw"
   "rosidl_generator_c"
@@ -122,6 +132,11 @@ register_rmw_implementation(
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  ament_add_gtest(test_gid_message test/test_gid_message.cpp)
+  if(TARGET test_gid_message)
+    target_link_libraries(test_gid_message ${PROJECT_NAME})
+  endif()
 endif()
 
 ament_package(

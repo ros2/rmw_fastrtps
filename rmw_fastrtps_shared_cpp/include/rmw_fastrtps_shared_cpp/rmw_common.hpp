@@ -86,12 +86,10 @@ __rmw_set_log_severity(rmw_log_severity_t severity);
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_node_t *
 __rmw_create_node(
+  rmw_context_t * context,
   const char * identifier,
   const char * name,
-  const char * namespace_,
-  size_t domain_id,
-  const rmw_node_security_options_t * security_options,
-  bool localhost_only);
+  const char * namespace_);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
@@ -152,7 +150,7 @@ RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 __rmw_destroy_publisher(
   const char * identifier,
-  rmw_node_t * node,
+  const rmw_node_t * node,
   rmw_publisher_t * publisher);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -270,7 +268,7 @@ RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 __rmw_destroy_subscription(
   const char * identifier,
-  rmw_node_t * node,
+  const rmw_node_t * node,
   rmw_subscription_t * subscription);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC

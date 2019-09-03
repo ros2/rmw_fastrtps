@@ -20,6 +20,7 @@
 #include <string>
 #include <vector>
 
+#include "fastrtps/rtps/common/InstanceHandle.h"
 #include "fastrtps/attributes/ParticipantAttributes.h"
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/participant/ParticipantListener.h"
@@ -27,12 +28,16 @@
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rcutils/logging_macros.h"
 
-#include "rmw/impl/cpp/key_value.hpp"
+#include "rmw/qos_profiles.h"
 #include "rmw/rmw.h"
 
-#include "rmw_common.hpp"
+#include "rmw_dds_common/context.hpp"
 
-#include "topic_cache.hpp"
+#include "rmw_fastrtps_shared_cpp/create_rmw_gid.hpp"
+#include "rmw_fastrtps_shared_cpp/qos.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+
+using rmw_dds_common::operator<<;
 
 class ParticipantListener;
 
@@ -53,88 +58,28 @@ typedef struct CustomParticipantInfo
 class ParticipantListener : public eprosima::fastrtps::ParticipantListener
 {
 public:
-  explicit ParticipantListener(rmw_guard_condition_t * graph_guard_condition)
-  : graph_guard_condition_(graph_guard_condition)
+  explicit ParticipantListener(
+    rmw_guard_condition_t * graph_guard_condition,
+    rmw_dds_common::Context * context)
+  : context(context),
+    graph_guard_condition_(graph_guard_condition)
   {}
 
   void onParticipantDiscovery(
     eprosima::fastrtps::Participant *,
     eprosima::fastrtps::rtps::ParticipantDiscoveryInfo && info) override
   {
+    // We aren't monitoring discovered participants, just dropped and removed.
+    // Participants are added to the Graph when they send a ParticipantEntitiesInfo message.
     if (
-      info.status != eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DISCOVERED_PARTICIPANT &&
       info.status != eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::REMOVED_PARTICIPANT &&
       info.status != eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DROPPED_PARTICIPANT)
     {
       return;
     }
-
-    std::lock_guard<std::mutex> guard(names_mutex_);
-    if (eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DISCOVERED_PARTICIPANT == info.status) {
-      // ignore already known GUIDs
-      if (discovered_names.find(info.info.m_guid) == discovered_names.end()) {
-        auto map = rmw::impl::cpp::parse_key_value(info.info.m_userData);
-        auto name_found = map.find("name");
-        auto ns_found = map.find("namespace");
-
-        std::string name;
-        if (name_found != map.end()) {
-          name = std::string(name_found->second.begin(), name_found->second.end());
-        }
-
-        std::string namespace_;
-        if (ns_found != map.end()) {
-          namespace_ = std::string(ns_found->second.begin(), ns_found->second.end());
-        }
-
-        if (name.empty()) {
-          // use participant name if no name was found in the user data
-          name = info.info.m_participantName;
-        }
-        // ignore discovered participants without a name
-        if (!name.empty()) {
-          discovered_names[info.info.m_guid] = name;
-          discovered_namespaces[info.info.m_guid] = namespace_;
-        }
-      }
-    } else {
-      {
-        auto it = discovered_names.find(info.info.m_guid);
-        // only consider known GUIDs
-        if (it != discovered_names.end()) {
-          discovered_names.erase(it);
-        }
-      }
-      {
-        auto it = discovered_namespaces.find(info.info.m_guid);
-        // only consider known GUIDs
-        if (it != discovered_namespaces.end()) {
-          discovered_namespaces.erase(it);
-        }
-      }
-    }
-  }
-
-  std::vector<std::string> get_discovered_names() const
-  {
-    std::lock_guard<std::mutex> guard(names_mutex_);
-    std::vector<std::string> names(discovered_names.size());
-    size_t i = 0;
-    for (auto it : discovered_names) {
-      names[i++] = it.second;
-    }
-    return names;
-  }
-
-  std::vector<std::string> get_discovered_namespaces() const
-  {
-    std::lock_guard<std::mutex> guard(names_mutex_);
-    std::vector<std::string> namespaces(discovered_namespaces.size());
-    size_t i = 0;
-    for (auto it : discovered_namespaces) {
-      namespaces[i++] = it.second;
-    }
-    return namespaces;
+    context->graph_cache.remove_participant(
+      rmw_fastrtps_shared_cpp::create_rmw_gid(
+        graph_guard_condition_->implementation_identifier, info.info.m_guid));
   }
 
   void onSubscriberDiscovery(
@@ -159,27 +104,34 @@ public:
     }
   }
 
+private:
   template<class T>
-  void process_discovery_info(T & proxyData, bool is_alive, bool is_reader)
+  void
+  process_discovery_info(T & proxyData, bool is_alive, bool is_reader)
   {
-    auto & topic_cache =
-      is_reader ? reader_topic_cache : writer_topic_cache;
     bool trigger;
     {
-      std::lock_guard<std::mutex> guard(topic_cache.getMutex());
       if (is_alive) {
-        trigger = topic_cache().addTopic(
-          proxyData.RTPSParticipantKey(),
-          proxyData.guid(),
+        rmw_qos_profile_t qos_profile = rmw_qos_profile_unknown;
+        dds_qos_to_rmw_qos(proxyData.m_qos, &qos_profile);
+
+        trigger = context->graph_cache.add_entity(
+          rmw_fastrtps_shared_cpp::create_rmw_gid(
+            graph_guard_condition_->implementation_identifier,
+            proxyData.guid()),
           proxyData.topicName().to_string(),
           proxyData.typeName().to_string(),
-          proxyData.m_qos);
+          rmw_fastrtps_shared_cpp::create_rmw_gid(
+            graph_guard_condition_->implementation_identifier,
+            iHandle2GUID(proxyData.RTPSParticipantKey())),
+          qos_profile,
+          is_reader);
       } else {
-        trigger = topic_cache().removeTopic(
-          proxyData.RTPSParticipantKey(),
-          proxyData.guid(),
-          proxyData.topicName().to_string(),
-          proxyData.typeName().to_string());
+        trigger = context->graph_cache.remove_entity(
+          rmw_fastrtps_shared_cpp::create_rmw_gid(
+            graph_guard_condition_->implementation_identifier,
+            proxyData.guid()),
+          is_reader);
       }
     }
     if (trigger) {
@@ -189,12 +141,7 @@ public:
     }
   }
 
-  using guid_map_t = std::map<eprosima::fastrtps::rtps::GUID_t, std::string>;
-  mutable std::mutex names_mutex_;
-  guid_map_t discovered_names RCPPUTILS_TSA_GUARDED_BY(names_mutex_);
-  guid_map_t discovered_namespaces RCPPUTILS_TSA_GUARDED_BY(names_mutex_);
-  LockedObject<TopicCache> reader_topic_cache;
-  LockedObject<TopicCache> writer_topic_cache;
+  rmw_dds_common::Context * context;
   rmw_guard_condition_t * graph_guard_condition_;
 };
 

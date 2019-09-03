@@ -30,11 +30,13 @@
 #include "rmw/allocators.h"
 #include "rmw/rmw.h"
 
+#include "rmw_fastrtps_shared_cpp/create_rmw_gid.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
@@ -49,7 +51,6 @@ __rmw_destroy_service(
   rmw_node_t * node,
   rmw_service_t * service)
 {
-  (void)node;
   if (!service) {
     RMW_SET_ERROR_MSG("service handle is null");
     return RMW_RET_ERROR;
@@ -58,8 +59,37 @@ __rmw_destroy_service(
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
     return RMW_RET_ERROR;
   }
+  if (!node) {
+    RMW_SET_ERROR_MSG("node handle is null");
+    return RMW_RET_ERROR;
+  }
+  auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
+  auto info = static_cast<CustomServiceInfo *>(service->data);
+  {
+    // Update graph
+    std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
+    rmw_gid_t gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
+      identifier, info->request_subscriber_->getGuid());
+    common_context->graph_cache.dissociate_reader(
+      gid,
+      common_context->gid,
+      node->name,
+      node->namespace_);
+    gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
+      identifier, info->response_publisher_->getGuid());
+    rmw_dds_common::msg::ParticipantEntitiesInfo msg =
+      common_context->graph_cache.dissociate_writer(
+      gid, common_context->gid, node->name, node->namespace_);
+    rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
+      identifier,
+      common_context->pub,
+      &msg,
+      nullptr);
+    if (RMW_RET_OK != rmw_ret) {
+      return rmw_ret;
+    }
+  }
 
-  CustomServiceInfo * info = static_cast<CustomServiceInfo *>(service->data);
   if (info != nullptr) {
     if (info->request_subscriber_ != nullptr) {
       Domain::removeSubscriber(info->request_subscriber_);
