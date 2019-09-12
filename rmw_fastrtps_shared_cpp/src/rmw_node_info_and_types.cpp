@@ -59,7 +59,7 @@ rmw_ret_t __get_guid_by_name(
   const char * node_namespace, GUID_t & guid)
 {
   auto impl = static_cast<CustomParticipantInfo *>(node->data);
-  if (strcmp(node->name, node_name) == 0) {
+  if (strcmp(node->name, node_name) == 0 && strcmp(node->namespace_, node_namespace) == 0) {
     guid = impl->participant->getGuid();
   } else {
     std::set<GUID_t> nodes_in_desired_namespace;
