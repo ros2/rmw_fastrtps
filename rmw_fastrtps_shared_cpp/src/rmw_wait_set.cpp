@@ -47,7 +47,8 @@ __rmw_create_wait_set(const char * identifier, rmw_context_t * context, size_t m
   wait_set->data = rmw_allocate(sizeof(CustomWaitsetInfo));
   // This should default-construct the fields of CustomWaitsetInfo
   wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
-  RMW_TRY_PLACEMENT_NEW(wait_set_info, wait_set_info, goto fail, CustomWaitsetInfo)
+  // cppcheck-suppress syntaxError
+  RMW_TRY_PLACEMENT_NEW(wait_set_info, wait_set_info, goto fail, CustomWaitsetInfo, )
   if (!wait_set_info) {
     RMW_SET_ERROR_MSG("failed to construct wait set info struct");
     goto fail;
