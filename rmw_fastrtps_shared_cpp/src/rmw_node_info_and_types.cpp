@@ -82,7 +82,7 @@ rmw_ret_t __get_guid_by_name(
 
     if (guid_node_pair == impl->listener->discovered_names.end()) {
       RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-        "Node name not found: ns='%s', name='%s",
+        "Node name not found: ns='%s', name='%s'",
         node_namespace,
         node_name
       );
