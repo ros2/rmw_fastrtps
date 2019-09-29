@@ -71,6 +71,62 @@ rmw_take_serialized_message_with_info(
 }
 
 rmw_ret_t
+rmw_take_loaned_message_sequence(
+  const rmw_subscriptions_t * subscription,
+  rmw_loaned_message_sequence_t * loaned_message_sequence,
+  size_t n,
+  bool * taken,
+  rmw_subscription_allocation_t * allocation)
+{
+  (void) subscription;
+  (void) loaned_message_sequence;
+  (void) n;
+  (void) taken;
+  (void) allocation;
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
+rmw_take_loaned_message_sequence_with_info(
+  const rmw_subscriptions_t * subscription,
+  rmw_loaned_message_sequence_t * loaned_message_sequence,
+  rmw_message_info_sequence_t * message_info_sequence,
+  size_t n,
+  bool * taken,
+  rmw_subscription_allocation_t * allocation)
+{
+  (void) subscription;
+  (void) loaned_message_sequence;
+  (void) message_info_sequence;
+  (void) n;
+  (void) taken;
+  (void) allocation;
+  return RMW_RET_ERROR;
+}
+
+void *
+rmw_loaned_message_sequence_at(
+  const rmw_subscription_t * subscription,
+  const rmw_loaned_message_sequence_t * loaned_message_sequence,
+  size_t position)
+{
+  (void) subscription;
+  (void) loaned_message_sequence;
+  (void) position;
+  return nullptr;
+}
+
+rmw_ret_t
+rmw_return_loaned_message_sequence(
+  const rmw_subscription_t * subscription,
+  rmw_loaned_message_sequence_t * loaned_message_sequence)
+{
+  (void) subscription;
+  (void) loaned_message_sequence;
+  return RMW_RET_ERROR;
+}
+
+rmw_ret_t
 rmw_take_event(
   const rmw_event_t * event_handle,
   void * event_info,
