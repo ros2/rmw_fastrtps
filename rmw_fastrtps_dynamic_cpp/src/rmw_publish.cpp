@@ -32,10 +32,10 @@ rmw_publish(
   rmw_publisher_allocation_t * allocation,
   bool is_loaned)
 {
-  if (is_loaned) {
-    RMW_SET_ERROR_MSG("fastrtps dynamic does not support loaned messages");
-    return RMW_RET_ERROR;
-  }
+  // FastRTPS doesn't allow to loan messages.
+  // We therefore don't do anything special when messages are loaned
+  (void) is_loaned;
+
   return rmw_fastrtps_shared_cpp::__rmw_publish(
     eprosima_fastrtps_identifier, publisher, ros_message, allocation);
 }
