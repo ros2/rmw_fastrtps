@@ -31,7 +31,7 @@
  */
 template<typename DDSQoSPolicyT>
 void
-dds_qos_policy_to_rmw_qos(
+dds_qos_to_rmw_qos(
   const DDSQoSPolicyT & dds_qos,
   rmw_qos_profile_t * qos)
 {

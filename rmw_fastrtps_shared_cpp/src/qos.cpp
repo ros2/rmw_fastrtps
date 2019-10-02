@@ -166,7 +166,7 @@ is_valid_qos(const rmw_qos_profile_t & /* qos_policies */)
 
 template<typename AttributeT>
 void
-dds_qos_to_rmw_qos(
+dds_attributes_to_rmw_qos(
   const AttributeT & dds_qos,
   rmw_qos_profile_t * qos)
 {
@@ -182,7 +182,7 @@ dds_qos_to_rmw_qos(
       break;
   }
   qos->depth = static_cast<size_t>(dds_qos.topic.historyQos.depth);
-  dds_qos_policy_to_rmw_qos(dds_qos.qos, qos);
+  dds_qos_to_rmw_qos(dds_qos.qos, qos);
 }
 
 template

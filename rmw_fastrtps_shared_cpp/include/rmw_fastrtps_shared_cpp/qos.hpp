@@ -23,8 +23,8 @@ namespace eprosima
 {
 namespace fastrtps
 {
-class PublisherAttributes;
 class SubscriberAttributes;
+class PublisherAttributes;
 }  // namespace fastrtps
 }  // namespace eprosima
 
