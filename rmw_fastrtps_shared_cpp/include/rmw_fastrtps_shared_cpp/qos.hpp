@@ -23,10 +23,8 @@ namespace eprosima
 {
 namespace fastrtps
 {
-class SubscriberAttributes;
 class PublisherAttributes;
-class WriterQos;
-class ReaderQos;
+class SubscriberAttributes;
 }  // namespace fastrtps
 }  // namespace eprosima
 
@@ -45,29 +43,6 @@ bool
 get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
   eprosima::fastrtps::PublisherAttributes & pattr);
-
-/*
- * Converts the low-level QOS Policy; of type WriterQos or ReaderQos into rmw_qos_profile_t.
- * Since WriterQos and ReaderQos do not have information about history and depth, these values are not set
- * by this function.
- */
-template<typename DDSQoSPolicyT>
-void
-dds_qos_policy_to_rmw_qos(
-  const DDSQoSPolicyT & dds_qos,
-  rmw_qos_profile_t * qos);
-
-extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
-void
-dds_qos_policy_to_rmw_qos<eprosima::fastrtps::WriterQos>(
-  const eprosima::fastrtps::WriterQos & dds_qos,
-  rmw_qos_profile_t * qos);
-
-extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
-void
-dds_qos_policy_to_rmw_qos<eprosima::fastrtps::ReaderQos>(
-  const eprosima::fastrtps::ReaderQos & dds_qos,
-  rmw_qos_profile_t * qos);
 
 template<typename AttributeT>
 void
