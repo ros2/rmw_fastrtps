@@ -52,7 +52,6 @@ add_library(rmw_fastrtps_shared_cpp
   src/demangle.cpp
   src/namespace_prefix.cpp
   src/qos.cpp
-  src/qos_converter.cpp
   src/rmw_client.cpp
   src/rmw_compare_gids_equal.cpp
   src/rmw_count.cpp

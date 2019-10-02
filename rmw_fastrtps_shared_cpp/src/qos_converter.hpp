@@ -16,16 +16,10 @@
 #ifndef QOS_CONVERTER_HPP_
 #define QOS_CONVERTER_HPP_
 
-namespace eprosima
-{
-namespace fastrtps
-{
-class ReaderQos;
-class WriterQos;
-}  // namespace fastrtps
-}  // namespace eprosima
+#include "rmw/types.h"
 
-struct rmw_qos_profile_t;
+#include "fastrtps/qos/WriterQos.h"
+#include "fastrtps/qos/ReaderQos.h"
 
 /*
  * Converts the low-level QOS Policy; of type WriterQos or ReaderQos into rmw_qos_profile_t.
@@ -39,16 +33,54 @@ template<typename DDSQoSPolicyT>
 void
 dds_qos_policy_to_rmw_qos(
   const DDSQoSPolicyT & dds_qos,
-  rmw_qos_profile_t * qos);
+  rmw_qos_profile_t * qos)
+{
+  switch (dds_qos.m_reliability.kind) {
+    case eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
+      break;
+    case eprosima::fastrtps::RELIABLE_RELIABILITY_QOS:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
+      break;
+    default:
+      qos->reliability = RMW_QOS_POLICY_RELIABILITY_UNKNOWN;
+      break;
+  }
 
-extern template
-void dds_qos_policy_to_rmw_qos<eprosima::fastrtps::WriterQos>(
-  const eprosima::fastrtps::WriterQos & dds_qos,
-  rmw_qos_profile_t * qos);
+  switch (dds_qos.m_durability.kind) {
+    case eprosima::fastrtps::TRANSIENT_LOCAL_DURABILITY_QOS:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
+      break;
+    case eprosima::fastrtps::VOLATILE_DURABILITY_QOS:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_VOLATILE;
+      break;
+    default:
+      qos->durability = RMW_QOS_POLICY_DURABILITY_UNKNOWN;
+      break;
+  }
 
-extern template
-void dds_qos_policy_to_rmw_qos<eprosima::fastrtps::ReaderQos>(
-  const eprosima::fastrtps::ReaderQos & dds_qos,
-  rmw_qos_profile_t * qos);
+  qos->deadline.sec = dds_qos.m_deadline.period.seconds;
+  qos->deadline.nsec = dds_qos.m_deadline.period.nanosec;
+
+  qos->lifespan.sec = dds_qos.m_lifespan.duration.seconds;
+  qos->lifespan.nsec = dds_qos.m_lifespan.duration.nanosec;
+
+  switch (dds_qos.m_liveliness.kind) {
+    case eprosima::fastrtps::AUTOMATIC_LIVELINESS_QOS:
+      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
+      break;
+    case eprosima::fastrtps::MANUAL_BY_PARTICIPANT_LIVELINESS_QOS:
+      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE;
+      break;
+    case eprosima::fastrtps::MANUAL_BY_TOPIC_LIVELINESS_QOS:
+      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC;
+      break;
+    default:
+      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_UNKNOWN;
+      break;
+  }
+  qos->liveliness_lease_duration.sec = dds_qos.m_liveliness.lease_duration.seconds;
+  qos->liveliness_lease_duration.nsec = dds_qos.m_liveliness.lease_duration.nanosec;
+}
 
 #endif  // QOS_CONVERTER_HPP_
