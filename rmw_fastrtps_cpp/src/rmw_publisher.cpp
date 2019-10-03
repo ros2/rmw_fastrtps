@@ -261,21 +261,21 @@ rmw_publisher_get_actual_qos(
     publisher, qos);
 }
 
-void *
-rmw_allocate_loaned_message(
+rmw_ret_t
+rmw_borrow_loaned_message(
   const rmw_publisher_t * publisher,
   const rosidl_message_type_support_t * type_support,
-  size_t message_size)
+  void ** ros_message)
 {
   (void) publisher;
   (void) type_support;
-  (void) message_size;
+  (void) ros_message;
 
-  return nullptr;
+  return RMW_RET_ERROR;
 }
 
 rmw_ret_t
-rmw_deallocate_loaned_message(
+rmw_return_loaned_message(
   const rmw_publisher_t * publisher,
   void * loaned_message)
 {

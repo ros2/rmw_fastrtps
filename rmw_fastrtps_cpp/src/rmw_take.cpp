@@ -101,7 +101,7 @@ rmw_take_loaned_message_with_info(
 }
 
 rmw_ret_t
-rmw_return_loaned_message(
+rmw_release_loaned_message(
   const rmw_subscription_t * subscription,
   void * loaned_message)
 {
@@ -169,7 +169,7 @@ rmw_message_info_sequence_at(
 }
 
 rmw_ret_t
-rmw_return_loaned_message_sequence(
+rmw_release_loaned_message_sequence(
   const rmw_subscription_t * subscription,
   rmw_loaned_message_sequence_t * loaned_message_sequence)
 {
