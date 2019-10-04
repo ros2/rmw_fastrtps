@@ -66,7 +66,9 @@ rmw_subscription_t *
 rmw_create_subscription(
   const rmw_node_t * node,
   const rosidl_message_type_support_t * type_supports,
-  const char * topic_name, const rmw_qos_profile_t * qos_policies, bool ignore_local_publications)
+  const char * topic_name,
+  const rmw_qos_profile_t * qos_policies,
+  const rmw_subscription_options_t * subscription_options)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
@@ -84,7 +86,12 @@ rmw_create_subscription(
   }
 
   if (!qos_policies) {
-    RMW_SET_ERROR_MSG("qos_profile is null");
+    RMW_SET_ERROR_MSG("qos_policies is null");
+    return nullptr;
+  }
+
+  if (!subscription_options) {
+    RMW_SET_ERROR_MSG("subscription_options is null");
     return nullptr;
   }
 
@@ -115,7 +122,6 @@ rmw_create_subscription(
     return nullptr;
   }
 
-  (void)ignore_local_publications;
   CustomSubscriberInfo * info = nullptr;
   rmw_subscription_t * rmw_subscription = nullptr;
   eprosima::fastrtps::SubscriberAttributes subscriberParam;
@@ -182,6 +188,9 @@ rmw_create_subscription(
   }
 
   memcpy(const_cast<char *>(rmw_subscription->topic_name), topic_name, strlen(topic_name) + 1);
+
+  rmw_subscription->options = *subscription_options;
+
   return rmw_subscription;
 
 fail:
