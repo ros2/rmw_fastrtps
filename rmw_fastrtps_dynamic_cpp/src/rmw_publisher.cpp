@@ -273,12 +273,13 @@ rmw_borrow_loaned_message(
 rmw_ret_t
 rmw_return_loaned_message(
   const rmw_publisher_t * publisher,
-  void * loaned_message)
+  const void * loaned_message)
 {
   (void) publisher;
   (void) loaned_message;
 
-  return RMW_RET_OK;
+  RMW_SET_ERROR_MSG("fastrtps-dynamic currently doesn't support loaned messages");
+  return RMW_RET_ERROR;
 }
 
 rmw_ret_t
