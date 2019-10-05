@@ -273,7 +273,7 @@ rmw_borrow_loaned_message(
 rmw_ret_t
 rmw_return_loaned_message(
   const rmw_publisher_t * publisher,
-  const void * loaned_message)
+  void * loaned_message)
 {
   (void) publisher;
   (void) loaned_message;
