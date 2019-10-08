@@ -45,7 +45,7 @@ rmw_publish_loaned_message(
   (void) ros_message;
   (void) allocation;
 
-  RMW_SET_ERROR_MSG("fastrtps-dynamic currently doesn't support loaned messages");
+  RMW_SET_ERROR_MSG("rmw_publish_loaned_message is not implemented for rmw_fastrtps_dynamic_cpp");
   return RMW_RET_ERROR;
 }
 

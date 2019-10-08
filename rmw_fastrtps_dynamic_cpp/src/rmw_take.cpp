@@ -81,6 +81,8 @@ rmw_take_loaned_message(
   (void) loaned_message;
   (void) taken;
   (void) allocation;
+
+  RMW_SET_ERROR_MSG("rmw_take_loaned_message is not implemented for rmw_fastrtps_dynamic_cpp");
   return RMW_RET_ERROR;
 }
 
@@ -97,6 +99,9 @@ rmw_take_loaned_message_with_info(
   (void) taken;
   (void) message_info;
   (void) allocation;
+
+  RMW_SET_ERROR_MSG(
+    "rmw_take_loaned_message_with_info is not implemented for rmw_fastrtps_dynamic_cpp");
   return RMW_RET_ERROR;
 }
 
@@ -107,6 +112,8 @@ rmw_release_loaned_message(
 {
   (void) subscription;
   (void) loaned_message;
+
+  RMW_SET_ERROR_MSG("rmw_release_loaned_message is not implemented for rmw_fastrtps_dynamic_cpp");
   return RMW_RET_ERROR;
 }
 
