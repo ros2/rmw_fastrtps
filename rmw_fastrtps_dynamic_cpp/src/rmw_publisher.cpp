@@ -62,7 +62,9 @@ rmw_publisher_t *
 rmw_create_publisher(
   const rmw_node_t * node,
   const rosidl_message_type_support_t * type_supports,
-  const char * topic_name, const rmw_qos_profile_t * qos_policies)
+  const char * topic_name,
+  const rmw_qos_profile_t * qos_policies,
+  const rmw_publisher_options_t * publisher_options)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
@@ -80,7 +82,12 @@ rmw_create_publisher(
   }
 
   if (!qos_policies) {
-    RMW_SET_ERROR_MSG("qos_profile is null");
+    RMW_SET_ERROR_MSG("qos_policies is null");
+    return nullptr;
+  }
+
+  if (!publisher_options) {
+    RMW_SET_ERROR_MSG("publisher_options is null");
     return nullptr;
   }
 
@@ -201,6 +208,9 @@ rmw_create_publisher(
   }
 
   memcpy(const_cast<char *>(rmw_publisher->topic_name), topic_name, strlen(topic_name) + 1);
+
+  rmw_publisher->options = *publisher_options;
+
   return rmw_publisher;
 
 fail:
