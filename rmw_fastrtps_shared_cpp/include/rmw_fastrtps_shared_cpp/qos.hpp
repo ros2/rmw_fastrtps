@@ -46,19 +46,19 @@ get_datawriter_qos(
 
 template<typename AttributeT>
 void
-dds_qos_to_rmw_qos(
+dds_attributes_to_rmw_qos(
   const AttributeT & dds_qos,
   rmw_qos_profile_t * qos);
 
 extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
 void
-dds_qos_to_rmw_qos<eprosima::fastrtps::PublisherAttributes>(
+dds_attributes_to_rmw_qos<eprosima::fastrtps::PublisherAttributes>(
   const eprosima::fastrtps::PublisherAttributes & dds_qos,
   rmw_qos_profile_t * qos);
 
 extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
 void
-dds_qos_to_rmw_qos<eprosima::fastrtps::SubscriberAttributes>(
+dds_attributes_to_rmw_qos<eprosima::fastrtps::SubscriberAttributes>(
   const eprosima::fastrtps::SubscriberAttributes & dds_qos,
   rmw_qos_profile_t * qos);
 

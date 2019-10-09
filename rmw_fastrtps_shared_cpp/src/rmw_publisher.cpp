@@ -144,7 +144,7 @@ __rmw_publisher_get_actual_qos(
   const eprosima::fastrtps::PublisherAttributes & attributes =
     fastrtps_pub->getAttributes();
 
-  dds_qos_to_rmw_qos(attributes, qos);
+  dds_attributes_to_rmw_qos(attributes, qos);
 
   return RMW_RET_OK;
 }

@@ -125,7 +125,7 @@ __rmw_subscription_get_actual_qos(
   const eprosima::fastrtps::SubscriberAttributes & attributes =
     fastrtps_sub->getAttributes();
 
-  dds_qos_to_rmw_qos(attributes, qos);
+  dds_attributes_to_rmw_qos(attributes, qos);
 
   return RMW_RET_OK;
 }

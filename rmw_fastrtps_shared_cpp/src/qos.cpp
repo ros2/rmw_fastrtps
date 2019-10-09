@@ -165,7 +165,7 @@ is_valid_qos(const rmw_qos_profile_t & /* qos_policies */)
 
 template<typename AttributeT>
 void
-dds_qos_to_rmw_qos(
+dds_attributes_to_rmw_qos(
   const AttributeT & dds_qos,
   rmw_qos_profile_t * qos)
 {
@@ -231,11 +231,11 @@ dds_qos_to_rmw_qos(
 }
 
 template
-void dds_qos_to_rmw_qos<eprosima::fastrtps::PublisherAttributes>(
+void dds_attributes_to_rmw_qos<eprosima::fastrtps::PublisherAttributes>(
   const eprosima::fastrtps::PublisherAttributes & dds_qos,
   rmw_qos_profile_t * qos);
 
 template
-void dds_qos_to_rmw_qos<eprosima::fastrtps::SubscriberAttributes>(
+void dds_attributes_to_rmw_qos<eprosima::fastrtps::SubscriberAttributes>(
   const eprosima::fastrtps::SubscriberAttributes & dds_qos,
   rmw_qos_profile_t * qos);
