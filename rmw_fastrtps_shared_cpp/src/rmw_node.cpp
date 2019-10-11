@@ -22,11 +22,13 @@
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
+#include "rmw/host.h"
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
 #include "fastrtps/config.h"
 #include "fastrtps/Domain.h"
+#include "fastrtps/rtps/common/Locator.h"
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/attributes/ParticipantAttributes.h"
 #include "fastrtps/publisher/Publisher.h"
@@ -36,6 +38,7 @@
 #include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/subscriber/SampleInfo.h"
 #include "fastrtps/attributes/SubscriberAttributes.h"
+#include "fastrtps/utils/IPLocator.h"
 
 #include "fastrtps/rtps/RTPSDomain.h"
 
@@ -48,6 +51,8 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
+using IPLocator = eprosima::fastrtps::rtps::IPLocator;
+using Locator_t = eprosima::fastrtps::rtps::Locator_t;
 using Participant = eprosima::fastrtps::Participant;
 using ParticipantAttributes = eprosima::fastrtps::ParticipantAttributes;
 using StatefulReader = eprosima::fastrtps::rtps::StatefulReader;
@@ -236,6 +241,22 @@ __rmw_create_node(
   // since the participant name is not part of the DDS spec
   participantAttrs.rtps.setName(name);
 
+  char * allowed_hosts = NULL;
+  const rmw_ret_t ret_host = rmw_allowed_hosts(allowed_hosts);
+  if (ret_host == RMW_LOCAL_HOST_ENABLED) {
+    Locator_t local_network_interface_locator;
+    static const std::string local_ip_name("127.0.0.1");
+    local_network_interface_locator.kind = 1;
+    local_network_interface_locator.port = 0;
+    IPLocator::setIPv4(local_network_interface_locator, local_ip_name);
+    participantAttrs.rtps.builtin.metatrafficUnicastLocatorList.push_back(
+      local_network_interface_locator);
+    participantAttrs.rtps.builtin.initialPeersList.push_back(local_network_interface_locator);
+    free(allowed_hosts);
+  } else if (ret_host == RMW_INVALID_ALLOWED_HOSTS) {
+    RMW_SET_ERROR_MSG("an invalid host was provided");
+    return nullptr;
+  }
   bool leave_middleware_default_qos = false;
   const char * env_var = "RMW_FASTRTPS_USE_QOS_FROM_XML";
   // Check if the configuration from XML has been enabled from
