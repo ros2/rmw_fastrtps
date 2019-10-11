@@ -58,5 +58,4 @@ rmw_publish_loaned_message(
   RMW_SET_ERROR_MSG("rmw_publish_loaned_message not implemented for rmw_fastrtps_cpp");
   return RMW_RET_ERROR;
 }
-
 }  // extern "C"
