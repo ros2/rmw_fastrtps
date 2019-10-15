@@ -22,7 +22,7 @@
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
-#include "rmw/host.h"
+#include "rmw/localhost.h"
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
@@ -241,7 +241,7 @@ __rmw_create_node(
   // since the participant name is not part of the DDS spec
   participantAttrs.rtps.setName(name);
 
-  if (rmw_local_host_only()) {
+  if (rmw_localhost_only()) {
     Locator_t local_network_interface_locator;
     static const std::string local_ip_name("127.0.0.1");
     local_network_interface_locator.kind = 1;
