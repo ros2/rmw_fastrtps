@@ -75,6 +75,7 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_wait.cpp
   src/rmw_wait_set.cpp
   src/TypeSupport_impl.cpp
+  src/rmw_get_topic_info.cpp
 )
 
 target_link_libraries(rmw_fastrtps_shared_cpp
