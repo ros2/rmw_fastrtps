@@ -89,7 +89,8 @@ __rmw_create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
-  const rmw_node_security_options_t * security_options);
+  const rmw_node_security_options_t * security_options,
+  bool localhost_only);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t

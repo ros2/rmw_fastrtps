@@ -22,7 +22,6 @@
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
-#include "rmw/localhost.h"
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
@@ -221,7 +220,8 @@ __rmw_create_node(
   const char * name,
   const char * namespace_,
   size_t domain_id,
-  const rmw_node_security_options_t * security_options)
+  const rmw_node_security_options_t * security_options,
+  bool localhost_only)
 {
   if (!name) {
     RMW_SET_ERROR_MSG("name is null");
@@ -241,7 +241,7 @@ __rmw_create_node(
   // since the participant name is not part of the DDS spec
   participantAttrs.rtps.setName(name);
 
-  if (rmw_localhost_only()) {
+  if (localhost_only) {
     Locator_t local_network_interface_locator;
     static const std::string local_ip_name("127.0.0.1");
     local_network_interface_locator.kind = 1;
