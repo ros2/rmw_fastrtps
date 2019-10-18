@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2019 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -13,8 +13,8 @@
 // limitations under the License.
 
 
-#ifndef QOS_CONVERTER_HPP_
-#define QOS_CONVERTER_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__QOS_CONVERTER_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__QOS_CONVERTER_HPP_
 
 #include "rmw/types.h"
 
@@ -83,4 +83,4 @@ dds_qos_to_rmw_qos(
   qos->liveliness_lease_duration.nsec = dds_qos.m_liveliness.lease_duration.nanosec;
 }
 
-#endif  // QOS_CONVERTER_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__QOS_CONVERTER_HPP_
