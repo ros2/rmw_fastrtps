@@ -41,11 +41,16 @@ public:
   GUID_t guid[2];
   void SetUp()
   {
-    // Create an instance handlers
+    // Create instance handlers
     for (int i = 0; i < 2; i++) {
       guid[i] = GUID_t(GuidPrefix_t(), i + 1);
       instance_handler[i] = guid[i];
     }
+
+    // Populating WriterQos -> which is from the DDS layer and
+    // rmw_qos_profile_t which is from rmw/types.h.
+    // This is done to test if topic_cache.getTopicNameToTopicData() returns
+    // the correct value in rmw_qos_profile_t for a given WriterQos
 
     // DDS qos
     qos[0].m_durability.kind = eprosima::fastrtps::TRANSIENT_DURABILITY_QOS;
@@ -85,7 +90,7 @@ public:
     rmw_qos[1].lifespan.sec = 19u;
     rmw_qos[1].lifespan.nsec = 5432u;
 
-    // Add some topics
+    // Add data to topic_cache
     topic_cache.addTopic(instance_handler[0], "topic1", "type1", qos[0]);
     topic_cache.addTopic(instance_handler[0], "topic2", "type2", qos[0]);
     topic_cache.addTopic(instance_handler[1], "topic1", "type1", qos[1]);
@@ -124,7 +129,7 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_participant_map)
   const auto & it = participant_topic_map.find(this->guid[0]);
   ASSERT_TRUE(it != participant_topic_map.end());
   // Verify that the topic and respective types are present
-  auto & topic_type_map = it->second;
+  const auto & topic_type_map = it->second;
 
   const auto & topic1it = topic_type_map.find("topic1");
   ASSERT_TRUE(topic1it != topic_type_map.end());
@@ -140,7 +145,7 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_participant_map)
   const auto & it2 = participant_topic_map.find(this->guid[1]);
   ASSERT_TRUE(it2 != participant_topic_map.end());
   // Verify that the topic and respective types are present
-  auto & topic_type_map2 = it2->second;
+  const auto & topic_type_map2 = it2->second;
 
   const auto & topic1it2 = topic_type_map2.find("topic1");
   ASSERT_TRUE(topic1it2 != topic_type_map2.end());
@@ -163,21 +168,21 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_topic_name_topic_data_map)
   expected_results["topic2"].push_back(std::make_tuple(guid[0], "type2", rmw_qos[0]));
   expected_results["topic2"].push_back(std::make_tuple(guid[1], "type1", rmw_qos[1]));
   for (auto & result_it : expected_results) {
-    auto & topic_name = result_it.first;
-    auto & expected_topic_data = result_it.second;
+    const auto & topic_name = result_it.first;
+    const auto & expected_topic_data = result_it.second;
 
     const auto & it = topic_data_map.find(topic_name);
     ASSERT_TRUE(it != topic_data_map.end());
     // Verify that the topic has all the associated data
-    auto & topic_data = it->second;
+    const auto & topic_data = it->second;
     for (auto i = 0u; i < expected_topic_data.size(); i++) {
       // GUID
       EXPECT_EQ(std::get<0>(topic_data.at(i)), std::get<0>(expected_topic_data.at(i)));
       // TYPE
       EXPECT_EQ(std::get<1>(topic_data.at(i)), std::get<1>(expected_topic_data.at(i)));
       // QOS
-      auto & qos = std::get<2>(topic_data.at(i));
-      auto & expected_qos = std::get<2>(expected_topic_data.at(i));
+      const auto & qos = std::get<2>(topic_data.at(i));
+      const auto & expected_qos = std::get<2>(expected_topic_data.at(i));
       EXPECT_EQ(qos.durability, expected_qos.durability);
       EXPECT_EQ(qos.reliability, expected_qos.reliability);
       EXPECT_EQ(qos.liveliness, expected_qos.liveliness);
@@ -194,7 +199,8 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_topic_name_topic_data_map)
 TEST_F(TopicCacheTestFixture, test_topic_cache_add_topic)
 {
   // Add Topic
-  bool did_add = this->topic_cache.addTopic(this->instance_handler[1], "TestTopic", "TestType",
+  const bool did_add = this->topic_cache.addTopic(this->instance_handler[1], "TestTopic",
+      "TestType",
       this->qos[1]);
   // Verify that the returned value was true
   EXPECT_TRUE(did_add);
@@ -242,7 +248,7 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_remove_policy_element_does_not_ex
   // add topic
   this->topic_cache.addTopic(this->instance_handler[1], "TestTopic", "TestType", this->qos[1]);
   // Assert that the return was false
-  auto const did_remove = this->topic_cache.removeTopic(this->instance_handler[1], "NewTestTopic",
+  const auto did_remove = this->topic_cache.removeTopic(this->instance_handler[1], "NewTestTopic",
       "TestType");
   ASSERT_FALSE(did_remove);
 }

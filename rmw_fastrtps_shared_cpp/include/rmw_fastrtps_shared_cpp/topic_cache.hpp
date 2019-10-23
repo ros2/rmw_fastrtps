@@ -50,7 +50,7 @@ private:
    * Map of topic names to TopicData. Where topic data is vector of tuples containing
    * participant GUID, topic type and the qos policy of the respective participant.
    * Topics here are represented as one to many, DDS XTypes 1.2
-   * specifies application code 'generally' uses a 1-1 relationship.
+   * specifies application code that 'generally' uses a 1-1 relationship.
    * However, generic services such as logger and monitor, can discover
    * multiple types on the same topic.
    */
@@ -142,6 +142,7 @@ public:
    * @param rtpsParticipantKey
    * @param topic_name
    * @param type_name
+   * @param dds_qos the dds qos policy of the participant
    * @return true if a change has been recorded
    */
   template<class T>
