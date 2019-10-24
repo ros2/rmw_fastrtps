@@ -36,9 +36,13 @@
 
 #include "./type_support_common.hpp"
 
+#include "fastrtps/xmlparser/XMLProfileManager.h"
+
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
 using TopicDataType = eprosima::fastrtps::TopicDataType;
+using XMLProfileManager = eprosima::fastrtps::xmlparser::XMLProfileManager;
+using XMLP_ret = eprosima::fastrtps::xmlparser::XMLP_ret;
 
 extern "C"
 {
@@ -114,6 +118,8 @@ rmw_create_client(
       }
       delete info;
     });
+
+  info = new CustomClientInfo();
   info->participant_ = participant;
   info->typesupport_identifier_ = type_support->typesupport_identifier;
   info->request_publisher_matched_count_ = 0;
@@ -161,8 +167,23 @@ rmw_create_client(
     _register_type(participant, info->response_type_support_);
   }
 
+  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill subscriber attributes with a subscriber profile profile located
+  // based of topic name defined by _create_topic_name(). If no profile is found, a search with profile_name "client"
+  // is attempted. Else, use the default attributes.
+  std::string topic_name_fallback = "client";
   eprosima::fastrtps::SubscriberAttributes subscriberParam;
-  eprosima::fastrtps::PublisherAttributes publisherParam;
+  eprosima::fastrtps::fixed_string<255> sub_topic_name = _create_topic_name(
+    qos_policies, ros_service_response_prefix, service_name, "Reply");
+  Domain::getDefaultSubscriberAttributes(subscriberParam);
+
+  if (std::getenv("FASTRTPS_DEFAULT_PROFILES_FILE") != nullptr)
+  {
+    if (XMLProfileManager::fillSubscriberAttributes(sub_topic_name.to_string(), subscriberParam) !=
+      XMLP_ret::XML_OK)
+    {
+      XMLProfileManager::fillSubscriberAttributes(topic_name_fallback, subscriberParam);
+    }
+  }
 
   if (!participant_info->leave_middleware_default_qos) {
     subscriberParam.historyMemoryPolicy =
@@ -171,8 +192,24 @@ rmw_create_client(
 
   subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   subscriberParam.topic.topicDataType = response_type_name;
-  subscriberParam.topic.topicName = _create_topic_name(
-    qos_policies, ros_service_response_prefix, service_name, "Reply");
+  subscriberParam.topic.topicName = sub_topic_name;
+
+  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill publisher attributes with a publisher profile profile located
+  // based of topic name defined by _create_topic_name(). If no profile is found, a search with profile_name "client"
+  // is attempted. Else, use the default attributes.
+  eprosima::fastrtps::fixed_string<255> pub_topic_name = _create_topic_name(
+    qos_policies, ros_service_requester_prefix, service_name, "Request");
+  eprosima::fastrtps::PublisherAttributes publisherParam;
+  Domain::getDefaultPublisherAttributes(publisherParam);
+
+  if (std::getenv("FASTRTPS_DEFAULT_PROFILES_FILE") != nullptr)
+  {
+    if (XMLProfileManager::fillPublisherAttributes(pub_topic_name.to_string(), publisherParam) !=
+      XMLP_ret::XML_OK)
+    {
+      XMLProfileManager::fillPublisherAttributes(topic_name_fallback, publisherParam);
+    }
+  }
 
   if (!participant_info->leave_middleware_default_qos) {
     publisherParam.historyMemoryPolicy =
@@ -186,8 +223,7 @@ rmw_create_client(
 
   publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
   publisherParam.topic.topicDataType = request_type_name;
-  publisherParam.topic.topicName = _create_topic_name(
-    qos_policies, ros_service_requester_prefix, service_name, "Request");
+  publisherParam.topic.topicName = pub_topic_name;
 
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
