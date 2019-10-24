@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.1 (2019-10-23)
+------------------
+* Restrict traffic to localhost only if env var is provided (`#331 <https://github.com/ros2/rmw_fastrtps/issues/331>`_)
+* Added new functions which can be used to get rmw_qos_profile_t from WriterQos and ReaderQos (`#328 <https://github.com/ros2/rmw_fastrtps/issues/328>`_)
+* Renamed dds_qos_to_rmw_qos to dds_attributes_to_rmw_qos (`#330 <https://github.com/ros2/rmw_fastrtps/issues/330>`_)
+* Contributors: Brian Marchi, jaisontj
+
 0.8.0 (2019-09-25)
 ------------------
 * Correct error message (`#320 <https://github.com/ros2/rmw_fastrtps/issues/320>`_)
