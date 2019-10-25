@@ -177,7 +177,7 @@ rmw_create_service(
     _register_type(participant, info->response_type_support_);
   }
 
-  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill subscriber attributes with a subscriber profile profile located
+  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill subscriber attributes with a subscriber profile located
   // based of topic name defined by _create_topic_name(). If no profile is found, a search with profile_name "service"
   // is attempted. Else, use the default attributes.
   std::string topic_name_fallback = "service";
@@ -203,7 +203,7 @@ rmw_create_service(
   subscriberParam.topic.topicDataType = request_type_name;
   subscriberParam.topic.topicName = sub_topic_name;
 
-  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill publisher attributes with a publisher profile profile located
+  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill publisher attributes with a publisher profile located
   // based of topic name defined by _create_topic_name(). If no profile is found, a search with profile_name "service"
   // is attempted. Else, use the default attributes.
   eprosima::fastrtps::fixed_string<255> pub_topic_name = _create_topic_name(
