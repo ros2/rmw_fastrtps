@@ -167,7 +167,7 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_topic_name_topic_data_map)
   expected_results["topic1"].push_back(std::make_tuple(guid[1], "type1", rmw_qos[1]));
   expected_results["topic2"].push_back(std::make_tuple(guid[0], "type2", rmw_qos[0]));
   expected_results["topic2"].push_back(std::make_tuple(guid[1], "type1", rmw_qos[1]));
-  for (auto & result_it : expected_results) {
+  for (const auto & result_it : expected_results) {
     const auto & topic_name = result_it.first;
     const auto & expected_topic_data = result_it.second;
 
