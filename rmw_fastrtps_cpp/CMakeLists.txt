@@ -60,6 +60,7 @@ add_library(rmw_fastrtps_cpp
   src/rmw_get_gid_for_publisher.cpp
   src/rmw_get_implementation_identifier.cpp
   src/rmw_get_serialization_format.cpp
+  src/rmw_get_topic_info.cpp
   src/rmw_guard_condition.cpp
   src/rmw_init.cpp
   src/rmw_node.cpp
@@ -81,7 +82,6 @@ add_library(rmw_fastrtps_cpp
   src/rmw_wait_set.cpp
   src/serialization_format.cpp
   src/type_support_common.cpp
-  src/rmw_get_topic_info.cpp
 )
 target_link_libraries(rmw_fastrtps_cpp
   fastcdr fastrtps)
