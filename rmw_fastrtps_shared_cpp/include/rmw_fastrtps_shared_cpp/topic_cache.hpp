@@ -41,10 +41,10 @@ typedef eprosima::fastrtps::rtps::GUID_t GUID_t;
 class TopicCache
 {
 private:
-  typedef std::unordered_map<std::string, std::vector<std::string>> TopicToTypes;
-  typedef std::map<GUID_t, TopicToTypes> ParticipantTopicMap;
-  typedef std::vector<std::tuple<GUID_t, std::string, rmw_qos_profile_t>> TopicData;
-  typedef std::unordered_map<std::string, TopicData> TopicNameToTopicData;
+  using TopicToTypes = std::unordered_map<std::string, std::vector<std::string>>;
+  using ParticipantTopicMap = std::map<GUID_t, TopicToTypes>;
+  using TopicData = std::vector<std::tuple<GUID_t, std::string, rmw_qos_profile_t>>;
+  using TopicNameToTopicData = std::unordered_map<std::string, TopicData>;
 
   /**
    * Map of topic names to TopicData. Where topic data is vector of tuples containing
