@@ -96,10 +96,15 @@ _set_rmw_topic_info(
   rmw_topic_info_t * topic_info)
 {
   const auto & gid = std::get<0>(data);
-  // convert gid to const char * and set it inside topic_info
-  std::ostringstream gid_stream;
-  gid_stream << gid;
-  rmw_ret_t ret = rmw_topic_info_set_gid(topic_info, gid_stream.str().c_str(), allocator);
+  static_assert(
+    sizeof(eprosima::fastrtps::rtps::GUID_t) <= RMW_GID_STORAGE_SIZE,
+    "RMW_GID_STORAGE_SIZE insufficient to store the rmw_fastrtps_cpp GID implementation."
+  );
+  uint8_t rmw_gid[RMW_GID_STORAGE_SIZE];
+  memset(&rmw_gid, 0, RMW_GID_STORAGE_SIZE);
+  memcpy(&rmw_gid, &gid, sizeof(eprosima::fastrtps::rtps::GUID_t));
+  rmw_ret_t ret = rmw_topic_info_set_gid(topic_info, rmw_gid,
+      sizeof(eprosima::fastrtps::rtps::GUID_t));
   if (ret != RMW_RET_OK) {
     return ret;
   }
@@ -109,7 +114,7 @@ _set_rmw_topic_info(
     return ret;
   }
   // set qos profile
-  ret = rmw_topic_info_set_qos_profile(&std::get<2>(data), topic_info);
+  ret = rmw_topic_info_set_qos_profile(topic_info, &std::get<2>(data));
   if (ret != RMW_RET_OK) {
     return ret;
   }
