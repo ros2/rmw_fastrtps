@@ -21,6 +21,7 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 #include "rmw/topic_info_array.h"
+#include "rmw/topic_info.h"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
@@ -76,7 +77,6 @@ _get_topic_fqdns(const char * topic_name, bool no_mangle)
 {
   std::vector<std::string> topic_fqdns;
   topic_fqdns.push_back(topic_name);
-  // if mangle
   if (!no_mangle) {
     auto ros_prefixes = _get_all_ros_prefixes();
     // Build the list of all possible topic FQDN
@@ -99,12 +99,12 @@ _set_rmw_topic_info(
   // convert gid to const char * and set it inside topic_info
   std::ostringstream gid_stream;
   gid_stream << gid;
-  rmw_ret_t ret = rmw_topic_info_set_gid(allocator, gid_stream.str().c_str(), topic_info);
+  rmw_ret_t ret = rmw_topic_info_set_gid(topic_info, gid_stream.str().c_str(), allocator);
   if (ret != RMW_RET_OK) {
     return ret;
   }
   // set topic type
-  ret = rmw_topic_info_set_topic_type(allocator, std::get<1>(data).c_str(), topic_info);
+  ret = rmw_topic_info_set_topic_type(topic_info, std::get<1>(data).c_str(), allocator);
   if (ret != RMW_RET_OK) {
     return ret;
   }
@@ -116,9 +116,9 @@ _set_rmw_topic_info(
   // set node name
   const auto & d_name_it = slave_target->discovered_names.find(gid);
   if (d_name_it != slave_target->discovered_names.end()) {
-    ret = rmw_topic_info_set_node_name(allocator, d_name_it->second.c_str(), topic_info);
+    ret = rmw_topic_info_set_node_name(topic_info, d_name_it->second.c_str(), allocator);
   } else {
-    ret = rmw_topic_info_set_node_name(allocator, "_NODE_NAME_UNKNOWN_", topic_info);
+    ret = rmw_topic_info_set_node_name(topic_info, "_NODE_NAME_UNKNOWN_", allocator);
   }
   if (ret != RMW_RET_OK) {
     return ret;
@@ -126,9 +126,9 @@ _set_rmw_topic_info(
   // set node namespace
   const auto & d_namespace_it = slave_target->discovered_namespaces.find(gid);
   if (d_namespace_it != slave_target->discovered_namespaces.end()) {
-    ret = rmw_topic_info_set_node_namespace(allocator, d_namespace_it->second.c_str(), topic_info);
+    ret = rmw_topic_info_set_node_namespace(topic_info, d_namespace_it->second.c_str(), allocator);
   } else {
-    ret = rmw_topic_info_set_node_namespace(allocator, "_NODE_NAMESPACE_UNKNOWN_", topic_info);
+    ret = rmw_topic_info_set_node_namespace(topic_info, "_NODE_NAMESPACE_UNKNOWN_", allocator);
   }
   return ret;
 }
@@ -182,7 +182,7 @@ _get_info_by_topic(
 
     // add all the elements from the vector to rmw_topic_info_array_t
     auto count = topic_info_vector.size();
-    ret = rmw_topic_info_array_init_with_size(allocator, count, participants_info);
+    ret = rmw_topic_info_array_init_with_size(participants_info, count, allocator);
     if (ret != RMW_RET_OK) {
       RMW_SET_ERROR_MSG("rmw_topic_info_array_init_with_size failed to allocate memory.");
       return RMW_RET_BAD_ALLOC;
