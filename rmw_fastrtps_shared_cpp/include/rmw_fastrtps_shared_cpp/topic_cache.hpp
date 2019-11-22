@@ -29,7 +29,7 @@
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/rtps/common/Guid.h"
 #include "fastrtps/rtps/common/InstanceHandle.h"
-#include "qos_converter.hpp"
+#include "qos.hpp"
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rcutils/logging_macros.h"
 
