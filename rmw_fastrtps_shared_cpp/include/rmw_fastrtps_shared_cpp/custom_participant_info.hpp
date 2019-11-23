@@ -170,12 +170,14 @@ public:
       if (is_alive) {
         trigger = topic_cache().addTopic(
           proxyData.RTPSParticipantKey(),
+          proxyData.guid(),
           proxyData.topicName().to_string(),
           proxyData.typeName().to_string(),
           proxyData.m_qos);
       } else {
         trigger = topic_cache().removeTopic(
           proxyData.RTPSParticipantKey(),
+          proxyData.guid(),
           proxyData.topicName().to_string(),
           proxyData.typeName().to_string());
       }

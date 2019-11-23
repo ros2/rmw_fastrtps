@@ -36,6 +36,18 @@
 typedef eprosima::fastrtps::rtps::GUID_t GUID_t;
 
 /**
+ * A data structure that encapsulates all the data associated with a publisher
+ * or subscription by the topic it publishers or subscribers to
+ */
+struct TopicData
+{
+  GUID_t participant_guid;
+  GUID_t guid;       /* publisher or subscription guid */
+  std::string topic_type;
+  rmw_qos_profile_t qos_profile;
+};
+
+/**
  * Topic cache data structure. Manages relationships between participants and topics.
  */
 class TopicCache
@@ -43,8 +55,7 @@ class TopicCache
 private:
   using TopicToTypes = std::unordered_map<std::string, std::vector<std::string>>;
   using ParticipantTopicMap = std::map<GUID_t, TopicToTypes>;
-  using TopicData = std::vector<std::tuple<GUID_t, std::string, rmw_qos_profile_t>>;
-  using TopicNameToTopicData = std::unordered_map<std::string, TopicData>;
+  using TopicNameToTopicData = std::unordered_map<std::string, std::vector<TopicData>>;
 
   /**
    * Map of topic names to TopicData. Where topic data is vector of tuples containing
@@ -72,7 +83,7 @@ private:
     TopicNameToTopicData & topic_name_to_topic_data)
   {
     if (topic_name_to_topic_data.find(topic_name) == topic_name_to_topic_data.end()) {
-      topic_name_to_topic_data[topic_name] = TopicData();
+      topic_name_to_topic_data[topic_name] = std::vector<TopicData>();
     }
   }
 
@@ -113,8 +124,8 @@ public:
     TopicToTypes topic_to_types;
     for (const auto & it : topic_name_to_topic_data_) {
       topic_to_types[it.first] = std::vector<std::string>();
-      for (const auto & mit : it.second) {
-        topic_to_types[it.first].push_back(std::get<1>(mit));
+      for (const auto & topic_data : it.second) {
+        topic_to_types[it.first].push_back(topic_data.topic_type);
       }
     }
     return topic_to_types;
@@ -148,13 +159,14 @@ public:
   template<class T>
   bool addTopic(
     const eprosima::fastrtps::rtps::InstanceHandle_t & rtpsParticipantKey,
+    const GUID_t & guid, /* publisher or subscription GUID */
     const std::string & topic_name,
     const std::string & type_name,
     const T & dds_qos)
   {
     initializeTopicDataMap(topic_name, topic_name_to_topic_data_);
-    auto guid = iHandle2GUID(rtpsParticipantKey);
-    initializeParticipantMap(participant_to_topics_, guid);
+    auto participant_guid = iHandle2GUID(rtpsParticipantKey);
+    initializeParticipantMap(participant_to_topics_, participant_guid);
     initializeTopicTypesMap(topic_name, participant_to_topics_[guid]);
     if (rcutils_logging_logger_is_enabled_for("rmw_fastrtps_shared_cpp",
       RCUTILS_LOG_SEVERITY_DEBUG))
@@ -166,10 +178,16 @@ public:
         "Adding topic '%s' with type '%s' for node '%s'",
         topic_name.c_str(), type_name.c_str(), guid_stream.str().c_str());
     }
-    auto qos_profile = rmw_qos_profile_t();
+    rmw_qos_profile_t qos_profile = rmw_qos_profile_t();
     dds_qos_to_rmw_qos(dds_qos, &qos_profile);
-    topic_name_to_topic_data_[topic_name].push_back(std::make_tuple(guid, type_name, qos_profile));
-    participant_to_topics_[guid][topic_name].push_back(type_name);
+    TopicData topic_data = {
+      participant_guid,
+      guid,
+      type_name,
+      qos_profile
+    };
+    topic_name_to_topic_data_[topic_name].push_back(topic_data);
+    participant_to_topics_[participant_guid][topic_name].push_back(type_name);
     return true;
   }
 
@@ -177,12 +195,14 @@ public:
    * Remove a topic based on discovery.
    *
    * @param rtpsParticipantKey
+   * @param guid the guid of the publisher or subscription
    * @param topic_name
    * @param type_name
    * @return true if a change has been recorded
    */
   bool removeTopic(
     const eprosima::fastrtps::rtps::InstanceHandle_t & rtpsParticipantKey,
+    const eprosima::fastrtps::rtps::GUID_t & guid,
     const std::string & topic_name,
     const std::string & type_name)
   {
@@ -193,30 +213,28 @@ public:
         topic_name.c_str(), type_name.c_str());
       return false;
     }
-    auto guid = iHandle2GUID(rtpsParticipantKey);
     {
       auto & type_vec = topic_name_to_topic_data_[topic_name];
       type_vec.erase(std::find_if(type_vec.begin(), type_vec.end(),
-        [type_name, guid](const auto & topic_info) {
-          return type_name.compare(std::get<1>(topic_info)) == 0 &&
-          guid == std::get<0>(topic_info);
+        [type_name, guid](const auto & topic_data) {
+          return type_name.compare(topic_data.topic_type) == 0 && guid == topic_data.guid;
         }));
       if (type_vec.empty()) {
         topic_name_to_topic_data_.erase(topic_name);
       }
     }
-
-    auto guid_topics_pair = participant_to_topics_.find(guid);
+    auto participant_guid = iHandle2GUID(rtpsParticipantKey);
+    auto guid_topics_pair = participant_to_topics_.find(participant_guid);
     if (guid_topics_pair != participant_to_topics_.end() &&
       guid_topics_pair->second.find(topic_name) != guid_topics_pair->second.end())
     {
       auto & type_vec = guid_topics_pair->second[topic_name];
       type_vec.erase(std::find(type_vec.begin(), type_vec.end(), type_name));
       if (type_vec.empty()) {
-        participant_to_topics_[guid].erase(topic_name);
+        participant_to_topics_[participant_guid].erase(topic_name);
       }
-      if (participant_to_topics_[guid].empty()) {
-        participant_to_topics_.erase(guid);
+      if (participant_to_topics_[participant_guid].empty()) {
+        participant_to_topics_.erase(participant_guid);
       }
     } else {
       RCUTILS_LOG_DEBUG_NAMED(

@@ -37,14 +37,16 @@ public:
   TopicCache topic_cache;
   WriterQos qos[2];
   rmw_qos_profile_t rmw_qos[2];
-  InstanceHandle_t instance_handler[2];
+  InstanceHandle_t participant_instance_handler[2];
+  GUID_t participant_guid[2];
   GUID_t guid[2];
   void SetUp()
   {
     // Create instance handlers
     for (int i = 0; i < 2; i++) {
-      guid[i] = GUID_t(GuidPrefix_t(), i + 1);
-      instance_handler[i] = guid[i];
+      guid[i] = GUID_t(GuidPrefix_t(), i + 100);
+      participant_guid[i] = GUID_t(GuidPrefix_t(), i + 1);
+      participant_instance_handler[i] = participant_guid[i];
     }
 
     // Populating WriterQos -> which is from the DDS layer and
@@ -91,10 +93,10 @@ public:
     rmw_qos[1].lifespan.nsec = 5432u;
 
     // Add data to topic_cache
-    topic_cache.addTopic(instance_handler[0], "topic1", "type1", qos[0]);
-    topic_cache.addTopic(instance_handler[0], "topic2", "type2", qos[0]);
-    topic_cache.addTopic(instance_handler[1], "topic1", "type1", qos[1]);
-    topic_cache.addTopic(instance_handler[1], "topic2", "type1", qos[1]);
+    topic_cache.addTopic(participant_instance_handler[0], guid[0], "topic1", "type1", qos[0]);
+    topic_cache.addTopic(participant_instance_handler[0], guid[0], "topic2", "type2", qos[0]);
+    topic_cache.addTopic(participant_instance_handler[1], guid[1], "topic1", "type1", qos[1]);
+    topic_cache.addTopic(participant_instance_handler[1], guid[1], "topic2", "type1", qos[1]);
   }
 };
 
@@ -110,13 +112,14 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_topic_types)
   // Verify that there are two entries for type1
   EXPECT_EQ(std::count(topic_types.begin(), topic_types.end(), "type1"), 2);
   EXPECT_EQ(topic_types.at(0), "type1");
+  EXPECT_EQ(topic_types.at(1), "type1");
 
   // topic2
   const auto & it2 = topic_type_map.find("topic2");
   ASSERT_TRUE(it2 != topic_type_map.end());
   // Verify that the object returned from the map is indeed the one expected
   topic_types = it2->second;
-  // Verify that there are two entries for type1
+  // Verify that there are entries for type1 and type2
   EXPECT_TRUE(std::find(topic_types.begin(), topic_types.end(), "type1") != topic_types.end());
   EXPECT_TRUE(std::find(topic_types.begin(), topic_types.end(), "type2") != topic_types.end());
 }
@@ -126,7 +129,7 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_participant_map)
   const auto & participant_topic_map = this->topic_cache.getParticipantToTopics();
 
   // participant 1
-  const auto & it = participant_topic_map.find(this->guid[0]);
+  const auto & it = participant_topic_map.find(this->participant_guid[0]);
   ASSERT_TRUE(it != participant_topic_map.end());
   // Verify that the topic and respective types are present
   const auto & topic_type_map = it->second;
@@ -142,7 +145,7 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_participant_map)
   EXPECT_TRUE(std::find(topic_types.begin(), topic_types.end(), "type2") != topic_types.end());
 
   // participant 2
-  const auto & it2 = participant_topic_map.find(this->guid[1]);
+  const auto & it2 = participant_topic_map.find(this->participant_guid[1]);
   ASSERT_TRUE(it2 != participant_topic_map.end());
   // Verify that the topic and respective types are present
   const auto & topic_type_map2 = it2->second;
@@ -161,12 +164,11 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_participant_map)
 TEST_F(TopicCacheTestFixture, test_topic_cache_get_topic_name_topic_data_map)
 {
   const auto & topic_data_map = this->topic_cache.getTopicNameToTopicData();
-  auto expected_results = std::map<std::string, std::vector<std::tuple<GUID_t, std::string,
-      rmw_qos_profile_t>>>();
-  expected_results["topic1"].push_back(std::make_tuple(guid[0], "type1", rmw_qos[0]));
-  expected_results["topic1"].push_back(std::make_tuple(guid[1], "type1", rmw_qos[1]));
-  expected_results["topic2"].push_back(std::make_tuple(guid[0], "type2", rmw_qos[0]));
-  expected_results["topic2"].push_back(std::make_tuple(guid[1], "type1", rmw_qos[1]));
+  auto expected_results = std::map<std::string, std::vector<TopicData>>();
+  expected_results["topic1"].push_back({participant_guid[0], guid[0], "type1", rmw_qos[0]});
+  expected_results["topic1"].push_back({participant_guid[1], guid[1], "type1", rmw_qos[1]});
+  expected_results["topic2"].push_back({participant_guid[0], guid[0], "type2", rmw_qos[0]});
+  expected_results["topic2"].push_back({participant_guid[1], guid[1], "type1", rmw_qos[1]});
   for (const auto & result_it : expected_results) {
     const auto & topic_name = result_it.first;
     const auto & expected_topic_data = result_it.second;
@@ -176,13 +178,15 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_topic_name_topic_data_map)
     // Verify that the topic has all the associated data
     const auto & topic_data = it->second;
     for (auto i = 0u; i < expected_topic_data.size(); i++) {
+      // PARTICIPANT GUID
+      EXPECT_EQ(topic_data.at(i).participant_guid, expected_topic_data.at(i).participant_guid);
       // GUID
-      EXPECT_EQ(std::get<0>(topic_data.at(i)), std::get<0>(expected_topic_data.at(i)));
+      EXPECT_EQ(topic_data.at(i).guid, expected_topic_data.at(i).guid);
       // TYPE
-      EXPECT_EQ(std::get<1>(topic_data.at(i)), std::get<1>(expected_topic_data.at(i)));
+      EXPECT_EQ(topic_data.at(i).topic_type, expected_topic_data.at(i).topic_type);
       // QOS
-      const auto & qos = std::get<2>(topic_data.at(i));
-      const auto & expected_qos = std::get<2>(expected_topic_data.at(i));
+      const auto & qos = topic_data.at(i).qos_profile;
+      const auto & expected_qos = expected_topic_data.at(i).qos_profile;
       EXPECT_EQ(qos.durability, expected_qos.durability);
       EXPECT_EQ(qos.reliability, expected_qos.reliability);
       EXPECT_EQ(qos.liveliness, expected_qos.liveliness);
@@ -199,16 +203,18 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_topic_name_topic_data_map)
 TEST_F(TopicCacheTestFixture, test_topic_cache_add_topic)
 {
   // Add Topic
-  const bool did_add = this->topic_cache.addTopic(this->instance_handler[1], "TestTopic",
-      "TestType",
-      this->qos[1]);
+  const bool did_add =
+    this->topic_cache.addTopic(this->participant_instance_handler[1], this->guid[1], "TestTopic",
+      "TestType", this->qos[1]);
   // Verify that the returned value was true
   EXPECT_TRUE(did_add);
 }
 
 TEST_F(TopicCacheTestFixture, test_topic_cache_remove_topic_element_exists)
 {
-  auto did_remove = this->topic_cache.removeTopic(this->instance_handler[0], "topic1", "type1");
+  auto did_remove =
+    this->topic_cache.removeTopic(this->participant_instance_handler[0], this->guid[0], "topic1",
+      "type1");
   // Assert that the return was true
   ASSERT_TRUE(did_remove);
   // Verify it is removed from TopicToTypes
@@ -218,7 +224,7 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_remove_topic_element_exists)
   EXPECT_EQ(std::count(topic_type_it->second.begin(), topic_type_it->second.end(), "type1"), 1);
   // Verify it is removed from ParticipantTopicMap
   const auto & participant_topic_map = this->topic_cache.getParticipantToTopics();
-  const auto & participant_topic_it = participant_topic_map.find(this->guid[0]);
+  const auto & participant_topic_it = participant_topic_map.find(this->participant_guid[0]);
   ASSERT_TRUE(participant_topic_it != participant_topic_map.end());
   const auto & p_topic_type_it = participant_topic_it->second.find("topic1");
   ASSERT_TRUE(p_topic_type_it == participant_topic_it->second.end());
@@ -228,13 +234,14 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_remove_topic_element_exists)
   ASSERT_TRUE(topic_data_it != topic_data_map.end());
   EXPECT_EQ(topic_data_it->second.size(), 1u);
 
-  did_remove = this->topic_cache.removeTopic(this->instance_handler[1], "topic1", "type1");
+  did_remove = this->topic_cache.removeTopic(this->participant_instance_handler[1], this->guid[1],
+      "topic1", "type1");
   ASSERT_TRUE(did_remove);
   const auto & topic_type_map2 = this->topic_cache.getTopicToTypes();
   const auto & topic_type_it2 = topic_type_map2.find("topic1");
   ASSERT_TRUE(topic_type_it2 == topic_type_map2.end());
   const auto & participant_topic_map2 = this->topic_cache.getParticipantToTopics();
-  const auto & participant_topic_it2 = participant_topic_map2.find(this->guid[1]);
+  const auto & participant_topic_it2 = participant_topic_map2.find(this->participant_guid[1]);
   ASSERT_TRUE(participant_topic_it2 != participant_topic_map2.end());
   const auto & p_topic_type_it2 = participant_topic_it2->second.find("topic1");
   ASSERT_TRUE(p_topic_type_it2 == participant_topic_it2->second.end());
@@ -246,9 +253,11 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_remove_topic_element_exists)
 TEST_F(TopicCacheTestFixture, test_topic_cache_remove_policy_element_does_not_exist)
 {
   // add topic
-  this->topic_cache.addTopic(this->instance_handler[1], "TestTopic", "TestType", this->qos[1]);
+  this->topic_cache.addTopic(this->participant_instance_handler[1], this->guid[1], "TestTopic",
+    "TestType", this->qos[1]);
   // Assert that the return was false
-  const auto did_remove = this->topic_cache.removeTopic(this->instance_handler[1], "NewTestTopic",
+  const auto did_remove = this->topic_cache.removeTopic(this->participant_instance_handler[1],
+      this->guid[1], "NewTestTopic",
       "TestType");
   ASSERT_FALSE(did_remove);
 }

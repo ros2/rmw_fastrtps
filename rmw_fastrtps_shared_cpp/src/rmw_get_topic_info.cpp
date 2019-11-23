@@ -90,36 +90,50 @@ _get_topic_fqdns(const char * topic_name, bool no_mangle)
 
 rmw_ret_t
 _set_rmw_topic_info(
-  rcutils_allocator_t * allocator,
-  std::tuple<GUID_t, std::string, rmw_qos_profile_t> data,
+  rmw_topic_info_t * topic_info,
+  const GUID_t & participant_guid,
+  const char * node_name,
+  const char * node_namespace,
+  TopicData topic_data,
   ::ParticipantListener * slave_target,
-  rmw_topic_info_t * topic_info)
+  rcutils_allocator_t * allocator)
 {
-  const auto & gid = std::get<0>(data);
   static_assert(
     sizeof(eprosima::fastrtps::rtps::GUID_t) <= RMW_GID_STORAGE_SIZE,
     "RMW_GID_STORAGE_SIZE insufficient to store the rmw_fastrtps_cpp GID implementation."
   );
   uint8_t rmw_gid[RMW_GID_STORAGE_SIZE];
   memset(&rmw_gid, 0, RMW_GID_STORAGE_SIZE);
-  memcpy(&rmw_gid, &gid, sizeof(eprosima::fastrtps::rtps::GUID_t));
+  memcpy(&rmw_gid, &topic_data.guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
   rmw_ret_t ret = rmw_topic_info_set_gid(topic_info, rmw_gid,
       sizeof(eprosima::fastrtps::rtps::GUID_t));
   if (ret != RMW_RET_OK) {
     return ret;
   }
   // set topic type
-  ret = rmw_topic_info_set_topic_type(topic_info, std::get<1>(data).c_str(), allocator);
+  ret = rmw_topic_info_set_topic_type(topic_info, topic_data.topic_type.c_str(), allocator);
   if (ret != RMW_RET_OK) {
     return ret;
   }
   // set qos profile
-  ret = rmw_topic_info_set_qos_profile(topic_info, &std::get<2>(data));
+  ret = rmw_topic_info_set_qos_profile(topic_info, &topic_data.qos_profile);
   if (ret != RMW_RET_OK) {
     return ret;
   }
+  // Check if this participant is the same as the node that is passed
+  if (topic_data.participant_guid == participant_guid) {
+    ret = rmw_topic_info_set_node_name(topic_info, node_name, allocator);
+    if (ret != RMW_RET_OK) {
+      return ret;
+    }
+    ret = rmw_topic_info_set_node_namespace(topic_info, node_namespace, allocator);
+    return ret;
+  }
+  // This means that this discovered participant is not associated with the passed node
+  // and hence we must find its name and namespace from the discovered_names and
+  // discovered_namespace maps
   // set node name
-  const auto & d_name_it = slave_target->discovered_names.find(gid);
+  const auto & d_name_it = slave_target->discovered_names.find(topic_data.participant_guid);
   if (d_name_it != slave_target->discovered_names.end()) {
     ret = rmw_topic_info_set_node_name(topic_info, d_name_it->second.c_str(), allocator);
   } else {
@@ -129,7 +143,8 @@ _set_rmw_topic_info(
     return ret;
   }
   // set node namespace
-  const auto & d_namespace_it = slave_target->discovered_namespaces.find(gid);
+  const auto & d_namespace_it =
+    slave_target->discovered_namespaces.find(topic_data.participant_guid);
   if (d_namespace_it != slave_target->discovered_namespaces.end()) {
     ret = rmw_topic_info_set_node_namespace(topic_info, d_namespace_it->second.c_str(), allocator);
   } else {
@@ -160,8 +175,11 @@ _get_info_by_topic(
   }
 
   const auto & topic_fqdns = _get_topic_fqdns(topic_name, no_mangle);
-
   auto impl = static_cast<CustomParticipantInfo *>(node->data);
+  // The GUID of the participant associated with this node
+  const auto & participant_guid = impl->participant->getGuid();
+  const auto & node_name = node->name;
+  const auto & node_namespace = node->namespace_;
   ::ParticipantListener * slave_target = impl->listener;
   auto & topic_cache =
     is_publisher ? slave_target->writer_topic_cache : slave_target->reader_topic_cache;
@@ -174,7 +192,14 @@ _get_info_by_topic(
       if (it != topic_name_to_data.end()) {
         for (const auto & data : it->second) {
           rmw_topic_info_t topic_info;
-          rmw_ret_t ret = _set_rmw_topic_info(allocator, data, slave_target, &topic_info);
+          rmw_ret_t ret = _set_rmw_topic_info(
+            &topic_info,
+            participant_guid,
+            node_name,
+            node_namespace,
+            data,
+            slave_target,
+            allocator);
           if (ret != RMW_RET_OK) {
             RMW_SET_ERROR_MSG("Failed to create set_rmw_topic_info.");
             return ret;
