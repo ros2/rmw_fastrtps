@@ -88,20 +88,14 @@ _get_topic_fqdns(const char * topic_name, bool no_mangle)
   return topic_fqdns;
 }
 
-typedef rmw_ret_t (* rmw_topic_info_fini_func_t)(
-  rmw_topic_info_t * topic_info,
-  rcutils_allocator_t * allocator);
-
 void
-_handle_topic_info_member_fini(
+_handle_topic_info_fini(
   rmw_topic_info_t * topic_info,
-  std::string err_msg_title,
-  rcutils_allocator_t * allocator,
-  rmw_topic_info_fini_func_t topic_info_fini_member_func)
+  rcutils_allocator_t * allocator)
 {
-  std::string error_string = err_msg_title + "\n" + rmw_get_error_string().str;
+  std::string error_string = rmw_get_error_string().str;
   rmw_reset_error();
-  rmw_ret_t ret = topic_info_fini_member_func(topic_info, allocator);
+  rmw_ret_t ret = rmw_topic_info_fini(topic_info, allocator);
   if (ret != RMW_RET_OK) {
     error_string += rmw_get_error_string().str;
     rmw_reset_error();
@@ -145,15 +139,10 @@ _set_rmw_topic_info(
   if (topic_data.participant_guid == participant_guid) {
     ret = rmw_topic_info_set_node_name(topic_info, node_name, allocator);
     if (ret != RMW_RET_OK) {
-      _handle_topic_info_member_fini(topic_info, "Failed to set node_name", allocator,
-        rmw_topic_info_fini_topic_type);
       return ret;
     }
     ret = rmw_topic_info_set_node_namespace(topic_info, node_namespace, allocator);
     if (ret != RMW_RET_OK) {
-      _handle_topic_info_member_fini(topic_info, "Failed to set node_namespace", allocator,
-        rmw_topic_info_fini_node_name);
-      _handle_topic_info_member_fini(topic_info, "", allocator, rmw_topic_info_fini_topic_type);
       return ret;
     }
     return ret;
@@ -169,8 +158,6 @@ _set_rmw_topic_info(
     ret = rmw_topic_info_set_node_name(topic_info, "_NODE_NAME_UNKNOWN_", allocator);
   }
   if (ret != RMW_RET_OK) {
-    _handle_topic_info_member_fini(topic_info, "Failed to set node_name", allocator,
-      rmw_topic_info_fini_topic_type);
     return ret;
   }
   // set node namespace
@@ -180,11 +167,6 @@ _set_rmw_topic_info(
     ret = rmw_topic_info_set_node_namespace(topic_info, d_namespace_it->second.c_str(), allocator);
   } else {
     ret = rmw_topic_info_set_node_namespace(topic_info, "_NODE_NAMESPACE_UNKNOWN_", allocator);
-  }
-  if (ret != RMW_RET_OK) {
-    _handle_topic_info_member_fini(topic_info, "Failed to set node_namespace", allocator,
-      rmw_topic_info_fini_node_name);
-    _handle_topic_info_member_fini(topic_info, "", allocator, rmw_topic_info_fini_topic_type);
   }
   return ret;
 }
@@ -227,7 +209,7 @@ _get_info_by_topic(
       const auto & it = topic_name_to_data.find(topic_name);
       if (it != topic_name_to_data.end()) {
         for (const auto & data : it->second) {
-          rmw_topic_info_t topic_info;
+          rmw_topic_info_t topic_info = rmw_get_zero_initialized_topic_info();
           rmw_ret_t ret = _set_rmw_topic_info(
             &topic_info,
             participant_guid,
@@ -237,17 +219,12 @@ _get_info_by_topic(
             slave_target,
             allocator);
           if (ret != RMW_RET_OK) {
+            // Free topic_info
+            _handle_topic_info_fini(&topic_info, allocator);
             // Free all the space allocated to the previous topic_infos
             for (auto & tinfo : topic_info_vector) {
-              _handle_topic_info_member_fini(&tinfo, "", allocator,
-                rmw_topic_info_fini_node_namespace);
-              _handle_topic_info_member_fini(&tinfo, "", allocator, rmw_topic_info_fini_node_name);
-              _handle_topic_info_member_fini(&tinfo, "", allocator, rmw_topic_info_fini_topic_type);
+              _handle_topic_info_fini(&tinfo, allocator);
             }
-            std::string error_msg = "Failed to create set_rmw_topic_info: ";
-            error_msg += rmw_get_error_string().str;
-            rmw_reset_error();
-            RMW_SET_ERROR_MSG(error_msg.c_str());
             return ret;
           }
           // add rmw_topic_info_t to a vector
@@ -264,6 +241,10 @@ _get_info_by_topic(
       rmw_reset_error();
       RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
         "rmw_topic_info_array_init_with_size failed to allocate memory: %s", error_message.str);
+      // Free all the space allocated to the previous topic_infos
+      for (auto & tinfo : topic_info_vector) {
+        _handle_topic_info_fini(&tinfo, allocator);
+      }
       return RMW_RET_BAD_ALLOC;
     }
     for (auto i = 0u; i < count; i++) {
