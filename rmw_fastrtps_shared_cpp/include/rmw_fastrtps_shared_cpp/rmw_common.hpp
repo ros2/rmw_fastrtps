@@ -18,9 +18,10 @@
 #include "./visibility_control.h"
 
 #include "rmw/error_handling.h"
-#include "rmw/rmw.h"
-#include "rmw/types.h"
 #include "rmw/event.h"
+#include "rmw/rmw.h"
+#include "rmw/topic_info_array.h"
+#include "rmw/types.h"
 #include "rmw/names_and_types.h"
 
 namespace rmw_fastrtps_shared_cpp

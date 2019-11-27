@@ -181,7 +181,7 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_topic_name_topic_data_map)
       // PARTICIPANT GUID
       EXPECT_EQ(topic_data.at(i).participant_guid, expected_topic_data.at(i).participant_guid);
       // GUID
-      EXPECT_EQ(topic_data.at(i).guid, expected_topic_data.at(i).guid);
+      EXPECT_EQ(topic_data.at(i).entity_guid, expected_topic_data.at(i).entity_guid);
       // TYPE
       EXPECT_EQ(topic_data.at(i).topic_type, expected_topic_data.at(i).topic_type);
       // QOS

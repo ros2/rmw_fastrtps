@@ -88,6 +88,27 @@ _get_topic_fqdns(const char * topic_name, bool no_mangle)
   return topic_fqdns;
 }
 
+typedef rmw_ret_t (* rmw_topic_info_fini_func_t)(
+  rmw_topic_info_t * topic_info,
+  rcutils_allocator_t * allocator);
+
+void
+_handle_topic_info_member_fini(
+  rmw_topic_info_t * topic_info,
+  std::string err_msg_title,
+  rcutils_allocator_t * allocator,
+  rmw_topic_info_fini_func_t topic_info_fini_member_func)
+{
+  std::string error_string = err_msg_title + "\n" + rmw_get_error_string().str;
+  rmw_reset_error();
+  rmw_ret_t ret = topic_info_fini_member_func(topic_info, allocator);
+  if (ret != RMW_RET_OK) {
+    error_string += rmw_get_error_string().str;
+    rmw_reset_error();
+    RMW_SET_ERROR_MSG(error_string.c_str());
+  }
+}
+
 rmw_ret_t
 _set_rmw_topic_info(
   rmw_topic_info_t * topic_info,
@@ -104,14 +125,9 @@ _set_rmw_topic_info(
   );
   uint8_t rmw_gid[RMW_GID_STORAGE_SIZE];
   memset(&rmw_gid, 0, RMW_GID_STORAGE_SIZE);
-  memcpy(&rmw_gid, &topic_data.guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
+  memcpy(&rmw_gid, &topic_data.entity_guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
   rmw_ret_t ret = rmw_topic_info_set_gid(topic_info, rmw_gid,
       sizeof(eprosima::fastrtps::rtps::GUID_t));
-  if (ret != RMW_RET_OK) {
-    return ret;
-  }
-  // set topic type
-  ret = rmw_topic_info_set_topic_type(topic_info, topic_data.topic_type.c_str(), allocator);
   if (ret != RMW_RET_OK) {
     return ret;
   }
@@ -120,13 +136,26 @@ _set_rmw_topic_info(
   if (ret != RMW_RET_OK) {
     return ret;
   }
+  // set topic type
+  ret = rmw_topic_info_set_topic_type(topic_info, topic_data.topic_type.c_str(), allocator);
+  if (ret != RMW_RET_OK) {
+    return ret;
+  }
   // Check if this participant is the same as the node that is passed
   if (topic_data.participant_guid == participant_guid) {
     ret = rmw_topic_info_set_node_name(topic_info, node_name, allocator);
     if (ret != RMW_RET_OK) {
+      _handle_topic_info_member_fini(topic_info, "Failed to set node_name", allocator,
+        rmw_topic_info_fini_topic_type);
       return ret;
     }
     ret = rmw_topic_info_set_node_namespace(topic_info, node_namespace, allocator);
+    if (ret != RMW_RET_OK) {
+      _handle_topic_info_member_fini(topic_info, "Failed to set node_namespace", allocator,
+        rmw_topic_info_fini_node_name);
+      _handle_topic_info_member_fini(topic_info, "", allocator, rmw_topic_info_fini_topic_type);
+      return ret;
+    }
     return ret;
   }
   // This means that this discovered participant is not associated with the passed node
@@ -140,6 +169,8 @@ _set_rmw_topic_info(
     ret = rmw_topic_info_set_node_name(topic_info, "_NODE_NAME_UNKNOWN_", allocator);
   }
   if (ret != RMW_RET_OK) {
+    _handle_topic_info_member_fini(topic_info, "Failed to set node_name", allocator,
+      rmw_topic_info_fini_topic_type);
     return ret;
   }
   // set node namespace
@@ -149,6 +180,11 @@ _set_rmw_topic_info(
     ret = rmw_topic_info_set_node_namespace(topic_info, d_namespace_it->second.c_str(), allocator);
   } else {
     ret = rmw_topic_info_set_node_namespace(topic_info, "_NODE_NAMESPACE_UNKNOWN_", allocator);
+  }
+  if (ret != RMW_RET_OK) {
+    _handle_topic_info_member_fini(topic_info, "Failed to set node_namespace", allocator,
+      rmw_topic_info_fini_node_name);
+    _handle_topic_info_member_fini(topic_info, "", allocator, rmw_topic_info_fini_topic_type);
   }
   return ret;
 }
@@ -201,7 +237,17 @@ _get_info_by_topic(
             slave_target,
             allocator);
           if (ret != RMW_RET_OK) {
-            RMW_SET_ERROR_MSG("Failed to create set_rmw_topic_info.");
+            // Free all the space allocated to the previous topic_infos
+            for (auto & tinfo : topic_info_vector) {
+              _handle_topic_info_member_fini(&tinfo, "", allocator,
+                rmw_topic_info_fini_node_namespace);
+              _handle_topic_info_member_fini(&tinfo, "", allocator, rmw_topic_info_fini_node_name);
+              _handle_topic_info_member_fini(&tinfo, "", allocator, rmw_topic_info_fini_topic_type);
+            }
+            std::string error_msg = "Failed to create set_rmw_topic_info: ";
+            error_msg += rmw_get_error_string().str;
+            rmw_reset_error();
+            RMW_SET_ERROR_MSG(error_msg.c_str());
             return ret;
           }
           // add rmw_topic_info_t to a vector
@@ -214,7 +260,10 @@ _get_info_by_topic(
     auto count = topic_info_vector.size();
     ret = rmw_topic_info_array_init_with_size(participants_info, count, allocator);
     if (ret != RMW_RET_OK) {
-      RMW_SET_ERROR_MSG("rmw_topic_info_array_init_with_size failed to allocate memory.");
+      rmw_error_string_t error_message = rmw_get_error_string();
+      rmw_reset_error();
+      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+        "rmw_topic_info_array_init_with_size failed to allocate memory: %s", error_message.str);
       return RMW_RET_BAD_ALLOC;
     }
     for (auto i = 0u; i < count; i++) {

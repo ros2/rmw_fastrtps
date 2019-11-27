@@ -42,7 +42,7 @@ typedef eprosima::fastrtps::rtps::GUID_t GUID_t;
 struct TopicData
 {
   GUID_t participant_guid;
-  GUID_t guid;       /* publisher or subscription guid */
+  GUID_t entity_guid;
   std::string topic_type;
   rmw_qos_profile_t qos_profile;
 };
@@ -150,16 +150,17 @@ public:
   /**
    * Add a topic based on discovery.
    *
-   * @param rtpsParticipantKey
-   * @param topic_name
-   * @param type_name
-   * @param dds_qos the dds qos policy of the participant
+   * @param rtpsParticipantKey the participant key of the discovered publisher or subscription
+   * @param entity_guid the guid of the publisher or subscription
+   * @param topic_name the topic name associated with the discovered publisher or subscription
+   * @param type_name the topic type associated with the discovered publisher or subscription
+   * @param dds_qos the dds qos policy of the discovered publisher or subscription
    * @return true if a change has been recorded
    */
   template<class T>
   bool addTopic(
     const eprosima::fastrtps::rtps::InstanceHandle_t & rtpsParticipantKey,
-    const GUID_t & guid, /* publisher or subscription GUID */
+    const GUID_t & entity_guid,
     const std::string & topic_name,
     const std::string & type_name,
     const T & dds_qos)
@@ -167,12 +168,12 @@ public:
     initializeTopicDataMap(topic_name, topic_name_to_topic_data_);
     auto participant_guid = iHandle2GUID(rtpsParticipantKey);
     initializeParticipantMap(participant_to_topics_, participant_guid);
-    initializeTopicTypesMap(topic_name, participant_to_topics_[guid]);
+    initializeTopicTypesMap(topic_name, participant_to_topics_[entity_guid]);
     if (rcutils_logging_logger_is_enabled_for("rmw_fastrtps_shared_cpp",
       RCUTILS_LOG_SEVERITY_DEBUG))
     {
       std::stringstream guid_stream;
-      guid_stream << guid;
+      guid_stream << entity_guid;
       RCUTILS_LOG_DEBUG_NAMED(
         "rmw_fastrtps_shared_cpp",
         "Adding topic '%s' with type '%s' for node '%s'",
@@ -182,7 +183,7 @@ public:
     dds_qos_to_rmw_qos(dds_qos, &qos_profile);
     TopicData topic_data = {
       participant_guid,
-      guid,
+      entity_guid,
       type_name,
       qos_profile
     };
@@ -194,15 +195,15 @@ public:
   /**
    * Remove a topic based on discovery.
    *
-   * @param rtpsParticipantKey
-   * @param guid the guid of the publisher or subscription
-   * @param topic_name
-   * @param type_name
+   * @param rtpsParticipantKey the participant key of the publisher or subscription
+   * @param entity_guid the guid of the publisher or subscription
+   * @param topic_name the topic name associated with the publisher or subscription
+   * @param type_name the topic type associated with the publisher or subscription
    * @return true if a change has been recorded
    */
   bool removeTopic(
     const eprosima::fastrtps::rtps::InstanceHandle_t & rtpsParticipantKey,
-    const eprosima::fastrtps::rtps::GUID_t & guid,
+    const eprosima::fastrtps::rtps::GUID_t & entity_guid,
     const std::string & topic_name,
     const std::string & type_name)
   {
@@ -216,8 +217,9 @@ public:
     {
       auto & type_vec = topic_name_to_topic_data_[topic_name];
       type_vec.erase(std::find_if(type_vec.begin(), type_vec.end(),
-        [type_name, guid](const auto & topic_data) {
-          return type_name.compare(topic_data.topic_type) == 0 && guid == topic_data.guid;
+        [type_name, entity_guid](const auto & topic_data) {
+          return type_name.compare(topic_data.topic_type) == 0 &&
+          entity_guid == topic_data.entity_guid;
         }));
       if (type_vec.empty()) {
         topic_name_to_topic_data_.erase(topic_name);
@@ -237,11 +239,10 @@ public:
         participant_to_topics_.erase(participant_guid);
       }
     } else {
-      RCUTILS_LOG_DEBUG_NAMED(
+      RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_shared_cpp",
         "Unable to remove topic, does not exist '%s' with type '%s'",
         topic_name.c_str(), type_name.c_str());
-      return false;
     }
     return true;
   }
