@@ -131,7 +131,6 @@ rmw_create_service(
       delete info;
     });
 
-  info = new CustomServiceInfo();
   info->participant_ = participant;
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
@@ -177,22 +176,19 @@ rmw_create_service(
     _register_type(participant, info->response_type_support_);
   }
 
-  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill subscriber attributes with a subscriber profile located
-  // based of topic name defined by _create_topic_name(). If no profile is found, a search with profile_name "service"
-  // is attempted. Else, use the default attributes.
+  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill subscriber attributes with a subscriber profile
+  // located based of topic name defined by _create_topic_name(). If no profile is found, a search
+  // with profile_name "service" is attempted. Else, use the default attributes.
   std::string topic_name_fallback = "service";
   eprosima::fastrtps::SubscriberAttributes subscriberParam;
   eprosima::fastrtps::fixed_string<255> sub_topic_name = _create_topic_name(
     qos_policies, ros_service_requester_prefix, service_name, "Request");
   Domain::getDefaultSubscriberAttributes(subscriberParam);
 
-  if (std::getenv("FASTRTPS_DEFAULT_PROFILES_FILE") != nullptr)
+  if (XMLProfileManager::fillSubscriberAttributes(
+    sub_topic_name.to_string(), subscriberParam, false) != XMLP_ret::XML_OK)
   {
-    if (XMLProfileManager::fillSubscriberAttributes(sub_topic_name.to_string(), subscriberParam) !=
-      XMLP_ret::XML_OK)
-    {
-      XMLProfileManager::fillSubscriberAttributes(topic_name_fallback, subscriberParam);
-    }
+    XMLProfileManager::fillSubscriberAttributes(topic_name_fallback, subscriberParam, false);
   }
 
   if (!impl->leave_middleware_default_qos) {
@@ -203,21 +199,18 @@ rmw_create_service(
   subscriberParam.topic.topicDataType = request_type_name;
   subscriberParam.topic.topicName = sub_topic_name;
 
-  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill publisher attributes with a publisher profile located
-  // based of topic name defined by _create_topic_name(). If no profile is found, a search with profile_name "service"
-  // is attempted. Else, use the default attributes.
+  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill publisher attributes with a publisher profile
+  // located based of topic name defined by _create_topic_name(). If no profile is found, a search
+  // with profile_name "service" is attempted. Else, use the default attributes.
   eprosima::fastrtps::fixed_string<255> pub_topic_name = _create_topic_name(
     qos_policies, ros_service_response_prefix, service_name, "Reply");
   eprosima::fastrtps::PublisherAttributes publisherParam;
   Domain::getDefaultPublisherAttributes(publisherParam);
 
-  if (std::getenv("FASTRTPS_DEFAULT_PROFILES_FILE") != nullptr)
+  if (XMLProfileManager::fillPublisherAttributes(
+    pub_topic_name.to_string(), publisherParam, false) != XMLP_ret::XML_OK)
   {
-    if (XMLProfileManager::fillPublisherAttributes(pub_topic_name.to_string(), publisherParam) !=
-      XMLP_ret::XML_OK)
-    {
-      XMLProfileManager::fillPublisherAttributes(topic_name_fallback, publisherParam);
-    }
+    XMLProfileManager::fillPublisherAttributes(topic_name_fallback, publisherParam, false);
   }
 
   if (!impl->leave_middleware_default_qos) {
