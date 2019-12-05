@@ -1,40 +1,51 @@
 # ROS2 Middleware Implementation for eProsima's Fast-RTPS
+
 `rmw_fastrtps` constitutes __[ROS2](https://index.ros.org/doc/ros2/) default middleware implementation__, providing an interface between ROS2 and [eProsima's](https://www.eprosima.com/index.php) [Fast-RTPS](https://github.com/eProsima/Fast-RTPS) middleware.
 
 ## Getting started
-This implementation is available in all ROS2 distributions, both from binaries and from sources. You do not need to do anything in order to use Fast-RTPS as your ROS2 middleware layer (since it is the default implementation). However, you can still specify it in two different ways:
+This implementation is available in all ROS2 distributions, both from binaries and from sources.
+You do not need to do anything in order to use Fast-RTPS as your ROS2 middleware layer (since it is the default implementation).
+However, you can still specify it in two different ways:
 
 1. Exporting `RMW_IMPLEMENTATION` environment variable:
-    ```
+    ```bash
     export RMW_IMPLEMENTATION=rmw_fastrtps_cpp
     ```
 1. When launching your ROS2 application:
-    ```
+    ```bash
     RMW_IMPLEMENTATION=rmw_fastrtps_cpp ros2 run <your_package> <your application>
     ```
 
 ## Two different RMW implementations
+
 `rmw_fastrtps` actually provides not one but two different ROS2 middleware implementations, both of them using Fast-RTPS as middleware layer: `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` (note that directory `rmw_fastrtps_shared_cpp` just contains the code that the two implementations share, and does not constitute a layer on its own).
 
-The main difference between the two is that `rmw_fastrtps_dynamic_cpp` uses ROS2 Introspection at run time to decide on the serialization/deserialization mechanism, meaning that the application can be agnostic of the message types. On the other hand, `rmw_fastrtps_cpp` relies on message types known at build time.
+The main difference between the two is that `rmw_fastrtps_dynamic_cpp` uses ROS2 Introspection at run time to decide on the serialization/deserialization mechanism, meaning that the application can be agnostic of the message types.
+On the other hand, `rmw_fastrtps_cpp` relies on message types known at build time.
 
-Mind that the default ROS2 RMW implementation is `rmw_fastrtps_cpp`. You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment variable `RMW_IMPLEMENTATION` as described above.
+Mind that the default ROS2 RMW implementation is `rmw_fastrtps_cpp`.
+You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment variable `RMW_IMPLEMENTATION` as described above.
 
 ## Advance usage
+
 `rmw_fastrtps` sets some of the Fast-RTPS configurable parameters:
 * History memory policy: `PREALLOCATED_WITH_REALLOC_MEMORY_MODE`
 * Publication mode: `ASYNCHRONOUS_PUBLISH_MODE`
 
-However, it is possible to fully configure Fast-RTPS (including the history memory policy and the publication mode) using an XML file as described in [Fast-RTPS documentation](https://eprosima-fast-rtps.readthedocs.io/en/latest/xmlprofiles.html). Then, you just need to set environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` to 1 (it is set to 0 by default). This tells `rmw_fastrtps` that it should not override neither the history memory policy nor the publication mode.
+However, it is possible to fully configure Fast-RTPS (including the history memory policy and the publication mode) using an XML file as described in [Fast-RTPS documentation](https://eprosima-fast-rtps.readthedocs.io/en/latest/xmlprofiles.html).
+Then, you just need to set environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` to 1 (it is set to 0 by default).
+This tells `rmw_fastrtps` that it should not override neither the history memory policy nor the publication mode.
 
 You have two ways of telling you ROS2 application which XML to use:
-1. Placing your XML file in the running directory under the name `DEFAULT_FASTRTPS_PROFILES.xml`
+1. Placing your XML file in the running directory under the name `DEFAULT_FASTRTPS_PROFILES.xml`.
 2. Setting environment variable `FASTRTPS_DEFAULT_PROFILES_FILE` to your XML file.
 
 ## Example
+
 The following example configures Fast-RTPS to publish synchronously, and to have a pre-allocated history that can be expanded whenever it gets filled.
 
 1. Create a Fast-RTPS XML file with:
+
     ```XML
     <?xml version="1.0" encoding="UTF-8"?>
     <dds xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
@@ -54,13 +65,16 @@ The following example configures Fast-RTPS to publish synchronously, and to have
         </profiles>
     </dds>
     ```
+
 1. Run the talker/listener ROS2 demo:
     1. In one terminal
-        ```
+
+        ```bash
         FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_xml_file> RMW_FASTRTPS_USE_QOS_FROM_XML=1 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ros2 run demo_nodes_cpp talker
         ```
+
     1. In another terminal
-        ```
+
+        ```bash
         FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_xml_file> RMW_FASTRTPS_USE_QOS_FROM_XML=1 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ros2 run demo_nodes_cpp listener
         ```
-
