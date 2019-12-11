@@ -93,12 +93,23 @@ _handle_topic_info_fini(
   rmw_topic_info_t * topic_info,
   rcutils_allocator_t * allocator)
 {
-  std::string error_string = rmw_get_error_string().str;
+  bool had_error = rmw_error_is_set();
+  std::string error_string;
+  if (had_error) {
+    error_string = rmw_get_error_string().str;
+  }
   rmw_reset_error();
+
   rmw_ret_t ret = rmw_topic_info_fini(topic_info, allocator);
   if (ret != RMW_RET_OK) {
-    error_string += rmw_get_error_string().str;
+    RCUTILS_LOG_ERROR_NAMED(
+      "rmw_fastrtps_cpp",
+      "rmw_topic_info_fini failed: %s",
+      rmw_get_error_string().str);
     rmw_reset_error();
+  }
+
+  if (had_error) {
     RMW_SET_ERROR_MSG(error_string.c_str());
   }
 }
@@ -245,7 +256,7 @@ _get_info_by_topic(
       for (auto & tinfo : topic_info_vector) {
         _handle_topic_info_fini(&tinfo, allocator);
       }
-      return RMW_RET_BAD_ALLOC;
+      return ret;
     }
     for (auto i = 0u; i < count; i++) {
       participants_info->info_array[i] = topic_info_vector.at(i);
