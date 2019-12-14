@@ -29,9 +29,10 @@
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/rtps/common/Guid.h"
 #include "fastrtps/rtps/common/InstanceHandle.h"
-#include "qos.hpp"
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rcutils/logging_macros.h"
+
+#include "qos.hpp"
 
 typedef eprosima::fastrtps::rtps::GUID_t GUID_t;
 
@@ -75,8 +76,8 @@ private:
   /**
    * Helper function to initialize an empty TopicData for a topic name.
    *
-   * @param topic_name the topic name for which the TopicNameToTopicData map should be initialised.
-   * @param topic_name_to_topic_data the map to initialise.
+   * @param topic_name the topic name for which the TopicNameToTopicData map should be initialized.
+   * @param topic_name_to_topic_data the map to initialize.
    */
   void initializeTopicDataMap(
     const std::string & topic_name,
@@ -90,8 +91,8 @@ private:
   /**
     * Helper function to initialize a topic vector.
     *
-    * @param topic_name the topic name for which the TopicToTypes map should be initialised.
-    * @param topic_to_types the map to initialise.
+    * @param topic_name the topic name for which the TopicToTypes map should be initialized.
+    * @param topic_to_types the map to initialize.
     */
   void initializeTopicTypesMap(const std::string & topic_name, TopicToTypes & topic_to_types)
   {

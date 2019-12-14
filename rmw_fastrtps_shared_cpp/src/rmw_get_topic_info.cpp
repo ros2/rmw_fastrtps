@@ -214,7 +214,7 @@ _get_info_by_topic(
     is_publisher ? slave_target->writer_topic_cache : slave_target->reader_topic_cache;
   {
     std::lock_guard<std::mutex> guard(topic_cache.getMutex());
-    auto & topic_name_to_data = topic_cache().getTopicNameToTopicData();
+    const auto & topic_name_to_data = topic_cache().getTopicNameToTopicData();
     std::vector<rmw_topic_info_t> topic_info_vector;
     for (const auto & topic_name : topic_fqdns) {
       const auto & it = topic_name_to_data.find(topic_name);

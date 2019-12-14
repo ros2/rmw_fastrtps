@@ -40,6 +40,7 @@ public:
   InstanceHandle_t participant_instance_handler[2];
   GUID_t participant_guid[2];
   GUID_t guid[2];
+
   void SetUp()
   {
     // Create instance handlers
@@ -102,7 +103,7 @@ public:
 
 TEST_F(TopicCacheTestFixture, test_topic_cache_get_topic_types)
 {
-  const auto & topic_type_map = this->topic_cache.getTopicToTypes();
+  const auto topic_type_map = this->topic_cache.getTopicToTypes();
 
   // topic1
   const auto & it = topic_type_map.find("topic1");
