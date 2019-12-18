@@ -23,9 +23,10 @@
 #include "rmw/topic_info_array.h"
 #include "rmw/topic_info.h"
 
+#include "demangle.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
-#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -142,7 +143,8 @@ _set_rmw_topic_info(
     return ret;
   }
   // set topic type
-  ret = rmw_topic_info_set_topic_type(topic_info, topic_data.topic_type.c_str(), allocator);
+  std::string type_name = _demangle_if_ros_type(topic_data.topic_type);
+  ret = rmw_topic_info_set_topic_type(topic_info, type_name.c_str(), allocator);
   if (ret != RMW_RET_OK) {
     return ret;
   }
@@ -217,7 +219,7 @@ _get_info_by_topic(
     const auto & topic_name_to_data = topic_cache().getTopicNameToTopicData();
     std::vector<rmw_topic_info_t> topic_info_vector;
     for (const auto & topic_name : topic_fqdns) {
-      const auto & it = topic_name_to_data.find(topic_name);
+      const auto it = topic_name_to_data.find(topic_name);
       if (it != topic_name_to_data.end()) {
         for (const auto & data : it->second) {
           rmw_topic_info_t topic_info = rmw_get_zero_initialized_topic_info();

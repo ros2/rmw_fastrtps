@@ -38,7 +38,7 @@ typedef eprosima::fastrtps::rtps::GUID_t GUID_t;
 
 /**
  * A data structure that encapsulates all the data associated with a publisher
- * or subscription by the topic it publishers or subscribers to
+ * or subscription by the topic it publishes or subscribes to
  */
 struct TopicData
 {
