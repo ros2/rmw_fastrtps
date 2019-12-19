@@ -122,6 +122,7 @@ _set_rmw_topic_info(
   const char * node_name,
   const char * node_namespace,
   TopicData topic_data,
+  bool no_mangle,
   ::ParticipantListener * slave_target,
   rcutils_allocator_t * allocator)
 {
@@ -143,7 +144,8 @@ _set_rmw_topic_info(
     return ret;
   }
   // set topic type
-  std::string type_name = _demangle_if_ros_type(topic_data.topic_type);
+  std::string type_name =
+    no_mangle ? _demangle_if_ros_type(topic_data.topic_type) : topic_data.topic_type;
   ret = rmw_topic_info_set_topic_type(topic_info, type_name.c_str(), allocator);
   if (ret != RMW_RET_OK) {
     return ret;
@@ -229,6 +231,7 @@ _get_info_by_topic(
             node_name,
             node_namespace,
             data,
+            no_mangle,
             slave_target,
             allocator);
           if (ret != RMW_RET_OK) {
