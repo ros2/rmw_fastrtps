@@ -134,6 +134,7 @@ rmw_create_publisher(
   }
 
   info->typesupport_identifier_ = type_support->typesupport_identifier;
+  info->type_support_impl_ = type_support->data;
 
   auto callbacks = static_cast<const message_type_support_callbacks_t *>(type_support->data);
   std::string type_name = _create_type_name(callbacks);
