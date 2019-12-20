@@ -62,7 +62,7 @@ bool TypeSupport::serialize(
       payload->max_size);  // Object that manages the raw buffer.
     eprosima::fastcdr::Cdr ser(fastbuffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::Cdr::DDS_CDR);  // Object that serializes the data.
-    if (this->serializeROSmessage(ser_data->data, ser)) {
+    if (this->serializeROSmessage(ser_data->data, ser, ser_data->impl)) {
       payload->encapsulation = ser.endianness() ==
         eprosima::fastcdr::Cdr::BIG_ENDIANNESS ? CDR_BE : CDR_LE;
       payload->length = (uint32_t)ser.getSerializedDataLength();
@@ -97,7 +97,7 @@ bool TypeSupport::deserialize(
     fastbuffer,
     eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
     eprosima::fastcdr::Cdr::DDS_CDR);
-  return deserializeROSmessage(deser, ser_data->data);
+  return deserializeROSmessage(deser, ser_data->data, ser_data->impl);
 }
 
 std::function<uint32_t()> TypeSupport::getSerializedSizeProvider(void * data)
@@ -111,7 +111,7 @@ std::function<uint32_t()> TypeSupport::getSerializedSizeProvider(void * data)
         auto ser = static_cast<eprosima::fastcdr::Cdr *>(ser_data->data);
         return static_cast<uint32_t>(ser->getSerializedDataLength());
       }
-      return static_cast<uint32_t>(this->getEstimatedSerializedSize(ser_data->data));
+      return static_cast<uint32_t>(this->getEstimatedSerializedSize(ser_data->data, ser_data->impl));
     };
   return ser_size;
 }

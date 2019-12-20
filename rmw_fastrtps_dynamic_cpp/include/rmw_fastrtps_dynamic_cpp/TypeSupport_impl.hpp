@@ -1116,19 +1116,21 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
 
 template<typename MembersType>
 size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
-  const void * ros_message)
+  const void * ros_message, const void * impl)
 {
   if (max_size_bound_) {
     return m_typeSize;
   }
 
   assert(ros_message);
+  assert(impl);
 
   // Encapsulation size
   size_t ret_val = 4;
 
-  if (members_->member_count_ != 0) {
-    ret_val += TypeSupport::getEstimatedSerializedSize(members_, ros_message, 0);
+  auto members = static_cast<const MembersType *>(impl);
+  if (members->member_count_ != 0) {
+    ret_val += TypeSupport::getEstimatedSerializedSize(members, ros_message, 0);
   } else {
     ret_val += 1;
   }
@@ -1138,15 +1140,17 @@ size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
 
 template<typename MembersType>
 bool TypeSupport<MembersType>::serializeROSmessage(
-  const void * ros_message, eprosima::fastcdr::Cdr & ser)
+  const void * ros_message, eprosima::fastcdr::Cdr & ser, const void * impl)
 {
   assert(ros_message);
+  assert(impl);
 
   // Serialize encapsulation
   ser.serialize_encapsulation();
 
-  if (members_->member_count_ != 0) {
-    TypeSupport::serializeROSmessage(ser, members_, ros_message);
+  auto members = static_cast<const MembersType *>(impl);
+  if (members->member_count_ != 0) {
+    TypeSupport::serializeROSmessage(ser, members, ros_message);
   } else {
     ser << (uint8_t)0;
   }
@@ -1156,15 +1160,17 @@ bool TypeSupport<MembersType>::serializeROSmessage(
 
 template<typename MembersType>
 bool TypeSupport<MembersType>::deserializeROSmessage(
-  eprosima::fastcdr::Cdr & deser, void * ros_message)
+  eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl)
 {
   assert(ros_message);
+  assert(impl);
 
   // Deserialize encapsulation.
   deser.read_encapsulation();
 
-  if (members_->member_count_ != 0) {
-    TypeSupport::deserializeROSmessage(deser, members_, ros_message, false);
+  auto members = static_cast<const MembersType *>(impl);
+  if (members->member_count_ != 0) {
+    TypeSupport::deserializeROSmessage(deser, members, ros_message, false);
   } else {
     uint8_t dump = 0;
     deser >> dump;
