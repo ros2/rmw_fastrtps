@@ -55,6 +55,7 @@ __rmw_send_request(
   rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = false;
   data.data = const_cast<void *>(ros_request);
+  data.impl = info->request_type_support_impl_;
   if (info->request_publisher_->write(&data, wparams)) {
     returnedValue = RMW_RET_OK;
     *sequence_id = ((int64_t)wparams.sample_identity().sequence_number().high) << 32 |
@@ -94,7 +95,8 @@ __rmw_take_request(
   if (request.buffer_ != nullptr) {
     eprosima::fastcdr::Cdr deser(*request.buffer_, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::Cdr::DDS_CDR);
-    info->request_type_support_->deserializeROSmessage(deser, ros_request);
+    info->request_type_support_->deserializeROSmessage(
+      deser, ros_request, info->request_type_support_impl_);
 
     // Get header
     memcpy(request_header->writer_guid, &request.sample_identity_.writer_guid(),

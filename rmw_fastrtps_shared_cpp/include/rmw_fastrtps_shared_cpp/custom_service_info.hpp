@@ -38,7 +38,9 @@ class ServiceListener;
 typedef struct CustomServiceInfo
 {
   rmw_fastrtps_shared_cpp::TypeSupport * request_type_support_;
+  const void * request_type_support_impl_;
   rmw_fastrtps_shared_cpp::TypeSupport * response_type_support_;
+  const void * response_type_support_impl_;
   eprosima::fastrtps::Subscriber * request_subscriber_;
   eprosima::fastrtps::Publisher * response_publisher_;
   ServiceListener * listener_;
@@ -78,6 +80,7 @@ public:
     rmw_fastrtps_shared_cpp::SerializedData data;
     data.is_cdr_buffer = true;
     data.data = request.buffer_;
+    data.impl = nullptr; // not used when is_cdr_buffer is true
     if (sub->takeNextData(&data, &sinfo)) {
       if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
         request.sample_identity_ = sinfo.sample_identity;
