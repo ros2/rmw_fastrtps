@@ -28,13 +28,11 @@ You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment varia
 
 ## Advance usage
 
-`rmw_fastrtps` sets some of the Fast-RTPS configurable parameters:
-* History memory policy: `PREALLOCATED_WITH_REALLOC_MEMORY_MODE`
-* Publication mode: `ASYNCHRONOUS_PUBLISH_MODE`
+`rmw_fastrtps` sets Fast-RTPS history memory policy to `PREALLOCATED_WITH_REALLOC_MEMORY_MODE`
 
-However, it is possible to fully configure Fast-RTPS (including the history memory policy and the publication mode) using an XML file as described in [Fast-RTPS documentation](https://eprosima-fast-rtps.readthedocs.io/en/latest/xmlprofiles.html).
+However, it is possible to fully configure Fast-RTPS (including the history memory policy) using an XML file as described in [Fast-RTPS documentation](https://eprosima-fast-rtps.readthedocs.io/en/latest/xmlprofiles.html).
 Then, you just need to set environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` to 1 (it is set to 0 by default).
-This tells `rmw_fastrtps` that it should not override neither the history memory policy nor the publication mode.
+This tells `rmw_fastrtps` that it should not override the history memory policy.
 
 You have two ways of telling you ROS 2 application which XML to use:
 1. Placing your XML file in the running directory under the name `DEFAULT_FASTRTPS_PROFILES.xml`.
@@ -42,7 +40,7 @@ You have two ways of telling you ROS 2 application which XML to use:
 
 ## Example
 
-The following example configures Fast-RTPS to publish synchronously, and to have a pre-allocated history that can be expanded whenever it gets filled.
+The following example configures Fast-RTPS to have a pre-allocated history that can be expanded whenever it gets filled.
 
 1. Create a Fast-RTPS XML file with:
 
@@ -51,11 +49,6 @@ The following example configures Fast-RTPS to publish synchronously, and to have
     <dds xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
         <profiles>
             <publisher profile_name="publisher profile" is_default_profile="true">
-                <qos>
-                    <publishMode>
-                        <kind>SYNCHRONOUS</kind>
-                    </publishMode>
-                </qos>
                 <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
             </publisher>
 
