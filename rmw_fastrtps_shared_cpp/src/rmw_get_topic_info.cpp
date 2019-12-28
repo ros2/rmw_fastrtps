@@ -145,7 +145,7 @@ _set_rmw_topic_info(
   }
   // set topic type
   std::string type_name =
-    no_mangle ? _demangle_if_ros_type(topic_data.topic_type) : topic_data.topic_type;
+    no_mangle ? topic_data.topic_type : _demangle_if_ros_type(topic_data.topic_type);
   ret = rmw_topic_info_set_topic_type(topic_info, type_name.c_str(), allocator);
   if (ret != RMW_RET_OK) {
     return ret;
