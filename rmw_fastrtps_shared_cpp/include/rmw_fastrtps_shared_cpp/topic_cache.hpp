@@ -180,7 +180,7 @@ public:
         "Adding topic '%s' with type '%s' for node '%s'",
         topic_name.c_str(), type_name.c_str(), guid_stream.str().c_str());
     }
-    rmw_qos_profile_t qos_profile = rmw_qos_profile_t();
+    rmw_qos_profile_t qos_profile = rmw_qos_profile_unknown;
     dds_qos_to_rmw_qos(dds_qos, &qos_profile);
     TopicData topic_data = {
       participant_guid,
