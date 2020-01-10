@@ -170,7 +170,8 @@ _set_rmw_topic_endpoint_info(
     if (ret != RMW_RET_OK) {
       return ret;
     }
-    ret = rmw_topic_endpoint_info_set_node_namespace(topic_endpoint_info, node_namespace, allocator);
+    ret =
+      rmw_topic_endpoint_info_set_node_namespace(topic_endpoint_info, node_namespace, allocator);
     if (ret != RMW_RET_OK) {
       return ret;
     }
@@ -182,9 +183,11 @@ _set_rmw_topic_endpoint_info(
   // set node name
   const auto & d_name_it = slave_target->discovered_names.find(topic_data.participant_guid);
   if (d_name_it != slave_target->discovered_names.end()) {
-    ret = rmw_topic_endpoint_info_set_node_name(topic_endpoint_info, d_name_it->second.c_str(), allocator);
+    ret = rmw_topic_endpoint_info_set_node_name(
+      topic_endpoint_info, d_name_it->second.c_str(), allocator);
   } else {
-    ret = rmw_topic_endpoint_info_set_node_name(topic_endpoint_info, "_NODE_NAME_UNKNOWN_", allocator);
+    ret = rmw_topic_endpoint_info_set_node_name(
+      topic_endpoint_info, "_NODE_NAME_UNKNOWN_", allocator);
   }
   if (ret != RMW_RET_OK) {
     return ret;
@@ -193,9 +196,11 @@ _set_rmw_topic_endpoint_info(
   const auto & d_namespace_it =
     slave_target->discovered_namespaces.find(topic_data.participant_guid);
   if (d_namespace_it != slave_target->discovered_namespaces.end()) {
-    ret = rmw_topic_endpoint_info_set_node_namespace(topic_endpoint_info, d_namespace_it->second.c_str(), allocator);
+    ret = rmw_topic_endpoint_info_set_node_namespace(
+      topic_endpoint_info, d_namespace_it->second.c_str(), allocator);
   } else {
-    ret = rmw_topic_endpoint_info_set_node_namespace(topic_endpoint_info, "_NODE_NAMESPACE_UNKNOWN_", allocator);
+    ret = rmw_topic_endpoint_info_set_node_namespace(
+      topic_endpoint_info, "_NODE_NAMESPACE_UNKNOWN_", allocator);
   }
   return ret;
 }
@@ -238,7 +243,8 @@ _get_info_by_topic(
       const auto it = topic_name_to_data.find(topic_name);
       if (it != topic_name_to_data.end()) {
         for (const auto & data : it->second) {
-          rmw_topic_endpoint_info_t topic_endpoint_info = rmw_get_zero_initialized_topic_endpoint_info();
+          rmw_topic_endpoint_info_t topic_endpoint_info =
+            rmw_get_zero_initialized_topic_endpoint_info();
           rmw_ret_t ret = _set_rmw_topic_endpoint_info(
             &topic_endpoint_info,
             participant_guid,
@@ -271,7 +277,8 @@ _get_info_by_topic(
       rmw_error_string_t error_message = rmw_get_error_string();
       rmw_reset_error();
       RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-        "rmw_topic_endpoint_info_array_init_with_size failed to allocate memory: %s", error_message.str);
+        "rmw_topic_endpoint_info_array_init_with_size failed to allocate memory: %s",
+        error_message.str);
       // Free all the space allocated to the previous topic_endpoint_infos
       for (auto & tinfo : topic_endpoint_info_vector) {
         _handle_topic_endpoint_info_fini(&tinfo, allocator);
