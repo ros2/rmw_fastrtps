@@ -89,7 +89,7 @@ __rmw_publish_serialized_message(
   rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = true;
   data.data = &ser;
-  data.impl = nullptr; // not used when is_cdr_buffer is true
+  data.impl = nullptr;    // not used when is_cdr_buffer is true
   if (!info->publisher_->write(&data)) {
     RMW_SET_ERROR_MSG("cannot publish data");
     return RMW_RET_ERROR;

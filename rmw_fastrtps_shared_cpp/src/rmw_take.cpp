@@ -174,7 +174,7 @@ _take_serialized_message(
   rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = true;
   data.data = &buffer;
-  data.impl = nullptr; // not used when is_cdr_buffer is true
+  data.impl = nullptr;    // not used when is_cdr_buffer is true
   if (info->subscriber_->takeNextData(&data, &sinfo)) {
     info->listener_->data_taken(info->subscriber_);
 

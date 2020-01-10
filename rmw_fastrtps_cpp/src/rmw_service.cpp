@@ -118,7 +118,7 @@ rmw_create_service(
 
   info->request_type_support_impl_ = request_members;
   info->response_type_support_impl_ = response_members;
-  
+
   std::string request_type_name = _create_type_name(request_members);
   std::string response_type_name = _create_type_name(response_members);
 

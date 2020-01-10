@@ -83,7 +83,7 @@ public:
     rmw_fastrtps_shared_cpp::SerializedData data;
     data.is_cdr_buffer = true;
     data.data = response.buffer_.get();
-    data.impl = nullptr; // not used when is_cdr_buffer is true
+    data.impl = nullptr;    // not used when is_cdr_buffer is true
     if (sub->takeNextData(&data, &sinfo)) {
       if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
         response.sample_identity_ = sinfo.related_sample_identity;
