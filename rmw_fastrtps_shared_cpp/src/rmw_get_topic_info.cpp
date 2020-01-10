@@ -123,6 +123,7 @@ _set_rmw_topic_info(
   const char * node_namespace,
   TopicData topic_data,
   bool no_mangle,
+  bool is_publisher,
   ::ParticipantListener * slave_target,
   rcutils_allocator_t * allocator)
 {
@@ -130,11 +131,24 @@ _set_rmw_topic_info(
     sizeof(eprosima::fastrtps::rtps::GUID_t) <= RMW_GID_STORAGE_SIZE,
     "RMW_GID_STORAGE_SIZE insufficient to store the rmw_fastrtps_cpp GID implementation."
   );
+  rmw_ret_t ret;
+  // set endpoint type
+  if (is_publisher) {
+    ret = rmw_topic_info_set_endpoint_type(topic_info, RMW_ENDPOINT_PUBLISHER);
+  } else {
+    ret = rmw_topic_info_set_endpoint_type(topic_info, RMW_ENDPOINT_SUBSCRIPTION);
+  }
+  if (ret != RMW_RET_OK) {
+    return ret;
+  }
+  // set endpoint gid
   uint8_t rmw_gid[RMW_GID_STORAGE_SIZE];
   memset(&rmw_gid, 0, RMW_GID_STORAGE_SIZE);
   memcpy(&rmw_gid, &topic_data.entity_guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
-  rmw_ret_t ret = rmw_topic_info_set_gid(topic_info, rmw_gid,
-      sizeof(eprosima::fastrtps::rtps::GUID_t));
+  ret = rmw_topic_info_set_gid(
+    topic_info,
+    rmw_gid,
+    sizeof(eprosima::fastrtps::rtps::GUID_t));
   if (ret != RMW_RET_OK) {
     return ret;
   }
@@ -232,6 +246,7 @@ _get_info_by_topic(
             node_namespace,
             data,
             no_mangle,
+            is_publisher,
             slave_target,
             allocator);
           if (ret != RMW_RET_OK) {

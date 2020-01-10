@@ -21,7 +21,6 @@
 #include <set>
 #include <sstream>
 #include <string>
-#include <tuple>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -76,8 +75,8 @@ private:
   /**
    * Helper function to initialize an empty TopicData for a topic name.
    *
-   * @param topic_name the topic name for which the TopicNameToTopicData map should be initialized.
-   * @param topic_name_to_topic_data the map to initialize.
+   * \param topic_name the topic name for which the TopicNameToTopicData map should be initialized.
+   * \param topic_name_to_topic_data the map to initialize.
    */
   void initializeTopicDataMap(
     const std::string & topic_name,
@@ -91,8 +90,8 @@ private:
   /**
     * Helper function to initialize a topic vector.
     *
-    * @param topic_name the topic name for which the TopicToTypes map should be initialized.
-    * @param topic_to_types the map to initialize.
+    * \param topic_name the topic name for which the TopicToTypes map should be initialized.
+    * \param topic_to_types the map to initialize.
     */
   void initializeTopicTypesMap(const std::string & topic_name, TopicToTypes & topic_to_types)
   {
@@ -104,8 +103,8 @@ private:
   /**
    * Helper function to initialize the set inside a participant map.
    *
-   * @param map
-   * @param guid
+   * \param map
+   * \param guid
    */
   void initializeParticipantMap(
     ParticipantTopicMap & map,
@@ -118,7 +117,7 @@ private:
 
 public:
   /**
-   * @return a map of topic name to the vector of topic types used.
+   * \return a map of topic name to the vector of topic types used.
    */
   const TopicToTypes getTopicToTypes() const
   {
@@ -133,7 +132,7 @@ public:
   }
 
   /**
-   * @return a map of participant guid to the vector of topic names used.
+   * \return a map of participant guid to the vector of topic names used.
    */
   const ParticipantTopicMap & getParticipantToTopics() const
   {
@@ -141,7 +140,7 @@ public:
   }
 
   /**
-   * @return a map of topic name to a vector of GUID_t, type name and qos profile tuple.
+   * \return a map of topic name to a vector of GUID_t, type name and qos profile tuple.
    */
   const TopicNameToTopicData & getTopicNameToTopicData() const
   {
@@ -151,12 +150,12 @@ public:
   /**
    * Add a topic based on discovery.
    *
-   * @param rtpsParticipantKey the participant key of the discovered publisher or subscription
-   * @param entity_guid the guid of the publisher or subscription
-   * @param topic_name the topic name associated with the discovered publisher or subscription
-   * @param type_name the topic type associated with the discovered publisher or subscription
-   * @param dds_qos the dds qos policy of the discovered publisher or subscription
-   * @return true if a change has been recorded
+   * \param rtpsParticipantKey the participant key of the discovered publisher or subscription
+   * \param entity_guid the guid of the publisher or subscription
+   * \param topic_name the topic name associated with the discovered publisher or subscription
+   * \param type_name the topic type associated with the discovered publisher or subscription
+   * \param dds_qos the dds qos policy of the discovered publisher or subscription
+   * \return true if a change has been recorded
    */
   template<class T>
   bool addTopic(
@@ -196,11 +195,11 @@ public:
   /**
    * Remove a topic based on discovery.
    *
-   * @param rtpsParticipantKey the participant key of the publisher or subscription
-   * @param entity_guid the guid of the publisher or subscription
-   * @param topic_name the topic name associated with the publisher or subscription
-   * @param type_name the topic type associated with the publisher or subscription
-   * @return true if a change has been recorded
+   * \param rtpsParticipantKey the participant key of the publisher or subscription
+   * \param entity_guid the guid of the publisher or subscription
+   * \param topic_name the topic name associated with the publisher or subscription
+   * \param type_name the topic type associated with the publisher or subscription
+   * \return true if a change has been recorded
    */
   bool removeTopic(
     const eprosima::fastrtps::rtps::InstanceHandle_t & rtpsParticipantKey,
@@ -287,7 +286,7 @@ private:
 
 public:
   /**
-  * @return a reference to this object to lock.
+  * \return a reference to this object to lock.
   */
   std::mutex & getMutex() const RCPPUTILS_TSA_RETURN_CAPABILITY(mutex_)
   {
