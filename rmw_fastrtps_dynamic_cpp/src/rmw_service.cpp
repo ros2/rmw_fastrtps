@@ -151,7 +151,6 @@ rmw_create_service(
     qos_policies, ros_service_requester_prefix, service_name, "Request");
 
   if (!impl->leave_middleware_default_qos) {
-    publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
     publisherParam.historyMemoryPolicy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
