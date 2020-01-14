@@ -47,12 +47,12 @@ constexpr char kLoggerTag[] = "rmw_fastrtps_shared_cpp";
 /**
  * Get the guid that corresponds to the node and namespace.
  *
- * @param node to discover other participants with
- * @param node_name of the desired node
- * @param node_namespace of the desired node
- * @param guid [out] result
- * @return RMW_RET_ERROR if unable to find guid
- * @return RMW_RET_OK if guid is available
+ * \param node to discover other participants with
+ * \param node_name of the desired node
+ * \param node_namespace of the desired node
+ * \param guid [out] result
+ * \return RMW_RET_ERROR if unable to find guid
+ * \return RMW_RET_OK if guid is available
  */
 rmw_ret_t __get_guid_by_name(
   const rmw_node_t * node, const char * node_name,
@@ -96,9 +96,9 @@ rmw_ret_t __get_guid_by_name(
 /**
  * Validate the input data of node_info_and_types functions.
  *
- * @return RMW_RET_INVALID_ARGUMENT for null input args
- * @return RMW_RET_ERROR if identifier is not the same as the input node
- * @return RMW_RET_OK if all input is valid
+ * \return RMW_RET_INVALID_ARGUMENT for null input args
+ * \return RMW_RET_ERROR if identifier is not the same as the input node
+ * \return RMW_RET_OK if all input is valid
  */
 rmw_ret_t __validate_input(
   const char * identifier,
@@ -145,10 +145,10 @@ rmw_ret_t __validate_input(
  * Get info from publisher and subscriber
  * Combined results from the two lists
  *
- * @param topic_cache cache with topic information
- * @param topics [out] resulting topics
- * @param node_guid_ to find information for
- * @param no_demangle true if demangling will not occur
+ * \param topic_cache cache with topic information
+ * \param topics [out] resulting topics
+ * \param node_guid_ to find information for
+ * \param no_demangle true if demangling will not occur
  */
 void
 __accumulate_topics(
@@ -183,11 +183,11 @@ __accumulate_topics(
 /**
  * Copy topic data to results
  *
- * @param topics to copy over
- * @param allocator to use
- * @param no_demangle true if demangling will not occur
- * @param topic_names_and_types [out] final rmw result
- * @return RMW_RET_OK if successful
+ * \param topics to copy over
+ * \param allocator to use
+ * \param no_demangle true if demangling will not occur
+ * \param topic_names_and_types [out] final rmw result
+ * \return RMW_RET_OK if successful
  */
 rmw_ret_t
 __copy_data_to_results(
@@ -313,15 +313,15 @@ typedef std::function<const LockedObject<TopicCache>&(CustomParticipantInfo & pa
 /**
  * Get topic names and types for the specific node_name and node_namespace requested.
  *
- * @param identifier corresponding to the input node
- * @param node to use for discovery
- * @param allocator for returned value
- * @param node_name to search
- * @param node_namespace to search
- * @param no_demangle true if the topics should not be demangled
- * @param retrieve_cache_func getter for topic cache
- * @param topic_names_and_types result
- * @return RMW_RET_OK if successful
+ * \param identifier corresponding to the input node
+ * \param node to use for discovery
+ * \param allocator for returned value
+ * \param node_name to search
+ * \param node_namespace to search
+ * \param no_demangle true if the topics should not be demangled
+ * \param retrieve_cache_func getter for topic cache
+ * \param topic_names_and_types result
+ * \return RMW_RET_OK if successful
  */
 rmw_ret_t
 __rmw_get_topic_names_and_types_by_node(

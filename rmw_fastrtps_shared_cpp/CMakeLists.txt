@@ -56,6 +56,7 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_compare_gids_equal.cpp
   src/rmw_count.cpp
   src/rmw_get_gid_for_publisher.cpp
+  src/rmw_get_topic_endpoint_info.cpp
   src/rmw_guard_condition.cpp
   src/rmw_logging.cpp
   src/rmw_node.cpp

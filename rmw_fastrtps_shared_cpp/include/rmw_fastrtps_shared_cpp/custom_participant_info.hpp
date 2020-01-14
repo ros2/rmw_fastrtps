@@ -164,16 +164,22 @@ public:
   {
     auto & topic_cache =
       is_reader ? reader_topic_cache : writer_topic_cache;
-
     bool trigger;
     {
       std::lock_guard<std::mutex> guard(topic_cache.getMutex());
       if (is_alive) {
-        trigger = topic_cache().addTopic(proxyData.RTPSParticipantKey(),
-            proxyData.topicName().to_string(), proxyData.typeName().to_string());
+        trigger = topic_cache().addTopic(
+          proxyData.RTPSParticipantKey(),
+          proxyData.guid(),
+          proxyData.topicName().to_string(),
+          proxyData.typeName().to_string(),
+          proxyData.m_qos);
       } else {
-        trigger = topic_cache().removeTopic(proxyData.RTPSParticipantKey(),
-            proxyData.topicName().to_string(), proxyData.typeName().to_string());
+        trigger = topic_cache().removeTopic(
+          proxyData.RTPSParticipantKey(),
+          proxyData.guid(),
+          proxyData.topicName().to_string(),
+          proxyData.typeName().to_string());
       }
     }
     if (trigger) {

@@ -14,7 +14,6 @@
 
 #include <limits>
 
-#include "qos_converter.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 
 #include "fastrtps/attributes/PublisherAttributes.h"
