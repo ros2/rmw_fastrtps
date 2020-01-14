@@ -119,6 +119,9 @@ rmw_create_service(
   untyped_response_members = get_response_ptr(type_support->data,
       info->typesupport_identifier_);
 
+  info->request_type_support_impl_ = untyped_request_members;
+  info->response_type_support_impl_ = untyped_response_members;
+
   std::string request_type_name = _create_type_name(untyped_request_members,
       info->typesupport_identifier_);
   std::string response_type_name = _create_type_name(untyped_response_members,
