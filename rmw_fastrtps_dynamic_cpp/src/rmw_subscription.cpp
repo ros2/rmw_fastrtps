@@ -129,6 +129,7 @@ rmw_create_subscription(
     return nullptr;
   }
   info->typesupport_identifier_ = type_support->typesupport_identifier;
+  info->type_support_impl_ = type_support->data;
 
   std::string type_name = _create_type_name(
     type_support->data, info->typesupport_identifier_);

@@ -134,11 +134,13 @@ template<typename MembersType>
 class TypeSupport : public rmw_fastrtps_shared_cpp::TypeSupport
 {
 public:
-  size_t getEstimatedSerializedSize(const void * ros_message);
+  size_t getEstimatedSerializedSize(const void * ros_message, const void * impl);
 
-  bool serializeROSmessage(const void * ros_message, eprosima::fastcdr::Cdr & ser);
+  bool serializeROSmessage(
+    const void * ros_message, eprosima::fastcdr::Cdr & ser, const void * impl);
 
-  bool deserializeROSmessage(eprosima::fastcdr::Cdr & deser, void * ros_message);
+  bool deserializeROSmessage(
+    eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl);
 
 protected:
   TypeSupport();

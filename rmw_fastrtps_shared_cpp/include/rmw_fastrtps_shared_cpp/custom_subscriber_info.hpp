@@ -41,6 +41,7 @@ typedef struct CustomSubscriberInfo : public CustomEventInfo
   eprosima::fastrtps::Subscriber * subscriber_;
   SubListener * listener_;
   rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
+  const void * type_support_impl_;
   const char * typesupport_identifier_;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
