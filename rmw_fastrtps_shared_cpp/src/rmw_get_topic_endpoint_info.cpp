@@ -181,26 +181,29 @@ _set_rmw_topic_endpoint_info(
   // and hence we must find its name and namespace from the discovered_names and
   // discovered_namespace maps
   // set node name
-  const auto & d_name_it = slave_target->discovered_names.find(topic_data.participant_guid);
-  if (d_name_it != slave_target->discovered_names.end()) {
-    ret = rmw_topic_endpoint_info_set_node_name(
-      topic_endpoint_info, d_name_it->second.c_str(), allocator);
-  } else {
-    ret = rmw_topic_endpoint_info_set_node_name(
-      topic_endpoint_info, "_NODE_NAME_UNKNOWN_", allocator);
-  }
-  if (ret != RMW_RET_OK) {
-    return ret;
-  }
-  // set node namespace
-  const auto & d_namespace_it =
-    slave_target->discovered_namespaces.find(topic_data.participant_guid);
-  if (d_namespace_it != slave_target->discovered_namespaces.end()) {
-    ret = rmw_topic_endpoint_info_set_node_namespace(
-      topic_endpoint_info, d_namespace_it->second.c_str(), allocator);
-  } else {
-    ret = rmw_topic_endpoint_info_set_node_namespace(
-      topic_endpoint_info, "_NODE_NAMESPACE_UNKNOWN_", allocator);
+  { // Scope for lock guard
+    std::lock_guard<std::mutex> guard(slave_target->names_mutex_);
+    const auto & d_name_it = slave_target->discovered_names.find(topic_data.participant_guid);
+    if (d_name_it != slave_target->discovered_names.end()) {
+      ret = rmw_topic_endpoint_info_set_node_name(
+        topic_endpoint_info, d_name_it->second.c_str(), allocator);
+    } else {
+      ret = rmw_topic_endpoint_info_set_node_name(
+        topic_endpoint_info, "_NODE_NAME_UNKNOWN_", allocator);
+    }
+    if (ret != RMW_RET_OK) {
+      return ret;
+    }
+    // set node namespace
+    const auto & d_namespace_it =
+      slave_target->discovered_namespaces.find(topic_data.participant_guid);
+    if (d_namespace_it != slave_target->discovered_namespaces.end()) {
+      ret = rmw_topic_endpoint_info_set_node_namespace(
+        topic_endpoint_info, d_namespace_it->second.c_str(), allocator);
+    } else {
+      ret = rmw_topic_endpoint_info_set_node_namespace(
+        topic_endpoint_info, "_NODE_NAMESPACE_UNKNOWN_", allocator);
+    }
   }
   return ret;
 }
