@@ -92,7 +92,8 @@ __rmw_send_response(
   assert(info);
 
   eprosima::fastrtps::rtps::WriteParams wparams;
-  memcpy(&wparams.related_sample_identity().writer_guid(), request_header->writer_guid,
+  memcpy(
+    &wparams.related_sample_identity().writer_guid(), request_header->writer_guid,
     sizeof(eprosima::fastrtps::rtps::GUID_t));
   wparams.related_sample_identity().sequence_number().high =
     (int32_t)((request_header->sequence_number & 0xFFFFFFFF00000000) >> 32);

@@ -39,7 +39,8 @@ _assign_message_info(
   rmw_gid_t * sender_gid = &message_info->publisher_gid;
   sender_gid->implementation_identifier = identifier;
   memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
-  memcpy(sender_gid->data, &sinfo->sample_identity.writer_guid(),
+  memcpy(
+    sender_gid->data, &sinfo->sample_identity.writer_guid(),
     sizeof(eprosima::fastrtps::rtps::GUID_t));
 }
 
@@ -213,8 +214,8 @@ __rmw_take_serialized_message(
     serialized_message, "ros_message pointer is null", return RMW_RET_ERROR);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(taken, "boolean flag for taken is null", return RMW_RET_ERROR);
 
-  return _take_serialized_message(identifier, subscription, serialized_message, taken, nullptr,
-           allocation);
+  return _take_serialized_message(
+    identifier, subscription, serialized_message, taken, nullptr, allocation);
 }
 
 rmw_ret_t

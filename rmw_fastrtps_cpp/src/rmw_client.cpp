@@ -112,15 +112,19 @@ rmw_create_client(
   std::string request_type_name = _create_type_name(request_members);
   std::string response_type_name = _create_type_name(response_members);
 
-  if (!Domain::getRegisteredType(participant, request_type_name.c_str(),
-    reinterpret_cast<TopicDataType **>(&info->request_type_support_)))
+  if (
+    !Domain::getRegisteredType(
+      participant, request_type_name.c_str(),
+      reinterpret_cast<TopicDataType **>(&info->request_type_support_)))
   {
     info->request_type_support_ = new RequestTypeSupport_cpp(service_members);
     _register_type(participant, info->request_type_support_);
   }
 
-  if (!Domain::getRegisteredType(participant, response_type_name.c_str(),
-    reinterpret_cast<TopicDataType **>(&info->response_type_support_)))
+  if (
+    !Domain::getRegisteredType(
+      participant, response_type_name.c_str(),
+      reinterpret_cast<TopicDataType **>(&info->response_type_support_)))
   {
     info->response_type_support_ = new ResponseTypeSupport_cpp(service_members);
     _register_type(participant, info->response_type_support_);

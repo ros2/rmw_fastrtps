@@ -169,8 +169,9 @@ public:
     auto participant_guid = iHandle2GUID(rtpsParticipantKey);
     initializeParticipantMap(participant_to_topics_, participant_guid);
     initializeTopicTypesMap(topic_name, participant_to_topics_[entity_guid]);
-    if (rcutils_logging_logger_is_enabled_for("rmw_fastrtps_shared_cpp",
-      RCUTILS_LOG_SEVERITY_DEBUG))
+    if (
+      rcutils_logging_logger_is_enabled_for(
+        "rmw_fastrtps_shared_cpp", RCUTILS_LOG_SEVERITY_DEBUG))
     {
       std::stringstream guid_stream;
       guid_stream << entity_guid;
@@ -216,11 +217,13 @@ public:
     }
     {
       auto & type_vec = topic_name_to_topic_data_[topic_name];
-      type_vec.erase(std::find_if(type_vec.begin(), type_vec.end(),
-        [type_name, entity_guid](const auto & topic_data) {
-          return type_name.compare(topic_data.topic_type) == 0 &&
-          entity_guid == topic_data.entity_guid;
-        }));
+      type_vec.erase(
+        std::find_if(
+          type_vec.begin(), type_vec.end(),
+          [type_name, entity_guid](const auto & topic_data) {
+            return type_name.compare(topic_data.topic_type) == 0 &&
+            entity_guid == topic_data.entity_guid;
+          }));
       if (type_vec.empty()) {
         topic_name_to_topic_data_.erase(topic_name);
       }
@@ -259,7 +262,8 @@ inline std::ostream & operator<<(
     stream << "  Topics: " << std::endl;
     for (auto & types : elem.second) {
       stream << "    " << types.first << ": ";
-      std::copy(types.second.begin(), types.second.end(),
+      std::copy(
+        types.second.begin(), types.second.end(),
         std::ostream_iterator<std::string>(stream, ","));
       stream << std::endl;
     }
@@ -269,8 +273,9 @@ inline std::ostream & operator<<(
   topics_ss << "Cumulative TopicToTypes: " << std::endl;
   for (auto & elem : topic_cache.getTopicToTypes()) {
     std::ostringstream stream;
-    std::copy(elem.second.begin(), elem.second.end(), std::ostream_iterator<std::string>(stream,
-      ","));
+    std::copy(
+      elem.second.begin(), elem.second.end(), std::ostream_iterator<std::string>(
+        stream, ","));
     topics_ss << "  " << elem.first << " : " << stream.str() << std::endl;
   }
   ostream << map_ss.str() << topics_ss.str();

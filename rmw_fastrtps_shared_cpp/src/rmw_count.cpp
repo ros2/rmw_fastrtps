@@ -58,7 +58,8 @@ __rmw_count_publishers(
   std::vector<std::string> topic_fqdns;
   topic_fqdns.push_back(topic_name);
   if (topic_name[0] == '/') {
-    std::for_each(ros_prefixes.begin(), ros_prefixes.end(),
+    std::for_each(
+      ros_prefixes.begin(), ros_prefixes.end(),
       [&topic_fqdns, &topic_name](const std::string & prefix) {
         topic_fqdns.push_back(prefix + topic_name);
       });
@@ -113,7 +114,8 @@ __rmw_count_subscribers(
   std::vector<std::string> topic_fqdns;
   topic_fqdns.push_back(topic_name);
   if (topic_name[0] == '/') {
-    std::for_each(ros_prefixes.begin(), ros_prefixes.end(),
+    std::for_each(
+      ros_prefixes.begin(), ros_prefixes.end(),
       [&topic_fqdns, &topic_name](const std::string & prefix) {
         topic_fqdns.push_back(prefix + topic_name);
       });

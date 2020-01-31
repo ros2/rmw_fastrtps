@@ -81,7 +81,8 @@ _get_topic_fqdns(const char * topic_name, bool no_mangle)
   if (!no_mangle) {
     auto ros_prefixes = _get_all_ros_prefixes();
     // Build the list of all possible topic FQDN
-    std::for_each(ros_prefixes.begin(), ros_prefixes.end(),
+    std::for_each(
+      ros_prefixes.begin(), ros_prefixes.end(),
       [&topic_fqdns, &topic_name](const std::string & prefix) {
         topic_fqdns.push_back(prefix + topic_name);
       });

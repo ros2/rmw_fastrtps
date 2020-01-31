@@ -281,8 +281,9 @@ __rmw_create_node(
   size_t length = strlen(name) + strlen("name=;") +
     strlen(namespace_) + strlen("namespace=;") + 1;
   participantAttrs.rtps.userData.resize(length);
-  int written = snprintf(reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
-      length, "name=%s;namespace=%s;", name, namespace_);
+  int written = snprintf(
+    reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
+    length, "name=%s;namespace=%s;", name, namespace_);
   if (written < 0 || written > static_cast<int>(length) - 1) {
     RMW_SET_ERROR_MSG("failed to populate user_data buffer");
     return nullptr;
@@ -299,24 +300,31 @@ __rmw_create_node(
       property_policy.properties().emplace_back(
         Property("dds.sec.auth.plugin", "builtin.PKI-DH"));
       property_policy.properties().emplace_back(
-        Property("dds.sec.auth.builtin.PKI-DH.identity_ca",
-        security_files_paths[0]));
+        Property(
+          "dds.sec.auth.builtin.PKI-DH.identity_ca",
+          security_files_paths[0]));
       property_policy.properties().emplace_back(
-        Property("dds.sec.auth.builtin.PKI-DH.identity_certificate",
-        security_files_paths[1]));
+        Property(
+          "dds.sec.auth.builtin.PKI-DH.identity_certificate",
+          security_files_paths[1]));
       property_policy.properties().emplace_back(
-        Property("dds.sec.auth.builtin.PKI-DH.private_key",
-        security_files_paths[2]));
+        Property(
+          "dds.sec.auth.builtin.PKI-DH.private_key",
+          security_files_paths[2]));
       property_policy.properties().emplace_back(
         Property("dds.sec.crypto.plugin", "builtin.AES-GCM-GMAC"));
 
-      property_policy.properties().emplace_back(Property(
+      property_policy.properties().emplace_back(
+        Property(
           "dds.sec.access.plugin", "builtin.Access-Permissions"));
-      property_policy.properties().emplace_back(Property(
+      property_policy.properties().emplace_back(
+        Property(
           "dds.sec.access.builtin.Access-Permissions.permissions_ca", security_files_paths[3]));
-      property_policy.properties().emplace_back(Property(
+      property_policy.properties().emplace_back(
+        Property(
           "dds.sec.access.builtin.Access-Permissions.governance", security_files_paths[4]));
-      property_policy.properties().emplace_back(Property(
+      property_policy.properties().emplace_back(
+        Property(
           "dds.sec.access.builtin.Access-Permissions.permissions", security_files_paths[5]));
 
       participantAttrs.rtps.properties = property_policy;

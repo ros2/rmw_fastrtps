@@ -116,30 +116,32 @@ rmw_create_service(
 
   untyped_request_members =
     get_request_ptr(type_support->data, info->typesupport_identifier_);
-  untyped_response_members = get_response_ptr(type_support->data,
-      info->typesupport_identifier_);
+  untyped_response_members = get_response_ptr(
+    type_support->data, info->typesupport_identifier_);
 
   info->request_type_support_impl_ = untyped_request_members;
   info->response_type_support_impl_ = untyped_response_members;
 
-  std::string request_type_name = _create_type_name(untyped_request_members,
-      info->typesupport_identifier_);
-  std::string response_type_name = _create_type_name(untyped_response_members,
-      info->typesupport_identifier_);
+  std::string request_type_name = _create_type_name(
+    untyped_request_members, info->typesupport_identifier_);
+  std::string response_type_name = _create_type_name(
+    untyped_response_members, info->typesupport_identifier_);
 
-  if (!Domain::getRegisteredType(participant, request_type_name.c_str(),
-    reinterpret_cast<TopicDataType **>(&info->request_type_support_)))
+  if (!Domain::getRegisteredType(
+      participant, request_type_name.c_str(),
+      reinterpret_cast<TopicDataType **>(&info->request_type_support_)))
   {
-    info->request_type_support_ = _create_request_type_support(type_support->data,
-        info->typesupport_identifier_);
+    info->request_type_support_ = _create_request_type_support(
+      type_support->data, info->typesupport_identifier_);
     _register_type(participant, info->request_type_support_);
   }
 
-  if (!Domain::getRegisteredType(participant, response_type_name.c_str(),
-    reinterpret_cast<TopicDataType **>(&info->response_type_support_)))
+  if (!Domain::getRegisteredType(
+      participant, response_type_name.c_str(),
+      reinterpret_cast<TopicDataType **>(&info->response_type_support_)))
   {
-    info->response_type_support_ = _create_response_type_support(type_support->data,
-        info->typesupport_identifier_);
+    info->response_type_support_ = _create_response_type_support(
+      type_support->data, info->typesupport_identifier_);
     _register_type(participant, info->response_type_support_);
   }
 
