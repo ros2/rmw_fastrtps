@@ -106,7 +106,7 @@ __rmw_get_publishers_info_by_topic(
   }
 
   return graph_cache.get_writers_info_by_topic(
-    topic_name,
+    mangled_topic_name,
     demangle_type,
     allocator,
     publishers_info);
@@ -140,7 +140,7 @@ __rmw_get_subscriptions_info_by_topic(
   }
 
   return graph_cache.get_readers_info_by_topic(
-    topic_name,
+    mangled_topic_name,
     demangle_type,
     allocator,
     subscriptions_info);
