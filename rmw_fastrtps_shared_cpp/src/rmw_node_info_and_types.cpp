@@ -72,13 +72,14 @@ rmw_ret_t __get_guid_by_name(
       }
     }
 
-    auto guid_node_pair = std::find_if(impl->listener->discovered_names.begin(),
-        impl->listener->discovered_names.end(),
-        [node_name, &nodes_in_desired_namespace](const std::pair<const GUID_t,
-        std::string> & pair) {
-          return pair.second == node_name &&
-          nodes_in_desired_namespace.find(pair.first) != nodes_in_desired_namespace.end();
-        });
+    auto guid_node_pair = std::find_if(
+      impl->listener->discovered_names.begin(),
+      impl->listener->discovered_names.end(),
+      [node_name, &nodes_in_desired_namespace](const std::pair<const GUID_t,
+      std::string> & pair) {
+        return pair.second == node_name &&
+        nodes_in_desired_namespace.find(pair.first) != nodes_in_desired_namespace.end();
+      });
 
     if (guid_node_pair == impl->listener->discovered_names.end()) {
       RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
@@ -175,8 +176,8 @@ __accumulate_topics(
       "accumulate_topics: Found topic %s",
       topic_pair.first.c_str());
 
-    topics[topic_pair.first].insert(topic_pair.second.begin(),
-      topic_pair.second.end());
+    topics[topic_pair.first].insert(
+      topic_pair.second.begin(), topic_pair.second.end());
   }
 }
 
@@ -334,8 +335,8 @@ __rmw_get_topic_names_and_types_by_node(
   RetrieveCache & retrieve_cache_func,
   rmw_names_and_types_t * topic_names_and_types)
 {
-  rmw_ret_t valid_input = __validate_input(identifier, node, allocator, node_name,
-      node_namespace, topic_names_and_types);
+  rmw_ret_t valid_input = __validate_input(
+    identifier, node, allocator, node_name, node_namespace, topic_names_and_types);
   if (valid_input != RMW_RET_OK) {
     return valid_input;
   }
@@ -368,8 +369,9 @@ __rmw_get_subscriber_names_and_types_by_node(
     [](CustomParticipantInfo & participant_info) -> const LockedObject<TopicCache> & {
       return participant_info.listener->reader_topic_cache;
     };
-  return __rmw_get_topic_names_and_types_by_node(identifier, node, allocator, node_name,
-           node_namespace, no_demangle, retrieve_sub_cache, topic_names_and_types);
+  return __rmw_get_topic_names_and_types_by_node(
+    identifier, node, allocator, node_name,
+    node_namespace, no_demangle, retrieve_sub_cache, topic_names_and_types);
 }
 
 rmw_ret_t
@@ -386,8 +388,9 @@ __rmw_get_publisher_names_and_types_by_node(
     [](CustomParticipantInfo & participant_info) -> const LockedObject<TopicCache> & {
       return participant_info.listener->writer_topic_cache;
     };
-  return __rmw_get_topic_names_and_types_by_node(identifier, node, allocator, node_name,
-           node_namespace, no_demangle, retrieve_pub_cache, topic_names_and_types);
+  return __rmw_get_topic_names_and_types_by_node(
+    identifier, node, allocator, node_name,
+    node_namespace, no_demangle, retrieve_pub_cache, topic_names_and_types);
 }
 
 static
@@ -402,8 +405,8 @@ __get_service_names_and_types_by_node(
   const char * topic_suffix)
 {
   const std::string topic_suffix_stdstr(topic_suffix);
-  rmw_ret_t valid_input = __validate_input(identifier, node, allocator, node_name,
-      node_namespace, service_names_and_types);
+  rmw_ret_t valid_input = __validate_input(
+    identifier, node, allocator, node_name, node_namespace, service_names_and_types);
   if (valid_input != RMW_RET_OK) {
     return valid_input;
   }

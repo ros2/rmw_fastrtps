@@ -861,8 +861,9 @@ inline void deserialize_field<std::string>(
       }
 
       for (size_t i = 0; i < cpp_string_vector.size(); ++i) {
-        if (!rosidl_generator_c__String__assign(&string_sequence_field.data[i],
-          cpp_string_vector[i].c_str()))
+        if (
+          !rosidl_generator_c__String__assign(
+            &string_sequence_field.data[i], cpp_string_vector[i].c_str()))
         {
           throw std::runtime_error("unable to assign rosidl_generator_c__String");
         }

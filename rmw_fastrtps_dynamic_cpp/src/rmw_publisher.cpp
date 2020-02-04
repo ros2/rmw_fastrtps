@@ -137,11 +137,12 @@ rmw_create_publisher(
 
   std::string type_name = _create_type_name(
     type_support->data, info->typesupport_identifier_);
-  if (!Domain::getRegisteredType(participant, type_name.c_str(),
-    reinterpret_cast<TopicDataType **>(&info->type_support_)))
+  if (!Domain::getRegisteredType(
+      participant, type_name.c_str(),
+      reinterpret_cast<TopicDataType **>(&info->type_support_)))
   {
-    info->type_support_ = _create_message_type_support(type_support->data,
-        info->typesupport_identifier_);
+    info->type_support_ = _create_message_type_support(
+      type_support->data, info->typesupport_identifier_);
     _register_type(participant, info->type_support_);
   }
 

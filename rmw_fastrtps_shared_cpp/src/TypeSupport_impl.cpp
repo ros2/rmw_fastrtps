@@ -111,8 +111,10 @@ std::function<uint32_t()> TypeSupport::getSerializedSizeProvider(void * data)
         auto ser = static_cast<eprosima::fastcdr::Cdr *>(ser_data->data);
         return static_cast<uint32_t>(ser->getSerializedDataLength());
       }
-      return static_cast<uint32_t>(this->getEstimatedSerializedSize(ser_data->data,
-             ser_data->impl));
+      return static_cast<uint32_t>(
+        this->getEstimatedSerializedSize(
+          ser_data->data,
+          ser_data->impl));
     };
   return ser_size;
 }

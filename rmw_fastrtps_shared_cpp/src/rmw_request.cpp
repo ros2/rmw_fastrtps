@@ -99,7 +99,8 @@ __rmw_take_request(
       deser, ros_request, info->request_type_support_impl_);
 
     // Get header
-    memcpy(request_header->writer_guid, &request.sample_identity_.writer_guid(),
+    memcpy(
+      request_header->writer_guid, &request.sample_identity_.writer_guid(),
       sizeof(eprosima::fastrtps::rtps::GUID_t));
     request_header->sequence_number = ((int64_t)request.sample_identity_.sequence_number().high) <<
       32 | request.sample_identity_.sequence_number().low;

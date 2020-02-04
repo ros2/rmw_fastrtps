@@ -205,18 +205,16 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_get_topic_name_topic_data_map)
 TEST_F(TopicCacheTestFixture, test_topic_cache_add_topic)
 {
   // Add Topic
-  const bool did_add =
-    this->topic_cache.addTopic(this->participant_instance_handler[1], this->guid[1], "TestTopic",
-      "TestType", this->qos[1]);
+  const bool did_add = this->topic_cache.addTopic(
+    this->participant_instance_handler[1], this->guid[1], "TestTopic", "TestType", this->qos[1]);
   // Verify that the returned value was true
   EXPECT_TRUE(did_add);
 }
 
 TEST_F(TopicCacheTestFixture, test_topic_cache_remove_topic_element_exists)
 {
-  auto did_remove =
-    this->topic_cache.removeTopic(this->participant_instance_handler[0], this->guid[0], "topic1",
-      "type1");
+  auto did_remove = this->topic_cache.removeTopic(
+    this->participant_instance_handler[0], this->guid[0], "topic1", "type1");
   // Assert that the return was true
   ASSERT_TRUE(did_remove);
   // Verify it is removed from TopicToTypes
@@ -236,8 +234,8 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_remove_topic_element_exists)
   ASSERT_TRUE(topic_data_it != topic_data_map.end());
   EXPECT_EQ(topic_data_it->second.size(), 1u);
 
-  did_remove = this->topic_cache.removeTopic(this->participant_instance_handler[1], this->guid[1],
-      "topic1", "type1");
+  did_remove = this->topic_cache.removeTopic(
+    this->participant_instance_handler[1], this->guid[1], "topic1", "type1");
   ASSERT_TRUE(did_remove);
   const auto & topic_type_map2 = this->topic_cache.getTopicToTypes();
   const auto & topic_type_it2 = topic_type_map2.find("topic1");
@@ -255,11 +253,10 @@ TEST_F(TopicCacheTestFixture, test_topic_cache_remove_topic_element_exists)
 TEST_F(TopicCacheTestFixture, test_topic_cache_remove_policy_element_does_not_exist)
 {
   // add topic
-  this->topic_cache.addTopic(this->participant_instance_handler[1], this->guid[1], "TestTopic",
-    "TestType", this->qos[1]);
+  this->topic_cache.addTopic(
+    this->participant_instance_handler[1], this->guid[1], "TestTopic", "TestType", this->qos[1]);
   // Assert that the return was false
-  const auto did_remove = this->topic_cache.removeTopic(this->participant_instance_handler[1],
-      this->guid[1], "NewTestTopic",
-      "TestType");
+  const auto did_remove = this->topic_cache.removeTopic(
+    this->participant_instance_handler[1], this->guid[1], "NewTestTopic", "TestType");
   ASSERT_FALSE(did_remove);
 }
