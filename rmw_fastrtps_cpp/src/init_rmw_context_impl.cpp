@@ -126,8 +126,8 @@ init_context_impl(rmw_context_t * context)
         participant_info.get(),
         sub))
       {
-        fprintf(
-          stderr, "Failed to destroy subscription after function: '"
+        RMW_SAFE_FWRITE_TO_STDERR(
+          "Failed to destroy subscription after function: '"
           RCUTILS_STRINGIFY(__function__) "' failed.\n");
       }
     });
