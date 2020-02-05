@@ -31,6 +31,7 @@
 #include "rmw_fastrtps_shared_cpp/participant.hpp"
 #include "rmw_fastrtps_shared_cpp/publisher.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_init.hpp"
 #include "rmw_fastrtps_shared_cpp/subscription.hpp"
 
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
@@ -44,85 +45,22 @@ extern "C"
 rmw_ret_t
 rmw_init_options_init(rmw_init_options_t * init_options, rcutils_allocator_t allocator)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(init_options, RMW_RET_INVALID_ARGUMENT);
-  RCUTILS_CHECK_ALLOCATOR(&allocator, return RMW_RET_INVALID_ARGUMENT);
-  if (NULL != init_options->implementation_identifier) {
-    RMW_SET_ERROR_MSG("expected zero-initialized init_options");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-  init_options->instance_id = 0;
-  init_options->implementation_identifier = eprosima_fastrtps_identifier;
-  init_options->allocator = allocator;
-  init_options->impl = nullptr;
-  init_options->name = rcutils_strdup("", allocator);
-  if (!init_options->name) {
-    RMW_SET_ERROR_MSG("failed to copy context name");
-    return RMW_RET_BAD_ALLOC;
-  }
-  init_options->namespace_ = rcutils_strdup("", allocator);
-  if (!init_options->namespace_) {
-    allocator.deallocate(init_options->name, allocator.state);
-    RMW_SET_ERROR_MSG("failed to copy context namespace");
-    return RMW_RET_BAD_ALLOC;
-  }
-  return RMW_RET_OK;
+  return rmw_fastrtps_shared_cpp::rmw_init_options_init(
+    eprosima_fastrtps_identifier, init_options, allocator);
 }
 
 rmw_ret_t
 rmw_init_options_copy(const rmw_init_options_t * src, rmw_init_options_t * dst)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(src, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_ARGUMENT_FOR_NULL(dst, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    src,
-    src->implementation_identifier,
-    eprosima_fastrtps_identifier,
-    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  if (NULL != dst->implementation_identifier) {
-    RMW_SET_ERROR_MSG("expected zero-initialized dst");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-  const rcutils_allocator_t * allocator = &src->allocator;
-  rmw_ret_t ret = RMW_RET_OK;
-
-  *dst = *src;
-  dst->name = NULL;
-  dst->namespace_ = NULL;
-  dst->security_options = rmw_get_zero_initialized_security_options();
-
-  dst->name = rcutils_strdup(src->name, *allocator);
-  if (!dst->name) {
-    ret = RMW_RET_BAD_ALLOC;
-    goto fail;
-  }
-  dst->namespace_ = rcutils_strdup(src->namespace_, *allocator);
-  if (!dst->namespace_) {
-    ret = RMW_RET_BAD_ALLOC;
-    goto fail;
-  }
-  return rmw_security_options_copy(&src->security_options, allocator, &dst->security_options);
-fail:
-  allocator->deallocate(dst->name, allocator->state);
-  allocator->deallocate(dst->namespace_, allocator->state);
-  return ret;
+  return rmw_fastrtps_shared_cpp::rmw_init_options_copy(
+    eprosima_fastrtps_identifier, src, dst);
 }
 
 rmw_ret_t
 rmw_init_options_fini(rmw_init_options_t * init_options)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(init_options, RMW_RET_INVALID_ARGUMENT);
-  rcutils_allocator_t & allocator = init_options->allocator;
-  RCUTILS_CHECK_ALLOCATOR(&allocator, return RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    init_options,
-    init_options->implementation_identifier,
-    eprosima_fastrtps_identifier,
-    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  allocator.deallocate(init_options->name, allocator.state);
-  allocator.deallocate(init_options->namespace_, allocator.state);
-  rmw_security_options_fini(&init_options->security_options, &allocator);
-  *init_options = rmw_get_zero_initialized_init_options();
-  return RMW_RET_OK;
+  return rmw_fastrtps_shared_cpp::rmw_init_options_fini(
+    eprosima_fastrtps_identifier, init_options);
 }
 
 using rmw_dds_common::msg::ParticipantEntitiesInfo;
