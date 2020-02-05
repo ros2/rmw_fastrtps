@@ -25,6 +25,7 @@
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
+#include "rmw_fastrtps_shared_cpp/init_rmw_context_impl.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
@@ -56,7 +57,7 @@ rmw_create_node(
     context, eprosima_fastrtps_identifier, name, namespace_);
 
   if (nullptr == node) {
-    if (RMW_RET_OK != rmw_fastrtps_dynamic_cpp::decrement_context_impl_ref_count(context)) {
+    if (RMW_RET_OK != rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(context)) {
       RCUTILS_SAFE_FWRITE_TO_STDERR(
         "'decrement_context_impl_ref_count' failed while being executed due to '"
         RCUTILS_STRINGIFY(__function__) "' failing");
@@ -73,7 +74,7 @@ rmw_destroy_node(rmw_node_t * node)
   if (RMW_RET_OK != ret) {
     return ret;
   }
-  return rmw_fastrtps_dynamic_cpp::decrement_context_impl_ref_count(node->context);
+  return rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(node->context);
 }
 
 rmw_ret_t

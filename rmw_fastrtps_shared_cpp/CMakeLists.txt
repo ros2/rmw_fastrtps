@@ -52,6 +52,7 @@ add_library(rmw_fastrtps_shared_cpp
   src/custom_subscriber_info.cpp
   src/create_rmw_gid.cpp
   src/demangle.cpp
+  src/init_rmw_context_impl.cpp
   src/listener_thread.cpp
   src/namespace_prefix.cpp
   src/participant.cpp

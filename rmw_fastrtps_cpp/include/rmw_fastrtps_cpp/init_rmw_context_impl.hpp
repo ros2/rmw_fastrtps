@@ -29,13 +29,6 @@ namespace rmw_fastrtps_cpp
 rmw_ret_t
 increment_context_impl_ref_count(rmw_context_t * context);
 
-/// Increment `rmw_context_impl_t` reference count, destroying it if the count reaches zero.
-/**
- * Function that should be called when destroying a node.
- */
-rmw_ret_t
-decrement_context_impl_ref_count(rmw_context_t * context);
-
 }  // namespace rmw_fastrtps_cpp
 
 #endif  // RMW_FASTRTPS_CPP__INIT_RMW_CONTEXT_IMPL_HPP_

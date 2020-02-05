@@ -12,23 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_DYNAMIC_CPP__INIT_RMW_CONTEXT_IMPL_HPP_
-#define RMW_FASTRTPS_DYNAMIC_CPP__INIT_RMW_CONTEXT_IMPL_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__INIT_RMW_CONTEXT_IMPL_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__INIT_RMW_CONTEXT_IMPL_HPP_
 
 #include "rmw/init.h"
 #include "rmw/types.h"
 
-namespace rmw_fastrtps_dynamic_cpp
+namespace rmw_fastrtps_shared_cpp
 {
 
-/// Increment `rmw_context_impl_t` reference count, initing it necessary.
+/// Increment `rmw_context_impl_t` reference count, destroying it if the count reaches zero.
 /**
- * Function that should be called when creating a node,
- * before using `context->impl`.
+ * Function that should be called when destroying a node.
  */
 rmw_ret_t
-increment_context_impl_ref_count(rmw_context_t * context);
+decrement_context_impl_ref_count(rmw_context_t * context);
 
-}  // namespace rmw_fastrtps_dynamic_cpp
+}  // namespace rmw_fastrtps_shared_cpp
 
-#endif  // RMW_FASTRTPS_DYNAMIC_CPP__INIT_RMW_CONTEXT_IMPL_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__INIT_RMW_CONTEXT_IMPL_HPP_
