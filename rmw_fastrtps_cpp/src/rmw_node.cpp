@@ -54,12 +54,21 @@ rmw_create_node(
     // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
     return nullptr);
 
-  if (RMW_RET_OK != rmw_fastrtps_cpp::register_node(context)) {
+  if (RMW_RET_OK != rmw_fastrtps_cpp::increment_context_impl_ref_count(context)) {
     return nullptr;
   }
 
-  return rmw_fastrtps_shared_cpp::__rmw_create_node(
+  rmw_node_t * node = rmw_fastrtps_shared_cpp::__rmw_create_node(
     context, eprosima_fastrtps_identifier, name, namespace_);
+
+  if (nullptr == node) {
+    if (RMW_RET_OK != rmw_fastrtps_cpp::decrement_context_impl_ref_count(context)) {
+      RCUTILS_SAFE_FWRITE_TO_STDERR(
+        "'decrement_context_impl_ref_count' failed while being executed due to '"
+        RCUTILS_STRINGIFY(__function__) "' failing");
+    }
+  }
+  return node;
 }
 
 rmw_ret_t
@@ -70,7 +79,7 @@ rmw_destroy_node(rmw_node_t * node)
   if (RMW_RET_OK != ret) {
     return ret;
   }
-  return rmw_fastrtps_cpp::unregister_node(node->context);
+  return rmw_fastrtps_cpp::decrement_context_impl_ref_count(node->context);
 }
 
 rmw_ret_t

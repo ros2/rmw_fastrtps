@@ -81,9 +81,7 @@ _demangle_service_from_topic(
         ", report this: '%s'", topic_name.c_str());
       return "";
     }
-  }
-
-  if (std::string::npos == suffix_position) {
+  } else {
     RCUTILS_LOG_WARN_NAMED(
       "rmw_fastrtps_shared_cpp",
       "service topic has prefix but no suffix"

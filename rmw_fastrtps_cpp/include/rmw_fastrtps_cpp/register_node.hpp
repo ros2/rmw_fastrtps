@@ -1,4 +1,4 @@
-// Copyright 2019 Open Source Robotics Foundation, Inc.
+// Copyright 2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -21,20 +21,20 @@
 namespace rmw_fastrtps_cpp
 {
 
-/// Register node in context.
+/// Increment `rmw_context_impl_t` reference count, initing it necessary.
 /**
  * Function that should be called when creating a node,
  * before using `context->impl`.
  */
 rmw_ret_t
-register_node(rmw_context_t * context);
+increment_context_impl_ref_count(rmw_context_t * context);
 
-/// Unregister node in context.
+/// Increment `rmw_context_impl_t` reference count, destroying it if the count reaches zero.
 /**
  * Function that should be called when destroying a node.
  */
 rmw_ret_t
-unregister_node(rmw_context_t * context);
+decrement_context_impl_ref_count(rmw_context_t * context);
 
 }  // namespace rmw_fastrtps_cpp
 

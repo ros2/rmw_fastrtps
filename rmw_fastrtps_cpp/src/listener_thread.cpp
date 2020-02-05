@@ -62,8 +62,7 @@ rmw_fastrtps_cpp::run_listener_thread(rmw_context_t * context)
   common_context->thread_is_running.store(false);
   if (common_context->listener_thread_gc) {
     if (RMW_RET_OK != rmw_destroy_guard_condition(common_context->listener_thread_gc)) {
-      fprintf(
-        stderr,
+      RCUTILS_SAFE_FWRITE_TO_STDERR(
         RCUTILS_STRINGIFY(__FILE__) ":" RCUTILS_STRINGIFY(__function__) ":"
         RCUTILS_STRINGIFY(__LINE__) ": Failed to destroy guard condition");
     }
@@ -98,11 +97,9 @@ rmw_fastrtps_cpp::join_listener_thread(rmw_context_t * context)
 
 #define TERMINATE(msg) \
   do { \
-    fprintf( \
-      stderr, \
+    RCUTILS_SAFE_FWRITE_TO_STDERR( \
       RCUTILS_STRINGIFY(__FILE__) ":" RCUTILS_STRINGIFY(__function__) ":" \
-      RCUTILS_STRINGIFY(__LINE__) RCUTILS_STRINGIFY(msg) ": %s, terminating ...", \
-      rmw_get_error_string().str); \
+      RCUTILS_STRINGIFY(__LINE__) RCUTILS_STRINGIFY(msg) ": terminating ..."); \
     std::terminate(); \
   } while (0)
 

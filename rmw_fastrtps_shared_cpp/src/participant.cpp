@@ -112,8 +112,6 @@ fail:
   return nullptr;
 }
 
-#define ROS_DOMAIN_ID_VAR_NAME "ROS_DOMAIN_ID"
-
 CustomParticipantInfo *
 rmw_fastrtps_shared_cpp::create_participant(
   const char * identifier,

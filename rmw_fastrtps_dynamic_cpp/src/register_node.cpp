@@ -1,4 +1,4 @@
-// Copyright 2019 Open Source Robotics Foundation, Inc.
+// Copyright 2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -66,8 +66,8 @@ init_context_impl(rmw_context_t * context)
       common_context.get()),
     [&](CustomParticipantInfo * participant_info) {
       if (RMW_RET_OK != rmw_fastrtps_shared_cpp::destroy_participant(participant_info)) {
-        fprintf(
-          stderr, "Failed to destroy participant after function: '"
+        RCUTILS_SAFE_FWRITE_TO_STDERR(
+          "Failed to destroy participant after function: '"
           RCUTILS_STRINGIFY(__function__) "' failed.\n");
       }
     });
@@ -99,8 +99,8 @@ init_context_impl(rmw_context_t * context)
         participant_info.get(),
         pub))
       {
-        fprintf(
-          stderr, "Failed to destroy publisher after function: '"
+        RCUTILS_SAFE_FWRITE_TO_STDERR(
+          "Failed to destroy publisher after function: '"
           RCUTILS_STRINGIFY(__function__) "' failed.\n");
       }
     });
@@ -143,8 +143,9 @@ init_context_impl(rmw_context_t * context)
   context->impl->common = common_context.get();
   context->impl->participant_info = participant_info.get();
 
-  if (RMW_RET_OK != rmw_fastrtps_dynamic_cpp::run_listener_thread(context)) {
-    return RMW_RET_ERROR;
+  rmw_ret_t ret = rmw_fastrtps_dynamic_cpp::run_listener_thread(context);
+  if (RMW_RET_OK != ret) {
+    return ret;
   }
   common_context->graph_cache.add_participant(common_context->gid);
 
@@ -156,7 +157,7 @@ init_context_impl(rmw_context_t * context)
 }
 
 rmw_ret_t
-rmw_fastrtps_dynamic_cpp::register_node(rmw_context_t * context)
+rmw_fastrtps_dynamic_cpp::increment_context_impl_ref_count(rmw_context_t * context)
 {
   assert(context);
   assert(context->impl);
@@ -174,14 +175,19 @@ rmw_fastrtps_dynamic_cpp::register_node(rmw_context_t * context)
 }
 
 rmw_ret_t
-rmw_fastrtps_dynamic_cpp::unregister_node(rmw_context_t * context)
+rmw_fastrtps_dynamic_cpp::decrement_context_impl_ref_count(rmw_context_t * context)
 {
+  std::lock_guard<std::mutex> guard(context->impl->mutex);
+
   assert(context);
   assert(context->impl);
+  assert(0u < context->impl->count);
 
-  std::lock_guard<std::mutex> guard(context->impl->mutex);
   if (0u == --context->impl->count) {
-    rmw_ret_t ret;
+    rmw_ret_t err = RMW_RET_OK;
+    rmw_ret_t ret = RMW_RET_OK;
+    rmw_error_string_t error_string;
+
     ret = rmw_fastrtps_dynamic_cpp::join_listener_thread(context);
     if (RMW_RET_OK != ret) {
       return ret;
@@ -195,19 +201,32 @@ rmw_fastrtps_dynamic_cpp::unregister_node(rmw_context_t * context)
       eprosima_fastrtps_identifier,
       participant_info,
       common_context->sub);
+    // Try to clean the other objects if the above failed.
     if (RMW_RET_OK != ret) {
-      return ret;
+      error_string = rmw_get_error_string();
+      rmw_reset_error();
     }
-    ret = rmw_fastrtps_shared_cpp::destroy_publisher(
+    err = rmw_fastrtps_shared_cpp::destroy_publisher(
       eprosima_fastrtps_identifier,
       participant_info,
       common_context->pub);
-    if (RMW_RET_OK != ret) {
-      return ret;
+    if (RMW_RET_OK != ret && RMW_RET_OK != err) {
+      // We can just return one error, log about the previous one.
+      RMW_SAFE_FWRITE_TO_STDERR(
+        RCUTILS_STRINGIFY(__function__) ":" RCUTILS_STRINGIFY(__LINE__)
+        ": 'destroy_subscription' failed\n");
+      ret = err;
+      error_string = rmw_get_error_string();
+      rmw_reset_error();
     }
-    ret = rmw_fastrtps_shared_cpp::destroy_participant(participant_info);
-    if (RMW_RET_OK != ret) {
-      return ret;
+    err = rmw_fastrtps_shared_cpp::destroy_participant(participant_info);
+    if (RMW_RET_OK != ret && RMW_RET_OK != err) {
+      RMW_SAFE_FWRITE_TO_STDERR(
+        RCUTILS_STRINGIFY(__function__) ":" RCUTILS_STRINGIFY(__LINE__)
+        ": 'destroy_publisher' failed\n");
+      ret = err;
+    } else if (RMW_RET_OK != ret) {
+      RMW_SET_ERROR_MSG(error_string.str);
     }
     delete common_context;
     context->impl->common = nullptr;
