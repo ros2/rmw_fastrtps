@@ -1,4 +1,4 @@
-// Copyright 2019 Open Source Robotics Foundation, Inc.
+// Copyright 2020 Open Source Robotics Foundation, Inc.
 // Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -159,9 +159,9 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
   ret = rmw_init_options_copy(options, &context->options);
   if (RMW_RET_OK != ret) {
     if (RMW_RET_OK != rmw_init_options_fini(&context->options)) {
-      fprintf(
-        stderr,
-        "Failed to destroy init options after ':" RCUTILS_STRINGIFY(__function__) "' failed.\n");
+      RMW_SAFE_FWRITE_TO_STDERR(
+        "'rmw_init_options_fini' failed while being executed due to '"
+        RCUTILS_STRINGIFY(__function__) "' failing.\n");
     }
     return ret;
   }
