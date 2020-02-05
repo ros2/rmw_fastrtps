@@ -1,4 +1,4 @@
-// Copyright 2019 Open Source Robotics Foundation, Inc.
+// Copyright 2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -31,9 +31,9 @@
 #include "rmw_dds_common/gid_utils.hpp"
 #include "rmw_dds_common/msg/participant_entities_info.hpp"
 
+#include "rmw_fastrtps_shared_cpp/listener_thread.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
-
-#include "listener_thread.hpp"
 
 using rmw_dds_common::operator<<;
 
@@ -42,11 +42,12 @@ void
 node_listener(rmw_context_t * context);
 
 rmw_ret_t
-rmw_fastrtps_dynamic_cpp::run_listener_thread(rmw_context_t * context)
+rmw_fastrtps_shared_cpp::run_listener_thread(rmw_context_t * context)
 {
   auto common_context = static_cast<rmw_dds_common::Context *>(context->impl->common);
   common_context->thread_is_running.store(true);
-  common_context->listener_thread_gc = rmw_create_guard_condition(context);
+  common_context->listener_thread_gc = rmw_fastrtps_shared_cpp::__rmw_create_guard_condition(
+    context->implementation_identifier);
   if (common_context->listener_thread_gc) {
     try {
       common_context->listener_thread = std::thread(node_listener, context);
@@ -61,7 +62,9 @@ rmw_fastrtps_dynamic_cpp::run_listener_thread(rmw_context_t * context)
   }
   common_context->thread_is_running.store(false);
   if (common_context->listener_thread_gc) {
-    if (RMW_RET_OK != rmw_destroy_guard_condition(common_context->listener_thread_gc)) {
+    if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_destroy_guard_condition(
+        common_context->listener_thread_gc))
+    {
       RCUTILS_SAFE_FWRITE_TO_STDERR(
         RCUTILS_STRINGIFY(__FILE__) ":" RCUTILS_STRINGIFY(__function__) ":"
         RCUTILS_STRINGIFY(__LINE__) ": Failed to destroy guard condition");
@@ -71,11 +74,12 @@ rmw_fastrtps_dynamic_cpp::run_listener_thread(rmw_context_t * context)
 }
 
 rmw_ret_t
-rmw_fastrtps_dynamic_cpp::join_listener_thread(rmw_context_t * context)
+rmw_fastrtps_shared_cpp::join_listener_thread(rmw_context_t * context)
 {
   auto common_context = static_cast<rmw_dds_common::Context *>(context->impl->common);
   common_context->thread_is_running.exchange(false);
-  rmw_ret_t rmw_ret = rmw_trigger_guard_condition(common_context->listener_thread_gc);
+  rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_trigger_guard_condition(
+    context->implementation_identifier, common_context->listener_thread_gc);
   if (RMW_RET_OK != rmw_ret) {
     return rmw_ret;
   }
@@ -88,7 +92,8 @@ rmw_fastrtps_dynamic_cpp::join_listener_thread(rmw_context_t * context)
     RMW_SET_ERROR_MSG("Failed to join std::thread");
     return RMW_RET_ERROR;
   }
-  rmw_ret = rmw_destroy_guard_condition(common_context->listener_thread_gc);
+  rmw_ret = rmw_fastrtps_shared_cpp::__rmw_destroy_guard_condition(
+    common_context->listener_thread_gc);
   if (RMW_RET_OK != rmw_ret) {
     return rmw_ret;
   }
@@ -122,11 +127,12 @@ node_listener(rmw_context_t * context)
     guard_conditions.guard_condition_count = 1;
     guard_conditions.guard_conditions = guard_conditions_buffer;
     // number of conditions of a subscription is 2
-    rmw_wait_set_t * wait_set = rmw_create_wait_set(context, 2);
+    rmw_wait_set_t * wait_set = rmw_fastrtps_shared_cpp::__rmw_create_wait_set(
+      context->implementation_identifier, context, 2);
     if (nullptr == wait_set) {
       TERMINATE("failed to create wait set");
     }
-    if (RMW_RET_OK != rmw_wait(
+    if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_wait(
         &subscriptions,
         &guard_conditions,
         nullptr,
@@ -140,13 +146,14 @@ node_listener(rmw_context_t * context)
     if (subscriptions_buffer[0]) {
       rmw_dds_common::msg::ParticipantEntitiesInfo msg;
       bool taken;
-      if (RMW_RET_OK != rmw_take(
+      if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_take(
+          context->implementation_identifier,
           common_context->sub,
           static_cast<void *>(&msg),
           &taken,
           nullptr))
       {
-        TERMINATE("rmw_take failed");
+        TERMINATE("__rmw_take failed");
       }
       if (taken) {
         if (std::memcmp(
@@ -160,7 +167,9 @@ node_listener(rmw_context_t * context)
         common_context->graph_cache.update_participant_entities(msg);
       }
     }
-    if (RMW_RET_OK != rmw_destroy_wait_set(wait_set)) {
+    if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_destroy_wait_set(
+        context->implementation_identifier, wait_set))
+    {
       TERMINATE("failed to destroy wait set");
     }
   }

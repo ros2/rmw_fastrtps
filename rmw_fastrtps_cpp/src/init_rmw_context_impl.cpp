@@ -36,7 +36,7 @@
 
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
-#include "listener_thread.hpp"
+#include "rmw_fastrtps_shared_cpp/listener_thread.hpp"
 
 using rmw_dds_common::msg::ParticipantEntitiesInfo;
 
@@ -143,7 +143,7 @@ init_context_impl(rmw_context_t * context)
   context->impl->common = common_context.get();
   context->impl->participant_info = participant_info.get();
 
-  rmw_ret_t ret = rmw_fastrtps_cpp::run_listener_thread(context);
+  rmw_ret_t ret = rmw_fastrtps_shared_cpp::run_listener_thread(context);
   if (RMW_RET_OK != ret) {
     return ret;
   }
@@ -188,7 +188,7 @@ rmw_fastrtps_cpp::decrement_context_impl_ref_count(rmw_context_t * context)
     rmw_ret_t ret = RMW_RET_OK;
     rmw_error_string_t error_string;
 
-    ret = rmw_fastrtps_cpp::join_listener_thread(context);
+    ret = rmw_fastrtps_shared_cpp::join_listener_thread(context);
     if (RMW_RET_OK != ret) {
       return ret;
     }

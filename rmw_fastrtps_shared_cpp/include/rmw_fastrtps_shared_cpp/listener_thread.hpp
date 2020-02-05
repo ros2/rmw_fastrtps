@@ -1,4 +1,4 @@
-// Copyright 2019 Open Source Robotics Foundation, Inc.
+// Copyright 2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,12 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef LISTENER_THREAD_HPP_
-#define LISTENER_THREAD_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__LISTENER_THREAD_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__LISTENER_THREAD_HPP_
 
 #include "rmw/init.h"
 
-namespace rmw_fastrtps_dynamic_cpp
+namespace rmw_fastrtps_shared_cpp
 {
 
 rmw_ret_t
@@ -26,5 +26,5 @@ run_listener_thread(rmw_context_t * context);
 rmw_ret_t
 join_listener_thread(rmw_context_t * context);
 
-}  // namespace rmw_fastrtps_dynamic_cpp
-#endif  // LISTENER_THREAD_HPP_
+}  // namespace rmw_fastrtps_shared_cpp
+#endif  // RMW_FASTRTPS_SHARED_CPP__LISTENER_THREAD_HPP_

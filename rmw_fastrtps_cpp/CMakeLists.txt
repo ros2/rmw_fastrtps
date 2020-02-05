@@ -55,7 +55,6 @@ add_library(rmw_fastrtps_cpp
   src/get_subscriber.cpp
   src/identifier.cpp
   src/init_rmw_context_impl.cpp
-  src/listener_thread.cpp
   src/publisher.cpp
   src/rmw_logging.cpp
   src/rmw_client.cpp

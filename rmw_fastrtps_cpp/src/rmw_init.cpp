@@ -39,8 +39,6 @@
 #include "rmw_fastrtps_cpp/publisher.hpp"
 #include "rmw_fastrtps_cpp/subscription.hpp"
 
-#include "listener_thread.hpp"
-
 extern "C"
 {
 rmw_ret_t
