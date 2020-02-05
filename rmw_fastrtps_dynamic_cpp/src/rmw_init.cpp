@@ -86,8 +86,9 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
   context->instance_id = options->instance_id;
   context->implementation_identifier = eprosima_fastrtps_identifier;
 
-  std::unique_ptr<rmw_context_impl_t> context_impl(new rmw_context_impl_t());
+  std::unique_ptr<rmw_context_impl_t> context_impl(new (std::nothrow) rmw_context_impl_t());
   if (!context_impl) {
+    RMW_SET_ERROR_MSG("failed to allocate context impl");
     return RMW_RET_BAD_ALLOC;
   }
   context->options = rmw_get_zero_initialized_init_options();
