@@ -59,11 +59,11 @@ add_library(rmw_fastrtps_dynamic_cpp
   src/get_subscriber.cpp
   src/gid__type_support.cpp
   src/identifier.cpp
+  src/init_rmw_context_impl.cpp
   src/listener_thread.cpp
   src/node_entities_info__type_support.cpp
   src/participant_entities_info__type_support.cpp
   src/publisher.cpp
-  src/register_node.cpp
   src/rmw_client.cpp
   src/rmw_compare_gids_equal.cpp
   src/rmw_count.cpp

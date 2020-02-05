@@ -28,7 +28,7 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
-#include "rmw_fastrtps_dynamic_cpp/register_node.hpp"
+#include "rmw_fastrtps_dynamic_cpp/init_rmw_context_impl.hpp"
 
 extern "C"
 {

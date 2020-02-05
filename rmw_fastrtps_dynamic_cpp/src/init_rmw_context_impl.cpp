@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw_fastrtps_dynamic_cpp/register_node.hpp"
+#include "rmw_fastrtps_dynamic_cpp/init_rmw_context_impl.hpp"
 
 #include <cassert>
 #include <memory>
