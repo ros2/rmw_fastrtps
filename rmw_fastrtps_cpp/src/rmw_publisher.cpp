@@ -92,8 +92,8 @@ rmw_create_publisher(
   {
     // Update graph
     std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
-    rmw_dds_common::msg::ParticipantEntitiesInfo msg =
-      common_context->graph_cache.associate_writer(
+    rmw_dds_common::msg::ParticipantEntitiesInfo msg;
+    msg = common_context->graph_cache.associate_writer(
       info->publisher_gid, common_context->gid, node->name, node->namespace_);
     rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
       eprosima_fastrtps_identifier,
