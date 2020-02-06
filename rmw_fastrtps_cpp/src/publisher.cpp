@@ -88,7 +88,6 @@ rmw_fastrtps_cpp::create_publisher(
   // Load default XML profile.
   Domain::getDefaultPublisherAttributes(publisherParam);
 
-  // TODO(karsten1987) Verify consequences for std::unique_ptr?
   info = new (std::nothrow) CustomPublisherInfo();
   if (!info) {
     RMW_SET_ERROR_MSG("failed to allocate CustomPublisherInfo");
