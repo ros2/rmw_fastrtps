@@ -101,7 +101,7 @@ __rmw_get_publishers_info_by_topic(
   std::string mangled_topic_name = topic_name;
   DemangleFunction demangle_type = _identity_demangle;
   if (!no_mangle) {
-    mangled_topic_name = _mangle_topic_name(ros_topic_prefix, topic_name);
+    mangled_topic_name = _mangle_topic_name(ros_topic_prefix, topic_name).to_string();
     demangle_type = _demangle_if_ros_type;
   }
 
@@ -135,7 +135,7 @@ __rmw_get_subscriptions_info_by_topic(
   std::string mangled_topic_name = topic_name;
   DemangleFunction demangle_type = _identity_demangle;
   if (!no_mangle) {
-    mangled_topic_name = _mangle_topic_name(ros_topic_prefix, topic_name);
+    mangled_topic_name = _mangle_topic_name(ros_topic_prefix, topic_name).to_string();
     demangle_type = _demangle_if_ros_type;
   }
 

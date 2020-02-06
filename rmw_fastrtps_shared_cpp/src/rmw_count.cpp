@@ -50,7 +50,8 @@ __rmw_count_publishers(
     return RMW_RET_INVALID_ARGUMENT;
   }
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
-  const std::string mangled_topic_name = _mangle_topic_name(ros_topic_prefix, topic_name);
+  const std::string mangled_topic_name =
+    _mangle_topic_name(ros_topic_prefix, topic_name).to_string();
   return common_context->graph_cache.get_writer_count(mangled_topic_name, count);
 }
 
@@ -70,7 +71,8 @@ __rmw_count_subscribers(
     return RMW_RET_INVALID_ARGUMENT;
   }
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
-  const std::string mangled_topic_name = _mangle_topic_name(ros_topic_prefix, topic_name);
+  const std::string mangled_topic_name =
+    _mangle_topic_name(ros_topic_prefix, topic_name).to_string();
   return common_context->graph_cache.get_reader_count(mangled_topic_name, count);
 }
 }  // namespace rmw_fastrtps_shared_cpp
