@@ -52,7 +52,11 @@ rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(rmw_context_t * contex
     auto common_context = static_cast<rmw_dds_common::Context *>(context->impl->common);
     auto participant_info = static_cast<CustomParticipantInfo *>(context->impl->participant_info);
 
-    common_context->graph_cache.remove_participant(common_context->gid);
+    if (!common_context->graph_cache.remove_participant(common_context->gid)) {
+      RMW_SAFE_FWRITE_TO_STDERR(
+        RCUTILS_STRINGIFY(__function__) ":" RCUTILS_STRINGIFY(__line__) ": "
+        "Couldn't remove Participant gid from graph_cache when destroying Participant");
+    }
     ret = rmw_fastrtps_shared_cpp::destroy_subscription(
       context->implementation_identifier,
       participant_info,
