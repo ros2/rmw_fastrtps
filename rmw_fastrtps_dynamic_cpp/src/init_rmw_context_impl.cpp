@@ -77,7 +77,7 @@ init_context_impl(rmw_context_t * context)
 
   rmw_qos_profile_t qos = rmw_qos_profile_default;
 
-  qos.avoid_ros_namespace_conventions = false;  // Change this to true after testing
+  qos.avoid_ros_namespace_conventions = true;
   qos.history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
   qos.depth = 1;
   qos.durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
@@ -88,7 +88,7 @@ init_context_impl(rmw_context_t * context)
     rmw_fastrtps_dynamic_cpp::create_publisher(
       participant_info.get(),
       rosidl_typesupport_cpp::get_message_type_support_handle<ParticipantEntitiesInfo>(),
-      "_participant_info",
+      "ros_discovery_info",
       &qos,
       &publisher_options,
       false,  // our fastrtps typesupport doesn't support keyed topics
@@ -115,7 +115,7 @@ init_context_impl(rmw_context_t * context)
     rmw_fastrtps_dynamic_cpp::create_subscription(
       participant_info.get(),
       rosidl_typesupport_cpp::get_message_type_support_handle<ParticipantEntitiesInfo>(),
-      "_participant_info",
+      "ros_discovery_info",
       &qos,
       &subscription_options,
       false,  // our fastrtps typesupport doesn't support keyed topics
