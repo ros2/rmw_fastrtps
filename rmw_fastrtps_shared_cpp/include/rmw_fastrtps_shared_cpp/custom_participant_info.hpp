@@ -28,6 +28,7 @@
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rcutils/logging_macros.h"
 
+#include "rmw/impl/cpp/key_value.hpp"
 #include "rmw/qos_profiles.h"
 #include "rmw/rmw.h"
 
@@ -69,17 +70,38 @@ public:
     eprosima::fastrtps::Participant *,
     eprosima::fastrtps::rtps::ParticipantDiscoveryInfo && info) override
   {
-    // We aren't monitoring discovered participants, just dropped and removed.
-    // Participants are added to the Graph when they send a ParticipantEntitiesInfo message.
-    if (
-      info.status != eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::REMOVED_PARTICIPANT &&
-      info.status != eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DROPPED_PARTICIPANT)
-    {
-      return;
+    switch (info.status) {
+      case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DISCOVERED_PARTICIPANT:
+      {
+        auto map = rmw::impl::cpp::parse_key_value(info.info.m_userData);
+        auto name_found = map.find("name");
+        auto ns_found = map.find("namespace");
+
+        if (name_found == map.end() || ns_found == map.end()) {
+          return;
+        }
+        auto context_name =
+          std::string(name_found->second.begin(), name_found->second.end());
+        auto context_namespace =
+          std::string(ns_found->second.begin(), ns_found->second.end());
+
+        context->graph_cache.add_participant(
+          rmw_fastrtps_shared_cpp::create_rmw_gid(
+            graph_guard_condition_->implementation_identifier, info.info.m_guid),
+            context_name,
+            context_namespace);
+        break;
+      }
+      case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::REMOVED_PARTICIPANT:
+        // fall through
+      case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DROPPED_PARTICIPANT:
+        context->graph_cache.remove_participant(
+          rmw_fastrtps_shared_cpp::create_rmw_gid(
+            graph_guard_condition_->implementation_identifier, info.info.m_guid));
+        break;
+      default:
+        return;
     }
-    context->graph_cache.remove_participant(
-      rmw_fastrtps_shared_cpp::create_rmw_gid(
-        graph_guard_condition_->implementation_identifier, info.info.m_guid));
   }
 
   void onSubscriberDiscovery(

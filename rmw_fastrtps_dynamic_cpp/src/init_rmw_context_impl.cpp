@@ -63,6 +63,8 @@ init_context_impl(rmw_context_t * context)
       context->options.domain_id,
       &context->options.security_options,
       (context->options.localhost_only == RMW_LOCALHOST_ONLY_ENABLED) ? 1 : 0,
+      context->options.name,
+      context->options.namespace_,
       common_context.get()),
     [&](CustomParticipantInfo * participant_info) {
       if (RMW_RET_OK != rmw_fastrtps_shared_cpp::destroy_participant(participant_info)) {
@@ -147,7 +149,10 @@ init_context_impl(rmw_context_t * context)
   if (RMW_RET_OK != ret) {
     return ret;
   }
-  common_context->graph_cache.add_participant(common_context->gid);
+  common_context->graph_cache.add_participant(
+    common_context->gid,
+    context->options.name,
+    context->options.namespace_);
 
   publisher.release();
   subscription.release();

@@ -118,6 +118,8 @@ rmw_fastrtps_shared_cpp::create_participant(
   size_t domain_id,
   const rmw_security_options_t * security_options,
   bool localhost_only,
+  const char * context_name,
+  const char * context_namespace,
   rmw_dds_common::Context * common_context)
 {
   if (!security_options) {
@@ -143,8 +145,17 @@ rmw_fastrtps_shared_cpp::create_participant(
   }
 
   participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
-  // // since the participant name is not part of the DDS spec
-  // participantAttrs.rtps.setName(name);
+
+  size_t length = strlen(context_name) + strlen("name=;") +
+    strlen(context_namespace) + strlen("namespace=;") + 1;
+  participantAttrs.rtps.userData.resize(length);
+  int written = snprintf(
+    reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
+    length, "name=%s;namespace=%s;", context_name, context_namespace);
+  if (written < 0 || written > static_cast<int>(length) - 1) {
+    RMW_SET_ERROR_MSG("failed to populate user_data buffer");
+    return nullptr;
+  }
 
   bool leave_middleware_default_qos = false;
   const char * env_value;
