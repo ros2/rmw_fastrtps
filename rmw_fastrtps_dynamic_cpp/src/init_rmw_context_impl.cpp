@@ -137,10 +137,34 @@ init_context_impl(rmw_context_t * context)
     return RMW_RET_BAD_ALLOC;
   }
 
+  std::unique_ptr<rmw_guard_condition_t, std::function<void(rmw_guard_condition_t *)>>
+  graph_guard_condition(
+    rmw_fastrtps_shared_cpp::__rmw_create_guard_condition(eprosima_fastrtps_identifier),
+    [&](rmw_guard_condition_t * p) {
+      rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_destroy_guard_condition(p);
+      if (ret != RMW_RET_OK) {
+        RMW_SAFE_FWRITE_TO_STDERR(
+          "Failed to destroy guard condition after function: '"
+          RCUTILS_STRINGIFY(__function__) "' failed.\n");
+      }
+    });
+  if (!graph_guard_condition) {
+    return RMW_RET_BAD_ALLOC;
+  }
+
+  common_context->graph_cache.set_on_change_callback(
+    [guard_condition = graph_guard_condition.get()]() {
+      rmw_fastrtps_shared_cpp::__rmw_trigger_guard_condition(
+        eprosima_fastrtps_identifier,
+        guard_condition);
+    });
+
+
   common_context->gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
     eprosima_fastrtps_identifier, participant_info->participant->getGuid());
   common_context->pub = publisher.get();
   common_context->sub = subscription.get();
+  common_context->graph_guard_condition = graph_guard_condition.get();
 
   context->impl->common = common_context.get();
   context->impl->participant_info = participant_info.get();
@@ -154,6 +178,7 @@ init_context_impl(rmw_context_t * context)
     context->options.name,
     context->options.namespace_);
 
+  graph_guard_condition.release();
   publisher.release();
   subscription.release();
   common_context.release();

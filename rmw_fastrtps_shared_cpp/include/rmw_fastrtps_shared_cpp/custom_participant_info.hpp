@@ -46,7 +46,6 @@ typedef struct CustomParticipantInfo
 {
   eprosima::fastrtps::Participant * participant;
   ::ParticipantListener * listener;
-  rmw_guard_condition_t * graph_guard_condition;
 
   // Flag to establish if the QoS of the participant,
   // its publishers and its subscribers are going
@@ -60,10 +59,10 @@ class ParticipantListener : public eprosima::fastrtps::ParticipantListener
 {
 public:
   explicit ParticipantListener(
-    rmw_guard_condition_t * graph_guard_condition,
+    const char * identifier,
     rmw_dds_common::Context * context)
   : context(context),
-    graph_guard_condition_(graph_guard_condition)
+    identifier_(identifier)
   {}
 
   void onParticipantDiscovery(
@@ -72,32 +71,32 @@ public:
   {
     switch (info.status) {
       case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DISCOVERED_PARTICIPANT:
-      {
-        auto map = rmw::impl::cpp::parse_key_value(info.info.m_userData);
-        auto name_found = map.find("name");
-        auto ns_found = map.find("namespace");
+        {
+          auto map = rmw::impl::cpp::parse_key_value(info.info.m_userData);
+          auto name_found = map.find("name");
+          auto ns_found = map.find("namespace");
 
-        if (name_found == map.end() || ns_found == map.end()) {
-          return;
-        }
-        auto context_name =
-          std::string(name_found->second.begin(), name_found->second.end());
-        auto context_namespace =
-          std::string(ns_found->second.begin(), ns_found->second.end());
+          if (name_found == map.end() || ns_found == map.end()) {
+            return;
+          }
+          auto context_name =
+            std::string(name_found->second.begin(), name_found->second.end());
+          auto context_namespace =
+            std::string(ns_found->second.begin(), ns_found->second.end());
 
-        context->graph_cache.add_participant(
-          rmw_fastrtps_shared_cpp::create_rmw_gid(
-            graph_guard_condition_->implementation_identifier, info.info.m_guid),
+          context->graph_cache.add_participant(
+            rmw_fastrtps_shared_cpp::create_rmw_gid(
+              identifier_, info.info.m_guid),
             context_name,
             context_namespace);
-        break;
-      }
+          break;
+        }
       case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::REMOVED_PARTICIPANT:
-        // fall through
+      // fall through
       case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DROPPED_PARTICIPANT:
         context->graph_cache.remove_participant(
           rmw_fastrtps_shared_cpp::create_rmw_gid(
-            graph_guard_condition_->implementation_identifier, info.info.m_guid));
+            identifier_, info.info.m_guid));
         break;
       default:
         return;
@@ -131,40 +130,34 @@ private:
   void
   process_discovery_info(T & proxyData, bool is_alive, bool is_reader)
   {
-    bool trigger;
     {
       if (is_alive) {
         rmw_qos_profile_t qos_profile = rmw_qos_profile_unknown;
         dds_qos_to_rmw_qos(proxyData.m_qos, &qos_profile);
 
-        trigger = context->graph_cache.add_entity(
+        context->graph_cache.add_entity(
           rmw_fastrtps_shared_cpp::create_rmw_gid(
-            graph_guard_condition_->implementation_identifier,
+            identifier_,
             proxyData.guid()),
           proxyData.topicName().to_string(),
           proxyData.typeName().to_string(),
           rmw_fastrtps_shared_cpp::create_rmw_gid(
-            graph_guard_condition_->implementation_identifier,
+            identifier_,
             iHandle2GUID(proxyData.RTPSParticipantKey())),
           qos_profile,
           is_reader);
       } else {
-        trigger = context->graph_cache.remove_entity(
+        context->graph_cache.remove_entity(
           rmw_fastrtps_shared_cpp::create_rmw_gid(
-            graph_guard_condition_->implementation_identifier,
+            identifier_,
             proxyData.guid()),
           is_reader);
       }
     }
-    if (trigger) {
-      rmw_fastrtps_shared_cpp::__rmw_trigger_guard_condition(
-        graph_guard_condition_->implementation_identifier,
-        graph_guard_condition_);
-    }
   }
 
   rmw_dds_common::Context * context;
-  rmw_guard_condition_t * graph_guard_condition_;
+  const char * const identifier_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_

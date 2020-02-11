@@ -55,8 +55,9 @@ rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(rmw_context_t * contex
     if (!common_context->graph_cache.remove_participant(common_context->gid)) {
       RMW_SAFE_FWRITE_TO_STDERR(
         RCUTILS_STRINGIFY(__function__) ":" RCUTILS_STRINGIFY(__line__) ": "
-        "Couldn't remove Participant gid from graph_cache when destroying Participant");
+        "couldn't remove Participant gid from graph_cache when destroying Participant");
     }
+
     ret = rmw_fastrtps_shared_cpp::destroy_subscription(
       context->implementation_identifier,
       participant_info,
@@ -89,6 +90,16 @@ rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(rmw_context_t * contex
       RMW_SET_ERROR_MSG(error_string.str);
     }
     delete common_context;
+
+    common_context->graph_cache.clear_on_change_callback();
+    if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_destroy_guard_condition(
+        common_context->graph_guard_condition))
+    {
+      RMW_SAFE_FWRITE_TO_STDERR(
+        RCUTILS_STRINGIFY(__function__) ":" RCUTILS_STRINGIFY(__line__) ": "
+        "couldn't destroy graph_guard_condtion");
+    }
+
     context->impl->common = nullptr;
     context->impl->participant_info = nullptr;
   }

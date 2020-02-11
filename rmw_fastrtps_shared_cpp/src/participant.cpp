@@ -60,18 +60,11 @@ __create_participant(
   // Declare everything before beginning to create things.
   ::ParticipantListener * listener = nullptr;
   Participant * participant = nullptr;
-  rmw_guard_condition_t * graph_guard_condition = nullptr;
   CustomParticipantInfo * participant_info = nullptr;
-
-  graph_guard_condition = rmw_fastrtps_shared_cpp::__rmw_create_guard_condition(identifier);
-  if (!graph_guard_condition) {
-    // error already set
-    goto fail;
-  }
 
   try {
     listener = new ::ParticipantListener(
-      graph_guard_condition, common_context);
+      identifier, common_context);
   } catch (std::bad_alloc &) {
     RMW_SET_ERROR_MSG("failed to allocate participant listener");
     goto fail;
@@ -93,18 +86,9 @@ __create_participant(
 
   participant_info->participant = participant;
   participant_info->listener = listener;
-  participant_info->graph_guard_condition = graph_guard_condition;
 
   return participant_info;
 fail:
-  if (graph_guard_condition) {
-    rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_destroy_guard_condition(graph_guard_condition);
-    if (ret != RMW_RET_OK) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_shared_cpp",
-        "failed to destroy guard condition during error handling");
-    }
-  }
   rmw_free(listener);
   if (participant) {
     Domain::removeParticipant(participant);
@@ -238,12 +222,6 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
     return RMW_RET_ERROR;
   }
   Domain::removeParticipant(participant_info->participant);
-  if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_destroy_guard_condition(
-      participant_info->graph_guard_condition))
-  {
-    RMW_SET_ERROR_MSG("failed to destroy graph guard condition");
-    result_ret = RMW_RET_ERROR;
-  }
   delete participant_info->listener;
   participant_info->listener = nullptr;
   delete participant_info;

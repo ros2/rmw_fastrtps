@@ -167,11 +167,11 @@ __rmw_node_assert_liveliness(
 const rmw_guard_condition_t *
 __rmw_node_get_graph_guard_condition(const rmw_node_t * node)
 {
-  auto impl = static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
-  if (!impl) {
-    RMW_SET_ERROR_MSG("node impl is null");
+  auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
+  if (!common_context) {
+    RMW_SET_ERROR_MSG("common_context is nullptr");
     return nullptr;
   }
-  return impl->graph_guard_condition;
+  return common_context->graph_guard_condition;
 }
 }  // namespace rmw_fastrtps_shared_cpp
