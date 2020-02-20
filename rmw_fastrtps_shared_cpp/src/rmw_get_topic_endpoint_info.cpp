@@ -292,7 +292,6 @@ _get_info_by_topic(
     for (auto i = 0u; i < count; i++) {
       participants_info->info_array[i] = topic_endpoint_info_vector.at(i);
     }
-    participants_info->count = count;
   }
   return RMW_RET_OK;
 }
