@@ -23,10 +23,12 @@
 #include "rmw/topic_endpoint_info_array.h"
 #include "rmw/topic_endpoint_info.h"
 
-#include "demangle.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+
+#include "demangle.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -144,8 +146,10 @@ _set_rmw_topic_endpoint_info(
   }
   // set endpoint gid
   uint8_t rmw_gid[RMW_GID_STORAGE_SIZE];
-  memset(&rmw_gid, 0, RMW_GID_STORAGE_SIZE);
-  memcpy(&rmw_gid, &topic_data.entity_guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
+  // memset(&rmw_gid, 0, RMW_GID_STORAGE_SIZE);
+  rmw_fastrtps_shared_cpp::copy_from_GUID_t_to_byte_array(
+    topic_data.entity_guid,
+    rmw_gid);
   ret = rmw_topic_endpoint_info_set_gid(
     topic_endpoint_info,
     rmw_gid,

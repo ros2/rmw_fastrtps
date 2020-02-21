@@ -24,8 +24,9 @@
 #include "fastcdr/Cdr.h"
 #include "fastcdr/FastBuffer.h"
 
-#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 namespace rmw_fastrtps_shared_cpp
@@ -39,9 +40,10 @@ _assign_message_info(
   rmw_gid_t * sender_gid = &message_info->publisher_gid;
   sender_gid->implementation_identifier = identifier;
   memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
-  memcpy(
-    sender_gid->data, &sinfo->sample_identity.writer_guid(),
-    sizeof(eprosima::fastrtps::rtps::GUID_t));
+
+  rmw_fastrtps_shared_cpp::copy_from_GUID_t_to_byte_array(
+    sinfo->sample_identity.writer_guid(),
+    sender_gid->data);
 }
 
 rmw_ret_t
