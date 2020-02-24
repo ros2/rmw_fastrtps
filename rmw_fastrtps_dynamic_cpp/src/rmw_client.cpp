@@ -38,6 +38,7 @@
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
 using TopicDataType = eprosima::fastrtps::TopicDataType;
+using TypeSupportProxy = rmw_fastrtps_dynamic_cpp::TypeSupportProxy;
 
 extern "C"
 {
@@ -101,6 +102,26 @@ rmw_create_client(
   info->request_publisher_matched_count_ = 0;
   info->response_subscriber_matched_count_ = 0;
 
+  auto request_type_impl = _create_request_type_support(
+    type_support->data, info->typesupport_identifier_);
+  if(!request_type_impl) {
+    delete info;
+    RMW_SET_ERROR_MSG("failed to allocate request type support");
+    return nullptr;
+  }
+    
+  auto response_type_impl = _create_response_type_support(
+      type_support->data, info->typesupport_identifier_);
+  if(!response_type_impl) {
+    delete request_type_impl;
+    delete info;
+    RMW_SET_ERROR_MSG("failed to allocate response type support");
+    return nullptr;
+  }
+  
+  info->request_type_support_impl_ = request_type_impl;
+  info->response_type_support_impl_ = response_type_impl;
+
   const void * untyped_request_members;
   const void * untyped_response_members;
 
@@ -108,9 +129,6 @@ rmw_create_client(
     get_request_ptr(type_support->data, info->typesupport_identifier_);
   untyped_response_members = get_response_ptr(
     type_support->data, info->typesupport_identifier_);
-
-  info->request_type_support_impl_ = untyped_request_members;
-  info->response_type_support_impl_ = untyped_response_members;
 
   std::string request_type_name = _create_type_name(
     untyped_request_members, info->typesupport_identifier_);
@@ -121,8 +139,11 @@ rmw_create_client(
       participant, request_type_name.c_str(),
       reinterpret_cast<TopicDataType **>(&info->request_type_support_)))
   {
-    info->request_type_support_ = _create_request_type_support(
-      type_support->data, info->typesupport_identifier_);
+    info->request_type_support_ = new (std::nothrow) TypeSupportProxy(request_type_impl);
+    if(!info->request_type_support_) {
+      RMW_SET_ERROR_MSG("failed to allocate request TypeSupportProxy");
+      goto fail;
+    }
     _register_type(participant, info->request_type_support_);
   }
 
@@ -130,8 +151,11 @@ rmw_create_client(
       participant, response_type_name.c_str(),
       reinterpret_cast<TopicDataType **>(&info->response_type_support_)))
   {
-    info->response_type_support_ = _create_response_type_support(
-      type_support->data, info->typesupport_identifier_);
+    info->response_type_support_ = new (std::nothrow) TypeSupportProxy(response_type_impl);
+    if(!info->response_type_support_) {
+      RMW_SET_ERROR_MSG("failed to allocate response TypeSupportProxy");
+      goto fail;
+    }
     _register_type(participant, info->response_type_support_);
   }
 
@@ -245,6 +269,8 @@ fail:
         "leaking type support objects because node impl is null");
     }
 
+    delete request_type_impl;
+    delete response_type_impl;
     delete info;
     info = nullptr;
   }
@@ -263,6 +289,17 @@ fail:
 rmw_ret_t
 rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
 {
+  auto info = static_cast<CustomClientInfo *>(client->data);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "client info pointer is null", return RMW_RET_ERROR);
+
+  auto impl = static_cast<TopicDataType *>(const_cast<void *>(info->request_type_support_impl_));
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(impl, "client's request type support is null", return RMW_RET_ERROR);
+  delete impl;
+  
+  impl = static_cast<TopicDataType *>(const_cast<void *>(info->response_type_support_impl_));
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(impl, "client's response type support is null", return RMW_RET_ERROR);
+  delete impl;
+
   return rmw_fastrtps_shared_cpp::__rmw_destroy_client(
     eprosima_fastrtps_identifier, node, client);
 }
