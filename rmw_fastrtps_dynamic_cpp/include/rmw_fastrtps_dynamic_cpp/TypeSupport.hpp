@@ -134,13 +134,13 @@ template<typename MembersType>
 class TypeSupport : public rmw_fastrtps_shared_cpp::TypeSupport
 {
 public:
-  size_t getEstimatedSerializedSize(const void * ros_message, const void * impl);
+  size_t getEstimatedSerializedSize(const void * ros_message, const void * impl) const override;
 
   bool serializeROSmessage(
-    const void * ros_message, eprosima::fastcdr::Cdr & ser, const void * impl);
+    const void * ros_message, eprosima::fastcdr::Cdr & ser, const void * impl) const override;
 
   bool deserializeROSmessage(
-    eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl);
+    eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const override;
 
 protected:
   TypeSupport();
@@ -151,14 +151,20 @@ protected:
 
 private:
   size_t getEstimatedSerializedSize(
-    const MembersType * members, const void * ros_message, size_t current_alignment);
+    const MembersType * members,
+    const void * ros_message,
+    size_t current_alignment) const;
 
   bool serializeROSmessage(
-    eprosima::fastcdr::Cdr & ser, const MembersType * members, const void * ros_message);
+    eprosima::fastcdr::Cdr & ser,
+    const MembersType * members,
+    const void * ros_message) const;
 
   bool deserializeROSmessage(
-    eprosima::fastcdr::Cdr & deser, const MembersType * members, void * ros_message,
-    bool call_new);
+    eprosima::fastcdr::Cdr & deser,
+    const MembersType * members,
+    void * ros_message,
+    bool call_new) const;
 };
 
 }  // namespace rmw_fastrtps_dynamic_cpp
