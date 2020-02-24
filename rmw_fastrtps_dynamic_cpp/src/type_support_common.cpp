@@ -101,21 +101,21 @@ TypeSupportProxy::TypeSupportProxy(rmw_fastrtps_shared_cpp::TypeSupport * inner_
 }
 
 size_t TypeSupportProxy::getEstimatedSerializedSize(
-    const void * ros_message, const void * impl) const
+  const void * ros_message, const void * impl) const
 {
   auto type_impl = static_cast<const rmw_fastrtps_shared_cpp::TypeSupport *>(impl);
   return type_impl->getEstimatedSerializedSize(ros_message, impl);
 }
 
 bool TypeSupportProxy::serializeROSmessage(
-    const void * ros_message, eprosima::fastcdr::Cdr & ser, const void * impl) const
+  const void * ros_message, eprosima::fastcdr::Cdr & ser, const void * impl) const
 {
   auto type_impl = static_cast<const rmw_fastrtps_shared_cpp::TypeSupport *>(impl);
   return type_impl->serializeROSmessage(ros_message, ser, impl);
 }
 
 bool TypeSupportProxy::deserializeROSmessage(
-    eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const
+  eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const
 {
   auto type_impl = static_cast<const rmw_fastrtps_shared_cpp::TypeSupport *>(impl);
   return type_impl->deserializeROSmessage(deser, ros_message, impl);

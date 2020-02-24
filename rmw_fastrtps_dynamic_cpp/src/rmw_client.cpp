@@ -104,21 +104,21 @@ rmw_create_client(
 
   auto request_type_impl = _create_request_type_support(
     type_support->data, info->typesupport_identifier_);
-  if(!request_type_impl) {
+  if (!request_type_impl) {
     delete info;
     RMW_SET_ERROR_MSG("failed to allocate request type support");
     return nullptr;
   }
-    
+
   auto response_type_impl = _create_response_type_support(
-      type_support->data, info->typesupport_identifier_);
-  if(!response_type_impl) {
+    type_support->data, info->typesupport_identifier_);
+  if (!response_type_impl) {
     delete request_type_impl;
     delete info;
     RMW_SET_ERROR_MSG("failed to allocate response type support");
     return nullptr;
   }
-  
+
   info->request_type_support_impl_ = request_type_impl;
   info->response_type_support_impl_ = response_type_impl;
 
@@ -140,7 +140,7 @@ rmw_create_client(
       reinterpret_cast<TopicDataType **>(&info->request_type_support_)))
   {
     info->request_type_support_ = new (std::nothrow) TypeSupportProxy(request_type_impl);
-    if(!info->request_type_support_) {
+    if (!info->request_type_support_) {
       RMW_SET_ERROR_MSG("failed to allocate request TypeSupportProxy");
       goto fail;
     }
@@ -152,7 +152,7 @@ rmw_create_client(
       reinterpret_cast<TopicDataType **>(&info->response_type_support_)))
   {
     info->response_type_support_ = new (std::nothrow) TypeSupportProxy(response_type_impl);
-    if(!info->response_type_support_) {
+    if (!info->response_type_support_) {
       RMW_SET_ERROR_MSG("failed to allocate response TypeSupportProxy");
       goto fail;
     }
@@ -293,11 +293,15 @@ rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "client info pointer is null", return RMW_RET_ERROR);
 
   auto impl = static_cast<TopicDataType *>(const_cast<void *>(info->request_type_support_impl_));
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(impl, "client's request type support is null", return RMW_RET_ERROR);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    impl, "client's request type support is null",
+    return RMW_RET_ERROR);
   delete impl;
-  
+
   impl = static_cast<TopicDataType *>(const_cast<void *>(info->response_type_support_impl_));
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(impl, "client's response type support is null", return RMW_RET_ERROR);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    impl, "client's response type support is null",
+    return RMW_RET_ERROR);
   delete impl;
 
   return rmw_fastrtps_shared_cpp::__rmw_destroy_client(

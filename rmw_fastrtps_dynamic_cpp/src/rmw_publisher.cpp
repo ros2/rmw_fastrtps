@@ -133,15 +133,15 @@ rmw_create_publisher(
     RMW_SET_ERROR_MSG("failed to allocate CustomPublisherInfo");
     return nullptr;
   }
-  
+
   auto type_impl = _create_message_type_support(
     type_support->data, type_support->typesupport_identifier);
-  if(!type_impl) {
+  if (!type_impl) {
     delete info;
     RMW_SET_ERROR_MSG("failed to allocate type support");
     return nullptr;
   }
-  
+
   info->typesupport_identifier_ = type_support->typesupport_identifier;
   info->type_support_impl_ = type_impl;
 
@@ -152,7 +152,7 @@ rmw_create_publisher(
       reinterpret_cast<TopicDataType **>(&info->type_support_)))
   {
     info->type_support_ = new (std::nothrow) TypeSupportProxy(type_impl);
-    if(!info->type_support_) {
+    if (!info->type_support_) {
       RMW_SET_ERROR_MSG("failed to allocate TypeSupportProxy");
       goto fail;
     }
@@ -239,7 +239,7 @@ fail:
     }
     delete info;
   }
-  
+
   delete type_impl;
 
   if (rmw_publisher) {
@@ -309,7 +309,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 
   auto impl = static_cast<TopicDataType *>(const_cast<void *>(info->type_support_impl_));
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(impl, "publisher type support is null", return RMW_RET_ERROR);
-  
+
   delete impl;
 
   return rmw_fastrtps_shared_cpp::__rmw_destroy_publisher(
