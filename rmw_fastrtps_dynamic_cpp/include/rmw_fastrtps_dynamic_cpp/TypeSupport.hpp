@@ -130,6 +130,20 @@ struct StringHelper<rosidl_typesupport_introspection_cpp::MessageMembers>
   }
 };
 
+class TypeSupportProxy : public rmw_fastrtps_shared_cpp::TypeSupport
+{
+public:
+  TypeSupportProxy(rmw_fastrtps_shared_cpp::TypeSupport * inner_type);
+
+  size_t getEstimatedSerializedSize(const void * ros_message, const void * impl) const override;
+
+  bool serializeROSmessage(
+    const void * ros_message, eprosima::fastcdr::Cdr & ser, const void * impl) const override;
+
+  bool deserializeROSmessage(
+    eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const override;
+};
+
 template<typename MembersType>
 class TypeSupport : public rmw_fastrtps_shared_cpp::TypeSupport
 {
