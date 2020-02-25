@@ -24,7 +24,7 @@
 
 #include "type_support_common.hpp"
 
-using type_support_ptr = rmw_fastrtps_shared_cpp::TypeSupport *;
+using type_support_ptr = rmw_fastrtps_dynamic_cpp::BaseTypeSupport *;
 
 /**
  * A data structure to use as value type for the type registry.
@@ -48,13 +48,13 @@ private:
 public:
   ~TypeSupportRegistry();
 
-  rmw_fastrtps_shared_cpp::TypeSupport * get_message_type_support(
+  type_support_ptr get_message_type_support(
     const rosidl_message_type_support_t * ros_type_support);
 
-  rmw_fastrtps_shared_cpp::TypeSupport * get_request_type_support(
+  type_support_ptr get_request_type_support(
     const rosidl_service_type_support_t * ros_type_support);
 
-  rmw_fastrtps_shared_cpp::TypeSupport * get_response_type_support(
+  type_support_ptr get_response_type_support(
     const rosidl_service_type_support_t * ros_type_support);
 
   void return_message_type_support(

@@ -18,7 +18,7 @@
 #include "type_support_registry.hpp"
 
 template<typename key_type, typename map_type, typename creator>
-rmw_fastrtps_shared_cpp::TypeSupport * get_type_support(
+type_support_ptr get_type_support(
   const key_type & ros_type_support, map_type & map, creator fun)
 {
   std::lock_guard<std::mutex> guard(map.getMutex());
@@ -52,10 +52,10 @@ TypeSupportRegistry::~TypeSupportRegistry()
   assert(response_types_.empty());
 }
 
-rmw_fastrtps_shared_cpp::TypeSupport * TypeSupportRegistry::get_message_type_support(
+type_support_ptr TypeSupportRegistry::get_message_type_support(
   const rosidl_message_type_support_t * ros_type_support)
 {
-  auto creator_fun = [&ros_type_support]() -> rmw_fastrtps_shared_cpp::TypeSupport *
+  auto creator_fun = [&ros_type_support]() -> type_support_ptr
     {
       if (using_introspection_c_typesupport(ros_type_support->typesupport_identifier)) {
         auto members = static_cast<const rosidl_typesupport_introspection_c__MessageMembers *>(
@@ -73,10 +73,10 @@ rmw_fastrtps_shared_cpp::TypeSupport * TypeSupportRegistry::get_message_type_sup
   return get_type_support(ros_type_support, message_types_, creator_fun);
 }
 
-rmw_fastrtps_shared_cpp::TypeSupport * TypeSupportRegistry::get_request_type_support(
+type_support_ptr TypeSupportRegistry::get_request_type_support(
   const rosidl_service_type_support_t * ros_type_support)
 {
-  auto creator_fun = [&ros_type_support]() -> rmw_fastrtps_shared_cpp::TypeSupport *
+  auto creator_fun = [&ros_type_support]() -> type_support_ptr
     {
       if (using_introspection_c_typesupport(ros_type_support->typesupport_identifier)) {
         auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(
@@ -94,10 +94,10 @@ rmw_fastrtps_shared_cpp::TypeSupport * TypeSupportRegistry::get_request_type_sup
   return get_type_support(ros_type_support, request_types_, creator_fun);
 }
 
-rmw_fastrtps_shared_cpp::TypeSupport * TypeSupportRegistry::get_response_type_support(
+type_support_ptr TypeSupportRegistry::get_response_type_support(
   const rosidl_service_type_support_t * ros_type_support)
 {
-  auto creator_fun = [&ros_type_support]() -> rmw_fastrtps_shared_cpp::TypeSupport *
+  auto creator_fun = [&ros_type_support]() -> type_support_ptr
     {
       if (using_introspection_c_typesupport(ros_type_support->typesupport_identifier)) {
         auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(

@@ -144,8 +144,26 @@ public:
     eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const override;
 };
 
+class BaseTypeSupport : public rmw_fastrtps_shared_cpp::TypeSupport
+{
+public:
+  const void * ros_type_support() const
+  {
+    return ros_type_support_;
+  }
+
+protected:
+  explicit BaseTypeSupport(const void * ros_type_support)
+  {
+    ros_type_support_ = ros_type_support;
+  }
+
+private:
+  const void * ros_type_support_;
+};
+
 template<typename MembersType>
-class TypeSupport : public rmw_fastrtps_shared_cpp::TypeSupport
+class TypeSupport : public BaseTypeSupport
 {
 public:
   size_t getEstimatedSerializedSize(const void * ros_message, const void * impl) const override;
@@ -156,18 +174,12 @@ public:
   bool deserializeROSmessage(
     eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const override;
 
-  const void * ros_type_support() const
-  {
-    return ros_type_support_;
-  }
-
 protected:
   explicit TypeSupport(const void * ros_type_support);
 
   size_t calculateMaxSerializedSize(const MembersType * members, size_t current_alignment);
 
   const MembersType * members_;
-  const void * ros_type_support_;
 
 private:
   size_t getEstimatedSerializedSize(
