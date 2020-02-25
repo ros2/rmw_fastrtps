@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rmw/error_handling.h"
+
 #include "type_support_common.hpp"
 #include "type_support_registry.hpp"
 
@@ -22,8 +24,7 @@ rmw_fastrtps_shared_cpp::TypeSupport * get_type_support(
   std::lock_guard<std::mutex> guard(map.getMutex());
   RefCountedTypeSupport & item = map()[ros_type_support];
   if (0 == item.ref_count++) {
-    item.type_support = fun(
-      ros_type_support->data, ros_type_support->typesupport_identifier);
+    item.type_support = fun();
     if (!item.type_support) {
       map().erase(ros_type_support);
       return nullptr;
@@ -54,19 +55,64 @@ TypeSupportRegistry::~TypeSupportRegistry()
 rmw_fastrtps_shared_cpp::TypeSupport * TypeSupportRegistry::get_message_type_support(
   const rosidl_message_type_support_t * ros_type_support)
 {
-  return get_type_support(ros_type_support, message_types_, _create_message_type_support);
+  auto creator_fun = [&ros_type_support]() -> rmw_fastrtps_shared_cpp::TypeSupport *
+    {
+      if (using_introspection_c_typesupport(ros_type_support->typesupport_identifier)) {
+        auto members = static_cast<const rosidl_typesupport_introspection_c__MessageMembers *>(
+          ros_type_support->data);
+        return new MessageTypeSupport_c(members, ros_type_support);
+      } else if (using_introspection_cpp_typesupport(ros_type_support->typesupport_identifier)) {
+        auto members = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(
+          ros_type_support->data);
+        return new MessageTypeSupport_cpp(members, ros_type_support);
+      }
+      RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+      return nullptr;
+    };
+
+  return get_type_support(ros_type_support, message_types_, creator_fun);
 }
 
 rmw_fastrtps_shared_cpp::TypeSupport * TypeSupportRegistry::get_request_type_support(
   const rosidl_service_type_support_t * ros_type_support)
 {
-  return get_type_support(ros_type_support, request_types_, _create_request_type_support);
+  auto creator_fun = [&ros_type_support]() -> rmw_fastrtps_shared_cpp::TypeSupport *
+    {
+      if (using_introspection_c_typesupport(ros_type_support->typesupport_identifier)) {
+        auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(
+          ros_type_support->data);
+        return new RequestTypeSupport_c(members, ros_type_support);
+      } else if (using_introspection_cpp_typesupport(ros_type_support->typesupport_identifier)) {
+        auto members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers *>(
+          ros_type_support->data);
+        return new RequestTypeSupport_cpp(members, ros_type_support);
+      }
+      RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+      return nullptr;
+    };
+
+  return get_type_support(ros_type_support, request_types_, creator_fun);
 }
 
 rmw_fastrtps_shared_cpp::TypeSupport * TypeSupportRegistry::get_response_type_support(
   const rosidl_service_type_support_t * ros_type_support)
 {
-  return get_type_support(ros_type_support, response_types_, _create_response_type_support);
+  auto creator_fun = [&ros_type_support]() -> rmw_fastrtps_shared_cpp::TypeSupport *
+    {
+      if (using_introspection_c_typesupport(ros_type_support->typesupport_identifier)) {
+        auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(
+          ros_type_support->data);
+        return new ResponseTypeSupport_c(members, ros_type_support);
+      } else if (using_introspection_cpp_typesupport(ros_type_support->typesupport_identifier)) {
+        auto members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers *>(
+          ros_type_support->data);
+        return new ResponseTypeSupport_cpp(members, ros_type_support);
+      }
+      RMW_SET_ERROR_MSG("Unknown typesupport identifier");
+      return nullptr;
+    };
+
+  return get_type_support(ros_type_support, response_types_, creator_fun);
 }
 
 void TypeSupportRegistry::return_message_type_support(
