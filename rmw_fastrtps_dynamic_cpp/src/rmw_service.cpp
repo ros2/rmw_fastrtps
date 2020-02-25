@@ -43,9 +43,11 @@
 
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 
-#include "type_support_common.hpp"
 #include "client_service_common.hpp"
+#include "type_support_common.hpp"
+#include "type_support_registry.hpp"
 
+using BaseTypeSupport = rmw_fastrtps_dynamic_cpp::BaseTypeSupport;
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
 using TopicDataType = eprosima::fastrtps::TopicDataType;
@@ -111,18 +113,17 @@ rmw_create_service(
   info->participant_ = participant;
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-  auto request_type_impl = _create_request_type_support(
-    type_support->data, info->typesupport_identifier_);
+  TypeSupportRegistry & type_registry = get_type_support_registry(node);
+  auto request_type_impl = type_registry.get_request_type_support(type_support);
   if (!request_type_impl) {
     delete info;
     RMW_SET_ERROR_MSG("failed to allocate request type support");
     return nullptr;
   }
 
-  auto response_type_impl = _create_response_type_support(
-    type_support->data, info->typesupport_identifier_);
+  auto response_type_impl = type_registry.get_response_type_support(type_support);
   if (!response_type_impl) {
-    delete request_type_impl;
+    type_registry.return_request_type_support(type_support);
     delete info;
     RMW_SET_ERROR_MSG("failed to allocate response type support");
     return nullptr;
@@ -265,8 +266,8 @@ fail:
       rmw_fastrtps_shared_cpp::_unregister_type(participant, info->response_type_support_);
     }
 
-    delete request_type_impl;
-    delete response_type_impl;
+    type_registry.return_request_type_support(type_support);
+    type_registry.return_response_type_support(type_support);
     delete info;
   }
 
@@ -285,17 +286,25 @@ rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
   auto info = static_cast<CustomServiceInfo *>(service->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "service info pointer is null", return RMW_RET_ERROR);
 
-  auto impl = static_cast<TopicDataType *>(const_cast<void *>(info->request_type_support_impl_));
+  auto impl = static_cast<BaseTypeSupport *>(const_cast<void *>(info->request_type_support_impl_));
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    impl, "service's request type support is null",
+    impl, "client's request type support is null",
     return RMW_RET_ERROR);
-  delete impl;
 
-  impl = static_cast<TopicDataType *>(const_cast<void *>(info->response_type_support_impl_));
+  auto ros_type_support = static_cast<const rosidl_service_type_support_t *>(
+    impl->ros_type_support());
+
+  TypeSupportRegistry & type_registry = get_type_support_registry(node);
+  type_registry.return_request_type_support(ros_type_support);
+
+  impl = static_cast<BaseTypeSupport *>(const_cast<void *>(info->response_type_support_impl_));
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    impl, "service's response type support is null",
+    impl, "client's response type support is null",
     return RMW_RET_ERROR);
-  delete impl;
+
+  ros_type_support = static_cast<const rosidl_service_type_support_t *>(
+    impl->ros_type_support());
+  type_registry.return_response_type_support(ros_type_support);
 
   return rmw_fastrtps_shared_cpp::__rmw_destroy_service(
     eprosima_fastrtps_identifier, node, service);

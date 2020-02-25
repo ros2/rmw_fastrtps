@@ -28,7 +28,9 @@
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 
 #include "type_support_common.hpp"
+#include "type_support_registry.hpp"
 
+using BaseTypeSupport = rmw_fastrtps_dynamic_cpp::BaseTypeSupport;
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
 using TopicDataType = eprosima::fastrtps::TopicDataType;
@@ -134,8 +136,8 @@ rmw_create_publisher(
     return nullptr;
   }
 
-  auto type_impl = _create_message_type_support(
-    type_support->data, type_support->typesupport_identifier);
+  TypeSupportRegistry & type_registry = get_type_support_registry(node);
+  auto type_impl = type_registry.get_message_type_support(type_support);
   if (!type_impl) {
     delete info;
     RMW_SET_ERROR_MSG("failed to allocate type support");
@@ -240,7 +242,7 @@ fail:
     delete info;
   }
 
-  delete type_impl;
+  type_registry.return_message_type_support(type_support);
 
   if (rmw_publisher) {
     rmw_publisher_free(rmw_publisher);
@@ -307,10 +309,14 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "publisher info pointer is null", return RMW_RET_ERROR);
 
-  auto impl = static_cast<TopicDataType *>(const_cast<void *>(info->type_support_impl_));
+  auto impl = static_cast<const BaseTypeSupport *>(info->type_support_impl_);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(impl, "publisher type support is null", return RMW_RET_ERROR);
 
-  delete impl;
+  auto ros_type_support = static_cast<const rosidl_message_type_support_t *>(
+    impl->ros_type_support());
+
+  TypeSupportRegistry & type_registry = get_type_support_registry(node);
+  type_registry.return_message_type_support(ros_type_support);
 
   return rmw_fastrtps_shared_cpp::__rmw_destroy_publisher(
     eprosima_fastrtps_identifier, node, publisher);
