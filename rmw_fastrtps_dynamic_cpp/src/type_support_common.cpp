@@ -35,54 +35,6 @@ using_introspection_cpp_typesupport(const char * typesupport_identifier)
          rosidl_typesupport_introspection_cpp::typesupport_identifier;
 }
 
-rmw_fastrtps_shared_cpp::TypeSupport *
-_create_message_type_support(const void * untyped_members, const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_c__MessageMembers *>(
-      untyped_members);
-    return new MessageTypeSupport_c(members, nullptr);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(
-      untyped_members);
-    return new MessageTypeSupport_cpp(members, nullptr);
-  }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return nullptr;
-}
-
-rmw_fastrtps_shared_cpp::TypeSupport *
-_create_request_type_support(const void * untyped_members, const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(
-      untyped_members);
-    return new RequestTypeSupport_c(members, nullptr);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers *>(
-      untyped_members);
-    return new RequestTypeSupport_cpp(members, nullptr);
-  }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return nullptr;
-}
-
-rmw_fastrtps_shared_cpp::TypeSupport *
-_create_response_type_support(const void * untyped_members, const char * typesupport_identifier)
-{
-  if (using_introspection_c_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(
-      untyped_members);
-    return new ResponseTypeSupport_c(members, nullptr);
-  } else if (using_introspection_cpp_typesupport(typesupport_identifier)) {
-    auto members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers *>(
-      untyped_members);
-    return new ResponseTypeSupport_cpp(members, nullptr);
-  }
-  RMW_SET_ERROR_MSG("Unknown typesupport identifier");
-  return nullptr;
-}
-
 void
 _register_type(
   eprosima::fastrtps::Participant * participant,
