@@ -156,12 +156,18 @@ public:
   bool deserializeROSmessage(
     eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const override;
 
+  const void * ros_type_support() const
+  {
+    return ros_type_support_;
+  }
+
 protected:
-  TypeSupport();
+  explicit TypeSupport(const void * ros_type_support);
 
   size_t calculateMaxSerializedSize(const MembersType * members, size_t current_alignment);
 
   const MembersType * members_;
+  const void * ros_type_support_;
 
 private:
   size_t getEstimatedSerializedSize(

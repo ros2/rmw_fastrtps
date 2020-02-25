@@ -32,7 +32,9 @@ namespace rmw_fastrtps_dynamic_cpp
 {
 
 template<typename MembersType>
-MessageTypeSupport<MembersType>::MessageTypeSupport(const MembersType * members)
+MessageTypeSupport<MembersType>::MessageTypeSupport(
+  const MembersType * members, const void * ros_type_support)
+: TypeSupport<MembersType>(ros_type_support)
 {
   assert(members);
   this->members_ = members;

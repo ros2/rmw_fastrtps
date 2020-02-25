@@ -108,10 +108,11 @@ rosidl_generator_c__void__Sequence__fini(rosidl_generator_c__void__Sequence * se
 }
 
 template<typename MembersType>
-TypeSupport<MembersType>::TypeSupport()
+TypeSupport<MembersType>::TypeSupport(const void * ros_type_support)
 {
   m_isGetKeyDefined = false;
   max_size_bound_ = false;
+  ros_type_support_ = ros_type_support;
 }
 
 static inline void *
