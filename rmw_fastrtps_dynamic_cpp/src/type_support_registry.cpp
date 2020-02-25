@@ -47,9 +47,9 @@ void return_type_support(
 
 TypeSupportRegistry::~TypeSupportRegistry()
 {
-  assert(message_types_.empty());
-  assert(request_types_.empty());
-  assert(response_types_.empty());
+  assert(message_types_().empty());
+  assert(request_types_().empty());
+  assert(response_types_().empty());
 }
 
 type_support_ptr TypeSupportRegistry::get_message_type_support(
