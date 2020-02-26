@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rcutils/logging_macros.h"
+
 #include "rmw/error_handling.h"
 
 #include "type_support_common.hpp"
@@ -41,15 +43,31 @@ void return_type_support(
   auto it = map().find(ros_type_support);
   assert(it != map().end());
   if (0 == --it->second.ref_count) {
+    delete it->second.type_support;
     map().erase(it);
+  }
+}
+
+template<typename map_type>
+void cleanup(map_type & map, const char * msg)
+{
+  std::lock_guard<std::mutex> guard(map.getMutex());
+  if (!map().empty()) {
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_fastrtps_dynamic_cpp",
+      "TypeSupportRegistry %s is not empty. Cleaning it up...", msg);
+    for (auto it : map() ) {
+      delete it.second.type_support;
+    }
+    map().clear();
   }
 }
 
 TypeSupportRegistry::~TypeSupportRegistry()
 {
-  assert(message_types_().empty());
-  assert(request_types_().empty());
-  assert(response_types_().empty());
+  cleanup(message_types_, "message_types_");
+  cleanup(request_types_, "request_types_");
+  cleanup(response_types_, "response_types_");
 }
 
 type_support_ptr TypeSupportRegistry::get_message_type_support(
