@@ -146,7 +146,6 @@ _set_rmw_topic_endpoint_info(
   }
   // set endpoint gid
   uint8_t rmw_gid[RMW_GID_STORAGE_SIZE];
-  // memset(&rmw_gid, 0, RMW_GID_STORAGE_SIZE);
   rmw_fastrtps_shared_cpp::copy_from_GUID_t_to_byte_array(
     topic_data.entity_guid,
     rmw_gid);
