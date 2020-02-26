@@ -67,6 +67,6 @@ public:
     const rosidl_service_type_support_t * ros_type_support);
 };
 
-TypeSupportRegistry & get_type_support_registry(const rmw_node_t * node);
+TypeSupportRegistry & get_type_support_registry();
 
 #endif  // TYPE_SUPPORT_REGISTRY_HPP_

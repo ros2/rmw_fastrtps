@@ -135,8 +135,7 @@ void TypeSupportRegistry::return_response_type_support(
 
 static TypeSupportRegistry type_registry_instance;
 
-TypeSupportRegistry & get_type_support_registry(const rmw_node_t * node)
+TypeSupportRegistry & get_type_support_registry()
 {
-  (void)node;
   return type_registry_instance;
 }

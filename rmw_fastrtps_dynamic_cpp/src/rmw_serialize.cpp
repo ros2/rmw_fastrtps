@@ -40,7 +40,7 @@ rmw_serialize(
     }
   }
 
-  TypeSupportRegistry & type_registry = get_type_support_registry(nullptr);
+  TypeSupportRegistry & type_registry = get_type_support_registry();
   auto tss = type_registry.get_message_type_support(ts);
   auto data_length = tss->getEstimatedSerializedSize(ros_message, ts->data);
   if (serialized_message->buffer_capacity < data_length) {
@@ -81,7 +81,7 @@ rmw_deserialize(
     }
   }
 
-  TypeSupportRegistry & type_registry = get_type_support_registry(nullptr);
+  TypeSupportRegistry & type_registry = get_type_support_registry();
   auto tss = type_registry.get_message_type_support(ts);
   eprosima::fastcdr::FastBuffer buffer(
     reinterpret_cast<char *>(serialized_message->buffer), serialized_message->buffer_length);

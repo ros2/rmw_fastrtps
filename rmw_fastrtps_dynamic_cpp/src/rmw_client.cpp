@@ -104,7 +104,7 @@ rmw_create_client(
   info->request_publisher_matched_count_ = 0;
   info->response_subscriber_matched_count_ = 0;
 
-  TypeSupportRegistry & type_registry = get_type_support_registry(node);
+  TypeSupportRegistry & type_registry = get_type_support_registry();
   auto request_type_impl = type_registry.get_request_type_support(type_support);
   if (!request_type_impl) {
     delete info;
@@ -301,7 +301,7 @@ rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
   auto ros_type_support = static_cast<const rosidl_service_type_support_t *>(
     impl->ros_type_support());
 
-  TypeSupportRegistry & type_registry = get_type_support_registry(node);
+  TypeSupportRegistry & type_registry = get_type_support_registry();
   type_registry.return_request_type_support(ros_type_support);
 
   impl = static_cast<BaseTypeSupport *>(const_cast<void *>(info->response_type_support_impl_));
