@@ -93,7 +93,7 @@ __rmw_send_response(
   assert(info);
 
   eprosima::fastrtps::rtps::WriteParams wparams;
-  rmw_fastrtps_shared_cpp::copy_from_byte_array_to_GUID_t(
+  rmw_fastrtps_shared_cpp::copy_from_byte_array_to_fastrtps_guid(
     request_header->writer_guid,
     &wparams.related_sample_identity().writer_guid());
   wparams.related_sample_identity().sequence_number().high =

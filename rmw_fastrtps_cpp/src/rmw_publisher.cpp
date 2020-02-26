@@ -193,7 +193,7 @@ rmw_create_publisher(
   );
 
   memset(info->publisher_gid.data, 0, RMW_GID_STORAGE_SIZE);
-  rmw_fastrtps_shared_cpp::copy_from_GUID_t_to_byte_array(
+  rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(
     info->publisher_->getGuid(),
     info->publisher_gid.data);
 

@@ -41,7 +41,7 @@ _assign_message_info(
   sender_gid->implementation_identifier = identifier;
   memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
 
-  rmw_fastrtps_shared_cpp::copy_from_GUID_t_to_byte_array(
+  rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(
     sinfo->sample_identity.writer_guid(),
     sender_gid->data);
 }

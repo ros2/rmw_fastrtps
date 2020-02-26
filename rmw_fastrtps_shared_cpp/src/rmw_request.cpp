@@ -100,7 +100,7 @@ __rmw_take_request(
       deser, ros_request, info->request_type_support_impl_);
 
     // Get header
-    rmw_fastrtps_shared_cpp::copy_from_byte_array_to_GUID_t(
+    rmw_fastrtps_shared_cpp::copy_from_byte_array_to_fastrtps_guid(
       request_header->writer_guid,
       &request.sample_identity_.writer_guid());
     request_header->sequence_number = ((int64_t)request.sample_identity_.sequence_number().high) <<

@@ -26,7 +26,7 @@ namespace rmw_fastrtps_shared_cpp
 
 template<typename ByteT>  // either uint8_t, int8_t or equivalent.
 void
-copy_from_byte_array_to_GUID_t(const ByteT * guid_byte_array, eprosima::fastrtps::rtps::GUID_t * guid)
+copy_from_byte_array_to_fastrtps_guid(const ByteT * guid_byte_array, eprosima::fastrtps::rtps::GUID_t * guid)
 {
   static_assert(
     std::is_same<uint8_t, ByteT>::value || std::is_same<int8_t, ByteT>::value,
@@ -40,7 +40,7 @@ copy_from_byte_array_to_GUID_t(const ByteT * guid_byte_array, eprosima::fastrtps
 
 template<typename ByteT>  // either uint8_t, int8_t or equivalent.
 void
-copy_from_GUID_t_to_byte_array(const eprosima::fastrtps::rtps::GUID_t & guid, ByteT * guid_byte_array)
+copy_from_fastrtps_guid_to_byte_array(const eprosima::fastrtps::rtps::GUID_t & guid, ByteT * guid_byte_array)
 {
   static_assert(
     std::is_same<uint8_t, ByteT>::value || std::is_same<int8_t, ByteT>::value,
