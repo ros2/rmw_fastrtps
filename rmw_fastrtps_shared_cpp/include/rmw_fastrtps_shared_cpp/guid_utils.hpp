@@ -46,9 +46,9 @@ copy_from_fastrtps_guid_to_byte_array(const eprosima::fastrtps::rtps::GUID_t & g
     std::is_same<uint8_t, ByteT>::value || std::is_same<int8_t, ByteT>::value,
     "ByteT should be either int8_t or uint8_t");
   assert(guid_byte_array);
-  constexpr auto prefix_size = sizeof(decltype(guid.guidPrefix));
+  constexpr auto prefix_size = guid.guidPrefix.size;
   memcpy(guid_byte_array, &guid.guidPrefix, prefix_size);
-  memcpy(&guid_byte_array[prefix_size], &guid.entityId, sizeof(decltype(guid.entityId)));
+  memcpy(&guid_byte_array[prefix_size], &guid.entityId, guid.entityId.size);
 }
 
 }  // namespace rmw_fastrtps_shared_cpp
