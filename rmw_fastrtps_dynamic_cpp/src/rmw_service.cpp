@@ -113,7 +113,7 @@ rmw_create_service(
   info->participant_ = participant;
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
-  TypeSupportRegistry & type_registry = get_type_support_registry();
+  TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
   auto request_type_impl = type_registry.get_request_type_support(type_support);
   if (!request_type_impl) {
     delete info;
@@ -294,7 +294,7 @@ rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
   auto ros_type_support = static_cast<const rosidl_service_type_support_t *>(
     impl->ros_type_support());
 
-  TypeSupportRegistry & type_registry = get_type_support_registry();
+  TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
   type_registry.return_request_type_support(ros_type_support);
 
   impl = static_cast<BaseTypeSupport *>(const_cast<void *>(info->response_type_support_impl_));

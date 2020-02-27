@@ -138,7 +138,7 @@ rmw_create_subscription(
     return nullptr;
   }
 
-  TypeSupportRegistry & type_registry = get_type_support_registry();
+  TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
   auto type_impl = type_registry.get_message_type_support(type_support);
   if (!type_impl) {
     delete info;
@@ -261,7 +261,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
   auto ros_type_support = static_cast<const rosidl_message_type_support_t *>(
     impl->ros_type_support());
 
-  TypeSupportRegistry & type_registry = get_type_support_registry();
+  TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
   type_registry.return_message_type_support(ros_type_support);
 
   return rmw_fastrtps_shared_cpp::__rmw_destroy_subscription(

@@ -70,6 +70,12 @@ TypeSupportRegistry::~TypeSupportRegistry()
   cleanup(response_types_, "response_types_");
 }
 
+TypeSupportRegistry & TypeSupportRegistry::get_instance()
+{
+  static TypeSupportRegistry type_registry_instance;
+  return type_registry_instance;
+}
+
 type_support_ptr TypeSupportRegistry::get_message_type_support(
   const rosidl_message_type_support_t * ros_type_support)
 {
@@ -149,11 +155,4 @@ void TypeSupportRegistry::return_response_type_support(
   const rosidl_service_type_support_t * ros_type_support)
 {
   return_type_support(ros_type_support, response_types_);
-}
-
-static TypeSupportRegistry type_registry_instance;
-
-TypeSupportRegistry & get_type_support_registry()
-{
-  return type_registry_instance;
 }

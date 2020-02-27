@@ -136,7 +136,7 @@ rmw_create_publisher(
     return nullptr;
   }
 
-  TypeSupportRegistry & type_registry = get_type_support_registry();
+  TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
   auto type_impl = type_registry.get_message_type_support(type_support);
   if (!type_impl) {
     delete info;
@@ -315,7 +315,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
   auto ros_type_support = static_cast<const rosidl_message_type_support_t *>(
     impl->ros_type_support());
 
-  TypeSupportRegistry & type_registry = get_type_support_registry();
+  TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
   type_registry.return_message_type_support(ros_type_support);
 
   return rmw_fastrtps_shared_cpp::__rmw_destroy_publisher(

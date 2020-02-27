@@ -45,8 +45,12 @@ private:
   LockedObject<srv_map_t> request_types_;
   LockedObject<srv_map_t> response_types_;
 
+  TypeSupportRegistry() = default;
+
 public:
   ~TypeSupportRegistry();
+
+  static TypeSupportRegistry & get_instance();
 
   type_support_ptr get_message_type_support(
     const rosidl_message_type_support_t * ros_type_support);
@@ -66,7 +70,5 @@ public:
   void return_response_type_support(
     const rosidl_service_type_support_t * ros_type_support);
 };
-
-TypeSupportRegistry & get_type_support_registry();
 
 #endif  // TYPE_SUPPORT_REGISTRY_HPP_
