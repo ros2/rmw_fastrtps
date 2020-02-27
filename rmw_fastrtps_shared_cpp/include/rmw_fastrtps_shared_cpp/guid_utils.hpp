@@ -35,7 +35,7 @@ copy_from_byte_array_to_fastrtps_guid(
     "ByteT should be either int8_t or uint8_t");
   assert(guid_byte_array);
   assert(guid);
-  constexpr auto prefix_size = guid->guidPrefix.size;
+  constexpr auto prefix_size = sizeof(guid->guidPrefix.value);
   memcpy(guid->guidPrefix.value, guid_byte_array, prefix_size);
   memcpy(guid->entityId.value, &guid_byte_array[prefix_size], guid->entityId.size);
 }
@@ -50,7 +50,7 @@ copy_from_fastrtps_guid_to_byte_array(
     std::is_same<uint8_t, ByteT>::value || std::is_same<int8_t, ByteT>::value,
     "ByteT should be either int8_t or uint8_t");
   assert(guid_byte_array);
-  constexpr auto prefix_size = guid.guidPrefix.size;
+  constexpr auto prefix_size = sizeof(guid.guidPrefix.value);
   memcpy(guid_byte_array, &guid.guidPrefix, prefix_size);
   memcpy(&guid_byte_array[prefix_size], &guid.entityId, guid.entityId.size);
 }
