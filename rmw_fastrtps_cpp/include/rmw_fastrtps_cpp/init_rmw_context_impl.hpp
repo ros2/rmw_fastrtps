@@ -21,10 +21,9 @@
 namespace rmw_fastrtps_cpp
 {
 
-/// Increment `rmw_context_impl_t` reference count, initing it necessary.
+/// Increment `rmw_context_impl_t` reference count, initializing it if necessary.
 /**
- * Function that should be called when creating a node,
- * before using `context->impl`.
+ * Should be called when creating a node, and before using `context->impl`.
  */
 rmw_ret_t
 increment_context_impl_ref_count(rmw_context_t * context);

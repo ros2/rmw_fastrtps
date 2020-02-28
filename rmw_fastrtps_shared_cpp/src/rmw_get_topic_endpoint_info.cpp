@@ -97,7 +97,6 @@ __rmw_get_publishers_info_by_topic(
     return ret;
   }
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
-  rmw_dds_common::GraphCache & graph_cache = common_context->graph_cache;
   std::string mangled_topic_name = topic_name;
   DemangleFunction demangle_type = _identity_demangle;
   if (!no_mangle) {
@@ -105,7 +104,7 @@ __rmw_get_publishers_info_by_topic(
     demangle_type = _demangle_if_ros_type;
   }
 
-  return graph_cache.get_writers_info_by_topic(
+  return common_context->graph_cache.get_writers_info_by_topic(
     mangled_topic_name,
     demangle_type,
     allocator,
@@ -131,7 +130,6 @@ __rmw_get_subscriptions_info_by_topic(
     return ret;
   }
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
-  rmw_dds_common::GraphCache & graph_cache = common_context->graph_cache;
   std::string mangled_topic_name = topic_name;
   DemangleFunction demangle_type = _identity_demangle;
   if (!no_mangle) {
@@ -139,7 +137,7 @@ __rmw_get_subscriptions_info_by_topic(
     demangle_type = _demangle_if_ros_type;
   }
 
-  return graph_cache.get_readers_info_by_topic(
+  return common_context->graph_cache.get_readers_info_by_topic(
     mangled_topic_name,
     demangle_type,
     allocator,

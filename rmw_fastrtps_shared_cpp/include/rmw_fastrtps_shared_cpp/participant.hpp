@@ -36,6 +36,7 @@ create_participant(
 
 rmw_ret_t
 destroy_participant(CustomParticipantInfo * info);
+
 }  // namespace rmw_fastrtps_shared_cpp
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__PARTICIPANT_HPP_

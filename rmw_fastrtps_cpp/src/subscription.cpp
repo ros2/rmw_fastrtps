@@ -15,6 +15,9 @@
 #include <string>
 #include <utility>
 
+#include "rcutils/allocator.h"
+#include "rcutils/strdup.h"
+
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -150,13 +153,11 @@ create_subscription(
   }
   rmw_subscription->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_subscription->data = info;
-  rmw_subscription->topic_name =
-    reinterpret_cast<const char *>(rmw_allocate(strlen(topic_name) + 1));
+  rmw_subscription->topic_name = rcutils_strdup(topic_name, rcutils_get_default_allocator());
   if (!rmw_subscription->topic_name) {
     RMW_SET_ERROR_MSG("failed to allocate memory for subscription topic name");
     goto fail;
   }
-  memcpy(const_cast<char *>(rmw_subscription->topic_name), topic_name, strlen(topic_name) + 1);
 
   rmw_subscription->options = *subscription_options;
   return rmw_subscription;
