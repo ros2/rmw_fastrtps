@@ -84,6 +84,8 @@ add_library(rmw_fastrtps_dynamic_cpp
   src/rmw_wait.cpp
   src/rmw_wait_set.cpp
   src/type_support_common.cpp
+  src/type_support_proxy.cpp
+  src/type_support_registry.cpp
   src/serialization_format.cpp
 )
 target_link_libraries(rmw_fastrtps_dynamic_cpp

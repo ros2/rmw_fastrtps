@@ -112,15 +112,6 @@ _create_type_name(
   return "";
 }
 
-rmw_fastrtps_shared_cpp::TypeSupport *
-_create_message_type_support(const void * untyped_members, const char * typesupport_identifier);
-
-rmw_fastrtps_shared_cpp::TypeSupport *
-_create_request_type_support(const void * untyped_members, const char * typesupport_identifier);
-
-rmw_fastrtps_shared_cpp::TypeSupport *
-_create_response_type_support(const void * untyped_members, const char * typesupport_identifier);
-
 void
 _register_type(
   eprosima::fastrtps::Participant * participant,
