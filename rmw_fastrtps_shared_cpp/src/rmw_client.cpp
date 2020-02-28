@@ -63,8 +63,8 @@ __rmw_destroy_client(
       node->namespace_);
     gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
       identifier, info->response_subscriber_->getGuid());
-    rmw_dds_common::msg::ParticipantEntitiesInfo msg;
-    msg = common_context->graph_cache.dissociate_reader(
+    rmw_dds_common::msg::ParticipantEntitiesInfo msg =
+      common_context->graph_cache.dissociate_reader(
       gid, common_context->gid, node->name, node->namespace_);
     rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
       identifier,
