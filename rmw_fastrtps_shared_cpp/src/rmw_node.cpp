@@ -19,7 +19,6 @@
 #include <set>
 #include <string>
 
-#include "rcutils/filesystem.h"
 #include "rcutils/logging_macros.h"
 
 #include "rmw/allocators.h"

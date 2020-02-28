@@ -34,6 +34,7 @@
 #include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/subscriber/SampleInfo.h"
 
+#include "rcutils/filesystem.h"
 #include "rcutils/get_env.h"
 
 #include "rmw/allocators.h"
@@ -48,6 +49,43 @@ using Locator_t = eprosima::fastrtps::rtps::Locator_t;
 using Participant = eprosima::fastrtps::Participant;
 using ParticipantAttributes = eprosima::fastrtps::ParticipantAttributes;
 using StatefulReader = eprosima::fastrtps::rtps::StatefulReader;
+
+#if HAVE_SECURITY
+static
+bool
+get_security_file_paths(
+  std::array<std::string, 6> & security_files_paths, const char * node_secure_root)
+{
+  // here assume only 6 files for security
+  const char * file_names[6] = {
+    "identity_ca.cert.pem", "cert.pem", "key.pem",
+    "permissions_ca.cert.pem", "governance.p7s", "permissions.p7s"
+  };
+  size_t num_files = sizeof(file_names) / sizeof(char *);
+
+  std::string file_prefix("file://");
+
+  for (size_t i = 0; i < num_files; i++) {
+    rcutils_allocator_t allocator = rcutils_get_default_allocator();
+    char * file_path = rcutils_join_path(node_secure_root, file_names[i], allocator);
+
+    if (!file_path) {
+      return false;
+    }
+
+    if (rcutils_is_readable(file_path)) {
+      security_files_paths[i] = file_prefix + std::string(file_path);
+    } else {
+      allocator.deallocate(file_path, allocator.state);
+      return false;
+    }
+
+    allocator.deallocate(file_path, allocator.state);
+  }
+
+  return true;
+}
+#endif
 
 static
 CustomParticipantInfo *
