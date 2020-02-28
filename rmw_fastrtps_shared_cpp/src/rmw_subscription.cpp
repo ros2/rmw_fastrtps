@@ -49,6 +49,15 @@ __rmw_destroy_subscription(
     return RMW_RET_ERROR;
   }
 
+  if (!subscription) {
+    RMW_SET_ERROR_MSG("subscription handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (subscription->implementation_identifier != identifier) {
+    RMW_SET_ERROR_MSG("subscription handle not from this implementation");
+    return RMW_RET_ERROR;
+  }
+
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   auto info = static_cast<const CustomSubscriberInfo *>(subscription->data);
   {

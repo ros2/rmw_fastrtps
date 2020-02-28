@@ -47,6 +47,15 @@ __rmw_destroy_publisher(
     return RMW_RET_ERROR;
   }
 
+  if (!publisher) {
+    RMW_SET_ERROR_MSG("publisher handle is null");
+    return RMW_RET_ERROR;
+  }
+  if (publisher->implementation_identifier != identifier) {
+    RMW_SET_ERROR_MSG("publisher handle not from this implementation");
+    return RMW_RET_ERROR;
+  }
+
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
   {
