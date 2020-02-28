@@ -23,9 +23,10 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
-#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 namespace rmw_fastrtps_shared_cpp
@@ -99,9 +100,9 @@ __rmw_take_request(
       deser, ros_request, info->request_type_support_impl_);
 
     // Get header
-    memcpy(
-      request_header->writer_guid, &request.sample_identity_.writer_guid(),
-      sizeof(eprosima::fastrtps::rtps::GUID_t));
+    rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(
+      request.sample_identity_.writer_guid(),
+      request_header->writer_guid);
     request_header->sequence_number = ((int64_t)request.sample_identity_.sequence_number().high) <<
       32 | request.sample_identity_.sequence_number().low;
 

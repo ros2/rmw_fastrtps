@@ -21,9 +21,10 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 namespace rmw_fastrtps_shared_cpp
@@ -92,9 +93,9 @@ __rmw_send_response(
   assert(info);
 
   eprosima::fastrtps::rtps::WriteParams wparams;
-  memcpy(
-    &wparams.related_sample_identity().writer_guid(), request_header->writer_guid,
-    sizeof(eprosima::fastrtps::rtps::GUID_t));
+  rmw_fastrtps_shared_cpp::copy_from_byte_array_to_fastrtps_guid(
+    request_header->writer_guid,
+    &wparams.related_sample_identity().writer_guid());
   wparams.related_sample_identity().sequence_number().high =
     (int32_t)((request_header->sequence_number & 0xFFFFFFFF00000000) >> 32);
   wparams.related_sample_identity().sequence_number().low =
