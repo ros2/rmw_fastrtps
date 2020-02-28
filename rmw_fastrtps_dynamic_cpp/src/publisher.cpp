@@ -95,7 +95,6 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   CustomPublisherInfo * info = nullptr;
   rmw_publisher_t * rmw_publisher = nullptr;
   eprosima::fastrtps::PublisherAttributes publisherParam;
-  const eprosima::fastrtps::rtps::GUID_t * guid = nullptr;
 
   // Load default XML profile.
   Domain::getDefaultPublisherAttributes(publisherParam);
@@ -167,19 +166,8 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
     goto fail;
   }
 
-  info->publisher_gid.implementation_identifier = eprosima_fastrtps_identifier;
-  static_assert(
-    sizeof(eprosima::fastrtps::rtps::GUID_t) <= RMW_GID_STORAGE_SIZE,
-    "RMW_GID_STORAGE_SIZE insufficient to store the rmw_fastrtps_dynamic_cpp GID implementation."
-  );
-
-  memset(info->publisher_gid.data, 0, RMW_GID_STORAGE_SIZE);
-  guid = &info->publisher_->getGuid();
-  if (!guid) {
-    RMW_SET_ERROR_MSG("no guid found for publisher");
-    goto fail;
-  }
-  memcpy(info->publisher_gid.data, guid, sizeof(eprosima::fastrtps::rtps::GUID_t));
+  info->publisher_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
+    eprosima_fastrtps_identifier, info->publisher_->getGuid());
 
   rmw_publisher = rmw_publisher_allocate();
   if (!rmw_publisher) {

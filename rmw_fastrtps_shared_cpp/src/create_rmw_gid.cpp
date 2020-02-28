@@ -30,7 +30,7 @@ rmw_fastrtps_shared_cpp::create_rmw_gid(
     "RMW_GID_STORAGE_SIZE insufficient to store the fastrtps GUID_t."
   );
   rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(
-    info->publisher_->getGuid(),
-    info->publisher_gid.data);
+    guid,
+    rmw_gid.data);
   return rmw_gid;
 }
