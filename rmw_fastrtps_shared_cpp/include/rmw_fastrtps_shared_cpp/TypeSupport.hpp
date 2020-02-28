@@ -41,13 +41,13 @@ struct SerializedData
 class TypeSupport : public eprosima::fastrtps::TopicDataType
 {
 public:
-  virtual size_t getEstimatedSerializedSize(const void * ros_message, const void * impl) = 0;
+  virtual size_t getEstimatedSerializedSize(const void * ros_message, const void * impl) const = 0;
 
   virtual bool serializeROSmessage(
-    const void * ros_message, eprosima::fastcdr::Cdr & ser, const void * impl) = 0;
+    const void * ros_message, eprosima::fastcdr::Cdr & ser, const void * impl) const = 0;
 
   virtual bool deserializeROSmessage(
-    eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) = 0;
+    eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const = 0;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool getKey(

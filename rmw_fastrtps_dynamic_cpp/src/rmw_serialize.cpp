@@ -19,6 +19,7 @@
 #include "rmw/rmw.h"
 
 #include "./type_support_common.hpp"
+#include "./type_support_registry.hpp"
 
 extern "C"
 {
@@ -39,11 +40,13 @@ rmw_serialize(
     }
   }
 
-  auto tss = _create_message_type_support(ts->data, ts->typesupport_identifier);
+  TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
+  auto tss = type_registry.get_message_type_support(ts);
   auto data_length = tss->getEstimatedSerializedSize(ros_message, ts->data);
   if (serialized_message->buffer_capacity < data_length) {
     if (rmw_serialized_message_resize(serialized_message, data_length) != RMW_RET_OK) {
       RMW_SET_ERROR_MSG("unable to dynamically resize serialized message");
+      type_registry.return_message_type_support(ts);
       return RMW_RET_ERROR;
     }
   }
@@ -57,7 +60,7 @@ rmw_serialize(
   auto ret = tss->serializeROSmessage(ros_message, ser, ts->data);
   serialized_message->buffer_length = data_length;
   serialized_message->buffer_capacity = data_length;
-  delete tss;
+  type_registry.return_message_type_support(ts);
   return ret == true ? RMW_RET_OK : RMW_RET_ERROR;
 }
 
@@ -78,14 +81,15 @@ rmw_deserialize(
     }
   }
 
-  auto tss = _create_message_type_support(ts->data, ts->typesupport_identifier);
+  TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
+  auto tss = type_registry.get_message_type_support(ts);
   eprosima::fastcdr::FastBuffer buffer(
     reinterpret_cast<char *>(serialized_message->buffer), serialized_message->buffer_length);
   eprosima::fastcdr::Cdr deser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
     eprosima::fastcdr::Cdr::DDS_CDR);
 
   auto ret = tss->deserializeROSmessage(deser, ros_message, ts->data);
-  delete tss;
+  type_registry.return_message_type_support(ts);
   return ret == true ? RMW_RET_OK : RMW_RET_ERROR;
 }
 

@@ -29,14 +29,10 @@
 namespace rmw_fastrtps_dynamic_cpp
 {
 
-template<typename MembersType>
-ServiceTypeSupport<MembersType>::ServiceTypeSupport()
-{
-}
-
 template<typename ServiceMembersType, typename MessageMembersType>
 RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
-  const ServiceMembersType * members)
+  const ServiceMembersType * members, const void * ros_type_support)
+: TypeSupport<MessageMembersType>(ros_type_support)
 {
   assert(members);
   this->members_ = members->request_members_;
@@ -65,7 +61,8 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
 
 template<typename ServiceMembersType, typename MessageMembersType>
 ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport(
-  const ServiceMembersType * members)
+  const ServiceMembersType * members, const void * ros_type_support)
+: TypeSupport<MessageMembersType>(ros_type_support)
 {
   assert(members);
   this->members_ = members->response_members_;

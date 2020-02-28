@@ -32,7 +32,7 @@ template<typename MembersType>
 class MessageTypeSupport : public TypeSupport<MembersType>
 {
 public:
-  explicit MessageTypeSupport(const MembersType * members);
+  MessageTypeSupport(const MembersType * members, const void * ros_type_support);
 };
 
 }  // namespace rmw_fastrtps_dynamic_cpp
