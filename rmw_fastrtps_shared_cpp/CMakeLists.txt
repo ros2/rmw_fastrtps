@@ -43,6 +43,8 @@ find_package(fastcdr REQUIRED CONFIG)
 find_package(fastrtps REQUIRED CONFIG)
 find_package(FastRTPS REQUIRED MODULE)
 
+find_package(rosidl_runtime_c REQUIRED)
+
 find_package(rmw REQUIRED)
 include_directories(include)
 
@@ -87,6 +89,7 @@ ament_target_dependencies(rmw_fastrtps_shared_cpp
   "rcpputils"
   "rcutils"
   "rmw"
+  "rosidl_runtime_c"
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,

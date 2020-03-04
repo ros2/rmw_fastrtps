@@ -41,6 +41,7 @@ find_package(FastRTPS REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
 find_package(rosidl_generator_c REQUIRED)
+find_package(rosidl_runtime_c REQUIRED)
 find_package(rosidl_typesupport_fastrtps_c REQUIRED)
 find_package(rosidl_typesupport_fastrtps_cpp REQUIRED)
 
@@ -94,6 +95,7 @@ ament_target_dependencies(rmw_fastrtps_cpp
   "rmw_fastrtps_shared_cpp"
   "rmw"
   "rosidl_generator_c"
+  "rosidl_runtime_c"
 )
 
 configure_rmw_library(rmw_fastrtps_cpp)
