@@ -54,7 +54,7 @@ using StatefulReader = eprosima::fastrtps::rtps::StatefulReader;
 static
 bool
 get_security_file_paths(
-  std::array<std::string, 6> & security_files_paths, const char * node_secure_root)
+  std::array<std::string, 6> & security_files_paths, const char * secure_root)
 {
   // here assume only 6 files for security
   const char * file_names[6] = {
@@ -67,7 +67,7 @@ get_security_file_paths(
 
   for (size_t i = 0; i < num_files; i++) {
     rcutils_allocator_t allocator = rcutils_get_default_allocator();
-    char * file_path = rcutils_join_path(node_secure_root, file_names[i], allocator);
+    char * file_path = rcutils_join_path(secure_root, file_names[i], allocator);
 
     if (!file_path) {
       return false;
@@ -141,7 +141,6 @@ rmw_fastrtps_shared_cpp::create_participant(
   const rmw_security_options_t * security_options,
   bool localhost_only,
   const char * context_name,
-  const char * context_namespace,
   rmw_dds_common::Context * common_context)
 {
   if (!security_options) {
@@ -168,16 +167,16 @@ rmw_fastrtps_shared_cpp::create_participant(
 
   participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
 
-  size_t length = strlen(context_name) + strlen("name=;") +
-    strlen(context_namespace) + strlen("namespace=;") + 1;
+  size_t length = strlen(context_name) + strlen("contextname=;") + 1;
   participantAttrs.rtps.userData.resize(length);
   int written = snprintf(
     reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
-    length, "name=%s;namespace=%s;", context_name, context_namespace);
+    length, "contextname=%s;", context_name);
   if (written < 0 || written > static_cast<int>(length) - 1) {
     RMW_SET_ERROR_MSG("failed to populate user_data buffer");
     return nullptr;
   }
+  participantAttrs.rtps.setName(context_name);
 
   bool leave_middleware_default_qos = false;
   const char * env_value;
@@ -201,7 +200,6 @@ rmw_fastrtps_shared_cpp::create_participant(
     // if security_root_path provided, try to find the key and certificate files
 #if HAVE_SECURITY
     std::array<std::string, 6> security_files_paths;
-
     if (get_security_file_paths(security_files_paths, security_options->security_root_path)) {
       eprosima::fastrtps::rtps::PropertyPolicy property_policy;
       using Property = eprosima::fastrtps::rtps::Property;

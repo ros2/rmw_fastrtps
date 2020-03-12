@@ -31,7 +31,6 @@ create_participant(
   const rmw_security_options_t * security_options,
   bool localhost_only,
   const char * context_name,
-  const char * context_namespace,
   rmw_dds_common::Context * common_context);
 
 rmw_ret_t

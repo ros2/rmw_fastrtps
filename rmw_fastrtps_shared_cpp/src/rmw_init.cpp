@@ -39,17 +39,10 @@ rmw_init_options_init(
   init_options->implementation_identifier = identifier;
   init_options->allocator = allocator;
   init_options->impl = nullptr;
-  init_options->name = rcutils_strdup("", allocator);
-  if (!init_options->name) {
-    RMW_SET_ERROR_MSG("failed to copy context name");
-    return RMW_RET_BAD_ALLOC;
-  }
-  init_options->namespace_ = rcutils_strdup("", allocator);
-  if (!init_options->namespace_) {
-    allocator.deallocate(init_options->name, allocator.state);
-    RMW_SET_ERROR_MSG("failed to copy context namespace");
-    return RMW_RET_BAD_ALLOC;
-  }
+  init_options->name = NULL;
+  init_options->domain_id = RMW_DEFAULT_DOMAIN_ID;
+  init_options->security_options = rmw_get_default_security_options();
+  init_options->localhost_only = RMW_LOCALHOST_ONLY_DEFAULT;
   return RMW_RET_OK;
 }
 
@@ -71,25 +64,19 @@ rmw_init_options_copy(
   const rcutils_allocator_t * allocator = &src->allocator;
   rmw_ret_t ret = RMW_RET_OK;
 
+  allocator->deallocate(dst->name, allocator->state);
   *dst = *src;
   dst->name = NULL;
-  dst->namespace_ = NULL;
   dst->security_options = rmw_get_zero_initialized_security_options();
 
   dst->name = rcutils_strdup(src->name, *allocator);
-  if (!dst->name) {
-    ret = RMW_RET_BAD_ALLOC;
-    goto fail;
-  }
-  dst->namespace_ = rcutils_strdup(src->namespace_, *allocator);
-  if (!dst->namespace_) {
+  if (src->name && !dst->name) {
     ret = RMW_RET_BAD_ALLOC;
     goto fail;
   }
   return rmw_security_options_copy(&src->security_options, allocator, &dst->security_options);
 fail:
   allocator->deallocate(dst->name, allocator->state);
-  allocator->deallocate(dst->namespace_, allocator->state);
   return ret;
 }
 
@@ -105,7 +92,6 @@ rmw_init_options_fini(const char * identifier, rmw_init_options_t * init_options
     identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   allocator.deallocate(init_options->name, allocator.state);
-  allocator.deallocate(init_options->namespace_, allocator.state);
   rmw_security_options_fini(&init_options->security_options, &allocator);
   *init_options = rmw_get_zero_initialized_init_options();
   return RMW_RET_OK;

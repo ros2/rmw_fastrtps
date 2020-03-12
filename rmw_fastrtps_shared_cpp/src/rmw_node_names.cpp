@@ -64,6 +64,42 @@ __rmw_get_node_names(
   return common_context->graph_cache.get_node_names(
     node_names,
     node_namespaces,
+    nullptr,
+    &allocator);
+}
+
+rmw_ret_t
+__rmw_get_node_names_with_context_names(
+  const char * identifier,
+  const rmw_node_t * node,
+  rcutils_string_array_t * node_names,
+  rcutils_string_array_t * node_namespaces,
+  rcutils_string_array_t * context_names)
+{
+  if (!node) {
+    RMW_SET_ERROR_MSG("null node handle");
+    return RMW_RET_ERROR;
+  }
+  if (rmw_check_zero_rmw_string_array(node_names) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
+  if (rmw_check_zero_rmw_string_array(node_namespaces) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
+  if (rmw_check_zero_rmw_string_array(context_names) != RMW_RET_OK) {
+    return RMW_RET_ERROR;
+  }
+  if (node->implementation_identifier != identifier) {
+    RMW_SET_ERROR_MSG("node handle not from this implementation");
+    return RMW_RET_ERROR;
+  }
+
+  auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
+  rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  return common_context->graph_cache.get_node_names(
+    node_names,
+    node_namespaces,
+    context_names,
     &allocator);
 }
 }  // namespace rmw_fastrtps_shared_cpp
