@@ -25,25 +25,18 @@
 namespace rmw_fastrtps_dynamic_cpp
 {
 
-template<typename MembersType>
-class ServiceTypeSupport : public TypeSupport<MembersType>
+template<typename ServiceMembersType, typename MessageMembersType>
+class RequestTypeSupport : public TypeSupport<MessageMembersType>
 {
-protected:
-  ServiceTypeSupport();
+public:
+  RequestTypeSupport(const ServiceMembersType * members, const void * ros_type_support);
 };
 
 template<typename ServiceMembersType, typename MessageMembersType>
-class RequestTypeSupport : public ServiceTypeSupport<MessageMembersType>
+class ResponseTypeSupport : public TypeSupport<MessageMembersType>
 {
 public:
-  explicit RequestTypeSupport(const ServiceMembersType * members);
-};
-
-template<typename ServiceMembersType, typename MessageMembersType>
-class ResponseTypeSupport : public ServiceTypeSupport<MessageMembersType>
-{
-public:
-  explicit ResponseTypeSupport(const ServiceMembersType * members);
+  ResponseTypeSupport(const ServiceMembersType * members, const void * ros_type_support);
 };
 
 }  // namespace rmw_fastrtps_dynamic_cpp

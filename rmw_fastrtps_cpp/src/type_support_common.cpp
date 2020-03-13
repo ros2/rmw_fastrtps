@@ -47,28 +47,34 @@ void TypeSupport::set_members(const message_type_support_callbacks_t * members)
   m_typeSize = 4 + data_size;
 }
 
-size_t TypeSupport::getEstimatedSerializedSize(const void * ros_message)
+size_t TypeSupport::getEstimatedSerializedSize(const void * ros_message, const void * impl) const
 {
   if (max_size_bound_) {
     return m_typeSize;
   }
 
   assert(ros_message);
+  assert(impl);
+
+  auto callbacks = static_cast<const message_type_support_callbacks_t *>(impl);
 
   // Encapsulation size + message size
-  return 4 + members_->get_serialized_size(ros_message);
+  return 4 + callbacks->get_serialized_size(ros_message);
 }
 
-bool TypeSupport::serializeROSmessage(const void * ros_message, eprosima::fastcdr::Cdr & ser)
+bool TypeSupport::serializeROSmessage(
+  const void * ros_message, eprosima::fastcdr::Cdr & ser, const void * impl) const
 {
   assert(ros_message);
+  assert(impl);
 
   // Serialize encapsulation
   ser.serialize_encapsulation();
 
   // If type is not empty, serialize message
   if (has_data_) {
-    return members_->cdr_serialize(ros_message, ser);
+    auto callbacks = static_cast<const message_type_support_callbacks_t *>(impl);
+    return callbacks->cdr_serialize(ros_message, ser);
   }
 
   // Otherwise, add a dummy byte
@@ -76,16 +82,19 @@ bool TypeSupport::serializeROSmessage(const void * ros_message, eprosima::fastcd
   return true;
 }
 
-bool TypeSupport::deserializeROSmessage(eprosima::fastcdr::Cdr & deser, void * ros_message)
+bool TypeSupport::deserializeROSmessage(
+  eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const
 {
   assert(ros_message);
+  assert(impl);
 
   // Deserialize encapsulation.
   deser.read_encapsulation();
 
   // If type is not empty, deserialize message
   if (has_data_) {
-    return members_->cdr_deserialize(deser, ros_message);
+    auto callbacks = static_cast<const message_type_support_callbacks_t *>(impl);
+    return callbacks->cdr_deserialize(deser, ros_message);
   }
 
   // Otherwise, consume dummy byte

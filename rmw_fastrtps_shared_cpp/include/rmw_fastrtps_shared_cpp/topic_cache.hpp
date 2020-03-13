@@ -28,8 +28,10 @@
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/rtps/common/Guid.h"
 #include "fastrtps/rtps/common/InstanceHandle.h"
-#include "rcpputils/thread_safety_annotations.hpp"
 #include "rcutils/logging_macros.h"
+
+#include "locked_object.hpp"
+#include "qos.hpp"
 
 typedef eprosima::fastrtps::rtps::GUID_t GUID_t;
 
@@ -213,32 +215,5 @@ inline std::ostream & operator<<(
   ostream << map_ss.str() << topics_ss.str();
   return ostream;
 }
-
-template<class T>
-class LockedObject
-{
-private:
-  mutable std::mutex mutex_;
-  T object_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
-
-public:
-  /**
-  * @return a reference to this object to lock.
-  */
-  std::mutex & getMutex() const RCPPUTILS_TSA_RETURN_CAPABILITY(mutex_)
-  {
-    return mutex_;
-  }
-
-  T & operator()()
-  {
-    return object_;
-  }
-
-  const T & operator()() const
-  {
-    return object_;
-  }
-};
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__TOPIC_CACHE_HPP_

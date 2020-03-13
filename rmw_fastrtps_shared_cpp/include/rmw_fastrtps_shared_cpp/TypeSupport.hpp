@@ -35,16 +35,19 @@ struct SerializedData
 {
   bool is_cdr_buffer;  // Whether next field is a pointer to a Cdr or to a plain ros message
   void * data;
+  const void * impl;   // RMW implementation specific data
 };
 
 class TypeSupport : public eprosima::fastrtps::TopicDataType
 {
 public:
-  virtual size_t getEstimatedSerializedSize(const void * ros_message) = 0;
+  virtual size_t getEstimatedSerializedSize(const void * ros_message, const void * impl) const = 0;
 
-  virtual bool serializeROSmessage(const void * ros_message, eprosima::fastcdr::Cdr & ser) = 0;
+  virtual bool serializeROSmessage(
+    const void * ros_message, eprosima::fastcdr::Cdr & ser, const void * impl) const = 0;
 
-  virtual bool deserializeROSmessage(eprosima::fastcdr::Cdr & deser, void * ros_message) = 0;
+  virtual bool deserializeROSmessage(
+    eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const = 0;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool getKey(
