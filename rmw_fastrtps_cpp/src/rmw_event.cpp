@@ -20,7 +20,6 @@
 
 extern "C"
 {
-
 rmw_ret_t
 rmw_publisher_event_init(
   rmw_event_t * rmw_event,
@@ -48,5 +47,4 @@ rmw_subscription_event_init(
     subscription->data,
     event_type);
 }
-
 }  // extern "C"
