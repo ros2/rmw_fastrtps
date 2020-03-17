@@ -62,7 +62,7 @@ void SubListener::on_liveliness_changed(
 
 bool SubListener::hasEvent(rmw_event_type_t event_type) const
 {
-  assert(is_event_supported(event_type));
+  assert(rmw_fastrtps_shared_cpp_internal::is_event_supported(event_type));
   switch (event_type) {
     case RMW_EVENT_LIVELINESS_CHANGED:
       return liveliness_changes_.load(std::memory_order_relaxed);
@@ -76,7 +76,7 @@ bool SubListener::hasEvent(rmw_event_type_t event_type) const
 
 bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
 {
-  assert(is_event_supported(event_type));
+  assert(rmw_fastrtps_shared_cpp_internal::is_event_supported(event_type));
   std::lock_guard<std::mutex> lock(internalMutex_);
   switch (event_type) {
     case RMW_EVENT_LIVELINESS_CHANGED:
