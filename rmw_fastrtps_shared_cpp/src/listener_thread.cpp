@@ -100,13 +100,14 @@ rmw_fastrtps_shared_cpp::join_listener_thread(rmw_context_t * context)
   return RMW_RET_OK;
 }
 
-#define TERMINATE(msg) \
-  do { \
+#define TERMINATE_THREAD(msg) \
+  { \
     RCUTILS_SAFE_FWRITE_TO_STDERR( \
       RCUTILS_STRINGIFY(__FILE__) ":" RCUTILS_STRINGIFY(__function__) ":" \
-      RCUTILS_STRINGIFY(__LINE__) RCUTILS_STRINGIFY(msg) ": terminating ..."); \
-    std::terminate(); \
-  } while (0)
+      RCUTILS_STRINGIFY(__LINE__) RCUTILS_STRINGIFY(msg) \
+      ": ros discovery info listener thread will shutdown ...\n"); \
+    break; \
+  }
 
 void
 node_listener(rmw_context_t * context)
@@ -130,7 +131,7 @@ node_listener(rmw_context_t * context)
     rmw_wait_set_t * wait_set = rmw_fastrtps_shared_cpp::__rmw_create_wait_set(
       context->implementation_identifier, context, 2);
     if (nullptr == wait_set) {
-      TERMINATE("failed to create wait set");
+      TERMINATE_THREAD("failed to create wait set");
     }
     if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_wait(
         &subscriptions,
@@ -141,7 +142,7 @@ node_listener(rmw_context_t * context)
         wait_set,
         nullptr))
     {
-      TERMINATE("rmw_wait failed");
+      TERMINATE_THREAD("rmw_wait failed");
     }
     if (subscriptions_buffer[0]) {
       rmw_dds_common::msg::ParticipantEntitiesInfo msg;
@@ -153,7 +154,7 @@ node_listener(rmw_context_t * context)
           &taken,
           nullptr))
       {
-        TERMINATE("__rmw_take failed");
+        TERMINATE_THREAD("__rmw_take failed");
       }
       if (taken) {
         if (std::memcmp(
@@ -170,7 +171,7 @@ node_listener(rmw_context_t * context)
     if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_destroy_wait_set(
         context->implementation_identifier, wait_set))
     {
-      TERMINATE("failed to destroy wait set");
+      TERMINATE_THREAD("failed to destroy wait set");
     }
   }
 }
