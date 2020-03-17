@@ -16,11 +16,37 @@
 
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
+#include "rmw_fastrtps_cpp/identifier.hpp"
+
 extern "C"
 {
-bool
-rmw_event_type_is_supported(rmw_event_type_t event_type)
+
+rmw_ret_t
+rmw_publisher_event_init(
+  rmw_event_t * rmw_event,
+  const rmw_publisher_t * publisher,
+  rmw_event_type_t event_type)
 {
-  return rmw_fastrtps_shared_cpp::__rmw_event_type_is_supported(event_type);
+  return rmw_fastrtps_shared_cpp::__rmw_init_event(
+    eprosima_fastrtps_identifier,
+    rmw_event,
+    publisher->implementation_identifier,
+    publisher->data,
+    event_type);
 }
+
+rmw_ret_t
+rmw_subscription_event_init(
+  rmw_event_t * rmw_event,
+  const rmw_subscription_t * subscription,
+  rmw_event_type_t event_type)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_init_event(
+    eprosima_fastrtps_identifier,
+    rmw_event,
+    subscription->implementation_identifier,
+    subscription->data,
+    event_type);
+}
+
 }  // extern "C"

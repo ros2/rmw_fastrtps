@@ -14,7 +14,10 @@
 
 #include <unordered_set>
 
+#include "rmw/impl/cpp/macros.hpp"
+
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "types/event_types.hpp"
 
 static const std::unordered_set<rmw_event_type_t> __rmw_event_type_set{
   RMW_EVENT_LIVELINESS_CHANGED,
@@ -23,13 +26,41 @@ static const std::unordered_set<rmw_event_type_t> __rmw_event_type_set{
   RMW_EVENT_OFFERED_DEADLINE_MISSED
 };
 
+bool is_event_supported(rmw_event_type_t event_type)
+{
+  return __rmw_event_type_set.count(event_type) > 0;
+}
+
 namespace rmw_fastrtps_shared_cpp
 {
 
-bool
-__rmw_event_type_is_supported(rmw_event_type_t event_type)
+rmw_ret_t
+__rmw_init_event(
+  const char * identifier,
+  rmw_event_t * rmw_event,
+  const char * topic_endpoint_impl_identifier,
+  void * data,
+  rmw_event_type_t event_type)
 {
-  return __rmw_event_type_set.count(event_type) > 0;
+  RMW_CHECK_ARGUMENT_FOR_NULL(identifier, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(rmw_event, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(topic_endpoint_impl_identifier, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(data, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    topic endpoint,
+    topic_endpoint_impl_identifier,
+    identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (!::is_event_supported(event_type)) {
+    RMW_SET_ERROR_MSG("provided event_type is not supported by rmw_fastrtps_cpp");
+    return RMW_RET_UNSUPPORTED;
+  }
+
+  rmw_event->implementation_identifier = topic_endpoint_impl_identifier;
+  rmw_event->data = data;
+  rmw_event->event_type = event_type;
+
+  return RMW_RET_OK;
 }
 
 }  // namespace rmw_fastrtps_shared_cpp

@@ -118,8 +118,13 @@ __rmw_get_node_names(
   rcutils_string_array_t * node_namespaces);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
-bool
-__rmw_event_type_is_supported(rmw_event_type_t event_type);
+rmw_ret_t
+__rmw_init_event(
+  const char * identifier,
+  rmw_event_t * rmw_event,
+  const char * topic_endpoint_impl_identifier,
+  void * data,
+  rmw_event_type_t event_type);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
