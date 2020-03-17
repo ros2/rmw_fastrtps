@@ -126,12 +126,12 @@ __rmw_init_event(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
-__rmw_get_node_names_with_context_names(
+__rmw_get_node_names_with_security_contexts(
   const char * identifier,
   const rmw_node_t * node,
   rcutils_string_array_t * node_names,
   rcutils_string_array_t * node_namespaces,
-  rcutils_string_array_t * context_names);
+  rcutils_string_array_t * security_contexts);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t

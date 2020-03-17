@@ -69,12 +69,12 @@ __rmw_get_node_names(
 }
 
 rmw_ret_t
-__rmw_get_node_names_with_context_names(
+__rmw_get_node_names_with_security_contexts(
   const char * identifier,
   const rmw_node_t * node,
   rcutils_string_array_t * node_names,
   rcutils_string_array_t * node_namespaces,
-  rcutils_string_array_t * context_names)
+  rcutils_string_array_t * security_contexts)
 {
   if (!node) {
     RMW_SET_ERROR_MSG("null node handle");
@@ -86,7 +86,7 @@ __rmw_get_node_names_with_context_names(
   if (rmw_check_zero_rmw_string_array(node_namespaces) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
-  if (rmw_check_zero_rmw_string_array(context_names) != RMW_RET_OK) {
+  if (rmw_check_zero_rmw_string_array(security_contexts) != RMW_RET_OK) {
     return RMW_RET_ERROR;
   }
   if (node->implementation_identifier != identifier) {
@@ -99,7 +99,7 @@ __rmw_get_node_names_with_context_names(
   return common_context->graph_cache.get_node_names(
     node_names,
     node_namespaces,
-    context_names,
+    security_contexts,
     &allocator);
 }
 }  // namespace rmw_fastrtps_shared_cpp

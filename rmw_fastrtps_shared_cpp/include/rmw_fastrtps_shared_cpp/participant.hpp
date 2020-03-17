@@ -30,7 +30,7 @@ create_participant(
   size_t domain_id,
   const rmw_security_options_t * security_options,
   bool localhost_only,
-  const char * context_name,
+  const char * security_context,
   rmw_dds_common::Context * common_context);
 
 rmw_ret_t

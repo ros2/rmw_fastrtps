@@ -73,18 +73,18 @@ public:
       case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DISCOVERED_PARTICIPANT:
         {
           auto map = rmw::impl::cpp::parse_key_value(info.info.m_userData);
-          auto name_found = map.find("contextname");
+          auto name_found = map.find("security_context");
 
           if (name_found == map.end()) {
             return;
           }
-          auto context_name =
+          auto security_context =
             std::string(name_found->second.begin(), name_found->second.end());
 
           context->graph_cache.add_participant(
             rmw_fastrtps_shared_cpp::create_rmw_gid(
               identifier_, info.info.m_guid),
-            context_name);
+            security_context);
           break;
         }
       case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::REMOVED_PARTICIPANT:
