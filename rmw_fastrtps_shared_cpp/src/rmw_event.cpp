@@ -26,7 +26,9 @@ static const std::unordered_set<rmw_event_type_t> g_rmw_event_type_set{
   RMW_EVENT_OFFERED_DEADLINE_MISSED
 };
 
-namespace rmw_fastrtps_shared_cpp_internal
+namespace rmw_fastrtps_shared_cpp
+{
+namespace internal
 {
 
 bool is_event_supported(rmw_event_type_t event_type)
@@ -34,10 +36,7 @@ bool is_event_supported(rmw_event_type_t event_type)
   return g_rmw_event_type_set.count(event_type) == 1;
 }
 
-}  // namespace rmw_fastrtps_shared_cpp_internal
-
-namespace rmw_fastrtps_shared_cpp
-{
+}  // namespace internal
 
 rmw_ret_t
 __rmw_init_event(
@@ -56,7 +55,7 @@ __rmw_init_event(
     topic_endpoint_impl_identifier,
     identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  if (!rmw_fastrtps_shared_cpp_internal::is_event_supported(event_type)) {
+  if (!internal::is_event_supported(event_type)) {
     RMW_SET_ERROR_MSG("provided event_type is not supported by rmw_fastrtps_cpp");
     return RMW_RET_UNSUPPORTED;
   }

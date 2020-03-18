@@ -17,11 +17,14 @@
 
 #include "rmw/event.h"
 
-namespace rmw_fastrtps_shared_cpp_internal
+namespace rmw_fastrtps_shared_cpp
+{
+namespace internal
 {
 
 bool is_event_supported(rmw_event_type_t event_type);
 
-}  // namespace rmw_fastrtps_shared_cpp_internal
+}  // namespace internal
+}  // namespace rmw_fastrtps_shared_cpp
 
 #endif  // TYPES__EVENT_TYPES_HPP_

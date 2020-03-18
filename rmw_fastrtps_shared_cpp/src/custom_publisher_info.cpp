@@ -60,7 +60,7 @@ void PubListener::on_liveliness_lost(
 
 bool PubListener::hasEvent(rmw_event_type_t event_type) const
 {
-  assert(rmw_fastrtps_shared_cpp_internal::is_event_supported(event_type));
+  assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
   switch (event_type) {
     case RMW_EVENT_LIVELINESS_LOST:
       return liveliness_changes_.load(std::memory_order_relaxed);
@@ -74,7 +74,7 @@ bool PubListener::hasEvent(rmw_event_type_t event_type) const
 
 bool PubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
 {
-  assert(rmw_fastrtps_shared_cpp_internal::is_event_supported(event_type));
+  assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
   std::lock_guard<std::mutex> lock(internalMutex_);
   switch (event_type) {
     case RMW_EVENT_LIVELINESS_LOST:
