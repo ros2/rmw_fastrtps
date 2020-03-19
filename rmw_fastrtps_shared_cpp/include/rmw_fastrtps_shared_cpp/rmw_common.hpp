@@ -119,6 +119,15 @@ __rmw_get_node_names(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_init_event(
+  const char * identifier,
+  rmw_event_t * rmw_event,
+  const char * topic_endpoint_impl_identifier,
+  void * data,
+  rmw_event_type_t event_type);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_publish(
   const char * identifier,
   const rmw_publisher_t * publisher,
