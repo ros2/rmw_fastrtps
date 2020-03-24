@@ -17,12 +17,16 @@
 
 #include "rmw/init.h"
 
+#include "rmw_fastrtps_shared_cpp/visibility_control.h"
+
 namespace rmw_fastrtps_shared_cpp
 {
 
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 run_listener_thread(rmw_context_t * context);
 
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 join_listener_thread(rmw_context_t * context);
 

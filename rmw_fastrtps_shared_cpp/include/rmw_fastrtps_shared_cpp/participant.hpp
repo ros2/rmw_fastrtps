@@ -20,10 +20,12 @@
 #include "rmw_dds_common/context.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/visibility_control.h"
 
 namespace rmw_fastrtps_shared_cpp
 {
 
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 CustomParticipantInfo *
 create_participant(
   const char * identifier,
@@ -33,6 +35,7 @@ create_participant(
   const char * security_context,
   rmw_dds_common::Context * common_context);
 
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 destroy_participant(CustomParticipantInfo * info);
 

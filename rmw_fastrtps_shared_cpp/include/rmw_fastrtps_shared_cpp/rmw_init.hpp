@@ -19,17 +19,22 @@
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/init_options.h"
 
+#include "rmw_fastrtps_shared_cpp/visibility_control.h"
+
 namespace rmw_fastrtps_shared_cpp
 {
 
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 rmw_init_options_init(
   const char * identifier, rmw_init_options_t * init_options, rcutils_allocator_t allocator);
 
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 rmw_init_options_copy(
   const char * identifier, const rmw_init_options_t * src, rmw_init_options_t * dst);
 
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 rmw_init_options_fini(const char * identifier, rmw_init_options_t * init_options);
 
