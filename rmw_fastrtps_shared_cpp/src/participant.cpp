@@ -167,7 +167,8 @@ rmw_fastrtps_shared_cpp::create_participant(
 
   participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
 
-  size_t length = snprintf(nullptr, 0, "securitycontext=%s;", security_context);
+  size_t length = snprintf(nullptr, 0, "securitycontext=%s;", security_context) + 1;
+  participantAttrs.rtps.userData.resize(length);
   int written = snprintf(
     reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
     length, "securitycontext=%s;", security_context);
