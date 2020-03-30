@@ -45,8 +45,6 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
-constexpr char kLoggerTag[] = "rmw_fastrtps_shared_cpp";
-
 /**
  * Validate the input data of node_info_and_types functions.
  *
