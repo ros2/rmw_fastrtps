@@ -72,12 +72,13 @@ rmw_create_node(
 rmw_ret_t
 rmw_destroy_node(rmw_node_t * node)
 {
+  rmw_context_t * context = node->context;
   rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_destroy_node(
     eprosima_fastrtps_identifier, node);
   if (RMW_RET_OK != ret) {
     return ret;
   }
-  return rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(node->context);
+  return rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(context);
 }
 
 rmw_ret_t

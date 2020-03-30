@@ -89,7 +89,6 @@ rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(rmw_context_t * contex
     } else if (RMW_RET_OK != ret) {
       RMW_SET_ERROR_MSG(error_string.str);
     }
-    delete common_context;
 
     common_context->graph_cache.clear_on_change_callback();
     if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_destroy_guard_condition(
@@ -100,6 +99,7 @@ rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(rmw_context_t * contex
         "couldn't destroy graph_guard_condtion");
     }
 
+    delete common_context;
     context->impl->common = nullptr;
     context->impl->participant_info = nullptr;
   }
