@@ -56,7 +56,7 @@ __rmw_init_event(
     identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   if (!internal::is_event_supported(event_type)) {
-    RMW_SET_ERROR_MSG("provided event_type is not supported by rmw_fastrtps_cpp");
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("provided event_type is not supported by %s", identifier);
     return RMW_RET_UNSUPPORTED;
   }
 
