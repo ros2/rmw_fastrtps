@@ -35,11 +35,11 @@ The API is declared using Doxygen documentation available to be [generated](http
 
 4.  *Must have a policy for API stability*
     
-There is no explicit policy related to API stability. However, as eProsima widely announces that they provide ROS2, it is not expected that this dependency will generate API issues with the ROS2 code.
+There is no explicit policy related to API stability. However, as eProsima widely announces that their implementation is adopted in ROS2, it is not expected that this dependency will generate API issues with the ROS2 code.
 
 5. *Must have a policy for ABI stability*
     
-There is no explicit policy related to ABI stability. However, as eProsima widely announces that they provide ROS2, it is not expected that this dependency will generate API issues with the ROS2 code.
+There is no explicit policy related to ABI stability. However, as eProsima widely announces that their implementation is adopted in ROS2, it is not expected that this dependency will generate API issues with the ROS2 code.
 
 6.  *Must have a policy that keeps API and ABI stability within a released ROS distribution*
    
