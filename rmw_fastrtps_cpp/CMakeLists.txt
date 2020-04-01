@@ -105,6 +105,10 @@ ament_target_dependencies(rmw_fastrtps_cpp
   "rosidl_generator_c"
 )
 
+target_link_libraries(rmw_fastrtps_cpp
+  ${rmw_dds_common_LIBRARIES__rosidl_typesupport_fastrtps_cpp}
+)
+
 configure_rmw_library(rmw_fastrtps_cpp)
 
 # Causes the visibility macros to use dllexport rather than dllimport,
