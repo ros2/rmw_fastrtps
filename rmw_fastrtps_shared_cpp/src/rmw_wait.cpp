@@ -200,13 +200,10 @@ __rmw_wait(
       custom_subscriber_info->listener_->detachCondition();
       if (!custom_subscriber_info->listener_->hasData()) {
         subscriptions->subscribers[i] = 0;
+        subscriptions->timestamps[i] = 0;
       } else {
-        bool success = custom_subscriber_info->subscriber_->get_first_untaken_info(&si);
-        if(success) {
-          subscriptions->timestamps[i] = si.receptionTimestamp.to_ns();
-        } else {
-          subscriptions->timestamps[i] = 0;
-        }
+        subscriptions->timestamps[i] = custom_subscriber_info->subscriber_->\
+          get_first_untaken_info(&si) ? si.receptionTimestamp.to_ns() : 0;
       }
     }
   }
@@ -218,6 +215,10 @@ __rmw_wait(
       custom_client_info->listener_->detachCondition();
       if (!custom_client_info->listener_->hasData()) {
         clients->clients[i] = 0;
+        clients->timestamps[i] = 0;
+      } else {
+        clients->timestamps[i] = custom_client_info->response_subscriber_->\
+          get_first_untaken_info(&si) ? si.receptionTimestamp.to_ns() : 0;
       }
     }
   }
@@ -229,6 +230,10 @@ __rmw_wait(
       custom_service_info->listener_->detachCondition();
       if (!custom_service_info->listener_->hasData()) {
         services->services[i] = 0;
+        services->timestamps[i] = 0;
+      } else {
+        services->timestamps[i] = custom_service_info->request_subscriber_->\
+          get_first_untaken_info(&si) ? si.receptionTimestamp.to_ns() : 0;
       }
     }
   }
