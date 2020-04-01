@@ -201,20 +201,10 @@ __rmw_wait(
       custom_subscriber_info->listener_->detachCondition();
       if (!custom_subscriber_info->listener_->hasData()) {
         subscriptions->subscribers[i] = 0;
-<<<<<<< HEAD
         subscriptions->timestamps[i] = 0;
       } else {
         subscriptions->timestamps[i] = custom_subscriber_info->subscriber_->\
           get_first_untaken_info(&si) ? si.receptionTimestamp.to_ns() : 0;
-=======
-      } else {
-        bool success = custom_subscriber_info->subscriber_->get_first_untaken_info(&si);
-        if(success) {
-          subscriptions->timestamps[i] = si.receptionTimestamp.to_ns();
-        } else {
-          subscriptions->timestamps[i] = 0;
-        }
->>>>>>> Fill in timestamps for subscriptions.
       }
     }
   }
