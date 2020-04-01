@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "fastrtps/subscriber/Subscriber.h"
+#include "fastrtps/subscriber/SampleInfo.h"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -191,6 +192,7 @@ __rmw_wait(
   // after we check, it will be caught on the next call to this function).
   lock.unlock();
 
+  eprosima::fastrtps::SampleInfo_t si;
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
       void * data = subscriptions->subscribers[i];
@@ -198,6 +200,13 @@ __rmw_wait(
       custom_subscriber_info->listener_->detachCondition();
       if (!custom_subscriber_info->listener_->hasData()) {
         subscriptions->subscribers[i] = 0;
+      } else {
+        bool success = custom_subscriber_info->subscriber_->get_first_untaken_info(&si);
+        if(success) {
+          subscriptions->timestamps[i] = si.receptionTimestamp.to_ns();
+        } else {
+          subscriptions->timestamps[i] = 0;
+        }
       }
     }
   }
