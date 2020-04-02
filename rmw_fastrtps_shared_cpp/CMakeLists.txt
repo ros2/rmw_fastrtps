@@ -45,6 +45,10 @@ find_package(fastrtps REQUIRED CONFIG)
 find_package(FastRTPS REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
+
+find_package(tinyxml2_vendor REQUIRED)
+find_package(TinyXML2 REQUIRED)  # provided by tinyxml2 upstream, or tinyxml2_vendor
+
 include_directories(include)
 
 add_library(rmw_fastrtps_shared_cpp
@@ -74,6 +78,7 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_publisher.cpp
   src/rmw_request.cpp
   src/rmw_response.cpp
+  src/rmw_security.cpp
   src/rmw_service.cpp
   src/rmw_service_names_and_types.cpp
   src/rmw_service_server_is_available.cpp
@@ -111,6 +116,8 @@ ament_export_libraries(rmw_fastrtps_shared_cpp)
 ament_export_dependencies(rcpputils)
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rmw)
+ament_export_dependencies(tinyxml2_vendor)
+ament_export_dependencies(TinyXML2)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

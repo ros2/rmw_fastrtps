@@ -19,6 +19,7 @@
   <build_depend>rcpputils</build_depend>
   <build_depend>rcutils</build_depend>
   <build_depend>rmw</build_depend>
+  <build_depend>tinyxml2_vendor</build_depend>
   <build_depend>rmw_dds_common</build_depend>
 
   <build_export_depend>fastcdr</build_export_depend>

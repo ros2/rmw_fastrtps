@@ -42,6 +42,7 @@
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/participant.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_security.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
 using IPLocator = eprosima::fastrtps::rtps::IPLocator;
@@ -49,43 +50,6 @@ using Locator_t = eprosima::fastrtps::rtps::Locator_t;
 using Participant = eprosima::fastrtps::Participant;
 using ParticipantAttributes = eprosima::fastrtps::ParticipantAttributes;
 using StatefulReader = eprosima::fastrtps::rtps::StatefulReader;
-
-#if HAVE_SECURITY
-static
-bool
-get_security_file_paths(
-  std::array<std::string, 6> & security_files_paths, const char * secure_root)
-{
-  // here assume only 6 files for security
-  const char * file_names[6] = {
-    "identity_ca.cert.pem", "cert.pem", "key.pem",
-    "permissions_ca.cert.pem", "governance.p7s", "permissions.p7s"
-  };
-  size_t num_files = sizeof(file_names) / sizeof(char *);
-
-  std::string file_prefix("file://");
-
-  for (size_t i = 0; i < num_files; i++) {
-    rcutils_allocator_t allocator = rcutils_get_default_allocator();
-    char * file_path = rcutils_join_path(secure_root, file_names[i], allocator);
-
-    if (!file_path) {
-      return false;
-    }
-
-    if (rcutils_is_readable(file_path)) {
-      security_files_paths[i] = file_prefix + std::string(file_path);
-    } else {
-      allocator.deallocate(file_path, allocator.state);
-      return false;
-    }
-
-    allocator.deallocate(file_path, allocator.state);
-  }
-
-  return true;
-}
-#endif
 
 static
 CustomParticipantInfo *
@@ -196,52 +160,14 @@ rmw_fastrtps_shared_cpp::create_participant(
     participantAttrs.rtps.builtin.writerHistoryMemoryPolicy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
-  if (security_options->security_root_path) {
-    // if security_root_path provided, try to find the key and certificate files
-#if HAVE_SECURITY
-    std::array<std::string, 6> security_files_paths;
-    if (get_security_file_paths(security_files_paths, security_options->security_root_path)) {
-      eprosima::fastrtps::rtps::PropertyPolicy property_policy;
-      using Property = eprosima::fastrtps::rtps::Property;
-      property_policy.properties().emplace_back(
-        Property("dds.sec.auth.plugin", "builtin.PKI-DH"));
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.auth.builtin.PKI-DH.identity_ca", security_files_paths[0]));
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.auth.builtin.PKI-DH.identity_certificate", security_files_paths[1]));
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.auth.builtin.PKI-DH.private_key", security_files_paths[2]));
-      property_policy.properties().emplace_back(
-        Property("dds.sec.crypto.plugin", "builtin.AES-GCM-GMAC"));
 
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.access.plugin", "builtin.Access-Permissions"));
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.access.builtin.Access-Permissions.permissions_ca", security_files_paths[3]));
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.access.builtin.Access-Permissions.governance", security_files_paths[4]));
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.access.builtin.Access-Permissions.permissions", security_files_paths[5]));
-
-      participantAttrs.rtps.properties = property_policy;
-    } else if (security_options->enforce_security) {
-      RMW_SET_ERROR_MSG("couldn't find all security files!");
-      return nullptr;
-    }
-#else
-    RMW_SET_ERROR_MSG(
-      "This Fast-RTPS version doesn't have the security libraries\n"
-      "Please compile Fast-RTPS using the -DSECURITY=ON CMake option");
+  eprosima::fastrtps::rtps::PropertyPolicy property_policy;
+  if (apply_security_options(*security_options, property_policy)) {
+    participantAttrs.rtps.properties = property_policy;
+  } else {
     return nullptr;
-#endif
   }
+
   return __create_participant(
     identifier,
     participantAttrs,
