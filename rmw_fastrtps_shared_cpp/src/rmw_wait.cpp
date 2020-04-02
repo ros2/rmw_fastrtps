@@ -1,4 +1,5 @@
 // Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Coypyright 2020 Robert Bosch GmbH
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -232,8 +233,8 @@ __rmw_wait(
         services->services[i] = 0;
         services->timestamps[i] = 0;
       } else {
-        services->timestamps[i] = custom_service_info->request_subscriber_->\
-          get_first_untaken_info(&si) ? si.receptionTimestamp.to_ns() : 0;
+        services->timestamps[i] = custom_service_info->listener_->\
+          peekSampleInfo().receptionTimestamp.to_ns();
       }
     }
   }
