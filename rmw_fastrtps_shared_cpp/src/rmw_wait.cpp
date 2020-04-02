@@ -232,8 +232,8 @@ __rmw_wait(
         services->services[i] = 0;
         services->timestamps[i] = 0;
       } else {
-        services->timestamps[i] = custom_service_info->request_subscriber_->\
-          get_first_untaken_info(&si) ? si.receptionTimestamp.to_ns() : 0;
+        services->timestamps[i] = custom_service_info->listener_->\
+          peekSampleInfo().receptionTimestamp.to_ns();
       }
     }
   }
