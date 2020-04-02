@@ -120,11 +120,15 @@ Based on the [CI jobs test results](http://jenkins.eprosima.com:8080/job/FastRTP
 
 `fastrtps` depends on the following packages:
 
-`libasio-dev` `libtinyxml2-dev`
+`libasio-dev` `libtinyxml2-dev` `fast-cdr` `foonathan_memory`
 
-These dependencies are suggested to be installed for Linux using apt package manager, which would pull them from the Debian upstream. This is a [list of advantages](https://wiki.debian.org/AdvantagesForUpstream) of using upstream packages, the fact that software and their patches are tested and the code is maintained available leads us to decide that these libraries as dependencies can be considered of Quality Level 1 as well.
+The first two dependencies are suggested to be installed for Linux using apt package manager, which would pull them from the Debian upstream. This is a [list of advantages](https://wiki.debian.org/AdvantagesForUpstream) of using upstream packages, the fact that software and their patches are tested and the code is maintained available leads us to decide that these libraries as dependencies can be considered of Quality Level 1 as well.
+
+The other two are installed from the eProsima repositories as well, their current quality declarations can be found in [Quality Declaration `fast-cdr`](https://github.com/ros2/rmw_fastrtps/pull/360) and [Quality Declaration `foonathan_memory`](https://github.com/eProsima/foonathan_memory_vendor/pull/22)
 
 TO DO: Windows suggested method to install the dependencies is using [Chocolatey](https://chocolatey.org/) and the list of ROS2 dependencies [choco repo](https://github.com/ros2/choco-packages/releases/tag/2020-02-24). For Windows, the upstream argument won’t apply
+
+TO DO: Add link
 
 ### Platform Support:
 
