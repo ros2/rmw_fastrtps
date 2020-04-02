@@ -218,8 +218,8 @@ __rmw_wait(
         clients->clients[i] = 0;
         clients->timestamps[i] = 0;
       } else {
-        clients->timestamps[i] = custom_client_info->response_subscriber_->\
-          get_first_untaken_info(&si) ? si.receptionTimestamp.to_ns() : 0;
+        clients->timestamps[i] = custom_client_info->listener_->\
+          peekSampleInfo().receptionTimestamp.to_ns();
       }
     }
   }

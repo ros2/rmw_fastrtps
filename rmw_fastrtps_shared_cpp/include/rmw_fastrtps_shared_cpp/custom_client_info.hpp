@@ -94,6 +94,7 @@ public:
           if (conditionMutex_ != nullptr) {
             std::unique_lock<std::mutex> clock(*conditionMutex_);
             list.emplace_back(std::move(response));
+            sampleInfos_.push(sinfo);
             // the change to list_has_data_ needs to be mutually exclusive with
             // rmw_wait() which checks hasData() and decides if wait() needs to
             // be called
@@ -102,6 +103,7 @@ public:
             conditionVariable_->notify_one();
           } else {
             list.emplace_back(std::move(response));
+            sampleInfos_.push(sinfo);
             list_has_data_.store(true);
           }
         }
@@ -119,6 +121,16 @@ public:
       return popResponse(response);
     }
     return popResponse(response);
+  }
+
+  /**
+   * Returns the SampleInfo_t at the front of the queue -- this corresponds
+   * to the next CustomServiceRequest to be returned on callinge getRequest().
+   */
+  const eprosima::fastrtps::SampleInfo_t&
+  peekSampleInfo() const
+  {
+    return sampleInfos_.front();
   }
 
   void
@@ -167,6 +179,7 @@ private:
     if (!list.empty()) {
       response = std::move(list.front());
       list.pop_front();
+      sampleInfos_.pop();
       list_has_data_.store(!list.empty());
       return true;
     }
@@ -180,6 +193,7 @@ private:
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_;
+  std::queue<eprosima::fastrtps::SampleInfo_t> sampleInfos_;
 };
 
 class ClientPubListener : public eprosima::fastrtps::PublisherListener
