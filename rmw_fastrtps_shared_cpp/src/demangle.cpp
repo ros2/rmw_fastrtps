@@ -1,3 +1,4 @@
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 // Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -21,6 +22,8 @@
 #include "rcutils/types.h"
 
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
+
+#include "demangle.hpp"
 
 /// Return the demangle ROS topic or the original if not a ROS topic.
 std::string
@@ -52,61 +55,63 @@ _demangle_if_ros_type(const std::string & dds_type_string)
   return type_namespace + type_name;
 }
 
+/// Return the topic name for a given topic if it is part of one, else "".
+std::string
+_demangle_ros_topic_from_topic(const std::string & topic_name)
+{
+  return _resolve_prefix(topic_name, ros_topic_prefix);
+}
+
 /// Return the service name for a given topic if it is part of one, else "".
 std::string
-_demangle_service_from_topic(const std::string & topic_name)
+_demangle_service_from_topic(
+  const std::string & prefix, const std::string & topic_name, std::string suffix)
 {
-  std::string prefix = _get_ros_prefix_if_exists(topic_name);
-  if (prefix.empty()) {
-    // not a ROS topic or service
+  std::string service_name = _resolve_prefix(topic_name, prefix);
+  if ("" == service_name) {
     return "";
   }
-  std::vector<std::string> prefixes = {
-    ros_service_response_prefix,
-    ros_service_requester_prefix,
-  };
-  if (
-    std::none_of(
-      prefixes.cbegin(), prefixes.cend(),
-      [&prefix](auto x) {
-        return prefix == x;
-      }))
-  {
-    // not a ROS service topic
-    return "";
-  }
-  std::vector<std::string> suffixes = {
-    "Reply",
-    "Request",
-  };
-  std::string found_suffix;
-  size_t suffix_position = std::string::npos;
-  for (auto suffix : suffixes) {
-    suffix_position = topic_name.rfind(suffix);
-    if (suffix_position != std::string::npos) {
-      if (topic_name.length() - suffix_position - suffix.length() != 0) {
-        RCUTILS_LOG_WARN_NAMED(
-          "rmw_fastrtps_shared_cpp",
-          "service topic has service prefix and a suffix, but not at the end"
-          ", report this: '%s'", topic_name.c_str());
-        continue;
-      }
-      found_suffix = suffix;
-      break;
+
+  size_t suffix_position = service_name.rfind(suffix);
+  if (suffix_position != std::string::npos) {
+    if (service_name.length() - suffix_position - suffix.length() != 0) {
+      RCUTILS_LOG_WARN_NAMED(
+        "rmw_fastrtps_shared_cpp",
+        "service topic has service prefix and a suffix, but not at the end"
+        ", report this: '%s'", topic_name.c_str());
+      return "";
     }
-  }
-  if (std::string::npos == suffix_position) {
+  } else {
     RCUTILS_LOG_WARN_NAMED(
       "rmw_fastrtps_shared_cpp",
       "service topic has prefix but no suffix"
       ", report this: '%s'", topic_name.c_str());
     return "";
   }
-  // strip off the suffix first
-  std::string service_name = topic_name.substr(0, suffix_position + 1);
-  // then the prefix
-  size_t start = prefix.length();  // explicitly leave / after prefix
-  return service_name.substr(start, service_name.length() - 1 - start);
+  return service_name.substr(0, suffix_position);
+}
+
+std::string
+_demangle_service_from_topic(const std::string & topic_name)
+{
+  const std::string demangled_topic = _demangle_service_reply_from_topic(topic_name);
+  if ("" != demangled_topic) {
+    return demangled_topic;
+  }
+  return _demangle_service_request_from_topic(topic_name);
+}
+
+
+std::string
+_demangle_service_request_from_topic(const std::string & topic_name)
+{
+  return _demangle_service_from_topic(ros_service_requester_prefix, topic_name, "Request");
+}
+
+std::string
+_demangle_service_reply_from_topic(const std::string & topic_name)
+{
+  return _demangle_service_from_topic(ros_service_response_prefix, topic_name, "Reply");
 }
 
 /// Return the demangled service type if it is a ROS srv type, else "".
@@ -153,4 +158,10 @@ _demangle_service_type_only(const std::string & dds_type_name)
   size_t start = ns_substring_position + ns_substring.length();
   std::string type_name = dds_type_name.substr(start, suffix_position - start);
   return type_namespace + type_name;
+}
+
+std::string
+_identity_demangle(const std::string & name)
+{
+  return name;
 }

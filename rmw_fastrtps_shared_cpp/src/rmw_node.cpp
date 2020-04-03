@@ -1,3 +1,4 @@
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 // Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -13,11 +14,11 @@
 // limitations under the License.
 
 #include <array>
+#include <mutex>
 #include <utility>
 #include <set>
 #include <string>
 
-#include "rcutils/filesystem.h"
 #include "rcutils/logging_macros.h"
 
 #include "rmw/allocators.h"
@@ -25,45 +26,21 @@
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
-#include "fastrtps/config.h"
-#include "fastrtps/Domain.h"
-#include "fastrtps/rtps/common/Locator.h"
-#include "fastrtps/participant/Participant.h"
-#include "fastrtps/attributes/ParticipantAttributes.h"
-#include "fastrtps/publisher/Publisher.h"
-#include "fastrtps/attributes/PublisherAttributes.h"
-#include "fastrtps/publisher/PublisherListener.h"
-#include "fastrtps/subscriber/Subscriber.h"
-#include "fastrtps/subscriber/SubscriberListener.h"
-#include "fastrtps/subscriber/SampleInfo.h"
-#include "fastrtps/attributes/SubscriberAttributes.h"
-#include "fastrtps/utils/IPLocator.h"
-
-#include "fastrtps/rtps/RTPSDomain.h"
-
-#include "fastrtps/rtps/reader/RTPSReader.h"
-#include "fastrtps/rtps/reader/StatefulReader.h"
-#include "fastrtps/rtps/reader/ReaderListener.h"
-#include "fastrtps/rtps/builtin/discovery/endpoint/EDPSimple.h"
+#include "rmw_dds_common/context.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 
-using Domain = eprosima::fastrtps::Domain;
-using IPLocator = eprosima::fastrtps::rtps::IPLocator;
-using Locator_t = eprosima::fastrtps::rtps::Locator_t;
-using Participant = eprosima::fastrtps::Participant;
-using ParticipantAttributes = eprosima::fastrtps::ParticipantAttributes;
-using StatefulReader = eprosima::fastrtps::rtps::StatefulReader;
 
 namespace rmw_fastrtps_shared_cpp
 {
 rmw_node_t *
-create_node(
+__rmw_create_node(
+  rmw_context_t * context,
   const char * identifier,
   const char * name,
-  const char * namespace_,
-  ParticipantAttributes participantAttrs)
+  const char * namespace_)
 {
   if (!name) {
     RMW_SET_ERROR_MSG("name is null");
@@ -75,57 +52,9 @@ create_node(
     return nullptr;
   }
 
-  // Declare everything before beginning to create things.
-  ::ParticipantListener * listener = nullptr;
-  Participant * participant = nullptr;
-  rmw_guard_condition_t * graph_guard_condition = nullptr;
-  CustomParticipantInfo * node_impl = nullptr;
   rmw_node_t * node_handle = nullptr;
-
-  graph_guard_condition = __rmw_create_guard_condition(identifier);
-  if (!graph_guard_condition) {
-    // error already set
-    goto fail;
-  }
-
-  try {
-    listener = new ::ParticipantListener(graph_guard_condition);
-  } catch (std::bad_alloc &) {
-    RMW_SET_ERROR_MSG("failed to allocate participant listener");
-    goto fail;
-  }
-
-  participant = Domain::createParticipant(participantAttrs, listener);
-  if (!participant) {
-    RMW_SET_ERROR_MSG("create_node() could not create participant");
-    return nullptr;
-  }
-
-  try {
-    node_impl = new CustomParticipantInfo();
-
-    node_impl->leave_middleware_default_qos = false;
-    const char * env_var = "RMW_FASTRTPS_USE_QOS_FROM_XML";
-    // Check if the configuration from XML has been enabled from
-    // the RMW_FASTRTPS_USE_QOS_FROM_XML env variable.
-    char * config_env_val = nullptr;
-#ifndef _WIN32
-    config_env_val = getenv(env_var);
-    if (config_env_val != nullptr) {
-      node_impl->leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
-    }
-#else
-    size_t config_env_val_size;
-    _dupenv_s(&config_env_val, &config_env_val_size, env_var);
-    if (config_env_val != nullptr) {
-      node_impl->leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
-    }
-    free(config_env_val);
-#endif
-  } catch (std::bad_alloc &) {
-    RMW_SET_ERROR_MSG("failed to allocate node impl struct");
-    goto fail;
-  }
+  auto common_context = static_cast<rmw_dds_common::Context *>(context->impl->common);
+  rmw_dds_common::GraphCache & graph_cache = common_context->graph_cache;
 
   node_handle = rmw_node_allocate();
   if (!node_handle) {
@@ -133,10 +62,7 @@ create_node(
     goto fail;
   }
   node_handle->implementation_identifier = identifier;
-  node_impl->participant = participant;
-  node_impl->listener = listener;
-  node_impl->graph_guard_condition = graph_guard_condition;
-  node_handle->data = node_impl;
+  node_handle->data = nullptr;
 
   node_handle->name =
     static_cast<const char *>(rmw_allocate(sizeof(char) * strlen(name) + 1));
@@ -154,7 +80,26 @@ create_node(
     goto fail;
   }
   memcpy(const_cast<char *>(node_handle->namespace_), namespace_, strlen(namespace_) + 1);
+  node_handle->context = context;
 
+  {
+    // Though graph_cache methods are thread safe, both cache update and publishing have to also
+    // be atomic.
+    // If not, the following race condition is possible:
+    // node1-update-get-message / node2-update-get-message / node2-publish / node1-publish
+    // In that case, the last message published is not accurate.
+    std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
+    rmw_dds_common::msg::ParticipantEntitiesInfo participant_msg =
+      graph_cache.add_node(common_context->gid, name, namespace_);
+    if (RMW_RET_OK != __rmw_publish(
+        identifier,
+        common_context->pub,
+        static_cast<void *>(&participant_msg),
+        nullptr))
+    {
+      goto fail;
+    }
+  }
   return node_handle;
 fail:
   if (node_handle) {
@@ -164,182 +109,7 @@ fail:
     node_handle->name = nullptr;
   }
   rmw_node_free(node_handle);
-  delete node_impl;
-  if (graph_guard_condition) {
-    rmw_ret_t ret = __rmw_destroy_guard_condition(graph_guard_condition);
-    if (ret != RMW_RET_OK) {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_shared_cpp",
-        "failed to destroy guard condition during error handling");
-    }
-  }
-  rmw_free(listener);
-  if (participant) {
-    Domain::removeParticipant(participant);
-  }
   return nullptr;
-}
-
-bool
-get_security_file_paths(
-  std::array<std::string, 6> & security_files_paths, const char * node_secure_root)
-{
-  // here assume only 6 files for security
-  const char * file_names[6] = {
-    "identity_ca.cert.pem", "cert.pem", "key.pem",
-    "permissions_ca.cert.pem", "governance.p7s", "permissions.p7s"
-  };
-  size_t num_files = sizeof(file_names) / sizeof(char *);
-
-  std::string file_prefix("file://");
-
-  for (size_t i = 0; i < num_files; i++) {
-    rcutils_allocator_t allocator = rcutils_get_default_allocator();
-    char * file_path = rcutils_join_path(node_secure_root, file_names[i], allocator);
-
-    if (!file_path) {
-      return false;
-    }
-
-    if (rcutils_is_readable(file_path)) {
-      security_files_paths[i] = file_prefix + std::string(file_path);
-    } else {
-      allocator.deallocate(file_path, allocator.state);
-      return false;
-    }
-
-    allocator.deallocate(file_path, allocator.state);
-  }
-
-  return true;
-}
-
-rmw_node_t *
-__rmw_create_node(
-  const char * identifier,
-  const char * name,
-  const char * namespace_,
-  size_t domain_id,
-  const rmw_node_security_options_t * security_options,
-  bool localhost_only)
-{
-  if (!name) {
-    RMW_SET_ERROR_MSG("name is null");
-    return nullptr;
-  }
-  if (!security_options) {
-    RMW_SET_ERROR_MSG("security_options is null");
-    return nullptr;
-  }
-
-  ParticipantAttributes participantAttrs;
-
-  // Load default XML profile.
-  Domain::getDefaultParticipantAttributes(participantAttrs);
-
-  participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
-  // since the participant name is not part of the DDS spec
-  participantAttrs.rtps.setName(name);
-
-  if (localhost_only) {
-    Locator_t local_network_interface_locator;
-    static const std::string local_ip_name("127.0.0.1");
-    local_network_interface_locator.kind = 1;
-    local_network_interface_locator.port = 0;
-    IPLocator::setIPv4(local_network_interface_locator, local_ip_name);
-    participantAttrs.rtps.builtin.metatrafficUnicastLocatorList.push_back(
-      local_network_interface_locator);
-    participantAttrs.rtps.builtin.initialPeersList.push_back(local_network_interface_locator);
-  }
-  bool leave_middleware_default_qos = false;
-  const char * env_var = "RMW_FASTRTPS_USE_QOS_FROM_XML";
-  // Check if the configuration from XML has been enabled from
-  // the RMW_FASTRTPS_USE_QOS_FROM_XML env variable.
-  char * config_env_val = nullptr;
-#ifndef _WIN32
-  config_env_val = getenv(env_var);
-  if (config_env_val != nullptr) {
-    leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
-  }
-#else
-  size_t config_env_val_size;
-  _dupenv_s(&config_env_val, &config_env_val_size, env_var);
-  if (config_env_val != nullptr) {
-    leave_middleware_default_qos = strcmp(config_env_val, "1") == 0;
-  }
-  free(config_env_val);
-#endif
-
-  // allow reallocation to support discovery messages bigger than 5000 bytes
-  if (!leave_middleware_default_qos) {
-    participantAttrs.rtps.builtin.readerHistoryMemoryPolicy =
-      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-    participantAttrs.rtps.builtin.writerHistoryMemoryPolicy =
-      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-  }
-
-  size_t length = strlen(name) + strlen("name=;") +
-    strlen(namespace_) + strlen("namespace=;") + 1;
-  participantAttrs.rtps.userData.resize(length);
-  int written = snprintf(
-    reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
-    length, "name=%s;namespace=%s;", name, namespace_);
-  if (written < 0 || written > static_cast<int>(length) - 1) {
-    RMW_SET_ERROR_MSG("failed to populate user_data buffer");
-    return nullptr;
-  }
-
-  if (security_options->security_root_path) {
-    // if security_root_path provided, try to find the key and certificate files
-#if HAVE_SECURITY
-    std::array<std::string, 6> security_files_paths;
-
-    if (get_security_file_paths(security_files_paths, security_options->security_root_path)) {
-      eprosima::fastrtps::rtps::PropertyPolicy property_policy;
-      using Property = eprosima::fastrtps::rtps::Property;
-      property_policy.properties().emplace_back(
-        Property("dds.sec.auth.plugin", "builtin.PKI-DH"));
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.auth.builtin.PKI-DH.identity_ca",
-          security_files_paths[0]));
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.auth.builtin.PKI-DH.identity_certificate",
-          security_files_paths[1]));
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.auth.builtin.PKI-DH.private_key",
-          security_files_paths[2]));
-      property_policy.properties().emplace_back(
-        Property("dds.sec.crypto.plugin", "builtin.AES-GCM-GMAC"));
-
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.access.plugin", "builtin.Access-Permissions"));
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.access.builtin.Access-Permissions.permissions_ca", security_files_paths[3]));
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.access.builtin.Access-Permissions.governance", security_files_paths[4]));
-      property_policy.properties().emplace_back(
-        Property(
-          "dds.sec.access.builtin.Access-Permissions.permissions", security_files_paths[5]));
-
-      participantAttrs.rtps.properties = property_policy;
-    } else if (security_options->enforce_security) {
-      RMW_SET_ERROR_MSG("couldn't find all security files!");
-      return nullptr;
-    }
-#else
-    RMW_SET_ERROR_MSG(
-      "This Fast-RTPS version doesn't have the security libraries\n"
-      "Please compile Fast-RTPS using the -DSECURITY=ON CMake option");
-    return nullptr;
-#endif
-  }
-  return create_node(identifier, name, namespace_, participantAttrs);
 }
 
 rmw_ret_t
@@ -358,33 +128,28 @@ __rmw_destroy_node(
     return RMW_RET_ERROR;
   }
 
-  auto impl = static_cast<CustomParticipantInfo *>(node->data);
-  if (!impl) {
-    RMW_SET_ERROR_MSG("node impl is null");
-    return RMW_RET_ERROR;
+  auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
+  rmw_dds_common::GraphCache & graph_cache = common_context->graph_cache;
+  {
+    std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
+    rmw_dds_common::msg::ParticipantEntitiesInfo participant_msg =
+      graph_cache.remove_node(common_context->gid, node->name, node->namespace_);
+    result_ret = __rmw_publish(
+      identifier,
+      common_context->pub,
+      static_cast<void *>(&participant_msg),
+      nullptr);
+    if (RMW_RET_OK != result_ret) {
+      return result_ret;
+    }
   }
-
-  Participant * participant = impl->participant;
-
-  // Begin deleting things in the same order they were created in __rmw_create_node().
   rmw_free(const_cast<char *>(node->name));
   node->name = nullptr;
   rmw_free(const_cast<char *>(node->namespace_));
   node->namespace_ = nullptr;
   rmw_node_free(node);
 
-  Domain::removeParticipant(participant);
-
-  if (RMW_RET_OK != __rmw_destroy_guard_condition(impl->graph_guard_condition)) {
-    RMW_SET_ERROR_MSG("failed to destroy graph guard condition");
-    result_ret = RMW_RET_ERROR;
-  }
-
-  delete impl->listener;
-  impl->listener = nullptr;
-  delete impl;
-
-  return result_ret;
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
@@ -392,35 +157,20 @@ __rmw_node_assert_liveliness(
   const char * identifier,
   const rmw_node_t * node)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    node,
-    node->implementation_identifier,
-    identifier,
-    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  (void)identifier;
+  (void)node;
 
-  auto node_info = static_cast<CustomParticipantInfo *>(node->data);
-  if (nullptr == node_info) {
-    RMW_SET_ERROR_MSG("node info handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (nullptr == node_info->participant) {
-    RMW_SET_ERROR_MSG("node internal participant is invalid");
-    return RMW_RET_ERROR;
-  }
-
-  node_info->participant->assert_liveliness();
-  return RMW_RET_OK;
+  return RMW_RET_UNSUPPORTED;
 }
 
 const rmw_guard_condition_t *
 __rmw_node_get_graph_guard_condition(const rmw_node_t * node)
 {
-  auto impl = static_cast<CustomParticipantInfo *>(node->data);
-  if (!impl) {
-    RMW_SET_ERROR_MSG("node impl is null");
+  auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
+  if (!common_context) {
+    RMW_SET_ERROR_MSG("common_context is nullptr");
     return nullptr;
   }
-  return impl->graph_guard_condition;
+  return common_context->graph_guard_condition;
 }
 }  // namespace rmw_fastrtps_shared_cpp

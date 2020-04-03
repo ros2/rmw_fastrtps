@@ -1,3 +1,4 @@
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 // Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -20,19 +21,14 @@
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
-#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
-#include "rmw_fastrtps_shared_cpp/names.hpp"
-#include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
-#include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_cpp/publisher.hpp"
 
-#include "./type_support_common.hpp"
-
-using Domain = eprosima::fastrtps::Domain;
-using Participant = eprosima::fastrtps::Participant;
-using TopicDataType = eprosima::fastrtps::TopicDataType;
+#include "rmw_dds_common/context.hpp"
+#include "rmw_dds_common/msg/participant_entities_info.hpp"
 
 extern "C"
 {
@@ -77,163 +73,40 @@ rmw_create_publisher(
     return nullptr;
   }
 
-  if (!topic_name || strlen(topic_name) == 0) {
-    RMW_SET_ERROR_MSG("publisher topic is null or empty string");
+  rmw_publisher_t * publisher = rmw_fastrtps_cpp::create_publisher(
+    static_cast<CustomParticipantInfo *>(node->context->impl->participant_info),
+    type_supports,
+    topic_name,
+    qos_policies,
+    publisher_options,
+    false,
+    true);
+
+  if (!publisher) {
     return nullptr;
   }
 
-  if (!qos_policies) {
-    RMW_SET_ERROR_MSG("qos_policies is null");
-    return nullptr;
-  }
+  auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
 
-  if (!publisher_options) {
-    RMW_SET_ERROR_MSG("publisher_options is null");
-    return nullptr;
-  }
-
-  auto impl = static_cast<CustomParticipantInfo *>(node->data);
-  if (!impl) {
-    RMW_SET_ERROR_MSG("node impl is null");
-    return nullptr;
-  }
-
-  Participant * participant = impl->participant;
-  if (!participant) {
-    RMW_SET_ERROR_MSG("participant handle is null");
-    return nullptr;
-  }
-
-  const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
-    type_supports, RMW_FASTRTPS_CPP_TYPESUPPORT_C);
-  if (!type_support) {
-    type_support = get_message_typesupport_handle(
-      type_supports, RMW_FASTRTPS_CPP_TYPESUPPORT_CPP);
-    if (!type_support) {
-      RMW_SET_ERROR_MSG("type support not from this implementation");
+  auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
+  {
+    // Update graph
+    std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
+    rmw_dds_common::msg::ParticipantEntitiesInfo msg =
+      common_context->graph_cache.associate_writer(
+      info->publisher_gid, common_context->gid, node->name, node->namespace_);
+    rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
+      eprosima_fastrtps_identifier,
+      common_context->pub,
+      static_cast<void *>(&msg),
+      nullptr);
+    if (RMW_RET_OK != rmw_ret) {
+      rmw_fastrtps_shared_cpp::__rmw_destroy_publisher(
+        eprosima_fastrtps_identifier, node, publisher);
       return nullptr;
     }
   }
-
-  CustomPublisherInfo * info = nullptr;
-  rmw_publisher_t * rmw_publisher = nullptr;
-  eprosima::fastrtps::PublisherAttributes publisherParam;
-
-  if (!is_valid_qos(*qos_policies)) {
-    return nullptr;
-  }
-
-  // Load default XML profile.
-  Domain::getDefaultPublisherAttributes(publisherParam);
-
-  // TODO(karsten1987) Verify consequences for std::unique_ptr?
-  info = new (std::nothrow) CustomPublisherInfo();
-  if (!info) {
-    RMW_SET_ERROR_MSG("failed to allocate CustomPublisherInfo");
-    return nullptr;
-  }
-
-  info->typesupport_identifier_ = type_support->typesupport_identifier;
-  info->type_support_impl_ = type_support->data;
-
-  auto callbacks = static_cast<const message_type_support_callbacks_t *>(type_support->data);
-  std::string type_name = _create_type_name(callbacks);
-  if (
-    !Domain::getRegisteredType(
-      participant, type_name.c_str(),
-      reinterpret_cast<TopicDataType **>(&info->type_support_)))
-  {
-    info->type_support_ = new (std::nothrow) MessageTypeSupport_cpp(callbacks);
-    if (!info->type_support_) {
-      RMW_SET_ERROR_MSG("Failed to allocate MessageTypeSupport");
-      goto fail;
-    }
-    _register_type(participant, info->type_support_);
-  }
-
-  if (!impl->leave_middleware_default_qos) {
-    publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
-    publisherParam.historyMemoryPolicy =
-      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-  }
-
-  publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
-  publisherParam.topic.topicDataType = type_name;
-  publisherParam.topic.topicName = _create_topic_name(qos_policies, ros_topic_prefix, topic_name);
-
-  // 1 Heartbeat every 10ms
-  // publisherParam.times.heartbeatPeriod.seconds = 0;
-  // publisherParam.times.heartbeatPeriod.fraction = 42949673;
-
-  // 300000 bytes each 10ms
-  // ThroughputControllerDescriptor throughputController{3000000, 10};
-  // publisherParam.throughputController = throughputController;
-
-  if (!get_datawriter_qos(*qos_policies, publisherParam)) {
-    RMW_SET_ERROR_MSG("failed to get datawriter qos");
-    goto fail;
-  }
-
-  info->listener_ = new (std::nothrow) PubListener(info);
-  if (!info->listener_) {
-    RMW_SET_ERROR_MSG("create_publisher() could not create publisher listener");
-    goto fail;
-  }
-
-  info->publisher_ = Domain::createPublisher(participant, publisherParam, info->listener_);
-  if (!info->publisher_) {
-    RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
-    goto fail;
-  }
-
-  info->publisher_gid.implementation_identifier = eprosima_fastrtps_identifier;
-  static_assert(
-    sizeof(eprosima::fastrtps::rtps::GUID_t) <= RMW_GID_STORAGE_SIZE,
-    "RMW_GID_STORAGE_SIZE insufficient to store the rmw_fastrtps_cpp GID implementation."
-  );
-
-  memset(info->publisher_gid.data, 0, RMW_GID_STORAGE_SIZE);
-  rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(
-    info->publisher_->getGuid(),
-    info->publisher_gid.data);
-
-  rmw_publisher = rmw_publisher_allocate();
-  if (!rmw_publisher) {
-    RMW_SET_ERROR_MSG("failed to allocate publisher");
-    goto fail;
-  }
-  rmw_publisher->can_loan_messages = false;
-  rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
-  rmw_publisher->data = info;
-  rmw_publisher->topic_name = reinterpret_cast<char *>(rmw_allocate(strlen(topic_name) + 1));
-
-  if (!rmw_publisher->topic_name) {
-    RMW_SET_ERROR_MSG("failed to allocate memory for publisher topic name");
-    goto fail;
-  }
-
-  memcpy(const_cast<char *>(rmw_publisher->topic_name), topic_name, strlen(topic_name) + 1);
-
-  rmw_publisher->options = *publisher_options;
-
-  return rmw_publisher;
-
-fail:
-  if (info) {
-    if (info->type_support_ != nullptr) {
-      delete info->type_support_;
-    }
-    if (info->listener_ != nullptr) {
-      delete info->listener_;
-    }
-    delete info;
-  }
-
-  if (rmw_publisher) {
-    rmw_publisher_free(rmw_publisher);
-  }
-
-  return nullptr;
+  return publisher;
 }
 
 rmw_ret_t

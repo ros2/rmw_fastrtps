@@ -15,9 +15,35 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__NAMES_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__NAMES_HPP_
 
+#include <string>
+
 #include "fastrtps/utils/fixed_size_string.hpp"
 #include "rmw/types.h"
 #include "namespace_prefix.hpp"
+
+/// Construct a topic name.
+/**
+  * \param[in] prefix Required prefix for topic name.
+  * \param[in] base Required name of the topic.
+  * \param[in] suffix Optional suffix for topic name.
+  */
+inline
+eprosima::fastrtps::string_255
+_mangle_topic_name(
+  const char * prefix,
+  const char * base,
+  const char * suffix = nullptr)
+{
+  std::ostringstream topicName;
+  if (prefix) {
+    topicName << prefix;
+  }
+  topicName << base;
+  if (suffix) {
+    topicName << suffix;
+  }
+  return topicName.str();
+}
 
 /// Construct a topic name according to proper conventions.
 /**
@@ -34,15 +60,10 @@ _create_topic_name(
   const char * base,
   const char * suffix = nullptr)
 {
-  std::ostringstream topicName;
-  if (!qos_profile->avoid_ros_namespace_conventions && prefix) {
-    topicName << prefix;
+  if (qos_profile->avoid_ros_namespace_conventions) {
+    prefix = nullptr;
   }
-  topicName << base;
-  if (suffix) {
-    topicName << suffix;
-  }
-  return topicName.str();
+  return _mangle_topic_name(prefix, base, suffix);
 }
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__NAMES_HPP_

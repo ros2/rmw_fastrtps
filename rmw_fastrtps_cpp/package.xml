@@ -20,6 +20,7 @@
   <build_depend>fastrtps_cmake_module</build_depend>
   <build_depend>rcutils</build_depend>
   <build_depend>rmw</build_depend>
+  <build_depend>rmw_dds_common</build_depend>
   <build_depend>rmw_fastrtps_shared_cpp</build_depend>
   <build_depend>rosidl_typesupport_fastrtps_c</build_depend>
   <build_depend>rosidl_typesupport_fastrtps_cpp</build_depend>
@@ -28,6 +29,8 @@
   <build_export_depend>fastrtps</build_export_depend>
   <build_export_depend>fastrtps_cmake_module</build_export_depend>
   <build_export_depend>rcutils</build_export_depend>
+  <build_export_depend>rmw_dds_common</build_export_depend>
+  <build_export_depend>rmw_fastrtps_shared_cpp</build_export_depend>
   <build_export_depend>rmw</build_export_depend>
   <build_export_depend>rmw_fastrtps_shared_cpp</build_export_depend>
   <build_export_depend>rosidl_typesupport_fastrtps_c</build_export_depend>
