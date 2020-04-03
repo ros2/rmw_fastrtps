@@ -1,3 +1,4 @@
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 // Copyright 2018 Amazon.com, Inc. or its affiliates. All Rights Reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -32,67 +33,17 @@
 #include "rmw/names_and_types.h"
 #include "rmw/rmw.h"
 
+#include "rmw_dds_common/context.hpp"
+
 #include "demangle.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/names.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
-
-#include "rmw_fastrtps_shared_cpp/topic_cache.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
-
-constexpr char kLoggerTag[] = "rmw_fastrtps_shared_cpp";
-
-/**
- * Get the guid that corresponds to the node and namespace.
- *
- * \param node to discover other participants with
- * \param node_name of the desired node
- * \param node_namespace of the desired node
- * \param guid [out] result
- * \return RMW_RET_ERROR if unable to find guid
- * \return RMW_RET_OK if guid is available
- */
-rmw_ret_t __get_guid_by_name(
-  const rmw_node_t * node, const char * node_name,
-  const char * node_namespace, GUID_t & guid)
-{
-  auto impl = static_cast<CustomParticipantInfo *>(node->data);
-  if (strcmp(node->name, node_name) == 0 && strcmp(node->namespace_, node_namespace) == 0) {
-    guid = impl->participant->getGuid();
-  } else {
-    std::set<GUID_t> nodes_in_desired_namespace;
-    std::lock_guard<std::mutex> guard(impl->listener->names_mutex_);
-
-    auto namespaces = impl->listener->discovered_namespaces;
-    for (auto & guid_to_namespace : impl->listener->discovered_namespaces) {
-      if (guid_to_namespace.second == node_namespace) {
-        nodes_in_desired_namespace.insert(guid_to_namespace.first);
-      }
-    }
-
-    auto guid_node_pair = std::find_if(
-      impl->listener->discovered_names.begin(),
-      impl->listener->discovered_names.end(),
-      [node_name, &nodes_in_desired_namespace](const std::pair<const GUID_t,
-      std::string> & pair) {
-        return pair.second == node_name &&
-        nodes_in_desired_namespace.find(pair.first) != nodes_in_desired_namespace.end();
-      });
-
-    if (guid_node_pair == impl->listener->discovered_names.end()) {
-      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-        "Node name not found: ns='%s', name='%s'",
-        node_namespace,
-        node_name
-      );
-      return RMW_RET_NODE_NAME_NON_EXISTENT;
-    }
-    guid = guid_node_pair->first;
-  }
-  return RMW_RET_OK;
-}
 
 /**
  * Validate the input data of node_info_and_types functions.
@@ -141,189 +92,15 @@ rmw_ret_t __validate_input(
   return RMW_RET_OK;
 }
 
-/**
- * Access the slave Listeners, which are the ones that have the topicnamesandtypes member
- * Get info from publisher and subscriber
- * Combined results from the two lists
- *
- * \param topic_cache cache with topic information
- * \param topics [out] resulting topics
- * \param node_guid_ to find information for
- * \param no_demangle true if demangling will not occur
- */
-void
-__accumulate_topics(
-  const LockedObject<TopicCache> & topic_cache,
-  std::map<std::string, std::set<std::string>> & topics,
-  const GUID_t & node_guid_,
-  bool no_demangle)
-{
-  std::lock_guard<std::mutex> guard(topic_cache.getMutex());
-  const auto & node_topics = topic_cache().getParticipantToTopics().find(node_guid_);
-  if (node_topics == topic_cache().getParticipantToTopics().end()) {
-    RCUTILS_LOG_DEBUG_NAMED(
-      kLoggerTag,
-      "No topics found for node");
-    return;
-  }
-  for (auto & topic_pair : node_topics->second) {
-    if (!no_demangle && _get_ros_prefix_if_exists(topic_pair.first) != ros_topic_prefix) {
-      // if we are demangling and this is not prefixed with rt/, skip it
-      continue;
-    }
-    RCUTILS_LOG_DEBUG_NAMED(
-      kLoggerTag,
-      "accumulate_topics: Found topic %s",
-      topic_pair.first.c_str());
+using GetNamesAndTypesByNodeFunction = rmw_ret_t (*)(
+  rmw_dds_common::Context *,
+  const std::string &,
+  const std::string &,
+  DemangleFunction,
+  DemangleFunction,
+  rcutils_allocator_t *,
+  rmw_names_and_types_t *);
 
-    topics[topic_pair.first].insert(
-      topic_pair.second.begin(), topic_pair.second.end());
-  }
-}
-
-/**
- * Copy topic data to results
- *
- * \param topics to copy over
- * \param allocator to use
- * \param no_demangle true if demangling will not occur
- * \param topic_names_and_types [out] final rmw result
- * \return RMW_RET_OK if successful
- */
-rmw_ret_t
-__copy_data_to_results(
-  const std::map<std::string, std::set<std::string>> & topics,
-  rcutils_allocator_t * allocator,
-  bool no_demangle,
-  rmw_names_and_types_t * topic_names_and_types)
-{
-  // Copy data to results handle
-  if (!topics.empty()) {
-    // Setup string array to store names
-    rmw_ret_t rmw_ret = rmw_names_and_types_init(topic_names_and_types, topics.size(), allocator);
-    if (rmw_ret != RMW_RET_OK) {
-      return rmw_ret;
-    }
-    // Setup cleanup function, in case of failure below
-    auto fail_cleanup = [&topic_names_and_types]() {
-        rmw_ret_t rmw_ret = rmw_names_and_types_fini(topic_names_and_types);
-        if (rmw_ret != RMW_RET_OK) {
-          RCUTILS_LOG_ERROR_NAMED(
-            kLoggerTag,
-            "error during report of error: %s", rmw_get_error_string().str);
-        }
-      };
-    // Setup demangling functions based on no_demangle option
-    auto demangle_topic = _demangle_if_ros_topic;
-    auto demangle_type = _demangle_if_ros_type;
-    if (no_demangle) {
-      auto noop = [](const std::string & in) {
-          return in;
-        };
-      demangle_topic = noop;
-      demangle_type = noop;
-    }
-    // For each topic, store the name, initialize the string array for types, and store all types
-    size_t index = 0;
-    for (const auto & topic_n_types : topics) {
-      // Duplicate and store the topic_name
-      char * topic_name = rcutils_strdup(demangle_topic(topic_n_types.first).c_str(), *allocator);
-      if (!topic_name) {
-        RMW_SET_ERROR_MSG("failed to allocate memory for topic name");
-        fail_cleanup();
-        return RMW_RET_BAD_ALLOC;
-      }
-      topic_names_and_types->names.data[index] = topic_name;
-      // Setup storage for types
-      {
-        rcutils_ret_t rcutils_ret = rcutils_string_array_init(
-          &topic_names_and_types->types[index],
-          topic_n_types.second.size(),
-          allocator);
-        if (rcutils_ret != RCUTILS_RET_OK) {
-          RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
-          fail_cleanup();
-          return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
-        }
-      }
-      // Duplicate and store each type for the topic
-      size_t type_index = 0;
-      for (const auto & type : topic_n_types.second) {
-        char * type_name = rcutils_strdup(demangle_type(type).c_str(), *allocator);
-        if (!type_name) {
-          RMW_SET_ERROR_MSG("failed to allocate memory for type name");
-          fail_cleanup();
-          return RMW_RET_BAD_ALLOC;
-        }
-        topic_names_and_types->types[index].data[type_index] = type_name;
-        ++type_index;
-      }        // for each type
-      ++index;
-    }      // for each topic
-  }
-  return RMW_RET_OK;
-}
-
-void
-__log_debug_information(const CustomParticipantInfo & impl)
-{
-  if (rcutils_logging_logger_is_enabled_for(kLoggerTag, RCUTILS_LOG_SEVERITY_DEBUG)) {
-    {
-      auto & topic_cache = impl.listener->writer_topic_cache;
-      std::lock_guard<std::mutex> guard(topic_cache.getMutex());
-      std::stringstream map_ss;
-      map_ss << topic_cache();
-      RCUTILS_LOG_DEBUG_NAMED(
-        kLoggerTag,
-        "Publisher Topic cache is: %s", map_ss.str().c_str());
-    }
-    {
-      auto & topic_cache = impl.listener->reader_topic_cache;
-      std::lock_guard<std::mutex> guard(topic_cache.getMutex());
-      std::stringstream map_ss;
-      map_ss << topic_cache();
-      RCUTILS_LOG_DEBUG_NAMED(
-        kLoggerTag,
-        "Subscriber Topic cache is: %s", map_ss.str().c_str());
-    }
-    {
-      std::stringstream ss;
-      std::lock_guard<std::mutex> guard(impl.listener->names_mutex_);
-      for (auto & node_pair : impl.listener->discovered_names) {
-        ss << node_pair.first << " : " << node_pair.second << " ";
-      }
-      RCUTILS_LOG_DEBUG_NAMED(kLoggerTag, "Discovered names: %s", ss.str().c_str());
-    }
-    {
-      std::stringstream ss;
-      std::lock_guard<std::mutex> guard(impl.listener->names_mutex_);
-      for (auto & node_pair : impl.listener->discovered_namespaces) {
-        ss << node_pair.first << " : " << node_pair.second << " ";
-      }
-      RCUTILS_LOG_DEBUG_NAMED(kLoggerTag, "Discovered namespaces: %s", ss.str().c_str());
-    }
-  }
-}
-
-/**
- * Function to abstract which topic_cache to use when gathering information.
- */
-typedef std::function<const LockedObject<TopicCache>&(CustomParticipantInfo & participant_info)>
-  RetrieveCache;
-
-/**
- * Get topic names and types for the specific node_name and node_namespace requested.
- *
- * \param identifier corresponding to the input node
- * \param node to use for discovery
- * \param allocator for returned value
- * \param node_name to search
- * \param node_namespace to search
- * \param no_demangle true if the topics should not be demangled
- * \param retrieve_cache_func getter for topic cache
- * \param topic_names_and_types result
- * \return RMW_RET_OK if successful
- */
 rmw_ret_t
 __rmw_get_topic_names_and_types_by_node(
   const char * identifier,
@@ -331,8 +108,10 @@ __rmw_get_topic_names_and_types_by_node(
   rcutils_allocator_t * allocator,
   const char * node_name,
   const char * node_namespace,
+  DemangleFunction demangle_topic,
+  DemangleFunction demangle_type,
   bool no_demangle,
-  RetrieveCache & retrieve_cache_func,
+  GetNamesAndTypesByNodeFunction get_names_and_types_by_node,
   rmw_names_and_types_t * topic_names_and_types)
 {
   rmw_ret_t valid_input = __validate_input(
@@ -340,19 +119,59 @@ __rmw_get_topic_names_and_types_by_node(
   if (valid_input != RMW_RET_OK) {
     return valid_input;
   }
-  RCUTILS_LOG_DEBUG_NAMED(kLoggerTag, "rmw_get_subscriber_names_and_types_by_node");
-  auto impl = static_cast<CustomParticipantInfo *>(node->data);
+  auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
 
-  __log_debug_information(*impl);
-
-  GUID_t guid;
-  rmw_ret_t valid_guid = __get_guid_by_name(node, node_name, node_namespace, guid);
-  if (valid_guid != RMW_RET_OK) {
-    return valid_guid;
+  if (no_demangle) {
+    demangle_topic = _identity_demangle;
+    demangle_type = _identity_demangle;
   }
-  std::map<std::string, std::set<std::string>> topics;
-  __accumulate_topics(retrieve_cache_func(*impl), topics, guid, no_demangle);
-  return __copy_data_to_results(topics, allocator, no_demangle, topic_names_and_types);
+
+  return get_names_and_types_by_node(
+    common_context,
+    node_name,
+    node_namespace,
+    demangle_topic,
+    demangle_type,
+    allocator,
+    topic_names_and_types);
+}
+
+rmw_ret_t
+__get_reader_names_and_types_by_node(
+  rmw_dds_common::Context * common_context,
+  const std::string & node_name,
+  const std::string & node_namespace,
+  DemangleFunction demangle_topic,
+  DemangleFunction demangle_type,
+  rcutils_allocator_t * allocator,
+  rmw_names_and_types_t * topic_names_and_types)
+{
+  return common_context->graph_cache.get_reader_names_and_types_by_node(
+    node_name,
+    node_namespace,
+    demangle_topic,
+    demangle_type,
+    allocator,
+    topic_names_and_types);
+}
+
+rmw_ret_t
+__get_writer_names_and_types_by_node(
+  rmw_dds_common::Context * common_context,
+  const std::string & node_name,
+  const std::string & node_namespace,
+  DemangleFunction demangle_topic,
+  DemangleFunction demangle_type,
+  rcutils_allocator_t * allocator,
+  rmw_names_and_types_t * topic_names_and_types)
+{
+  return common_context->graph_cache.get_writer_names_and_types_by_node(
+    node_name,
+    node_namespace,
+    demangle_topic,
+    demangle_type,
+    allocator,
+    topic_names_and_types);
 }
 
 rmw_ret_t
@@ -365,13 +184,17 @@ __rmw_get_subscriber_names_and_types_by_node(
   bool no_demangle,
   rmw_names_and_types_t * topic_names_and_types)
 {
-  RetrieveCache retrieve_sub_cache =
-    [](CustomParticipantInfo & participant_info) -> const LockedObject<TopicCache> & {
-      return participant_info.listener->reader_topic_cache;
-    };
   return __rmw_get_topic_names_and_types_by_node(
-    identifier, node, allocator, node_name,
-    node_namespace, no_demangle, retrieve_sub_cache, topic_names_and_types);
+    identifier,
+    node,
+    allocator,
+    node_name,
+    node_namespace,
+    _demangle_ros_topic_from_topic,
+    _demangle_if_ros_type,
+    no_demangle,
+    __get_reader_names_and_types_by_node,
+    topic_names_and_types);
 }
 
 rmw_ret_t
@@ -384,125 +207,17 @@ __rmw_get_publisher_names_and_types_by_node(
   bool no_demangle,
   rmw_names_and_types_t * topic_names_and_types)
 {
-  RetrieveCache retrieve_pub_cache =
-    [](CustomParticipantInfo & participant_info) -> const LockedObject<TopicCache> & {
-      return participant_info.listener->writer_topic_cache;
-    };
   return __rmw_get_topic_names_and_types_by_node(
-    identifier, node, allocator, node_name,
-    node_namespace, no_demangle, retrieve_pub_cache, topic_names_and_types);
-}
-
-static
-rmw_ret_t
-__get_service_names_and_types_by_node(
-  const char * identifier,
-  const rmw_node_t * node,
-  rcutils_allocator_t * allocator,
-  const char * node_name,
-  const char * node_namespace,
-  rmw_names_and_types_t * service_names_and_types,
-  const char * topic_suffix)
-{
-  const std::string topic_suffix_stdstr(topic_suffix);
-  rmw_ret_t valid_input = __validate_input(
-    identifier, node, allocator, node_name, node_namespace, service_names_and_types);
-  if (valid_input != RMW_RET_OK) {
-    return valid_input;
-  }
-  auto impl = static_cast<CustomParticipantInfo *>(node->data);
-  __log_debug_information(*impl);
-
-  GUID_t guid;
-  rmw_ret_t valid_guid = __get_guid_by_name(node, node_name, node_namespace, guid);
-  if (valid_guid != RMW_RET_OK) {
-    return valid_guid;
-  }
-
-  std::map<std::string, std::set<std::string>> services;
-  {
-    auto & topic_cache = impl->listener->reader_topic_cache;
-    std::lock_guard<std::mutex> guard(topic_cache.getMutex());
-    const auto & node_topics = topic_cache().getParticipantToTopics().find(guid);
-    if (node_topics != topic_cache().getParticipantToTopics().end()) {
-      for (auto & topic_pair : node_topics->second) {
-        std::string service_name = _demangle_service_from_topic(topic_pair.first);
-        if (service_name.empty()) {
-          // not a service
-          continue;
-        }
-        // Check if the topic suffix matches and is at the end of the name
-        const std::string & topic_name = topic_pair.first;
-        auto suffix_position = topic_name.rfind(topic_suffix_stdstr);
-        if (suffix_position == std::string::npos ||
-          topic_name.length() - suffix_position - topic_suffix_stdstr.length() != 0)
-        {
-          continue;
-        }
-
-        for (auto & itt : topic_pair.second) {
-          std::string service_type = _demangle_service_type_only(itt);
-          if (!service_type.empty()) {
-            services[service_name].insert(service_type);
-          }
-        }
-      }
-    }
-  }
-  if (services.empty()) {
-    return RMW_RET_OK;
-  }
-  // Setup string array to store names
-  rmw_ret_t rmw_ret =
-    rmw_names_and_types_init(service_names_and_types, services.size(), allocator);
-  if (rmw_ret != RMW_RET_OK) {
-    return rmw_ret;
-  }
-  // Setup cleanup function, in case of failure below
-  auto fail_cleanup = [&service_names_and_types]() {
-      rmw_ret_t rmw_ret = rmw_names_and_types_fini(service_names_and_types);
-      if (rmw_ret != RMW_RET_OK) {
-        RCUTILS_LOG_ERROR_NAMED(
-          kLoggerTag,
-          "error during report of error: %s", rmw_get_error_string().str);
-      }
-    };
-  // For each service, store the name, initialize the string array for types, and store all types
-  size_t index = 0;
-  for (const auto & service_n_types : services) {
-    // Duplicate and store the service_name
-    char * service_name = rcutils_strdup(service_n_types.first.c_str(), *allocator);
-    if (!service_name) {
-      RMW_SET_ERROR_MSG("failed to allocate memory for service name");
-      fail_cleanup();
-      return RMW_RET_BAD_ALLOC;
-    }
-    service_names_and_types->names.data[index] = service_name;
-    // Setup storage for types
-    rcutils_ret_t rcutils_ret = rcutils_string_array_init(
-      &service_names_and_types->types[index],
-      service_n_types.second.size(),
-      allocator);
-    if (rcutils_ret != RCUTILS_RET_OK) {
-      RMW_SET_ERROR_MSG(rcutils_get_error_string().str);
-      fail_cleanup();
-      return rmw_convert_rcutils_ret_to_rmw_ret(rcutils_ret);
-    }
-    // Duplicate and store each type for the service
-    size_t type_index = 0;
-    for (const auto & type : service_n_types.second) {
-      char * type_name = rcutils_strdup(type.c_str(), *allocator);
-      if (!type_name) {
-        RMW_SET_ERROR_MSG("failed to allocate memory for type name");
-        fail_cleanup();
-        return RMW_RET_BAD_ALLOC;
-      }
-      service_names_and_types->types[index].data[type_index] = type_name;
-      ++type_index;
-    }        // for each type
-    ++index;
-  }      // for each service
-  return RMW_RET_OK;
+    identifier,
+    node,
+    allocator,
+    node_name,
+    node_namespace,
+    _demangle_ros_topic_from_topic,
+    _demangle_if_ros_type,
+    no_demangle,
+    __get_writer_names_and_types_by_node,
+    topic_names_and_types);
 }
 
 rmw_ret_t
@@ -514,14 +229,17 @@ __rmw_get_service_names_and_types_by_node(
   const char * node_namespace,
   rmw_names_and_types_t * service_names_and_types)
 {
-  return __get_service_names_and_types_by_node(
+  return __rmw_get_topic_names_and_types_by_node(
     identifier,
     node,
     allocator,
     node_name,
     node_namespace,
-    service_names_and_types,
-    "Request");
+    _demangle_service_request_from_topic,
+    _demangle_service_type_only,
+    false,
+    __get_reader_names_and_types_by_node,
+    service_names_and_types);
 }
 
 rmw_ret_t
@@ -533,14 +251,17 @@ __rmw_get_client_names_and_types_by_node(
   const char * node_namespace,
   rmw_names_and_types_t * service_names_and_types)
 {
-  return __get_service_names_and_types_by_node(
+  return __rmw_get_topic_names_and_types_by_node(
     identifier,
     node,
     allocator,
     node_name,
     node_namespace,
-    service_names_and_types,
-    "Reply");
+    _demangle_service_reply_from_topic,
+    _demangle_service_type_only,
+    false,
+    __get_reader_names_and_types_by_node,
+    service_names_and_types);
 }
 
 }  // namespace rmw_fastrtps_shared_cpp

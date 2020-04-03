@@ -1,3 +1,4 @@
+// Copyright 2019 Open Source Robotics Foundation, Inc.
 // Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -24,9 +25,12 @@
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
+#include "rmw_dds_common/context.hpp"
+
 #include "demangle.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -66,22 +70,17 @@ __rmw_service_server_is_available(
   auto pub_topic_name =
     client_info->request_publisher_->getAttributes().topic.getTopicName().to_string();
 
-  auto pub_fqdn = _demangle_if_ros_topic(pub_topic_name);
-
   auto sub_topic_name =
     client_info->response_subscriber_->getAttributes().topic.getTopicName().to_string();
 
-  auto sub_fqdn = _demangle_if_ros_topic(sub_topic_name);
-
   *is_available = false;
+  auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
+
   size_t number_of_request_subscribers = 0;
-  rmw_ret_t ret = __rmw_count_subscribers(
-    identifier,
-    node,
-    pub_fqdn.c_str(),
-    &number_of_request_subscribers);
+  rmw_ret_t ret =
+    common_context->graph_cache.get_reader_count(pub_topic_name, &number_of_request_subscribers);
   if (ret != RMW_RET_OK) {
-    // error string already set
+    // error
     return ret;
   }
   if (0 == number_of_request_subscribers) {
@@ -90,13 +89,10 @@ __rmw_service_server_is_available(
   }
 
   size_t number_of_response_publishers = 0;
-  ret = __rmw_count_publishers(
-    identifier,
-    node,
-    sub_fqdn.c_str(),
-    &number_of_response_publishers);
+  ret =
+    common_context->graph_cache.get_writer_count(sub_topic_name, &number_of_response_publishers);
   if (ret != RMW_RET_OK) {
-    // error string already set
+    // error
     return ret;
   }
   if (0 == number_of_response_publishers) {

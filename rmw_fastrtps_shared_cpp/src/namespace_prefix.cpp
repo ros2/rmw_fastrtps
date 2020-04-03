@@ -27,6 +27,16 @@ const std::vector<std::string> _ros_prefixes =
 {ros_topic_prefix, ros_service_requester_prefix, ros_service_response_prefix};
 }  // extern "C"
 
+/// Returns `name` stripped of `prefix`.
+std::string
+_resolve_prefix(const std::string & name, const std::string & prefix)
+{
+  if (name.rfind(prefix, 0) == 0 && name.at(prefix.length()) == '/') {
+    return name.substr(prefix.length());
+  }
+  return "";
+}
+
 /// Return the ROS specific prefix if it exists, otherwise "".
 std::string
 _get_ros_prefix_if_exists(const std::string & topic_name)

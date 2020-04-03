@@ -29,6 +29,16 @@ RMW_FASTRTPS_SHARED_CPP_PUBLIC extern const char * const ros_service_response_pr
 RMW_FASTRTPS_SHARED_CPP_PUBLIC extern const std::vector<std::string> _ros_prefixes;
 }  // extern "C"
 
+/// Returns `name` stripped of `prefix` if exists, if not return "".
+/**
+ * \param[in] name string that will be stripped from prefix
+ * \param[in] prefix prefix to be stripped
+ * \return name stripped of prefix, or
+ * \return "" if name doesn't start with prefix
+ */
+std::string
+_resolve_prefix(const std::string & name, const std::string & prefix);
+
 /// Return the ROS specific prefix if it exists, otherwise "".
 std::string
 _get_ros_prefix_if_exists(const std::string & topic_name);

@@ -33,6 +33,7 @@ find_package(ament_cmake_ros REQUIRED)
 
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
+find_package(rmw_dds_common REQUIRED)
 find_package(rmw_fastrtps_shared_cpp REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
@@ -56,8 +57,12 @@ add_library(rmw_fastrtps_dynamic_cpp
   src/get_publisher.cpp
   src/get_service.cpp
   src/get_subscriber.cpp
+  src/gid__type_support.cpp
   src/identifier.cpp
-  src/rmw_logging.cpp
+  src/init_rmw_context_impl.cpp
+  src/node_entities_info__type_support.cpp
+  src/participant_entities_info__type_support.cpp
+  src/publisher.cpp
   src/rmw_client.cpp
   src/rmw_compare_gids_equal.cpp
   src/rmw_count.cpp
@@ -68,6 +73,7 @@ add_library(rmw_fastrtps_dynamic_cpp
   src/rmw_get_topic_endpoint_info.cpp
   src/rmw_guard_condition.cpp
   src/rmw_init.cpp
+  src/rmw_logging.cpp
   src/rmw_node.cpp
   src/rmw_node_info_and_types.cpp
   src/rmw_node_names.cpp
@@ -85,10 +91,11 @@ add_library(rmw_fastrtps_dynamic_cpp
   src/rmw_trigger_guard_condition.cpp
   src/rmw_wait.cpp
   src/rmw_wait_set.cpp
+  src/serialization_format.cpp
+  src/subscription.cpp
   src/type_support_common.cpp
   src/type_support_proxy.cpp
   src/type_support_registry.cpp
-  src/serialization_format.cpp
 )
 target_link_libraries(rmw_fastrtps_dynamic_cpp
   fastcdr fastrtps)
@@ -101,9 +108,14 @@ ament_target_dependencies(rmw_fastrtps_dynamic_cpp
   "rosidl_typesupport_fastrtps_cpp"
   "rosidl_typesupport_introspection_c"
   "rosidl_typesupport_introspection_cpp"
+  "rmw_dds_common"
   "rmw_fastrtps_shared_cpp"
   "rmw"
   "rosidl_generator_c"
+)
+
+target_link_libraries(rmw_fastrtps_dynamic_cpp
+  ${rmw_dds_common_LIBRARIES__rosidl_typesupport_introspection_cpp}
 )
 
 configure_rmw_library(rmw_fastrtps_dynamic_cpp)
