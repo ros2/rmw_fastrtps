@@ -280,7 +280,7 @@ TEST_F(SecurityTest, test_log_verbosity_invalid)
 
 TEST_F(SecurityTest, test_log_distribute)
 {
-  std::string xml_file_path = write_logging_xml("<distribute>true</distribute>");
+  std::string xml_file_path = write_logging_xml("<publish />");
   eprosima::fastrtps::rtps::PropertyPolicy policy;
   EXPECT_TRUE(apply_logging_configuration_from_file(xml_file_path, policy));
   EXPECT_FALSE(rmw_error_is_set());
@@ -301,7 +301,7 @@ TEST_F(SecurityTest, test_all)
   std::string xml_file_path = write_logging_xml(
     "<file>foo</file>\n"
     "<verbosity>CRITICAL</verbosity>\n"
-    "<distribute>true</distribute>");
+    "<publish />");
   eprosima::fastrtps::rtps::PropertyPolicy policy;
   EXPECT_TRUE(apply_logging_configuration_from_file(xml_file_path, policy));
   EXPECT_FALSE(rmw_error_is_set());

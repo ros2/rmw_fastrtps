@@ -234,15 +234,6 @@ bool apply_logging_configuration_from_file(
     return status;
   }
 
-  status = add_property_from_xml_element(
-    properties,
-    distribute_enable_property_name,
-    *log_element,
-    "distribute");
-  if (!status) {
-    return status;
-  }
-
   auto verbosity_element = log_element->FirstChildElement("verbosity");
   if (verbosity_element != nullptr) {
     std::string verbosity_str;
@@ -262,6 +253,15 @@ bool apply_logging_configuration_from_file(
       properties,
       eprosima::fastrtps::rtps::Property(verbosity_property_name, verbosity.c_str()));
   }
+
+  auto publish_element = log_element->FirstChildElement("publish");
+  if (publish_element != nullptr) {
+    // The presence of this element indicates that the log should be distributed
+    add_property(
+      properties,
+      eprosima::fastrtps::rtps::Property(distribute_enable_property_name, "true"));
+  }
+
 
   // Now that we're done parsing, actually update the properties
   for (auto & item : properties) {
