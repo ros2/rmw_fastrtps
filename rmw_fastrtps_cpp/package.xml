@@ -22,6 +22,8 @@
   <build_depend>rmw</build_depend>
   <build_depend>rmw_dds_common</build_depend>
   <build_depend>rmw_fastrtps_shared_cpp</build_depend>
+  <build_depend>rosidl_runtime_c</build_depend>
+  <build_depend>rosidl_runtime_cpp</build_depend>
   <build_depend>rosidl_typesupport_fastrtps_c</build_depend>
   <build_depend>rosidl_typesupport_fastrtps_cpp</build_depend>
 
@@ -32,15 +34,14 @@
   <build_export_depend>rmw_dds_common</build_export_depend>
   <build_export_depend>rmw_fastrtps_shared_cpp</build_export_depend>
   <build_export_depend>rmw</build_export_depend>
-  <build_export_depend>rmw_fastrtps_shared_cpp</build_export_depend>
+  <build_export_depend>rosidl_runtime_c</build_export_depend>
+  <build_export_depend>rosidl_runtime_cpp</build_export_depend>
   <build_export_depend>rosidl_typesupport_fastrtps_c</build_export_depend>
   <build_export_depend>rosidl_typesupport_fastrtps_cpp</build_export_depend>
 
   <exec_depend>rcutils</exec_depend>
   <exec_depend>rmw</exec_depend>
   <exec_depend>rmw_fastrtps_shared_cpp</exec_depend>
-
-  <depend>rosidl_runtime_c</depend>
 
   <test_depend>ament_lint_auto</test_depend>
   <test_depend>ament_lint_common</test_depend>
