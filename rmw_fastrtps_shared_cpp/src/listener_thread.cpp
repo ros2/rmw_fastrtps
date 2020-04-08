@@ -125,6 +125,8 @@ node_listener(rmw_context_t * context)
     rmw_guard_conditions_t guard_conditions;
     subscriptions.subscriber_count = 1;
     subscriptions.subscribers = subscriptions_buffer;
+    rcutils_time_point_value_t sub_timestamps[1] = { 0 };
+    subscriptions.timestamps = sub_timestamps;
     guard_conditions.guard_condition_count = 1;
     guard_conditions.guard_conditions = guard_conditions_buffer;
     // number of conditions of a subscription is 2
