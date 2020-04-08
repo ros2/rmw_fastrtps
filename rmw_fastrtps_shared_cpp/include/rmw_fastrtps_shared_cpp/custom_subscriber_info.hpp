@@ -80,6 +80,13 @@ public:
   void
   onNewDataMessage(eprosima::fastrtps::Subscriber * sub) final
   {
+    // take timestamp now to prevent further jitter by the following locks
+    rcutils_time_point_value_t timestamp = 0;
+    if(rcutils_system_time_now(&timestamp) != RCUTILS_RET_OK) {
+      // TODO(iluetkeb) report error
+      timestamp = 0;
+    }
+
     // Make sure to call into Fast-RTPS before taking the lock to avoid an
     // ABBA deadlock between internalMutex_ and mutexes inside of Fast-RTPS.
 #if FASTRTPS_VERSION_MAJOR == 1 && FASTRTPS_VERSION_MINOR < 9
@@ -95,6 +102,13 @@ public:
     ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
 
     data_.store(unread_count, std::memory_order_relaxed);
+    timestamps_.push(timestamp);
+}
+
+  const rcutils_time_point_value_t&
+  peekTimestamp() const
+  {
+    return timestamps_.front();
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -155,6 +169,7 @@ public:
     std::lock_guard<std::mutex> lock(internalMutex_);
     ConditionalScopedLock clock(conditionMutex_);
     data_.store(unread_count, std::memory_order_relaxed);
+    timestamps_.pop();
   }
 
   size_t publisherCount()
@@ -180,6 +195,7 @@ private:
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  std::queue<rcutils_time_point_value_t> timestamps_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_

@@ -203,8 +203,8 @@ __rmw_wait(
         subscriptions->subscribers[i] = 0;
         subscriptions->timestamps[i] = 0;
       } else {
-        subscriptions->timestamps[i] = custom_subscriber_info->subscriber_->\
-          get_first_untaken_info(&si) ? si.receptionTimestamp.to_ns() : 0;
+        subscriptions->timestamps[i] = custom_subscriber_info->listener_->\
+          peekTimestamp();
       }
     }
   }
@@ -219,7 +219,7 @@ __rmw_wait(
         clients->timestamps[i] = 0;
       } else {
         clients->timestamps[i] = custom_client_info->listener_->\
-          peekSampleInfo().receptionTimestamp.to_ns();
+          peekSampleInfo().sourceTimestamp.to_ns();
       }
     }
   }
@@ -234,7 +234,7 @@ __rmw_wait(
         services->timestamps[i] = 0;
       } else {
         services->timestamps[i] = custom_service_info->listener_->\
-          peekSampleInfo().receptionTimestamp.to_ns();
+          peekSampleInfo().sourceTimestamp.to_ns();
       }
     }
   }
