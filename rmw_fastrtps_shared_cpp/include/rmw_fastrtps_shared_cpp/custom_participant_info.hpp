@@ -78,13 +78,13 @@ public:
           if (name_found == map.end()) {
             return;
           }
-          auto security_context =
+          auto enclave =
             std::string(name_found->second.begin(), name_found->second.end());
 
           context->graph_cache.add_participant(
             rmw_fastrtps_shared_cpp::create_rmw_gid(
               identifier_, info.info.m_guid),
-            security_context);
+            enclave);
           break;
         }
       case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::REMOVED_PARTICIPANT:
