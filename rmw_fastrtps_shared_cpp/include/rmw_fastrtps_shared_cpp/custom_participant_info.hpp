@@ -73,7 +73,7 @@ public:
       case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DISCOVERED_PARTICIPANT:
         {
           auto map = rmw::impl::cpp::parse_key_value(info.info.m_userData);
-          auto name_found = map.find("securitycontext");
+          auto name_found = map.find("enclave");
 
           if (name_found == map.end()) {
             return;

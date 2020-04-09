@@ -167,11 +167,11 @@ rmw_fastrtps_shared_cpp::create_participant(
 
   participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
 
-  size_t length = snprintf(nullptr, 0, "securitycontext=%s;", enclave) + 1;
+  size_t length = snprintf(nullptr, 0, "enclave=%s;", enclave) + 1;
   participantAttrs.rtps.userData.resize(length);
   int written = snprintf(
     reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
-    length, "securitycontext=%s;", enclave);
+    length, "enclave=%s;", enclave);
   if (written < 0 || written > static_cast<int>(length) - 1) {
     RMW_SET_ERROR_MSG("failed to populate user_data buffer");
     return nullptr;
