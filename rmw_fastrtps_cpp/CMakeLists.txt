@@ -131,11 +131,6 @@ register_rmw_implementation(
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
-
-  ament_add_gtest(test_gid_message test/test_gid_message.cpp)
-  if(TARGET test_gid_message)
-    target_link_libraries(test_gid_message ${PROJECT_NAME})
-  endif()
 endif()
 
 ament_package(

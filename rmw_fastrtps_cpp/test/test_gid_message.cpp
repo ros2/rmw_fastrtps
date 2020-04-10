@@ -36,6 +36,9 @@ TEST(Test_gid, get_typesupport) {
   const rosidl_message_type_support_t * type_support_2 = get_message_typesupport_handle(
     type_support_1, rosidl_typesupport_fastrtps_cpp::typesupport_identifier);
 
+  fprintf(stderr, "type_support_1->typesupport_identifier: %s\n", type_support_1->typesupport_identifier);
+  fprintf(stderr, "type_support_2->typesupport_identifier: %s\n", type_support_2->typesupport_identifier);
+  ASSERT_EQ(strcmp(type_support_1->typesupport_identifier, type_support_2->typesupport_identifier), 0);
   ASSERT_EQ(type_support_1->typesupport_identifier, type_support_2->typesupport_identifier);
   ASSERT_EQ(type_support_1->data, type_support_2->data);
   ASSERT_EQ(type_support_1->func, type_support_2->func);
