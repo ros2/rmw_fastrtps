@@ -303,6 +303,17 @@ __rmw_take(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_take_sequence(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  size_t count,
+  rmw_message_sequence_t * message_sequencxe,
+  rmw_message_info_sequence_t * message_info_sequence,
+  size_t * taken,
+  rmw_subscription_allocation_t * allocation);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_take_event(
   const char * identifier,
   const rmw_event_t * event_handle,
