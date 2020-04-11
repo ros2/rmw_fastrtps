@@ -32,8 +32,8 @@
 #include "rosidl_typesupport_introspection_c/message_introspection.h"
 #include "rosidl_typesupport_introspection_c/service_introspection.h"
 
-#include "rosidl_generator_c/primitives_sequence_functions.h"
-#include "rosidl_generator_c/u16string_functions.h"
+#include "rosidl_runtime_c/primitives_sequence_functions.h"
+#include "rosidl_runtime_c/u16string_functions.h"
 
 namespace rmw_fastrtps_dynamic_cpp
 {
@@ -55,19 +55,19 @@ SPECIALIZE_GENERIC_C_SEQUENCE(uint32, uint32_t)
 SPECIALIZE_GENERIC_C_SEQUENCE(int64, int64_t)
 SPECIALIZE_GENERIC_C_SEQUENCE(uint64, uint64_t)
 
-typedef struct rosidl_generator_c__void__Sequence
+typedef struct rosidl_runtime_c__void__Sequence
 {
   void * data;
   /// The number of valid items in data
   size_t size;
   /// The number of allocated items in data
   size_t capacity;
-} rosidl_generator_c__void__Sequence;
+} rosidl_runtime_c__void__Sequence;
 
 inline
 bool
-rosidl_generator_c__void__Sequence__init(
-  rosidl_generator_c__void__Sequence * sequence, size_t size, size_t member_size)
+rosidl_runtime_c__void__Sequence__init(
+  rosidl_runtime_c__void__Sequence * sequence, size_t size, size_t member_size)
 {
   if (!sequence) {
     return false;
@@ -87,7 +87,7 @@ rosidl_generator_c__void__Sequence__init(
 
 inline
 void
-rosidl_generator_c__void__Sequence__fini(rosidl_generator_c__void__Sequence * sequence)
+rosidl_runtime_c__void__Sequence__fini(rosidl_runtime_c__void__Sequence * sequence)
 {
   if (!sequence) {
     return;
@@ -177,7 +177,7 @@ static size_t calculateMaxAlign(const MembersType * members)
           if (std::is_same<MembersType,
             rosidl_typesupport_introspection_c__MessageMembers>::value)
           {
-            alignment = alignof(rosidl_generator_c__String);
+            alignment = alignof(rosidl_runtime_c__String);
           } else {
             alignment = alignof(std::string);
           }
@@ -186,7 +186,7 @@ static size_t calculateMaxAlign(const MembersType * members)
           if (std::is_same<MembersType,
             rosidl_typesupport_introspection_c__MessageMembers>::value)
           {
-            alignment = alignof(rosidl_generator_c__U16String);
+            alignment = alignof(rosidl_runtime_c__U16String);
           } else {
             alignment = alignof(std::u16string);
           }
@@ -293,14 +293,14 @@ void serialize_field<std::string>(
       // tmpstring is defined here and not below to avoid
       // memory allocation in every iteration of the for loop
       std::string tmpstring;
-      auto string_field = static_cast<rosidl_generator_c__String *>(field);
+      auto string_field = static_cast<rosidl_runtime_c__String *>(field);
       for (size_t i = 0; i < member->array_size_; ++i) {
         tmpstring = string_field[i].data;
         ser.serialize(tmpstring);
       }
     } else {
       auto & string_sequence_field =
-        *reinterpret_cast<rosidl_generator_c__String__Sequence *>(field);
+        *reinterpret_cast<rosidl_runtime_c__String__Sequence *>(field);
       std::vector<std::string> cpp_string_vector;
       for (size_t i = 0; i < string_sequence_field.size; ++i) {
         cpp_string_vector.push_back(
@@ -320,17 +320,17 @@ void serialize_field<std::wstring>(
 {
   std::wstring wstr;
   if (!member->is_array_) {
-    auto u16str = static_cast<rosidl_generator_c__U16String *>(field);
+    auto u16str = static_cast<rosidl_runtime_c__U16String *>(field);
     rosidl_typesupport_fastrtps_c::u16string_to_wstring(*u16str, wstr);
     ser << wstr;
   } else if (member->array_size_ && !member->is_upper_bound_) {
-    auto array = static_cast<rosidl_generator_c__U16String *>(field);
+    auto array = static_cast<rosidl_runtime_c__U16String *>(field);
     for (size_t i = 0; i < member->array_size_; ++i) {
       rosidl_typesupport_fastrtps_c::u16string_to_wstring(array[i], wstr);
       ser << wstr;
     }
   } else {
-    auto sequence = static_cast<rosidl_generator_c__U16String__Sequence *>(field);
+    auto sequence = static_cast<rosidl_runtime_c__U16String__Sequence *>(field);
     ser << static_cast<uint32_t>(sequence->size);
     for (size_t i = 0; i < sequence->size; ++i) {
       rosidl_typesupport_fastrtps_c::u16string_to_wstring(sequence->data[i], wstr);
@@ -363,7 +363,7 @@ size_t get_array_size_and_assign_field(
   void * & subros_message,
   size_t, size_t)
 {
-  auto tmpsequence = static_cast<rosidl_generator_c__void__Sequence *>(field);
+  auto tmpsequence = static_cast<rosidl_runtime_c__void__Sequence *>(field);
   if (member->is_upper_bound_ && tmpsequence->size > member->array_size_) {
     throw std::runtime_error("vector overcomes the maximum length");
   }
@@ -575,7 +575,7 @@ size_t next_field_align_string<std::string>(
     current_alignment = CStringHelper::next_field_align(field, current_alignment);
   } else {
     if (member->array_size_ && !member->is_upper_bound_) {
-      auto string_field = static_cast<rosidl_generator_c__String *>(field);
+      auto string_field = static_cast<rosidl_runtime_c__String *>(field);
       for (size_t i = 0; i < member->array_size_; ++i) {
         current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
         current_alignment += padding;
@@ -585,7 +585,7 @@ size_t next_field_align_string<std::string>(
       current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       current_alignment += padding;
       auto & string_sequence_field =
-        *reinterpret_cast<rosidl_generator_c__String__Sequence *>(field);
+        *reinterpret_cast<rosidl_runtime_c__String__Sequence *>(field);
       for (size_t i = 0; i < string_sequence_field.size; ++i) {
         current_alignment = CStringHelper::next_field_align(
           &(string_sequence_field.data[i]), current_alignment);
@@ -604,13 +604,13 @@ size_t next_field_align_string<std::wstring>(
 {
   const size_t padding = 4;
   if (!member->is_array_) {
-    auto u16str = static_cast<rosidl_generator_c__U16String *>(field);
+    auto u16str = static_cast<rosidl_runtime_c__U16String *>(field);
     current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
     current_alignment += padding;
     current_alignment += 4 * (u16str->size + 1);
   } else {
     if (member->array_size_ && !member->is_upper_bound_) {
-      auto string_field = static_cast<rosidl_generator_c__U16String *>(field);
+      auto string_field = static_cast<rosidl_runtime_c__U16String *>(field);
       for (size_t i = 0; i < member->array_size_; ++i) {
         current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
         current_alignment += padding;
@@ -620,7 +620,7 @@ size_t next_field_align_string<std::wstring>(
       current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       current_alignment += padding;
       auto & string_sequence_field =
-        *reinterpret_cast<rosidl_generator_c__U16String__Sequence *>(field);
+        *reinterpret_cast<rosidl_runtime_c__U16String__Sequence *>(field);
       for (size_t i = 0; i < string_sequence_field.size; ++i) {
         current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
         current_alignment += padding;
@@ -842,14 +842,14 @@ inline void deserialize_field<std::string>(
     CStringHelper::assign(deser, field, call_new);
   } else {
     if (member->array_size_ && !member->is_upper_bound_) {
-      auto deser_field = static_cast<rosidl_generator_c__String *>(field);
+      auto deser_field = static_cast<rosidl_runtime_c__String *>(field);
       // tmpstring is defined here and not below to avoid
       // memory allocation in every iteration of the for loop
       std::string tmpstring;
       for (size_t i = 0; i < member->array_size_; ++i) {
         deser.deserialize(tmpstring);
-        if (!rosidl_generator_c__String__assign(&deser_field[i], tmpstring.c_str())) {
-          throw std::runtime_error("unable to assign rosidl_generator_c__String");
+        if (!rosidl_runtime_c__String__assign(&deser_field[i], tmpstring.c_str())) {
+          throw std::runtime_error("unable to assign rosidl_runtime_c__String");
         }
       }
     } else {
@@ -857,20 +857,20 @@ inline void deserialize_field<std::string>(
       deser >> cpp_string_vector;
 
       auto & string_sequence_field =
-        *reinterpret_cast<rosidl_generator_c__String__Sequence *>(field);
+        *reinterpret_cast<rosidl_runtime_c__String__Sequence *>(field);
       if (
-        !rosidl_generator_c__String__Sequence__init(
+        !rosidl_runtime_c__String__Sequence__init(
           &string_sequence_field, cpp_string_vector.size()))
       {
-        throw std::runtime_error("unable to initialize rosidl_generator_c__String array");
+        throw std::runtime_error("unable to initialize rosidl_runtime_c__String array");
       }
 
       for (size_t i = 0; i < cpp_string_vector.size(); ++i) {
         if (
-          !rosidl_generator_c__String__assign(
+          !rosidl_runtime_c__String__assign(
             &string_sequence_field.data[i], cpp_string_vector[i].c_str()))
         {
-          throw std::runtime_error("unable to assign rosidl_generator_c__String");
+          throw std::runtime_error("unable to assign rosidl_runtime_c__String");
         }
       }
     }
@@ -889,9 +889,9 @@ inline void deserialize_field<std::wstring>(
   if (!member->is_array_) {
     deser >> wstr;
     rosidl_typesupport_fastrtps_c::wstring_to_u16string(
-      wstr, *static_cast<rosidl_generator_c__U16String *>(field));
+      wstr, *static_cast<rosidl_runtime_c__U16String *>(field));
   } else if (member->array_size_ && !member->is_upper_bound_) {
-    auto array = static_cast<rosidl_generator_c__U16String *>(field);
+    auto array = static_cast<rosidl_runtime_c__U16String *>(field);
     for (size_t i = 0; i < member->array_size_; ++i) {
       deser >> wstr;
       rosidl_typesupport_fastrtps_c::wstring_to_u16string(wstr, array[i]);
@@ -899,9 +899,9 @@ inline void deserialize_field<std::wstring>(
   } else {
     uint32_t size;
     deser >> size;
-    auto sequence = static_cast<rosidl_generator_c__U16String__Sequence *>(field);
-    if (!rosidl_generator_c__U16String__Sequence__init(sequence, size)) {
-      throw std::runtime_error("unable to initialize rosidl_generator_c__U16String sequence");
+    auto sequence = static_cast<rosidl_runtime_c__U16String__Sequence *>(field);
+    if (!rosidl_runtime_c__U16String__Sequence__init(sequence, size)) {
+      throw std::runtime_error("unable to initialize rosidl_runtime_c__U16String sequence");
     }
     for (size_t i = 0; i < sequence->size; ++i) {
       deser >> wstr;
@@ -946,8 +946,8 @@ inline size_t get_submessage_array_deserialize(
   // Deserialize length
   uint32_t vsize = 0;
   deser >> vsize;
-  auto tmpsequence = static_cast<rosidl_generator_c__void__Sequence *>(field);
-  rosidl_generator_c__void__Sequence__init(tmpsequence, vsize, sub_members_size);
+  auto tmpsequence = static_cast<rosidl_runtime_c__void__Sequence *>(field);
+  rosidl_runtime_c__void__Sequence__init(tmpsequence, vsize, sub_members_size);
   subros_message = reinterpret_cast<void *>(tmpsequence->data);
   return vsize;
 }
