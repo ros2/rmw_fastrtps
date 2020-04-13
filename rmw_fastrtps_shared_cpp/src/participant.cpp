@@ -140,7 +140,7 @@ rmw_fastrtps_shared_cpp::create_participant(
   size_t domain_id,
   const rmw_security_options_t * security_options,
   bool localhost_only,
-  const char * security_context,
+  const char * enclave,
   rmw_dds_common::Context * common_context)
 {
   if (!security_options) {
@@ -167,16 +167,16 @@ rmw_fastrtps_shared_cpp::create_participant(
 
   participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
 
-  size_t length = snprintf(nullptr, 0, "securitycontext=%s;", security_context) + 1;
+  size_t length = snprintf(nullptr, 0, "enclave=%s;", enclave) + 1;
   participantAttrs.rtps.userData.resize(length);
   int written = snprintf(
     reinterpret_cast<char *>(participantAttrs.rtps.userData.data()),
-    length, "securitycontext=%s;", security_context);
+    length, "enclave=%s;", enclave);
   if (written < 0 || written > static_cast<int>(length) - 1) {
     RMW_SET_ERROR_MSG("failed to populate user_data buffer");
     return nullptr;
   }
-  participantAttrs.rtps.setName(security_context);
+  participantAttrs.rtps.setName(enclave);
 
   bool leave_middleware_default_qos = false;
   const char * env_value;

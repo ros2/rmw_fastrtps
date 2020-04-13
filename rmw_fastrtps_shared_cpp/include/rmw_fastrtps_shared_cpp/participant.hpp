@@ -32,7 +32,7 @@ create_participant(
   size_t domain_id,
   const rmw_security_options_t * security_options,
   bool localhost_only,
-  const char * security_context,
+  const char * enclave,
   rmw_dds_common::Context * common_context);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
