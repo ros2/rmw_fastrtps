@@ -52,6 +52,7 @@ typedef struct CustomServiceRequest
 {
   eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
   eprosima::fastcdr::FastBuffer * buffer_;
+  eprosima::fastrtps::SampleInfo_t sampleInfo_ {};
 
   CustomServiceRequest()
   : buffer_(nullptr) {}
@@ -75,15 +76,14 @@ public:
 
     CustomServiceRequest request;
     request.buffer_ = new eprosima::fastcdr::FastBuffer();
-    eprosima::fastrtps::SampleInfo_t sinfo;
 
     rmw_fastrtps_shared_cpp::SerializedData data;
     data.is_cdr_buffer = true;
     data.data = request.buffer_;
     data.impl = nullptr;    // not used when is_cdr_buffer is true
-    if (sub->takeNextData(&data, &sinfo)) {
-      if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
-        request.sample_identity_ = sinfo.sample_identity;
+    if (sub->takeNextData(&data, &request.sampleInfo_)) {
+      if (eprosima::fastrtps::rtps::ALIVE == request.sampleInfo_.sampleKind) {
+        request.sample_identity_ = request.sampleInfo_.sample_identity;
 
         std::lock_guard<std::mutex> lock(internalMutex_);
 

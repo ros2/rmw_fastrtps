@@ -62,6 +62,14 @@ __rmw_take_response(
     info->response_type_support_->deserializeROSmessage(
       deser, ros_response, info->response_type_support_impl_);
 
+    request_header->source_timestamp = {
+      static_cast<uint64_t>(response.sampleInfo_.sourceTimestamp.seconds()),
+      response.sampleInfo_.sourceTimestamp.nanosec()
+    };
+    request_header->received_timestamp = {
+      static_cast<uint64_t>(response.sampleInfo_.receptionTimestamp.seconds()),
+      response.sampleInfo_.receptionTimestamp.nanosec()
+    };
     request_header->sequence_number = ((int64_t)response.sample_identity_.sequence_number().high) <<
       32 | response.sample_identity_.sequence_number().low;
 

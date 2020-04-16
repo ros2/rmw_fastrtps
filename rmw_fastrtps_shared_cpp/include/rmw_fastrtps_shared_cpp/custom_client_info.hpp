@@ -60,6 +60,7 @@ typedef struct CustomClientResponse
 {
   eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
   std::unique_ptr<eprosima::fastcdr::FastBuffer> buffer_;
+  eprosima::fastrtps::SampleInfo_t sampleInfo_ {};
 } CustomClientResponse;
 
 class ClientListener : public eprosima::fastrtps::SubscriberListener
@@ -78,15 +79,14 @@ public:
     CustomClientResponse response;
     // Todo(sloretz) eliminate heap allocation pending eprosima/Fast-CDR#19
     response.buffer_.reset(new eprosima::fastcdr::FastBuffer());
-    eprosima::fastrtps::SampleInfo_t sinfo;
 
     rmw_fastrtps_shared_cpp::SerializedData data;
     data.is_cdr_buffer = true;
     data.data = response.buffer_.get();
     data.impl = nullptr;    // not used when is_cdr_buffer is true
-    if (sub->takeNextData(&data, &sinfo)) {
-      if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
-        response.sample_identity_ = sinfo.related_sample_identity;
+    if (sub->takeNextData(&data, &response.sampleInfo_)) {
+      if (eprosima::fastrtps::rtps::ALIVE == response.sampleInfo_.sampleKind) {
+        response.sample_identity_ = response.sampleInfo_.related_sample_identity;
 
         if (response.sample_identity_.writer_guid() == info_->writer_guid_) {
           std::lock_guard<std::mutex> lock(internalMutex_);
