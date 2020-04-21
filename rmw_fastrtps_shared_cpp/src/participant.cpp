@@ -152,8 +152,6 @@ rmw_fastrtps_shared_cpp::create_participant(
   // Load default XML profile.
   Domain::getDefaultParticipantAttributes(participantAttrs);
 
-  participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
-
   if (localhost_only) {
     Locator_t local_network_interface_locator;
     static const std::string local_ip_name("127.0.0.1");
@@ -165,7 +163,11 @@ rmw_fastrtps_shared_cpp::create_participant(
     participantAttrs.rtps.builtin.initialPeersList.push_back(local_network_interface_locator);
   }
 
+#if FASTRTPS_VERSION_MAJOR < 2
   participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
+#else
+  participantAttrs.domainId = static_cast<uint32_t>(domain_id);
+#endif
 
   size_t length = snprintf(nullptr, 0, "enclave=%s;", enclave) + 1;
   participantAttrs.rtps.userData.resize(length);
