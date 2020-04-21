@@ -195,13 +195,13 @@ __rmw_take_sequence(
   rmw_subscription_allocation_t * allocation)
 {
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    subscription, "subscription pointer is null", return RMW_RET_ERROR);
+    subscription, "subscription pointer is null", return RMW_RET_INVALID_ARGUMENT);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    message_sequence, "message_sequence pointer is null", return RMW_RET_ERROR);
+    message_sequence, "message_sequence pointer is null", return RMW_RET_INVALID_ARGUMENT);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    message_info_sequence, "message_info_sequence pointer is null", return RMW_RET_ERROR);
+    message_info_sequence, "message_info_sequence pointer is null", return RMW_RET_INVALID_ARGUMENT);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    taken, "size_t flag for count is null", return RMW_RET_ERROR);
+    taken, "size_t flag for count is null", return RMW_RET_INVALID_ARGUMENT);
 
   if (count > message_sequence->capacity) {
     RMW_SET_ERROR_MSG("Insufficient capacity in message_sequence");
