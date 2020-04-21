@@ -33,7 +33,7 @@ rmw_ret_t
 __rmw_take_response(
   const char * identifier,
   const rmw_client_t * client,
-  rmw_request_id_t * request_header,
+  rmw_service_info_t * request_header,
   void * ros_response,
   bool * taken)
 {
@@ -70,7 +70,8 @@ __rmw_take_response(
       static_cast<uint64_t>(response.sampleInfo_.receptionTimestamp.seconds()),
       response.sampleInfo_.receptionTimestamp.nanosec()
     };
-    request_header->sequence_number = ((int64_t)response.sample_identity_.sequence_number().high) <<
+    request_header->request_id.sequence_number =
+      ((int64_t)response.sample_identity_.sequence_number().high) <<
       32 | response.sample_identity_.sequence_number().low;
 
     *taken = true;
