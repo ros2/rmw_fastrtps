@@ -37,14 +37,8 @@ _assign_message_info(
   rmw_message_info_t * message_info,
   const eprosima::fastrtps::SampleInfo_t * sinfo)
 {
-  message_info->source_timestamp = {
-    static_cast<uint64_t>(sinfo->sourceTimestamp.seconds()),
-    sinfo->sourceTimestamp.nanosec()
-  };
-  message_info->received_timestamp = {
-    static_cast<uint64_t>(sinfo->receptionTimestamp.seconds()),
-    sinfo->receptionTimestamp.nanosec()
-  };
+  message_info->source_timestamp = sinfo->sourceTimestamp.to_ns();
+  message_info->received_timestamp = sinfo->receptionTimestamp.to_ns();
   rmw_gid_t * sender_gid = &message_info->publisher_gid;
   sender_gid->implementation_identifier = identifier;
   memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
