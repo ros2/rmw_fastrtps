@@ -45,7 +45,6 @@ find_package(fastrtps REQUIRED CONFIG)
 find_package(FastRTPS REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
-include_directories(include)
 
 add_library(rmw_fastrtps_shared_cpp
   src/custom_publisher_info.cpp
@@ -86,7 +85,10 @@ add_library(rmw_fastrtps_shared_cpp
   src/subscription.cpp
   src/TypeSupport_impl.cpp
 )
-
+target_include_directories(rmw_fastrtps_shared_cpp
+  PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include>")
 target_link_libraries(rmw_fastrtps_shared_cpp
   fastcdr fastrtps
 )
@@ -107,6 +109,7 @@ PRIVATE "RMW_FASTRTPS_SHARED_CPP_BUILDING_LIBRARY")
 # specific order: dependents before dependencies
 ament_export_include_directories(include)
 ament_export_libraries(rmw_fastrtps_shared_cpp)
+ament_export_targets(rmw_fastrtps_shared_cpp)
 
 ament_export_dependencies(rcpputils)
 ament_export_dependencies(rcutils)
@@ -128,7 +131,7 @@ install(
 )
 
 install(
-  TARGETS rmw_fastrtps_shared_cpp
+  TARGETS rmw_fastrtps_shared_cpp EXPORT rmw_fastrtps_shared_cpp
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
