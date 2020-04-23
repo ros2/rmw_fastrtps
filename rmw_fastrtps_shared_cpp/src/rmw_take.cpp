@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <algorithm>
-
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/serialized_message.h"
@@ -116,7 +114,9 @@ _take_sequence(
   // This prevents any samples that are added after the beginning of the
   // _take_sequence call from being read.
   auto unread_count = info->subscriber_->get_unread_count();
-  count = std::min(count, unread_count);
+  if (unread_count < count){
+    count = unread_count;
+  }
 
   for (size_t ii = 0; ii < count; ++ii) {
     taken_flag = false;
