@@ -60,7 +60,7 @@ typedef struct CustomClientResponse
 {
   eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
   std::unique_ptr<eprosima::fastcdr::FastBuffer> buffer_;
-  eprosima::fastrtps::SampleInfo_t sampleInfo_ {};
+  eprosima::fastrtps::SampleInfo_t sample_info_ {};
 } CustomClientResponse;
 
 class ClientListener : public eprosima::fastrtps::SubscriberListener
@@ -84,9 +84,9 @@ public:
     data.is_cdr_buffer = true;
     data.data = response.buffer_.get();
     data.impl = nullptr;    // not used when is_cdr_buffer is true
-    if (sub->takeNextData(&data, &response.sampleInfo_)) {
-      if (eprosima::fastrtps::rtps::ALIVE == response.sampleInfo_.sampleKind) {
-        response.sample_identity_ = response.sampleInfo_.related_sample_identity;
+    if (sub->takeNextData(&data, &response.sample_info_)) {
+      if (eprosima::fastrtps::rtps::ALIVE == response.sample_info_.sampleKind) {
+        response.sample_identity_ = response.sample_info_.related_sample_identity;
 
         if (response.sample_identity_.writer_guid() == info_->writer_guid_) {
           std::lock_guard<std::mutex> lock(internalMutex_);
