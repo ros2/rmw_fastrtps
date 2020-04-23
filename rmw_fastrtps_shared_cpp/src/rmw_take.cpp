@@ -199,7 +199,8 @@ __rmw_take_sequence(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     message_sequence, "message_sequence pointer is null", return RMW_RET_INVALID_ARGUMENT);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    message_info_sequence, "message_info_sequence pointer is null", return RMW_RET_INVALID_ARGUMENT);
+    message_info_sequence, "message_info_sequence pointer is null",
+    return RMW_RET_INVALID_ARGUMENT);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     taken, "size_t flag for count is null", return RMW_RET_INVALID_ARGUMENT);
 
