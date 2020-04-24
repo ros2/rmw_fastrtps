@@ -47,6 +47,20 @@ rmw_take_with_info(
 }
 
 rmw_ret_t
+rmw_take_sequence(
+  const rmw_subscription_t * subscription,
+  size_t count,
+  rmw_message_sequence_t * message_sequence,
+  rmw_message_info_sequence_t * message_info_sequence,
+  size_t * taken,
+  rmw_subscription_allocation_t * allocation)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_take_sequence(
+    eprosima_fastrtps_identifier, subscription, count, message_sequence, message_info_sequence,
+    taken, allocation);
+}
+
+rmw_ret_t
 rmw_take_serialized_message(
   const rmw_subscription_t * subscription,
   rmw_serialized_message_t * serialized_message,

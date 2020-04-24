@@ -89,6 +89,57 @@ _take(
 }
 
 rmw_ret_t
+_take_sequence(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  size_t count,
+  rmw_message_sequence_t * message_sequence,
+  rmw_message_info_sequence_t * message_info_sequence,
+  size_t * taken,
+  rmw_subscription_allocation_t * allocation)
+{
+  *taken = 0;
+  bool taken_flag = false;
+  rmw_ret_t ret = RMW_RET_OK;
+
+  if (subscription->implementation_identifier != identifier) {
+    RMW_SET_ERROR_MSG("publisher handle not from this implementation");
+    return RMW_RET_ERROR;
+  }
+
+  CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
+
+  // Limit the upper bound of reads to the number unread at the beginning.
+  // This prevents any samples that are added after the beginning of the
+  // _take_sequence call from being read.
+  auto unread_count = info->subscriber_->get_unread_count();
+  if (unread_count < count) {
+    count = unread_count;
+  }
+
+  for (size_t ii = 0; ii < count; ++ii) {
+    taken_flag = false;
+    ret = _take(
+      identifier, subscription, message_sequence->data[*taken],
+      &taken_flag, &message_info_sequence->data[*taken], allocation);
+
+    if (ret != RMW_RET_OK) {
+      break;
+    }
+
+    if (taken_flag) {
+      (*taken)++;
+    }
+  }
+
+  message_sequence->size = *taken;
+  message_info_sequence->size = *taken;
+
+  return ret;
+}
+
+rmw_ret_t
 __rmw_take_event(
   const char * identifier,
   const rmw_event_t * event_handle,
@@ -131,6 +182,41 @@ __rmw_take(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(taken, "boolean flag for taken is null", return RMW_RET_ERROR);
 
   return _take(identifier, subscription, ros_message, taken, nullptr, allocation);
+}
+
+rmw_ret_t
+__rmw_take_sequence(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  size_t count,
+  rmw_message_sequence_t * message_sequence,
+  rmw_message_info_sequence_t * message_info_sequence,
+  size_t * taken,
+  rmw_subscription_allocation_t * allocation)
+{
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    subscription, "subscription pointer is null", return RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    message_sequence, "message_sequence pointer is null", return RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    message_info_sequence, "message_info_sequence pointer is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    taken, "size_t flag for count is null", return RMW_RET_INVALID_ARGUMENT);
+
+  if (count > message_sequence->capacity) {
+    RMW_SET_ERROR_MSG("Insufficient capacity in message_sequence");
+    return RMW_RET_ERROR;
+  }
+
+  if (count > message_info_sequence->capacity) {
+    RMW_SET_ERROR_MSG("Insufficient capacity in message_info_sequence");
+    return RMW_RET_ERROR;
+  }
+
+  return _take_sequence(
+    identifier, subscription, count, message_sequence, message_info_sequence,
+    taken, allocation);
 }
 
 rmw_ret_t
