@@ -114,7 +114,7 @@ _take_sequence(
   // This prevents any samples that are added after the beginning of the
   // _take_sequence call from being read.
   auto unread_count = info->subscriber_->get_unread_count();
-  if (unread_count < count){
+  if (unread_count < count) {
     count = unread_count;
   }
 
