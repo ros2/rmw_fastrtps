@@ -72,7 +72,7 @@ rmw_ret_t
 __rmw_take_request(
   const char * identifier,
   const rmw_service_t * service,
-  rmw_request_id_t * request_header,
+  rmw_service_info_t * request_header,
   void * ros_request,
   bool * taken)
 {
@@ -102,8 +102,9 @@ __rmw_take_request(
     // Get header
     rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(
       request.sample_identity_.writer_guid(),
-      request_header->writer_guid);
-    request_header->sequence_number = ((int64_t)request.sample_identity_.sequence_number().high) <<
+      request_header->request_id.writer_guid);
+    request_header->request_id.sequence_number =
+      ((int64_t)request.sample_identity_.sequence_number().high) <<
       32 | request.sample_identity_.sequence_number().low;
 
     delete request.buffer_;

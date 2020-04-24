@@ -35,7 +35,7 @@ rmw_send_request(
 rmw_ret_t
 rmw_take_request(
   const rmw_service_t * service,
-  rmw_request_id_t * request_header,
+  rmw_service_info_t * request_header,
   void * ros_request,
   bool * taken)
 {
