@@ -3,7 +3,7 @@
 <package format="3">
   <name>rmw_fastrtps_dynamic_cpp</name>
   <version>0.8.1</version>
-  <description>Implement the ROS middleware interface using eProsima FastRTPS  static code generation in C++.</description>
+  <description>Implement the ROS middleware interface using eProsima FastRTPS dynamic code generation in C++.</description>
   <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
   <license>Apache License 2.0</license>
   <author>Ricardo González</author>
