@@ -73,6 +73,7 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_publisher.cpp
   src/rmw_request.cpp
   src/rmw_response.cpp
+  src/rmw_security_logging.cpp
   src/rmw_service.cpp
   src/rmw_service_names_and_types.cpp
   src/rmw_service_server_is_available.cpp

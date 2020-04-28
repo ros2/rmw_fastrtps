@@ -42,6 +42,7 @@
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/participant.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_security_logging.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
 using IPLocator = eprosima::fastrtps::rtps::IPLocator;
@@ -231,6 +232,11 @@ rmw_fastrtps_shared_cpp::create_participant(
       property_policy.properties().emplace_back(
         Property(
           "dds.sec.access.builtin.Access-Permissions.permissions", security_files_paths[5]));
+
+      // Configure security logging
+      if (!apply_security_logging_configuration(property_policy)) {
+        return nullptr;
+      }
 
       participantAttrs.rtps.properties = property_policy;
     } else if (security_options->enforce_security) {
