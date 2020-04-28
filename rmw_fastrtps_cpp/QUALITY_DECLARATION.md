@@ -67,7 +67,7 @@ Most of `rmw_fastrtps_cpp` has embedded API documentation. It is not yet hosted 
 
 ### License [3.iii]
 
-The license for `rmw_fastrtps_cpp` is Apache 2.0, and a summary is in each source file, the type is declared in the `package.xml` manifest file, and a full copy of the license is in the [LICENSE](../LICENSE) file.
+The license for `rmw_fastrtps_cpp` is Apache 2.0, and a summary is in each source file, the type is declared in the [package.xml](package.xml) manifest file, and a full copy of the license is in the [LICENSE](../LICENSE) file.
 
 There is an automated test which runs a linter that ensures each file has a license statement.
 
