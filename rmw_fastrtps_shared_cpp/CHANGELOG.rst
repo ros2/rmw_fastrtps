@@ -2,6 +2,26 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.9.0 (2020-04-28)
+------------------
+* Feature/services timestamps. (`#369 <https://github.com/ros2/rmw_fastrtps/issues/369>`_)
+* Add support for taking a sequence of messages. (`#366 <https://github.com/ros2/rmw_fastrtps/issues/366>`_)
+* Fill message_info timestamp. (`#368 <https://github.com/ros2/rmw_fastrtps/issues/368>`_)
+* Export targets in a addition to include directories / libraries. (`#371 <https://github.com/ros2/rmw_fastrtps/issues/371>`_)
+* Support for API break on Fast RTPS 2.0. (`#370 <https://github.com/ros2/rmw_fastrtps/issues/370>`_)
+* security-context -> enclave. (`#365 <https://github.com/ros2/rmw_fastrtps/issues/365>`_)
+* Switch to one Participant per Context. (`#312 <https://github.com/ros2/rmw_fastrtps/issues/312>`_)
+* Correct error message when event is not supported. (`#358 <https://github.com/ros2/rmw_fastrtps/issues/358>`_)
+* Add rmw\_*_event_init() functions. (`#354 <https://github.com/ros2/rmw_fastrtps/issues/354>`_)
+* Fixing type support C/CPP mix on rmw_fastrtps_dynamic_cpp. (`#350 <https://github.com/ros2/rmw_fastrtps/issues/350>`_)
+* Fix build warning in Ubuntu Focal. (`#346 <https://github.com/ros2/rmw_fastrtps/issues/346>`_)
+* Change rmw_topic_endpoint_info_array.count to .size. (`#348 <https://github.com/ros2/rmw_fastrtps/issues/348>`_)
+* Code style only: wrap after open parenthesis if not in one line. (`#347 <https://github.com/ros2/rmw_fastrtps/issues/347>`_)
+* Fix unprotected use of mutex-guarded variable. (`#345 <https://github.com/ros2/rmw_fastrtps/issues/345>`_)
+* Passing down type support information (`#342 <https://github.com/ros2/rmw_fastrtps/issues/342>`_)
+* Implement functions to get publisher and subcription informations like QoS policies from topic name. (`#336 <https://github.com/ros2/rmw_fastrtps/issues/336>`_)
+* Contributors: Dirk Thomas, Emerson Knapp, Ingo Lütkebohle, Ivan Santiago Paunovic, Jaison Titus, Miaofei Mei, Michael Carroll, Miguel Company, Mikael Arguedas
+
 0.8.1 (2019-10-23)
 ------------------
 * Restrict traffic to localhost only if env var is provided (`#331 <https://github.com/ros2/rmw_fastrtps/issues/331>`_)
