@@ -85,11 +85,12 @@ The results of the test can be found [here](https://ci.ros2.org/view/nightly/job
 
 ### Feature Testing [4.i]
 
-There is no feature testing in `rmw_fastrtps_shared_cpp`.
+Many of the features have testing in `rmw_fastrtps_shared_cpp`.
 
 ### Public API Testing [4.ii]
 
-There is little API testing in `rmw_fastrtps_shared_cpp`.
+Many parts of the public API have testing in `rmw_fastrtps_shared_cpp`.
+The latest nightly test results can be seen [here](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rmw_fastrtps_shared_cpp/).
 
 ### Coverage [4.iii]
 
