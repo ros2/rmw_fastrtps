@@ -4,8 +4,6 @@ PROJECT_NAME           = "rmw_fastrtps_shared_cpp"
 PROJECT_NUMBER         = master
 PROJECT_BRIEF          = "Code shared on static and dynamic type support of rmw_fastrtps_cpp."
 
-# Use these lines to include the generated logging.hpp (update install path if needed)
-# Otherwise just generate for the local (non-generated header files)
 INPUT                  = ./include
 
 RECURSIVE              = YES

@@ -4,8 +4,6 @@ PROJECT_NAME           = "rmw_fastrtps_dynamic_cpp"
 PROJECT_NUMBER         = master
 PROJECT_BRIEF          = "Implement the ROS middleware interface using eProsima FastRTPS dynamic code generation in C++."
 
-# Use these lines to include the generated logging.hpp (update install path if needed)
-# Otherwise just generate for the local (non-generated header files)
 INPUT                  = ./include
 
 RECURSIVE              = YES
