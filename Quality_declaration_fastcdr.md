@@ -13,110 +13,104 @@ There is no coverage information summary/report and, apparently, no checks being
 
 Considering the previously mentioned reasons, especially the fact that this software is being tested both directly and indirectly with [CI jobs](http://jenkins.eprosima.com:8080/), we consider this library to be robust and reliable, and hence we declare it to qualify as a level 1 external dependency.
 
-## Comparison with ROS packages quality standards
+# Comparison with ROS packages quality standards
 
-### Version policy
+## Version Policy [1]
 
- 1. *Must have a version policy*
+### Version Scheme [1.i]
 
 There is no public information related to how the eProsima team handles the versioning of `fast-cdr`. However, [each release](https://github.com/eProsima/Fast-CDR/releases) is documented in their documentation with the included features and bug fixes.
 
- 2. Must be at a stable version (e.g. for semver that means version >= 1.0.0)
+### Version Stability [1.ii]
 
-The current version is [1.0.13](https://github.com/eProsima/Fast-CDR/releases/tag/v1.0.13)
+The library has version >= 1.0.0.
 
-3.  *Must have a strictly declared public API*
+### Public API Declaration [1.iii]
     
 The API is declared using Doxygen documentation available to be [generated](https://github.com/eProsima/Fast-CDR/blob/master/utils/doxygen/doxyfile) with the source code. They have it hosted in this [page](https://www.eprosima.com/docs/fast-buffers/0.3.0/html/group___f_a_s_t_c_d_r_a_p_i_r_e_f_e_r_e_n_c_e.html) for the version 0.3.0 (currently at 1.0.13, outdated version)
 
-4.  *Must have a policy for API stability*
+### API Stability Policy [1.iv]
     
 There is no explicit policy related to API stability. However, as eProsima widely announces that their implementation is [adopted in ROS2](https://www.eprosima.com/index.php/company-all/news/135-fast-rtps-demonstrates-its-reliability-in-ros-2-navigation-2), it is not expected that this dependency will generate API issues with the ROS2 code.
 
-5. *Must have a policy for ABI stability*
+### ABI Stability Policy [1.v]
     
 There is no explicit policy related to ABI stability. However, as eProsima widely announces that their implementation is [adopted in ROS2](https://www.eprosima.com/index.php/company-all/news/135-fast-rtps-demonstrates-its-reliability-in-ros-2-navigation-2), it is not expected that this dependency will generate API issues with the ROS2 code.
 
-6.  *Must have a policy that keeps API and ABI stability within a released ROS distribution*
+### ABI and ABI Stability Within a Released ROS Distribution [1.vi]
    
 There is no direct correlation between API and ABI stability of the library within ROS distributions.
 
-### Change Control Process
+## Change Control Process [2]
 
-7.  *Must have all code changes occur through a change request (e.g. pull request, merge request, etc.)*
+### Change Requests [2.i]
     
 Browsing through the public GitHub repository [history of commits](https://github.com/eProsima/Fast-CDR/commits/master) of `fast-cdr` shows that most of the code passes through a Pull Request, except some minor cases related to styling issues or formatting.
 
-8.  *Must have confirmation of contributor origin (e.g. [DCO](https://developercertificate.org/), CLA, etc.)*
+### Contributor Origin [2.ii]
     
 Based on the public GitHub repository [history of commits](https://github.com/eProsima/Fast-CDR/commits/master) of `fast-cdr` it can be seen that there is no confirmation of contributor origin enforcement used in the repository.
 
-9.  *Must have peer review policy for all change requests (e.g. require one or more reviewers)*
+### Peer Review Policy [2.iii]
     
 Not publicly stated, but browsing through their [list of closed pull requests](https://github.com/eProsima/Fast-CDR/pulls?q=is:pr%20is:closed) it can be seen that their workflow requires at least one peer review approving the changes and building against CI before merging code to the master branch in the repository.
 
-10.  *Must have Continuous Integration (CI) policy for all change requests*
+### Continuous Integration [2.iv]
     
 Not publicly stated, but browsing through their [list of closed pull requests](https://github.com/eProsima/Fast-CDR/pulls?q=is:pr%20is:closed) it can be seen that their workflow requires at least one peer review approving the changes and building against CI before merging code to the master branch in the repository.
 
-
-11.  *Must have documentation policy for all change requests*
+###  Documentation Policy [2.v]
     
 Changes are not documented on each software change request, although the changes explicitly state what’s fixed/changed, there is no clear consistency among how to document these changes. This is better reflected in releases summaries, where the main new features are shown with the list bugs/issues fixed.
 
-### Documentation:
+## Documentation [3]
 
-12.  *Must have documentation for each "feature" (e.g. for rclcpp: create a node, publish a message, spin, etc.)*
+### Feature Documentation [3.i]
     
 A complete manual with the whole overview of how the Fast-CDR libraryworks is provided [here](https://github.com/eProsima/Fast-CDR/blob/master/doc/Users%20Manual.odt).
 
-13.  *Must have documentation for each item in the public API (e.g. functions, classes, etc.)*
+### Public API Documentation [3.ii]
     
 The public API is documented through their generated [Doxygen documentation](https://www.eprosima.com/docs/fast-buffers/0.3.0/html/group___f_a_s_t_c_d_r_a_p_i_r_e_f_e_r_e_n_c_e.html) and also in the [User Manual](https://github.com/eProsima/Fast-CDR/blob/master/doc/Users%20Manual.odt) document provided in their repository.
 
-14.  *Must have a declared license or set of licenses*
+### License [3.iii]
 
 The declared License for the code in the repository is [Apache License 2.0](https://github.com/eProsima/Fast-CDR/blob/master/LICENSE).
 
-15.  *Must have a copyright statement in each source file*
+### Copyright Statements [3.iv]
 
 A check to the source files on their repository shows that the source files include copyright statements to *“Proyectos y Sistemas de Mantenimiento SL (eProsima)”*. It is not stated if this is enforced with any kind of linter analysis.
 
-16.  *Must have a "quality declaration" document, which declares the quality level and justifies how the package meets each of the requirements*
-    
-This document will be the quality declaration supporting that `fast-cdr` can be qualified as Quality Level 1 to be used within the ROS2 ecosystem.
+## Testing [4]
 
-### Testing:
-
-17.  *Must have system tests which cover all items in the "feature" documentation*
+### Feature Testing [4.i]
     
 There are various [tests](https://github.com/eProsima/Fast-CDR/tree/master/test) in the `fast-cdr` repository, specifically the `SimpleTest.cpp` seems to be testing all the features of the library.
 
-18.  *Must have system, integration, and/or unit tests which cover all of the public API*
+### Public API Testing [4.ii]
     
 There are several [tests](https://github.com/eProsima/Fast-CDR/tree/master/test) in the `fast-cdr` repository, specifically the `SimpleTest.cpp` seems to be testing all the functions/types/operations of the library.
 
-19.  *Must have code coverage, and a policy for changes*
+### Coverage [4.iii]
     
 Checking their [CI jobs](http://jenkins.eprosima.com:8080/), and the testing folders, there seems to be no automatic code coverage analysis being made or anything related to code coverage analysis.
 
-20.  *Performance tests, and performance regression policy*
+### Performance [4.iv]
     
 Checking their [tests folder](https://github.com/eProsima/Fast-CDR/tree/master/test), it is shown there are no performance tests available for this library. As the library provides mainly basic types, and a couple of serialization mechanisms it is not needed for this case to create performance tests.
 
-21.  *Linters and Static Analysis*
+### Linters and Static Analysis [4.v]
     
 Based on the [CI jobs test results](http://jenkins.eprosima.com:8080/job/FastCDR%20Manual%20Linux/lastSuccessfulBuild/testReport/projectroot/test/), there seems there is no automatic static analysis being made on the code developed.
 
-
-### Dependencies:
-
-16.  Must not have direct runtime "ROS" dependencies which are not at the same level as the package in question ('Level N'), but…
+## Dependencies [5]
 
 `fast-cdr` only depends on functions provided by the standard C++ definitions.
 
-### Platform Support:
-
-23.  Must support all tier 1 platforms for ROS 2, as defined in [REP-2000](https://www.ros.org/reps/rep-2000.html#support-tiers)
+## Platform Support [6]
     
 There is no explicit support for any platform in their [repository page](https://github.com/eProsima/Fast-CDR). However, their CI jobs are triggered for both Linux and Windows. MacOS is not tested directly, but as this library is a dependence for the `Fast-RTPS` software, and that one is tested in the three platforms, it is safe to assume this library is supported in MacOS as well.
+
+##  Vulnerability Disclosure Policy [7.i]
+
+`fast-cdr` does not have a Vulnerability Disclosure Policy.
