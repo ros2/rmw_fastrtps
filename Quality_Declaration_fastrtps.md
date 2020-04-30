@@ -103,7 +103,7 @@ Checking their [CI jobs](http://jenkins.eprosima.com:8080/), and the testing fol
 
 20.  *Performance tests, and performance regression policy*
     
-Checking their [tests folder](https://github.com/eProsima/Fast-RTPS/tree/master/test), it is available a folder with performance tests, and also some [CI jobs](http://jenkins.eprosima.com:8080/job/FastRTPS%20Performance%20Tests%20Plots/) related to performance analysis. It is not possible to know whether there is a performance regression policy with the information from their repository.
+Fast RTPS includes a directory of performance tests in their [test directory](https://github.com/eProsima/Fast-RTPS/tree/master/test). Some [CI jobs](http://jenkins.eprosima.com:8080/job/FastRTPS%20Performance%20Tests%20Plots/) relating to performance analysis have been run. Based on their frequency, it is unlikely there is a performance regression policy.
 
 21.  *Linters and Static Analysis*
     
