@@ -209,6 +209,7 @@ bool apply_security_logging_configuration(eprosima::fastrtps::rtps::PropertyPoli
 
   return true;
 #else
+  (void)policy;
   RMW_SET_ERROR_MSG(
     "This Fast-RTPS version doesn't have the security libraries\n"
     "Please compile Fast-RTPS using the -DSECURITY=ON CMake option");
