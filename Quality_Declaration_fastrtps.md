@@ -6,15 +6,13 @@ As stated in their public repository, eprosima Fast RTPS is a C++ implementation
 
 ## Summary
 
-The `fastrtps` as a complete software solution manages to meet most of the ROS2 package requirements for Quality Level 1, this includes, but not limited to, a complete established workflow for new changes in its repository, testing for the features of the software and documentation with examples.
+The `fastrtps` as a complete software solution manages to meet most of the ROS2 package requirements for Quality Level 1, including a complete established workflow for new changes in its repository, testing for the features of the software and documentation with examples.
 
-As for the missing topics, eProsima does not state their versioning policies for the repository and does not state explicitly the API/ABI policies for the code in `fastrtps`. As the code deals with the standard RPTS implementation, it is not expected that the basic API functionalities will be changed. In any case, the code is actively being tested against their [CI](http://jenkins.eprosima.com:8080/) and in the [ROS2 CI](https://ci.ros2.org/).
+As for the missing topics, eProsima does not state their versioning policies for the repository and does not state explicitly the API/ABI policies for the code in `fastrtps`. As the code deals with the standard RTPS implementation, it is not expected that the basic API functionalities will be changed. In any case, the code is actively being tested against their [CI](http://jenkins.eprosima.com:8080/) and in the [ROS2 CI](https://ci.ros2.org/).
 
 There is no coverage information summary/report and, apparently, no checks being made in terms of linters/static analysis, however, as the core parts used in ROS2 are actively being tested under the packages that use `fastrtps` (`rmw_fastrtps_cpp, rmw_fastrtps_shared_cpp, rosidl_typesupport_fastrtps_c, rosidl_typesupport_fastrtps_cpp`).
 
-eProsima states publicly that their RTPS implementation is used as the default middleware for ROS2. This shows how important is for them to keep their software being high quality and compatible with ROS2 packages.
-  
-Considering the previously mentioned reasons, we consider this library to be robust and reliable, and hence we declare it to qualify as a level 1 external dependency.
+In terms of ROS2 package metrics this library is considered to be Quality Level 3.
 
 
 ## Comparison with ROS packages quality standards
@@ -31,7 +29,7 @@ The current version is 1.94
 
 3.  *Must have a strictly declared public API*
     
-The API is declared using Doxygen documentation available to be [generated](https://github.com/eProsima/Fast-RTPS/blob/master/utils/doxygen/complete_doxyfile_api) with the source code. They have it hosted in this [page](http://www.eprosima.com/docs/fast-rtps/1.5.0/html/group___f_a_s_t_r_t_p_s___g_e_n_e_r_a_l___a_p_i.html) for the version 1.5 (currently at 1.9.4)
+Fast RTPS has embedded documentation generated using Doxygen. It is currently [hosted](http://www.eprosima.com/docs/fast-rtps/1.5.0/html/group___f_a_s_t_r_t_p_s___g_e_n_e_r_a_l___a_p_i.html) with the source code for version 1.5 (currently at 1.9.4)
 
 4.  *Must have a policy for API stability*
     
@@ -49,7 +47,7 @@ There is no direct correlation between API and ABI stability of the library with
 
 7.  *Must have all code changes occur through a change request (e.g. pull request, merge request, etc.)*
     
-Browsing through the public GitHub repository [history of commits](https://github.com/eProsima/Fast-RTPS/commits/master) of `fastrtps` shows that most of the code passes through a Pull Request, except some minor cases related to styling issues or formatting.
+Fast RTPS does not have a declared change control process. However, it appears in their [history of commits](https://github.com/eProsima/Fast-RTPS/commits/master) that most of the code passes through a Pull Request, except some minor cases related to styling issues or formatting.
 
 8.  *Must have confirmation of contributor origin (e.g. [DCO](https://developercertificate.org/), CLA, etc.)*
     
@@ -62,7 +60,6 @@ Not publicly stated, but browsing through their [list of closed pull requests](h
 10.  *Must have Continuous Integration (CI) policy for all change requests*
     
 Not publicly stated, but browsing through their [list of closed pull requests](https://github.com/eProsima/Fast-RTPS/pulls?q=is%3Apr+is%3Aclosed) it can be seen that their workflow requires at least one peer review approving the changes and building against CI before merging code to the master branch in the repository.
-
 
 11.  *Must have documentation policy for all change requests*
     
@@ -112,12 +109,10 @@ Checking their [tests folder](https://github.com/eProsima/Fast-RTPS/tree/master/
     
 Based on the [CI jobs test results](http://jenkins.eprosima.com:8080/job/FastRTPS%20Manual%20Linux/lastSuccessfulBuild/testReport/), there seems there is no automatic static analysis being made on the code developed.
 
-
 ### Dependencies:
 
 16.  Must not have direct runtime "ROS" dependencies which are not at the same level as the package in question ('Level N'), but…
     
-
 `fastrtps` depends on the following packages:
 
 `libasio-dev` `libtinyxml2-dev` `fast-cdr` `foonathan_memory`
