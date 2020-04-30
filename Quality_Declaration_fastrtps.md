@@ -12,8 +12,7 @@ As for the missing topics, eProsima does not state their versioning policies for
 
 There is no coverage information summary/report and, apparently, no checks being made in terms of linters/static analysis, however, as the core parts used in ROS2 are actively being tested under the packages that use `fastrtps` (`rmw_fastrtps_cpp, rmw_fastrtps_shared_cpp, rosidl_typesupport_fastrtps_c, rosidl_typesupport_fastrtps_cpp`).
 
-In terms of ROS2 package metrics this library is considered to be Quality Level 4.
-
+In terms of ROS2 package metrics this library is considered to be Quality Level 4. Adding unit testing for the functions used in ROS2 packages, coverage statistics and version pinning will be needed to achieve Quality Level 1.
 
 # Comparison with ROS packages quality standards
 
