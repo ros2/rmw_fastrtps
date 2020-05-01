@@ -135,4 +135,4 @@ As stated in their [repository page](https://github.com/eProsima/Fast-RTPS) the 
 
 ##  Vulnerability Disclosure Policy [7.i]
 
-`ament_index_python` does not have a Vulnerability Disclosure Policy.
+`fastrtps` does not have a Vulnerability Disclosure Policy.
