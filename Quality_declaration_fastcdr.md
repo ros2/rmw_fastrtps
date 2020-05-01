@@ -2,12 +2,16 @@
 
 This document is a declaration of software quality for the FastCDR external dependency, based on the guidelines in [REP-2004](https://github.com/ros-infrastructure/rep/blob/rep-2004/rep-2004.rst).
 
+The external dependency `fast-cdr` claims to be in the Quality Level 4 category.
+
 As stated in their public repository, *eProsima FastCDR is a C++ library that provides two serialization mechanisms. One is the standard CDR serialization mechanism, while the other is a faster implementation that modifies the standard*.
 
 ## Summary
-The `fast-cdr` library is used as one of the dependencies of the `fastrtps`, it is important for the eProsima team to consider this software to be reliable. On its current state, meets most of the requirements to qualify as a level 1 package.
+The `fast-cdr` library is used as one of the dependencies of the `fastrtps` library, it is important for the eProsima team to consider this software to be reliable. In its current state, meets most of the requirements to qualify as a level 1 package.
 
-As for the missing topics, eProsima does not state their versioning policies for the repository and does not state explicitly the API/ABI policies for the code in  `fast-cdr`. As the code deals with the standard RPTS implementation, and it is used by their software `fastrtps` it is not expected that the basic API functionalities will be changed. In any case, the code is actively being tested against their  [CI](http://jenkins.eprosima.com:8080/) (both directly with the included test cases and indirectly through the tests of `fastrtps`)  and indirectly in the [ROS2 CI](https://ci.ros2.org/).
+As for the missing topics, eProsima does not state their versioning policies for the repository and does not state explicitly the API/ABI policies for the code in `fast-cdr`. As the code deals with the standard RPTS implementation, and it is used by their software `fastrtps` it is not expected that the basic API functionalities will be changed.
+
+The code is actively being tested against their [CI](http://jenkins.eprosima.com:8080/) (both directly with the included test cases and indirectly through the tests of `fastrtps`) and indirectly in the [ROS2 CI](https://ci.ros2.org/).
 
 In terms of ROS2 package metrics this library is considered to be Quality Level 4. Adding unit testing for the functions used in ROS2 packages, coverage statistics and version pinning will be needed to achieve Quality Level 1.
 
@@ -24,38 +28,38 @@ There is no public information related to how the eProsima team handles the vers
 The library has version >= 1.0.0.
 
 ### Public API Declaration [1.iii]
-    
+
 The API is declared using Doxygen documentation available to be [generated](https://github.com/eProsima/Fast-CDR/blob/master/utils/doxygen/doxyfile) with the source code. They have it hosted in this [page](https://www.eprosima.com/docs/fast-buffers/0.3.0/html/group___f_a_s_t_c_d_r_a_p_i_r_e_f_e_r_e_n_c_e.html) for the version 0.3.0. However, that is an outdated version, as currently the software version is 1.0.13.
 
 ### API Stability Policy [1.iv]
-    
-There is no explicit policy related to API stability. This package should be pinned to a particular Fast-CDR version to be considered high quality.
+
+There is no explicit policy related to API stability. This package may need to be pinned to specific versions in order to provide API stability to packages that depend on it.
 
 ### ABI Stability Policy [1.v]
-    
-There is no explicit policy related to ABI stability. This package should be pinned to a particular Fast-CDR version to be considered high quality.
+
+There is no explicit policy related to ABI stability. This package may need to be pinned to specific versions in order to provide ABI stability to packages that depend on it.
 
 ### ABI and ABI Stability Within a Released ROS Distribution [1.vi]
    
-There is no direct correlation between API and ABI stability of the library within ROS distributions. This package should be pinned to a particular Fast-CDR version to be considered high quality.
+There is no direct correlation between API and ABI stability of the library within ROS distributions. Individual ROS distributions may need to choose specific versions to ensure API and ABI stability within a released ROS distribution.
 
 ## Change Control Process [2]
 
 ### Change Requests [2.i]
-    
+
 Fast-CDR does not have a declared change control process. However, browsing through its public GitHub repository [history of commits](https://github.com/eProsima/Fast-CDR/commits/master) shows that most of the code passes through a Pull Request, except some minor cases related to styling issues or formatting.
 
 ### Contributor Origin [2.ii]
-    
+
 Based on the public GitHub repository [history of commits](https://github.com/eProsima/Fast-CDR/commits/master) of `fast-cdr` it can be seen that there is no confirmation of contributor origin enforcement used in the repository.
 
 ### Peer Review Policy [2.iii]
-    
-Not publicly stated, but browsing through their [list of closed pull requests](https://github.com/eProsima/Fast-CDR/pulls?q=is:pr%20is:closed) it can be seen that their workflow requires at least one peer review approving the changes and building against CI before merging code to the master branch in the repository.
+
+Fast-CDR does not have a publicly stated peer review policy.
 
 ### Continuous Integration [2.iv]
-    
-Not publicly stated, but browsing through their [list of closed pull requests](https://github.com/eProsima/Fast-CDR/pulls?q=is:pr%20is:closed) it can be seen that their workflow requires at least one peer review approving the changes and building against CI before merging code to the master branch in the repository.
+
+Fast-CDR does not have a publicly stated continuous integration process.
 
 ###  Documentation Policy [2.v]
     
