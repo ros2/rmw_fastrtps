@@ -18,7 +18,7 @@ In terms of ROS2 package metrics this library is considered to be Quality Level 
 
 ## Version Policy [1]
 
- ### Version Scheme [1.i]
+### Version Scheme [1.i]
 
 There is no public information related to how the eProsima team handles the versioning of `fastrtps`. However, each version is documented in their documentation with the included features and bug fixes.
 
@@ -28,7 +28,7 @@ The library has version >= 1.0.0.
 
 ### Public API Declaration [1.iii]
     
-Fast RTPS has embedded documentation generated using Doxygen. It is currently [hosted](http://www.eprosima.com/docs/fast-rtps/1.5.0/html/group___f_a_s_t_r_t_p_s___g_e_n_e_r_a_l___a_p_i.html) with the source code for version 1.5 (currently at 1.9.4).
+Fast RTPS has embedded documentation generated using Doxygen. It is currently [hosted](http://www.eprosima.com/docs/fast-rtps/latest/API) with the source code for their latest documented version. For ROS2 packages, current used version is pinned to 2.0.x, and the latest documented API points to 1.9.3.
 
 ### API Stability Policy [1.iv]
     
@@ -102,6 +102,8 @@ Coverage checks should be made to consider this dependency to apply for a higher
     
 Fast RTPS includes a directory of performance tests in their [test directory](https://github.com/eProsima/Fast-RTPS/tree/master/test). Some [CI jobs](http://jenkins.eprosima.com:8080/job/FastRTPS%20Performance%20Tests%20Plots/) relating to performance analysis have been run. Based on their frequency, it is unlikely there is a performance regression policy.
 
+It is also tested indirectly through the ROS2 performance tests buildfarm, latest result can be seen [here](http://build.ros2.org/view/Fci/job/Fci__nightly-performance_ubuntu_focal_amd64/lastSuccessfulBuild/).
+
 ### Linters and Static Analysis [4.v]
     
 Based on the [CI jobs test results](http://jenkins.eprosima.com:8080/job/FastRTPS%20Manual%20Linux/lastSuccessfulBuild/testReport/), there seems there is no automatic static analysis being made on the code developed.
@@ -127,7 +129,7 @@ Based on the [CI jobs test results](http://jenkins.eprosima.com:8080/job/FastRTP
 
 The first two dependencies are suggested to be installed for Linux using apt package manager, which would pull them from the Debian upstream. This is a [list of advantages](https://wiki.debian.org/AdvantagesForUpstream) of using upstream packages, the fact that software and their patches are tested and the code is maintained available leads us to decide that these libraries as dependencies can be considered of Quality Level 1 for their use within this library once there is testing covered for the functions of this libray used in ROS2 packages.
 
-The other two are installed from the eProsima repositories as well, their current quality declarations can be found in [Quality Declaration `fast-cdr`](https://github.com/ros2/rmw_fastrtps/pull/360) and [Quality Declaration `foonathan_memory`](https://github.com/eProsima/foonathan_memory_vendor/pull/22).
+The other two are installed from the eProsima repositories as well, their current quality declarations can be found in [Quality Declaration `fast-cdr`](https://github.com/ros2/rmw_fastrtps/blob/master/Quality_declaration_fastcdr.md) and [Quality Declaration `foonathan_memory`](https://github.com/eProsima/foonathan_memory_vendor/blob/master/QUALITY_DECLARATION_foonathan_memory.md).
 
 ## Platform Support [6]
     
