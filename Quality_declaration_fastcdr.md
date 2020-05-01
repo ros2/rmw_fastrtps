@@ -9,9 +9,7 @@ The `fast-cdr` library is used as one of the dependencies of the `fastrtps`, it 
 
 As for the missing topics, eProsima does not state their versioning policies for the repository and does not state explicitly the API/ABI policies for the code in  `fast-cdr`. As the code deals with the standard RPTS implementation, and it is used by their software `fastrtps` it is not expected that the basic API functionalities will be changed. In any case, the code is actively being tested against their  [CI](http://jenkins.eprosima.com:8080/) (both directly with the included test cases and indirectly through the tests of `fastrtps`)  and indirectly in the [ROS2 CI](https://ci.ros2.org/).
 
-There is no coverage information summary/report and, apparently, no checks being made in terms of linters/static analysis, however, as the core parts used in ROS2 are actively being tested under the packages that use  `fast-cdr`.
-
-Considering the previously mentioned reasons, especially the fact that this software is being tested both directly and indirectly with [CI jobs](http://jenkins.eprosima.com:8080/), we consider this library to be robust and reliable, and hence we declare it to qualify as a level 1 external dependency.
+In terms of ROS2 package metrics this library is considered to be Quality Level 4. Adding unit testing for the functions used in ROS2 packages, coverage statistics and version pinning will be needed to achieve Quality Level 1.
 
 # Comparison with ROS packages quality standards
 
@@ -27,25 +25,25 @@ The library has version >= 1.0.0.
 
 ### Public API Declaration [1.iii]
     
-The API is declared using Doxygen documentation available to be [generated](https://github.com/eProsima/Fast-CDR/blob/master/utils/doxygen/doxyfile) with the source code. They have it hosted in this [page](https://www.eprosima.com/docs/fast-buffers/0.3.0/html/group___f_a_s_t_c_d_r_a_p_i_r_e_f_e_r_e_n_c_e.html) for the version 0.3.0 (currently at 1.0.13, outdated version)
+The API is declared using Doxygen documentation available to be [generated](https://github.com/eProsima/Fast-CDR/blob/master/utils/doxygen/doxyfile) with the source code. They have it hosted in this [page](https://www.eprosima.com/docs/fast-buffers/0.3.0/html/group___f_a_s_t_c_d_r_a_p_i_r_e_f_e_r_e_n_c_e.html) for the version 0.3.0. However, that is an outdated version, as currently the software version is 1.0.13.
 
 ### API Stability Policy [1.iv]
     
-There is no explicit policy related to API stability. However, as eProsima widely announces that their implementation is [adopted in ROS2](https://www.eprosima.com/index.php/company-all/news/135-fast-rtps-demonstrates-its-reliability-in-ros-2-navigation-2), it is not expected that this dependency will generate API issues with the ROS2 code.
+There is no explicit policy related to API stability. This package should be pinned to a particular Fast-CDR version to be considered high quality.
 
 ### ABI Stability Policy [1.v]
     
-There is no explicit policy related to ABI stability. However, as eProsima widely announces that their implementation is [adopted in ROS2](https://www.eprosima.com/index.php/company-all/news/135-fast-rtps-demonstrates-its-reliability-in-ros-2-navigation-2), it is not expected that this dependency will generate API issues with the ROS2 code.
+There is no explicit policy related to ABI stability. This package should be pinned to a particular Fast-CDR version to be considered high quality.
 
 ### ABI and ABI Stability Within a Released ROS Distribution [1.vi]
    
-There is no direct correlation between API and ABI stability of the library within ROS distributions.
+There is no direct correlation between API and ABI stability of the library within ROS distributions. This package should be pinned to a particular Fast-CDR version to be considered high quality.
 
 ## Change Control Process [2]
 
 ### Change Requests [2.i]
     
-Browsing through the public GitHub repository [history of commits](https://github.com/eProsima/Fast-CDR/commits/master) of `fast-cdr` shows that most of the code passes through a Pull Request, except some minor cases related to styling issues or formatting.
+Fast-CDR does not have a declared change control process. However, browsing through its public GitHub repository [history of commits](https://github.com/eProsima/Fast-CDR/commits/master) shows that most of the code passes through a Pull Request, except some minor cases related to styling issues or formatting.
 
 ### Contributor Origin [2.ii]
     
@@ -67,11 +65,11 @@ Changes are not documented on each software change request, although the changes
 
 ### Feature Documentation [3.i]
     
-A complete manual with the whole overview of how the Fast-CDR libraryworks is provided [here](https://github.com/eProsima/Fast-CDR/blob/master/doc/Users%20Manual.odt).
+A complete manual with the whole overview of how the Fast-CDR library works is provided [here](https://github.com/eProsima/Fast-CDR/blob/master/doc/Users%20Manual.odt).
 
 ### Public API Documentation [3.ii]
     
-The public API is documented through their generated [Doxygen documentation](https://www.eprosima.com/docs/fast-buffers/0.3.0/html/group___f_a_s_t_c_d_r_a_p_i_r_e_f_e_r_e_n_c_e.html) and also in the [User Manual](https://github.com/eProsima/Fast-CDR/blob/master/doc/Users%20Manual.odt) document provided in their repository.
+The public API is documented through their generated [Doxygen documentation](https://www.eprosima.com/docs/fast-buffers/0.3.0/html/group___f_a_s_t_c_d_r_a_p_i_r_e_f_e_r_e_n_c_e.html) and also in the [User Manual](https://github.com/eProsima/Fast-CDR/blob/master/doc/Users%20Manual.odt) document provided in their repository. However, the generated API shown is outdated.
 
 ### License [3.iii]
 
@@ -95,12 +93,14 @@ There are several [tests](https://github.com/eProsima/Fast-CDR/tree/master/test)
     
 Checking their [CI jobs](http://jenkins.eprosima.com:8080/), and the testing folders, there seems to be no automatic code coverage analysis being made or anything related to code coverage analysis.
 
+Coverage checks should be made to consider this dependency to apply for a higher quality level.
+
 ### Performance [4.iv]
     
-Checking their [tests folder](https://github.com/eProsima/Fast-CDR/tree/master/test), it is shown there are no performance tests available for this library. As the library provides mainly basic types, and a couple of serialization mechanisms it is not needed for this case to create performance tests.
+Checking their [tests folder](https://github.com/eProsima/Fast-CDR/tree/master/test), it is shown there are no performance tests available for this library. As the library provides mainly basic types, and a couple of serialization mechanisms it is probably not needed for this case to create performance tests.
 
 ### Linters and Static Analysis [4.v]
-    
+
 Based on the [CI jobs test results](http://jenkins.eprosima.com:8080/job/FastCDR%20Manual%20Linux/lastSuccessfulBuild/testReport/projectroot/test/), there seems there is no automatic static analysis being made on the code developed.
 
 ## Dependencies [5]
