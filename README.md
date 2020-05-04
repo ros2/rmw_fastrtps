@@ -78,3 +78,7 @@ The following example configures Fast-RTPS to publish synchronously, and to have
         ```bash
         FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_xml_file> RMW_FASTRTPS_USE_QOS_FROM_XML=1 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ros2 run demo_nodes_cpp listener
         ```
+
+## Quality Declaration files
+
+Quality declaration of external dependency [fastcdr](./Quality_declaration_fastcdr.md)
