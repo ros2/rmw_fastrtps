@@ -4,6 +4,8 @@ This document is a declaration of software quality for the `fastrtps` external d
 
 As stated in their public repository, eprosima Fast RTPS is a C++ implementation of the RTPS (Real Time Publish Subscribe) protocol, which provides publisher-subscriber communications over unreliable transports such as UDP, as defined and maintained by the Object Management Group (OMG) consortium.
 
+This QD claims that the external dependency `fast-rtps` qualifies to Quality Level 4 category for its use within ROS2 core.
+
 ## Summary
 
 The `fastrtps` as a complete software solution manages to meet most of the ROS2 package requirements for Quality Level 1, including a complete established workflow for new changes in its repository, testing for the features of the software and documentation with examples.
