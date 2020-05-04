@@ -2,12 +2,12 @@
 
 This document is a declaration of software quality for the FastCDR external dependency, based on the guidelines in [REP-2004](https://github.com/ros-infrastructure/rep/blob/rep-2004/rep-2004.rst).
 
-The external dependency `fast-cdr` claims to be in the Quality Level 4 category.
+This QD claims that the external dependency `fast-cdr` qualifies to Quality Level 4 category for its use within ROS2 core.
 
 As stated in their public repository, *eProsima FastCDR is a C++ library that provides two serialization mechanisms. One is the standard CDR serialization mechanism, while the other is a faster implementation that modifies the standard*.
 
 ## Summary
-The `fast-cdr` library is used as one of the dependencies of the `fastrtps` library, it is important for the eProsima team to consider this software to be reliable. In its current state, meets most of the requirements to qualify as a level 1 package.
+The `fast-cdr` library is used as one of the dependencies of the `fastrtps` library, it is important for the eProsima team to consider this software to be reliable. In its current state, it meets most of the requirements to qualify as a level 1 package.
 
 As for the missing topics, eProsima does not state their versioning policies for the repository and does not state explicitly the API/ABI policies for the code in `fast-cdr`. As the code deals with the standard RPTS implementation, and it is used by their software `fastrtps` it is not expected that the basic API functionalities will be changed.
 
@@ -91,7 +91,7 @@ There are various [tests](https://github.com/eProsima/Fast-CDR/tree/master/test)
 
 ### Public API Testing [4.ii]
     
-There are several [tests](https://github.com/eProsima/Fast-CDR/tree/master/test) in the `fast-cdr` repository, specifically the `SimpleTest.cpp` seems to be testing all the functions/types/operations of the library.
+There are several [tests](https://github.com/eProsima/Fast-CDR/tree/master/test) in the `fast-cdr` repository, specifically `SimpleTest.cpp` seems to be testing all the functions/types/operations of the library.
 
 ### Coverage [4.iii]
     
@@ -113,7 +113,7 @@ Based on the [CI jobs test results](http://jenkins.eprosima.com:8080/job/FastCDR
 
 ## Platform Support [6]
     
-There is no explicit support for any platform in their [repository page](https://github.com/eProsima/Fast-CDR). However, their CI jobs are triggered for both Linux and Windows. MacOS is not tested directly, but as this library is a dependence for the `Fast-RTPS` software, and that one is tested in the three platforms, it is safe to assume this library is supported in MacOS as well.
+There is no explicit support for any platform in their [repository page](https://github.com/eProsima/Fast-CDR). However, their CI jobs are triggered for both Linux and Windows. MacOS is not tested directly, but as this library is a dependency for the `Fast-RTPS` software, and that one is tested in the three platforms, it is safe to assume this library is supported in MacOS as well.
 
 ##  Vulnerability Disclosure Policy [7.i]
 
