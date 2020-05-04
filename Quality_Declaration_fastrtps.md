@@ -135,6 +135,8 @@ The other two are installed from the eProsima repositories as well, their curren
     
 As stated in their [repository page](https://github.com/eProsima/Fast-RTPS) the library is supported for Linux, Windows, and Mac, but there is no specific information about the OS covered nor any claims for linux-aarch64. This item is considered partially covered.
 
-##  Vulnerability Disclosure Policy [7.i]
+## Security [7]
+
+###  Vulnerability Disclosure Policy [7.i]
 
 `fastrtps` does not have a Vulnerability Disclosure Policy.
