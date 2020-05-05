@@ -106,6 +106,8 @@ __rmw_take_request(
     request_header->request_id.sequence_number =
       ((int64_t)request.sample_identity_.sequence_number().high) <<
       32 | request.sample_identity_.sequence_number().low;
+    request_header->source_timestamp = request.sample_info_.sourceTimestamp.to_ns();
+    request_header->received_timestamp = request.sample_info_.receptionTimestamp.to_ns();
 
     delete request.buffer_;
 
