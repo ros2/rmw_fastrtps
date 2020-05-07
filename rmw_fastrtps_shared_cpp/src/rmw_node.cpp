@@ -152,17 +152,6 @@ __rmw_destroy_node(
   return RMW_RET_OK;
 }
 
-rmw_ret_t
-__rmw_node_assert_liveliness(
-  const char * identifier,
-  const rmw_node_t * node)
-{
-  (void)identifier;
-  (void)node;
-
-  return RMW_RET_UNSUPPORTED;
-}
-
 const rmw_guard_condition_t *
 __rmw_node_get_graph_guard_condition(const rmw_node_t * node)
 {

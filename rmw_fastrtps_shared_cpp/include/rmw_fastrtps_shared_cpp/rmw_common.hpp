@@ -98,12 +98,6 @@ __rmw_destroy_node(
   rmw_node_t * node);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
-rmw_ret_t
-__rmw_node_assert_liveliness(
-  const char * identifier,
-  const rmw_node_t * node);
-
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 const rmw_guard_condition_t *
 __rmw_node_get_graph_guard_condition(const rmw_node_t * node);
 

@@ -113,7 +113,7 @@ TEST_F(DDSAttributesToRMWQosTest, test_subscriber_liveliness_conversion) {
   subscriber_attributes_.qos.m_liveliness.kind =
     eprosima::fastrtps::MANUAL_BY_PARTICIPANT_LIVELINESS_QOS;
   dds_attributes_to_rmw_qos(subscriber_attributes_, &qos_profile_);
-  EXPECT_EQ(qos_profile_.liveliness, RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE);
+  EXPECT_EQ(qos_profile_.liveliness, RMW_QOS_POLICY_LIVELINESS_UNKNOWN);
 }
 
 TEST_F(DDSAttributesToRMWQosTest, test_subscriber_liveliness_lease_duration_conversion) {

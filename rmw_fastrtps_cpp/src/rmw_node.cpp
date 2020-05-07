@@ -81,13 +81,6 @@ rmw_destroy_node(rmw_node_t * node)
   return rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(context);
 }
 
-rmw_ret_t
-rmw_node_assert_liveliness(const rmw_node_t * node)
-{
-  return rmw_fastrtps_shared_cpp::__rmw_node_assert_liveliness(
-    eprosima_fastrtps_identifier, node);
-}
-
 const rmw_guard_condition_t *
 rmw_node_get_graph_guard_condition(const rmw_node_t * node)
 {
