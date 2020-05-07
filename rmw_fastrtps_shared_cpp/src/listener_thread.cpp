@@ -165,13 +165,6 @@ node_listener(rmw_context_t * context)
           // ignore local messages
           continue;
         }
-        fprintf(stderr, "***********************************************************\n");
-        fprintf(stderr, "***********************************************************\n");
-        fprintf(stderr, "***********************************************************\n");
-        fprintf(stderr, "received graph message\n");
-        fprintf(stderr, "***********************************************************\n");
-        fprintf(stderr, "***********************************************************\n");
-        fprintf(stderr, "***********************************************************\n");
         common_context->graph_cache.update_participant_entities(msg);
       }
     }
