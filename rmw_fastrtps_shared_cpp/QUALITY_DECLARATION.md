@@ -85,7 +85,7 @@ The results of the test can be found [here](https://ci.ros2.org/view/nightly/job
 
 ### Feature Testing [4.i]
 
-Many of the features have testing in `rmw_fastrtps_shared_cpp`.
+Many of the features have testing in `rmw_fastrtps_shared_cpp`. Since `rmw_fastrtps_shared_cpp` supports `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp`, integration and system tests for ROS middlewares up the stack also provide coverage.
 
 ### Public API Testing [4.ii]
 
