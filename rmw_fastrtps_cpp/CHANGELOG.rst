@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add package READMEs and QUALITY_DECLARATION files (`#375 <https://github.com/ros2/rmw_fastrtps/issues/375>`_)
+* Added doxyfiles (`#372 <https://github.com/ros2/rmw_fastrtps/issues/372>`_)
+* Contributors: Alejandro Hernández Cordero, brawner
+
 0.9.0 (2020-04-28)
 ------------------
 * Add missing export of rmw_dds_common. (`#374 <https://github.com/ros2/rmw_fastrtps/issues/374>`_)

@@ -2,6 +2,15 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fill service_info timestamps from sample_info (`#378 <https://github.com/ros2/rmw_fastrtps/issues/378>`_)
+* Fix unused variabled warning (`#377 <https://github.com/ros2/rmw_fastrtps/issues/377>`_)
+* Add basic support for security logging plugin (`#362 <https://github.com/ros2/rmw_fastrtps/issues/362>`_)
+* Add package READMEs and QUALITY_DECLARATION files (`#375 <https://github.com/ros2/rmw_fastrtps/issues/375>`_)
+* Added doxyfiles (`#372 <https://github.com/ros2/rmw_fastrtps/issues/372>`_)
+* Contributors: Alejandro Hernández Cordero, Ingo Lütkebohle, Jacob Perron, Kyle Fazzari, brawner
+
 0.9.0 (2020-04-28)
 ------------------
 * Feature/services timestamps. (`#369 <https://github.com/ros2/rmw_fastrtps/issues/369>`_)

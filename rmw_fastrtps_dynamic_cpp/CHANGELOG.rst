@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Added doxyfiles (`#372 <https://github.com/ros2/rmw_fastrtps/issues/372>`_)
+* Contributors: Alejandro Hernández Cordero
+
 0.9.0 (2020-04-28)
 ------------------
 * Fixed rmw_fastrtps_dynamic_cpp package description. (`#376 <https://github.com/ros2/rmw_fastrtps/issues/376>`_)
