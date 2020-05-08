@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+0.9.1 (2020-05-08)
+------------------
 * Fill service_info timestamps from sample_info (`#378 <https://github.com/ros2/rmw_fastrtps/issues/378>`_)
 * Fix unused variabled warning (`#377 <https://github.com/ros2/rmw_fastrtps/issues/377>`_)
 * Add basic support for security logging plugin (`#362 <https://github.com/ros2/rmw_fastrtps/issues/362>`_)
