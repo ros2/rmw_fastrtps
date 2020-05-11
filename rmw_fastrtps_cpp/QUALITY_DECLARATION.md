@@ -85,7 +85,7 @@ The results of the test can be found [here](https://ci.ros2.org/view/nightly/job
 
 ### Feature Testing [4.i]
 
-There is no feature testing in `rmw_fastrtps_cpp`.
+All `rmw_fastrtps_cpp` public features are ROS middleware features. Integration and system tests up the stack, such as those found in [`test_rclcpp`](https://github.com/ros2/system_tests/tree/master/test_rclcpp) and [`test_communication`](https://github.com/ros2/system_tests/tree/master/test_communication) packages, provide coverage. Nightly CI jobs in [`ci.ros2.org`](https://ci.ros2.org/) and [`build.ros2.org`](https://build.ros2.org/), where `rmw_fastrtps_cpp` is the default `rmw` implementation, thoroughly exercise this middleware.
 
 ### Public API Testing [4.ii]
 
