@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.0.0 (2020-05-12)
+------------------
 * Fix single rmw build for rmw_fastrtps_dynamic_cpp. (`#381 <https://github.com/ros2/rmw_fastrtps/issues/381>`_)
 * Remove API related to manual by node liveliness. (`#379 <https://github.com/ros2/rmw_fastrtps/issues/379>`_)
 * Contributors: Ivan Santiago Paunovic
