@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove API related to manual by node liveliness. (`#379 <https://github.com/ros2/rmw_fastrtps/issues/379>`_)
+* Update quality declarations on feature testing. (`#380 <https://github.com/ros2/rmw_fastrtps/issues/380>`_)
+* Contributors: Ivan Santiago Paunovic, Michel Hidalgo
+
 0.9.1 (2020-05-08)
 ------------------
 * Fill service_info timestamps from sample_info (`#378 <https://github.com/ros2/rmw_fastrtps/issues/378>`_)

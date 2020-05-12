@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove API related to manual by node liveliness.  (`#379 <https://github.com/ros2/rmw_fastrtps/issues/379>`_)
+* Update quality declarations on feature testing. (`#380 <https://github.com/ros2/rmw_fastrtps/issues/380>`_)
+* Contributors: Ivan Santiago Paunovic, Michel Hidalgo
+
 0.9.1 (2020-05-08)
 ------------------
 * Add package READMEs and QUALITY_DECLARATION files (`#375 <https://github.com/ros2/rmw_fastrtps/issues/375>`_)
