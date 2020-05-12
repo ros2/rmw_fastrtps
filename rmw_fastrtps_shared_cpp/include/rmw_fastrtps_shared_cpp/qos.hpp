@@ -99,9 +99,6 @@ dds_qos_to_rmw_qos(
     case eprosima::fastrtps::AUTOMATIC_LIVELINESS_QOS:
       qos->liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
       break;
-    case eprosima::fastrtps::MANUAL_BY_PARTICIPANT_LIVELINESS_QOS:
-      qos->liveliness = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_NODE;
-      break;
     case eprosima::fastrtps::MANUAL_BY_TOPIC_LIVELINESS_QOS:
       qos->liveliness = RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC;
       break;
