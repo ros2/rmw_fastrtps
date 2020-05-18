@@ -18,3 +18,8 @@ if(TARGET test_rmw_init_options)
   ament_target_dependencies(test_rmw_init_options osrf_testing_tools_cpp rcutils rmw)
   target_link_libraries(test_rmw_init_options ${PROJECT_NAME})
 endif()
+
+ament_add_gtest(test_guid_utils test_guid_utils.cpp)
+if(TARGET test_guid_utils)
+  target_link_libraries(test_guid_utils ${PROJECT_NAME})
+endif()
