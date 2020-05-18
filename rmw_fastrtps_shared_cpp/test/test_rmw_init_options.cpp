@@ -178,6 +178,38 @@ TEST(RMWInitOptionsTest, copy) {
   EXPECT_STREQ("/root", options.security_options.security_root_path);
 }
 
+static void * failing_allocate(size_t size, void * state)
+{
+  (void)size;
+  (void)state;
+  return NULL;
+}
+
+TEST(RMWInitOptionsTest, bad_alloc_on_copy) {
+  rcutils_allocator_t failing_allocator = rcutils_get_default_allocator();
+  failing_allocator.allocate = failing_allocate;
+
+  rmw_init_options_t preset_options = rmw_get_zero_initialized_init_options();
+  ASSERT_EQ(
+    RMW_RET_OK,
+    rmw_init_options_init("some_identifier", &preset_options, failing_allocator)) <<
+    rcutils_get_error_string().str;
+  OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
+  {
+    rcutils_reset_error();
+    EXPECT_EQ(RMW_RET_OK, rmw_init_options_fini("some_identifier", &preset_options)) <<
+      rcutils_get_error_string().str;
+    rcutils_reset_error();
+  });
+  preset_options.enclave = rcutils_strdup("/test", rcutils_get_default_allocator());
+  ASSERT_TRUE(preset_options.enclave != nullptr);
+
+  rmw_init_options_t options = rmw_get_zero_initialized_init_options();
+  EXPECT_EQ(
+    RMW_RET_BAD_ALLOC,
+    rmw_init_options_copy("some_identifier", &preset_options, &options));
+}
+
 TEST(RMWInitOptionsTest, fini_w_invalid_args_fails) {
   // Cannot finalize a null options instance.
   EXPECT_EQ(RMW_RET_INVALID_ARGUMENT, rmw_init_options_fini("some_identifier", nullptr));
