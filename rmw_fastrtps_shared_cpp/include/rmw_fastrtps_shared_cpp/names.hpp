@@ -60,6 +60,8 @@ _create_topic_name(
   const char * base,
   const char * suffix = nullptr)
 {
+  assert(qos_profile);
+  assert(base);
   if (qos_profile->avoid_ros_namespace_conventions) {
     prefix = nullptr;
   }
