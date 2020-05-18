@@ -30,6 +30,7 @@ using rmw_fastrtps_shared_cpp::rmw_init_options_fini;
 
 TEST(RMWInitOptionsTest, init_w_invalid_args_fails) {
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
+  // Cannot initialize a null options instance.
   EXPECT_EQ(
     RMW_RET_INVALID_ARGUMENT,
     rmw_init_options_init("some_identifier", nullptr, allocator));
@@ -37,6 +38,7 @@ TEST(RMWInitOptionsTest, init_w_invalid_args_fails) {
 
   rmw_init_options_t options = rmw_get_zero_initialized_init_options();
   rcutils_allocator_t invalid_allocator = rcutils_get_zero_initialized_allocator();
+  // Cannot initialize using an invalid allocator.
   EXPECT_EQ(
     RMW_RET_INVALID_ARGUMENT,
     rmw_init_options_init("some_identifier", &options, invalid_allocator));
@@ -103,6 +105,7 @@ TEST(RMWInitOptionsTest, copy_w_invalid_args_fails) {
     rcutils_reset_error();
   });
 
+  // Cannot copy from a null options instance.
   EXPECT_EQ(
     RMW_RET_INVALID_ARGUMENT,
     rmw_init_options_copy(
@@ -111,6 +114,7 @@ TEST(RMWInitOptionsTest, copy_w_invalid_args_fails) {
       &not_initialized_options));
   rcutils_reset_error();
 
+  // Cannot copy to a null options instance.
   EXPECT_EQ(
     RMW_RET_INVALID_ARGUMENT,
     rmw_init_options_copy(
@@ -119,6 +123,7 @@ TEST(RMWInitOptionsTest, copy_w_invalid_args_fails) {
       nullptr));
   rcutils_reset_error();
 
+  // Cannot copy an options instance if implementation identifiers do not match.
   EXPECT_EQ(
     RMW_RET_INCORRECT_RMW_IMPLEMENTATION,
     rmw_init_options_copy(
@@ -127,6 +132,7 @@ TEST(RMWInitOptionsTest, copy_w_invalid_args_fails) {
       &not_initialized_options));
   rcutils_reset_error();
 
+  // Cannot copy to an already initialized options instance.
   EXPECT_EQ(
     RMW_RET_INVALID_ARGUMENT, rmw_init_options_copy(
       "some_identifier",
@@ -173,10 +179,12 @@ TEST(RMWInitOptionsTest, copy) {
 }
 
 TEST(RMWInitOptionsTest, fini_w_invalid_args_fails) {
+  // Cannot finalize a null options instance.
   EXPECT_EQ(RMW_RET_INVALID_ARGUMENT, rmw_init_options_fini("some_identifier", nullptr));
   rcutils_reset_error();
 
   rmw_init_options_t options = rmw_get_zero_initialized_init_options();
+  // Cannot finalize an options instance that has not been initialized.
   EXPECT_EQ(RMW_RET_INVALID_ARGUMENT, rmw_init_options_fini("some_identifier", &options));
   rcutils_reset_error();
 
@@ -191,6 +199,7 @@ TEST(RMWInitOptionsTest, fini_w_invalid_args_fails) {
     rcutils_reset_error();
   });
 
+  // Cannot finalize an options instance if implementation identifiers do not match.
   EXPECT_EQ(
     RMW_RET_INCORRECT_RMW_IMPLEMENTATION,
     rmw_init_options_fini("another_identifier", &options));
