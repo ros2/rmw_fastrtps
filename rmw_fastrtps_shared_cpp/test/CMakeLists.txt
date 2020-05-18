@@ -1,4 +1,5 @@
 find_package(ament_cmake_gtest REQUIRED)
+find_package(osrf_testing_tools_cpp REQUIRED)
 
 ament_add_gtest(test_dds_attributes_to_rmw_qos test_dds_attributes_to_rmw_qos.cpp)
 if(TARGET test_dds_attributes_to_rmw_qos)
@@ -10,4 +11,10 @@ ament_add_gmock(test_security_logging test_security_logging.cpp)
 if(TARGET test_security_logging)
     ament_target_dependencies(test_security_logging)
     target_link_libraries(test_security_logging ${PROJECT_NAME})
+endif()
+
+ament_add_gtest(test_rmw_init_options test_rmw_init_options.cpp)
+if(TARGET test_rmw_init_options)
+  ament_target_dependencies(test_rmw_init_options osrf_testing_tools_cpp rcutils rmw)
+  target_link_libraries(test_rmw_init_options ${PROJECT_NAME})
 endif()
