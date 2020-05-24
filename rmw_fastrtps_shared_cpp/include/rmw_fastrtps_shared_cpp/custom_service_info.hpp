@@ -34,6 +34,7 @@
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 class ServiceListener;
+class ServicePubListener;
 
 typedef struct CustomServiceInfo
 {
@@ -44,6 +45,7 @@ typedef struct CustomServiceInfo
   eprosima::fastrtps::Subscriber * request_subscriber_;
   eprosima::fastrtps::Publisher * response_publisher_;
   ServiceListener * listener_;
+  ServicePubListener * pub_listener_;
   eprosima::fastrtps::Participant * participant_;
   const char * typesupport_identifier_;
 } CustomServiceInfo;
@@ -163,6 +165,47 @@ private:
   std::atomic_bool list_has_data_;
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+};
+
+class ServicePubListener : public eprosima::fastrtps::PublisherListener
+{
+public:
+  explicit ServicePubListener() = default;
+  
+  template< class Rep, class Period >
+  bool wait_for_subscription(
+    const eprosima::fastrtps::rtps::GUID_t & guid,
+    const std::chrono::duration<Rep, Period> & rel_time)
+  {
+    auto guid_is_present = [this, guid]() -> bool
+    {
+      return subscriptions_.find(guid) != subscriptions_.end();
+    };
+    
+    std::unique_lock<std::mutex> lock(mutex_);
+    return cv_.wait_for(lock, rel_time, guid_is_present);
+  }
+
+  void onPublicationMatched(
+    eprosima::fastrtps::Publisher * pub,
+    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
+  {
+    (void) pub;
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (eprosima::fastrtps::rtps::MATCHED_MATCHING == matchingInfo.status) {
+      subscriptions_.insert(matchingInfo.remoteEndpointGuid);
+    } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == matchingInfo.status) {
+      subscriptions_.erase(matchingInfo.remoteEndpointGuid);
+    } else {
+      return;
+    }
+    cv_.notify_all();
+  }
+
+private:
+  std::mutex mutex_;
+  std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  std::condition_variable cv_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_

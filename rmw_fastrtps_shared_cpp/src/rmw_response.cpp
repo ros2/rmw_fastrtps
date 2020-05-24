@@ -104,6 +104,18 @@ __rmw_send_response(
   wparams.related_sample_identity().sequence_number().low =
     (int32_t)(request_header->sequence_number & 0xFFFFFFFF);
 
+  const eprosima::fastrtps::rtps::GUID_t& related_guid =
+    wparams.related_sample_identity().writer_guid();
+  if( (related_guid.entityId.value[3] & 0x04) != 0)
+  {
+    // Related guid is a reader, so it is the response subscription guid.
+    // Wait for the response writer to be matched with it.
+    if(!info->pub_listener_->wait_for_subscription(related_guid, std::chrono::milliseconds(100))) {
+      RMW_SET_ERROR_MSG("client will not receive response");
+      return RMW_RET_ERROR;
+    }
+  }
+  
   rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = false;
   data.data = const_cast<void *>(ros_response);
