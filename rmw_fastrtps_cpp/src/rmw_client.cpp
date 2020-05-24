@@ -192,6 +192,7 @@ rmw_create_client(
   }
 
   info->writer_guid_ = info->request_publisher_->getGuid();
+  info->reader_guid_ = info->response_subscriber_->getGuid();
 
   rmw_client = rmw_client_allocate();
   if (!rmw_client) {

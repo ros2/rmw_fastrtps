@@ -84,6 +84,12 @@ public:
     if (sub->takeNextData(&data, &request.sample_info_)) {
       if (eprosima::fastrtps::rtps::ALIVE == request.sample_info_.sampleKind) {
         request.sample_identity_ = request.sample_info_.sample_identity;
+        // Use response subscriber guid (on related_sample_identity) when present.
+        const eprosima::fastrtps::rtps::GUID_t& reader_guid =
+          request.sample_info_.related_sample_identity.writer_guid();
+        if (reader_guid != eprosima::fastrtps::rtps::GUID_t::unknown() ) {
+          request.sample_identity_.writer_guid() = reader_guid;
+        }
 
         std::lock_guard<std::mutex> lock(internalMutex_);
 

@@ -49,6 +49,7 @@ typedef struct CustomClientInfo
   eprosima::fastrtps::Publisher * request_publisher_;
   ClientListener * listener_;
   eprosima::fastrtps::rtps::GUID_t writer_guid_;
+  eprosima::fastrtps::rtps::GUID_t reader_guid_;
   eprosima::fastrtps::Participant * participant_;
   const char * typesupport_identifier_;
   ClientPubListener * pub_listener_;
@@ -88,7 +89,8 @@ public:
       if (eprosima::fastrtps::rtps::ALIVE == response.sample_info_.sampleKind) {
         response.sample_identity_ = response.sample_info_.related_sample_identity;
 
-        if (response.sample_identity_.writer_guid() == info_->writer_guid_) {
+        if (response.sample_identity_.writer_guid() == info_->reader_guid_ ||
+            response.sample_identity_.writer_guid() == info_->writer_guid_) {
           std::lock_guard<std::mutex> lock(internalMutex_);
 
           if (conditionMutex_ != nullptr) {
