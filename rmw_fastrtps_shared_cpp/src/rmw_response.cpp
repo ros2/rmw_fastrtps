@@ -104,9 +104,13 @@ __rmw_send_response(
   wparams.related_sample_identity().sequence_number().low =
     (int32_t)(request_header->sequence_number & 0xFFFFFFFF);
 
-  const eprosima::fastrtps::rtps::GUID_t& related_guid =
+  // According to the list of possible entity kinds in section 9.3.1.2 of RTPS
+  // readers will have this bit on, while writers will not. We use this to know
+  // if the related guid is the request writer or the response reader.
+  constexpr uint8_t entity_id_is_reader_bit = 0x04;
+  const eprosima::fastrtps::rtps::GUID_t & related_guid =
     wparams.related_sample_identity().writer_guid();
-  if( (related_guid.entityId.value[3] & 0x04) != 0)
+  if((related_guid.entityId.value[3] & entity_id_is_reader_bit) != 0)
   {
     // Related guid is a reader, so it is the response subscription guid.
     // Wait for the response writer to be matched with it.
@@ -115,7 +119,7 @@ __rmw_send_response(
       return RMW_RET_ERROR;
     }
   }
-  
+
   rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = false;
   data.data = const_cast<void *>(ros_response);
