@@ -104,6 +104,12 @@ __rmw_send_response(
   wparams.related_sample_identity().sequence_number().low =
     (int32_t)(request_header->sequence_number & 0xFFFFFFFF);
 
+  // TODO(MiguelCompany) The following block is a workaround for the race on the
+  // discovery of services. It is (ab)using a related_sample_identity on the request
+  // with the GUID of the response reader, so we can wait here for it to be matched to
+  // the server response writer. In the future, this should be done with the mechanism
+  // explained on OMG DDS-RPC 1.0 spec under section 7.6.2 (Enhanced Service Mapping)
+
   // According to the list of possible entity kinds in section 9.3.1.2 of RTPS
   // readers will have this bit on, while writers will not. We use this to know
   // if the related guid is the request writer or the response reader.
