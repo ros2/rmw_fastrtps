@@ -62,13 +62,14 @@ struct hash_fastrtps_guid
   {
     union u_convert {
       uint8_t plain_value[sizeof(guid)];
-      uint32_t plain_ints[4];
+      uint32_t plain_ints[sizeof(guid)/sizeof(uint32_t)];
     } u;
 
     static_assert(
+      sizeof(guid) == 16 &&
       sizeof(u.plain_value) == sizeof(u.plain_ints) &&
       offsetof(u_convert, plain_value) == offsetof(u_convert, plain_ints),
-      "ByteT should be either int8_t or uint8_t");
+      "Plain guid should be easily convertible to uint32_t[4]");
 
     copy_from_fastrtps_guid_to_byte_array(guid, u.plain_value);
 
