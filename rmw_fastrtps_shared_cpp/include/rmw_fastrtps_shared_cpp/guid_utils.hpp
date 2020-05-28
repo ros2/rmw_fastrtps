@@ -16,6 +16,7 @@
 #define RMW_FASTRTPS_SHARED_CPP__GUID_UTILS_HPP_
 
 #include <cassert>
+#include <cstddef>
 #include <cstring>
 #include <type_traits>
 
@@ -54,6 +55,36 @@ copy_from_fastrtps_guid_to_byte_array(
   memcpy(guid_byte_array, &guid.guidPrefix, prefix_size);
   memcpy(&guid_byte_array[prefix_size], &guid.entityId, guid.entityId.size);
 }
+
+struct hash_fastrtps_guid
+{
+  std::size_t operator()(const eprosima::fastrtps::rtps::GUID_t & guid) const
+  {
+    union u_convert
+    {
+      uint8_t plain_value[sizeof(guid)];
+      uint32_t plain_ints[4];
+    } u;
+
+    static_assert(
+      sizeof(u.plain_value) == sizeof(u.plain_ints) &&
+      offsetof(u_convert, plain_value) == offsetof(u_convert, plain_ints),
+      "ByteT should be either int8_t or uint8_t");
+
+    copy_from_fastrtps_guid_to_byte_array(guid, u.plain_value);
+
+    constexpr std::size_t prime_1 = 7;
+    constexpr std::size_t prime_2 = 31;
+    constexpr std::size_t prime_3 = 59;
+
+    size_t ret_val = prime_1 * u.plain_ints[0];
+    ret_val = prime_2 * (u.plain_ints[1] + ret_val);
+    ret_val = prime_3 * (u.plain_ints[2] + ret_val);
+    ret_val = u.plain_ints[3] + ret_val;
+
+    return ret_val;
+  }
+};
 
 }  // namespace rmw_fastrtps_shared_cpp
 

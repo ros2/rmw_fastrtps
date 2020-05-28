@@ -19,7 +19,7 @@
 #include <condition_variable>
 #include <list>
 #include <mutex>
-#include <set>
+#include <unordered_set>
 
 #include "fastcdr/FastBuffer.h"
 
@@ -33,6 +33,7 @@
 #include "rcpputils/thread_safety_annotations.hpp"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 
 class ServiceListener;
 class ServicePubListener;
@@ -204,8 +205,12 @@ public:
   }
 
 private:
+  using subscriptions_set_t =
+    std::unordered_set<eprosima::fastrtps::rtps::GUID_t,
+      rmw_fastrtps_shared_cpp::hash_fastrtps_guid>;
+
   std::mutex mutex_;
-  std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  subscriptions_set_t subscriptions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
   std::condition_variable cv_;
 };
 
