@@ -25,14 +25,18 @@ static constexpr size_t byte_array_size =
   eprosima::fastrtps::rtps::GuidPrefix_t::size +
   eprosima::fastrtps::rtps::EntityId_t::size;
 
+
 TEST(GUIDUtilsTest, bad_arguments) {
+#ifndef NDEBUG
   eprosima::fastrtps::rtps::GUID_t guid;
   uint8_t byte_array[byte_array_size] = {0};
   uint8_t * null_byte_array = nullptr;
   EXPECT_DEATH(copy_from_byte_array_to_fastrtps_guid(byte_array, nullptr), "");
   EXPECT_DEATH(copy_from_byte_array_to_fastrtps_guid(null_byte_array, &guid), "");
   EXPECT_DEATH(copy_from_fastrtps_guid_to_byte_array(guid, null_byte_array), "");
+#endif
 }
+
 
 TEST(GUIDUtilsTest, byte_array_to_guid_and_back) {
   uint8_t input_byte_array[byte_array_size] = {0};

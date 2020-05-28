@@ -67,9 +67,11 @@ TEST(NamespaceTest, name_mangling) {
   rmw_qos_profile_t qos_profile = rmw_qos_profile_unknown;
   qos_profile.avoid_ros_namespace_conventions = false;
 
+#ifndef NDEBUG
   EXPECT_DEATH(_create_topic_name(nullptr, "", "", ""), "");
 
   EXPECT_DEATH(_create_topic_name(&qos_profile, "", nullptr, ""), "");
+#endif
 
   EXPECT_STREQ(
     "some_ros_prefix/test__suffix", _create_topic_name(
