@@ -19,6 +19,7 @@
 #include <condition_variable>
 #include <list>
 #include <mutex>
+#include <set>
 
 #include "fastcdr/FastBuffer.h"
 
@@ -87,7 +88,7 @@ public:
       if (eprosima::fastrtps::rtps::ALIVE == request.sample_info_.sampleKind) {
         request.sample_identity_ = request.sample_info_.sample_identity;
         // Use response subscriber guid (on related_sample_identity) when present.
-        const eprosima::fastrtps::rtps::GUID_t& reader_guid =
+        const eprosima::fastrtps::rtps::GUID_t & reader_guid =
           request.sample_info_.related_sample_identity.writer_guid();
         if (reader_guid != eprosima::fastrtps::rtps::GUID_t::unknown() ) {
           request.sample_identity_.writer_guid() = reader_guid;
@@ -170,18 +171,18 @@ private:
 class ServicePubListener : public eprosima::fastrtps::PublisherListener
 {
 public:
-  explicit ServicePubListener() = default;
-  
-  template< class Rep, class Period >
+  ServicePubListener() = default;
+
+  template<class Rep, class Period>
   bool wait_for_subscription(
     const eprosima::fastrtps::rtps::GUID_t & guid,
     const std::chrono::duration<Rep, Period> & rel_time)
   {
     auto guid_is_present = [this, guid]() -> bool
-    {
-      return subscriptions_.find(guid) != subscriptions_.end();
-    };
-    
+      {
+        return subscriptions_.find(guid) != subscriptions_.end();
+      };
+
     std::unique_lock<std::mutex> lock(mutex_);
     return cv_.wait_for(lock, rel_time, guid_is_present);
   }

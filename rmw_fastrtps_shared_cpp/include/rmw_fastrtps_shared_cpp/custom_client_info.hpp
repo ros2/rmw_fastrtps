@@ -90,7 +90,8 @@ public:
         response.sample_identity_ = response.sample_info_.related_sample_identity;
 
         if (response.sample_identity_.writer_guid() == info_->reader_guid_ ||
-            response.sample_identity_.writer_guid() == info_->writer_guid_) {
+          response.sample_identity_.writer_guid() == info_->writer_guid_)
+        {
           std::lock_guard<std::mutex> lock(internalMutex_);
 
           if (conditionMutex_ != nullptr) {

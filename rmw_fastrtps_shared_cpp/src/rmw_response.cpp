@@ -110,11 +110,11 @@ __rmw_send_response(
   constexpr uint8_t entity_id_is_reader_bit = 0x04;
   const eprosima::fastrtps::rtps::GUID_t & related_guid =
     wparams.related_sample_identity().writer_guid();
-  if((related_guid.entityId.value[3] & entity_id_is_reader_bit) != 0)
-  {
+  if ((related_guid.entityId.value[3] & entity_id_is_reader_bit) != 0) {
     // Related guid is a reader, so it is the response subscription guid.
     // Wait for the response writer to be matched with it.
-    if(!info->pub_listener_->wait_for_subscription(related_guid, std::chrono::milliseconds(100))) {
+    auto listener = info->pub_listener_;
+    if (!listener->wait_for_subscription(related_guid, std::chrono::milliseconds(100))) {
       RMW_SET_ERROR_MSG("client will not receive response");
       return RMW_RET_ERROR;
     }
