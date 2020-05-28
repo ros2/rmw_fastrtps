@@ -60,8 +60,7 @@ struct hash_fastrtps_guid
 {
   std::size_t operator()(const eprosima::fastrtps::rtps::GUID_t & guid) const
   {
-    union u_convert
-    {
+    union u_convert {
       uint8_t plain_value[sizeof(guid)];
       uint32_t plain_ints[4];
     } u;
