@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2020-06-01)
+------------------
+* Add Security Vulnerability Policy pointing to REP-2006 (`#389 <https://github.com/ros2/rmw_fastrtps/issues/389>`_)
+* Update QDs for 1.0 (`#383 <https://github.com/ros2/rmw_fastrtps/issues/383>`_)
+* Contributors: Chris Lalancette, Stephen Brawner
+
 1.0.0 (2020-05-12)
 ------------------
 * Remove API related to manual by node liveliness.  (`#379 <https://github.com/ros2/rmw_fastrtps/issues/379>`_)

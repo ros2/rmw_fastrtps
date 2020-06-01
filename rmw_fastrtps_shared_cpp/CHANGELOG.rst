@@ -2,6 +2,17 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.0.1 (2020-06-01)
+------------------
+* Add Security Vulnerability Policy pointing to REP-2006 (`#389 <https://github.com/ros2/rmw_fastrtps/issues/389>`_)
+* Do not compile assert death tests in Release builds (`#393 <https://github.com/ros2/rmw_fastrtps/issues/393>`_)
+* Add test coverage for name mangling and namespacing-specific API (`#388 <https://github.com/ros2/rmw_fastrtps/issues/388>`_)
+* Add test coverage for GUID utilities (`#387 <https://github.com/ros2/rmw_fastrtps/issues/387>`_)
+* Drop unused TopicCache sources (`#386 <https://github.com/ros2/rmw_fastrtps/issues/386>`_)
+* Add test coverage for rmw_init_options API (`#385 <https://github.com/ros2/rmw_fastrtps/issues/385>`_)
+* Update QDs for 1.0 (`#383 <https://github.com/ros2/rmw_fastrtps/issues/383>`_)
+* Contributors: Chris Lalancette, Michel Hidalgo, Stephen Brawner
+
 1.0.0 (2020-05-12)
 ------------------
 * Remove API related to manual by node liveliness. (`#379 <https://github.com/ros2/rmw_fastrtps/issues/379>`_)
