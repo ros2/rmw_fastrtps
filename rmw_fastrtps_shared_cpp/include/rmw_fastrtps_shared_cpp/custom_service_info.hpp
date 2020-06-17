@@ -19,6 +19,7 @@
 #include <condition_variable>
 #include <list>
 #include <mutex>
+#include <unordered_set>
 
 #include "fastcdr/FastBuffer.h"
 
@@ -32,8 +33,10 @@
 #include "rcpputils/thread_safety_annotations.hpp"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 
 class ServiceListener;
+class ServicePubListener;
 
 typedef struct CustomServiceInfo
 {
@@ -44,6 +47,7 @@ typedef struct CustomServiceInfo
   eprosima::fastrtps::Subscriber * request_subscriber_;
   eprosima::fastrtps::Publisher * response_publisher_;
   ServiceListener * listener_;
+  ServicePubListener * pub_listener_;
   eprosima::fastrtps::Participant * participant_;
   const char * typesupport_identifier_;
 } CustomServiceInfo;
@@ -84,6 +88,12 @@ public:
     if (sub->takeNextData(&data, &request.sample_info_)) {
       if (eprosima::fastrtps::rtps::ALIVE == request.sample_info_.sampleKind) {
         request.sample_identity_ = request.sample_info_.sample_identity;
+        // Use response subscriber guid (on related_sample_identity) when present.
+        const eprosima::fastrtps::rtps::GUID_t & reader_guid =
+          request.sample_info_.related_sample_identity.writer_guid();
+        if (reader_guid != eprosima::fastrtps::rtps::GUID_t::unknown() ) {
+          request.sample_identity_.writer_guid() = reader_guid;
+        }
 
         std::lock_guard<std::mutex> lock(internalMutex_);
 
@@ -157,6 +167,51 @@ private:
   std::atomic_bool list_has_data_;
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+};
+
+class ServicePubListener : public eprosima::fastrtps::PublisherListener
+{
+public:
+  ServicePubListener() = default;
+
+  template<class Rep, class Period>
+  bool wait_for_subscription(
+    const eprosima::fastrtps::rtps::GUID_t & guid,
+    const std::chrono::duration<Rep, Period> & rel_time)
+  {
+    auto guid_is_present = [this, guid]() -> bool
+      {
+        return subscriptions_.find(guid) != subscriptions_.end();
+      };
+
+    std::unique_lock<std::mutex> lock(mutex_);
+    return cv_.wait_for(lock, rel_time, guid_is_present);
+  }
+
+  void onPublicationMatched(
+    eprosima::fastrtps::Publisher * pub,
+    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
+  {
+    (void) pub;
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (eprosima::fastrtps::rtps::MATCHED_MATCHING == matchingInfo.status) {
+      subscriptions_.insert(matchingInfo.remoteEndpointGuid);
+    } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == matchingInfo.status) {
+      subscriptions_.erase(matchingInfo.remoteEndpointGuid);
+    } else {
+      return;
+    }
+    cv_.notify_all();
+  }
+
+private:
+  using subscriptions_set_t =
+    std::unordered_set<eprosima::fastrtps::rtps::GUID_t,
+      rmw_fastrtps_shared_cpp::hash_fastrtps_guid>;
+
+  std::mutex mutex_;
+  subscriptions_set_t subscriptions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  std::condition_variable cv_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_

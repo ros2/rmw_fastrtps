@@ -57,6 +57,7 @@ __rmw_send_request(
   data.is_cdr_buffer = false;
   data.data = const_cast<void *>(ros_request);
   data.impl = info->request_type_support_impl_;
+  wparams.related_sample_identity().writer_guid() = info->reader_guid_;
   if (info->request_publisher_->write(&data, wparams)) {
     returnedValue = RMW_RET_OK;
     *sequence_id = ((int64_t)wparams.sample_identity().sequence_number().high) << 32 |
