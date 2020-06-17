@@ -100,11 +100,22 @@ __rmw_service_server_is_available(
     return RMW_RET_OK;
   }
 
-  if (0 == client_info->request_publisher_matched_count_.load()) {
+  if (number_of_request_subscribers != number_of_response_publishers) {
     // not ready
     return RMW_RET_OK;
   }
-  if (0 == client_info->response_subscriber_matched_count_.load()) {
+
+  size_t matched_request_pubs = client_info->request_publisher_matched_count_.load();
+  if (0 == matched_request_pubs) {
+    // not ready
+    return RMW_RET_OK;
+  }
+  size_t matched_response_subs = client_info->response_subscriber_matched_count_.load();
+  if (0 == matched_response_subs) {
+    // not ready
+    return RMW_RET_OK;
+  }
+  if (matched_request_pubs != matched_response_subs) {
     // not ready
     return RMW_RET_OK;
   }

@@ -217,11 +217,12 @@ rmw_create_client(
   info->request_publisher_ =
     Domain::createPublisher(participant, publisherParam, info->pub_listener_);
   if (!info->request_publisher_) {
-    RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
+    RMW_SET_ERROR_MSG("create_client() could not create publisher");
     goto fail;
   }
 
   info->writer_guid_ = info->request_publisher_->getGuid();
+  info->reader_guid_ = info->response_subscriber_->getGuid();
 
   rmw_client = rmw_client_allocate();
   if (!rmw_client) {
