@@ -164,10 +164,13 @@ rmw_fastrtps_shared_cpp::create_participant(
     participantAttrs.rtps.builtin.initialPeersList.push_back(local_network_interface_locator);
   }
 
+  // No custom handling of RMW_DEFAULT_DOMAIN_ID. Simply use a reasonable domain id.
 #if FASTRTPS_VERSION_MAJOR < 2
-  participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
+  participantAttrs.rtps.builtin.domainId =
+    static_cast<uint32_t>(domain_id != RMW_DEFAULT_DOMAIN_ID ? domain_id : 0u);
 #else
-  participantAttrs.domainId = static_cast<uint32_t>(domain_id);
+  participantAttrs.domainId =
+    static_cast<uint32_t>(domain_id != RMW_DEFAULT_DOMAIN_ID ? domain_id : 0u);
 #endif
 
   size_t length = snprintf(nullptr, 0, "enclave=%s;", enclave) + 1;
