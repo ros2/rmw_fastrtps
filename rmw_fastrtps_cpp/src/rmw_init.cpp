@@ -18,7 +18,9 @@
 #include "rcutils/strdup.h"
 #include "rcutils/types.h"
 
+#include "rmw/error_handling.h"
 #include "rmw/init.h"
+#include "rmw/impl/cpp/atexit.hpp"
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/init_options.h"
 #include "rmw/publisher_options.h"
@@ -68,55 +70,57 @@ using rmw_dds_common::msg::ParticipantEntitiesInfo;
 rmw_ret_t
 rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
 {
-  std::unique_ptr<rmw_context_t, void (*)(rmw_context_t *)> clean_when_fail(
-    context,
-    [](rmw_context_t * context)
-    {
-      *context = rmw_get_zero_initialized_context();
-    });
-  rmw_ret_t ret = RMW_RET_OK;
-
-  RCUTILS_CHECK_ARGUMENT_FOR_NULL(options, RMW_RET_INVALID_ARGUMENT);
-  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(options, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    options->implementation_identifier,
+    "expected initialized init options",
+    return RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     options,
     options->implementation_identifier,
     eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (NULL != context->implementation_identifier) {
+    RMW_SET_ERROR_MSG("expected a zero-initialized context");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  rmw::impl::cpp::atexit cleanup{[context]() {
+      delete context->impl;
+      *context = rmw_get_zero_initialized_context();
+    }};
+
   context->instance_id = options->instance_id;
   context->implementation_identifier = eprosima_fastrtps_identifier;
-
-  std::unique_ptr<rmw_context_impl_t> context_impl(new (std::nothrow) rmw_context_impl_t());
-  if (!context_impl) {
+  context->impl = new (std::nothrow) rmw_context_impl_t();
+  if (nullptr == context->impl) {
     RMW_SET_ERROR_MSG("failed to allocate context impl");
     return RMW_RET_BAD_ALLOC;
   }
+  context->impl->is_shutdown = false;
   context->options = rmw_get_zero_initialized_init_options();
-  ret = rmw_init_options_copy(options, &context->options);
+  rmw_ret_t ret = rmw_init_options_copy(options, &context->options);
   if (RMW_RET_OK != ret) {
-    if (RMW_RET_OK != rmw_init_options_fini(&context->options)) {
-      RMW_SAFE_FWRITE_TO_STDERR(
-        "'rmw_init_options_fini' failed while being executed due to '"
-        RCUTILS_STRINGIFY(__function__) "' failing.\n");
-    }
     return ret;
   }
-  context_impl->is_shutdown = false;
-  context->impl = context_impl.release();
-  clean_when_fail.release();
+  cleanup.cancel();
   return RMW_RET_OK;
 }
 
 rmw_ret_t
 rmw_shutdown(rmw_context_t * context)
 {
-  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    context->impl,
+    "expected initialized context",
+    return RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     context,
     context->implementation_identifier,
     eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context->impl, RMW_RET_INVALID_ARGUMENT);
   context->impl->is_shutdown = true;
   return RMW_RET_OK;
 }
@@ -124,7 +128,11 @@ rmw_shutdown(rmw_context_t * context)
 rmw_ret_t
 rmw_context_fini(rmw_context_t * context)
 {
-  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(context, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    context->impl,
+    "expected initialized context",
+    return RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     context,
     context->implementation_identifier,
@@ -134,8 +142,9 @@ rmw_context_fini(rmw_context_t * context)
     RCUTILS_SET_ERROR_MSG("context has not been shutdown");
     return RMW_RET_INVALID_ARGUMENT;
   }
+  rmw_ret_t ret = rmw_init_options_fini(&context->options);
   delete context->impl;
   *context = rmw_get_zero_initialized_context();
-  return RMW_RET_OK;
+  return ret;
 }
 }  // extern "C"
