@@ -27,6 +27,8 @@ struct rmw_context_impl_t
   std::mutex mutex;
   /// Reference count.
   uint64_t count;
+  /// Shutdown flag.
+  bool is_shutdown;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__RMW_CONTEXT_IMPL_HPP_
