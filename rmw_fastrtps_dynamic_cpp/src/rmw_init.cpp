@@ -115,8 +115,8 @@ rmw_shutdown(rmw_context_t * context)
     context->implementation_identifier,
     eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  // Nothing to do here for now.
-  // This is just the middleware's notification that shutdown was called.
+  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context->impl, RMW_RET_INVALID_ARGUMENT);
+  context->impl->is_shutdown = true;
   return RMW_RET_OK;
 }
 
@@ -129,6 +129,10 @@ rmw_context_fini(rmw_context_t * context)
     context->implementation_identifier,
     eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (!context->impl->is_shutdown) {
+    RCUTILS_SET_ERROR_MSG("context has not been shutdown");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
   delete context->impl;
   *context = rmw_get_zero_initialized_context();
   return RMW_RET_OK;
