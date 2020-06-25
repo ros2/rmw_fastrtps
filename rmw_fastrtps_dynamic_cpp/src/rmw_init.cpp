@@ -19,12 +19,13 @@
 #include "rcutils/types.h"
 
 #include "rmw/error_handling.h"
-#include "rmw/impl/cpp/atexit.hpp"
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/init.h"
 #include "rmw/init_options.h"
 #include "rmw/publisher_options.h"
 #include "rmw/rmw.h"
+
+#include "rcpputils/scope_exit.hpp"
 
 #include "rmw_dds_common/context.hpp"
 #include "rmw_dds_common/msg/participant_entities_info.hpp"
@@ -86,10 +87,10 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     return RMW_RET_INVALID_ARGUMENT;
   }
 
-  rmw::impl::cpp::atexit cleanup{[context]() {
+  auto cleanup = rcpputils::make_scope_exit([context]() {
       delete context->impl;
       *context = rmw_get_zero_initialized_context();
-    }};
+    });
 
   context->instance_id = options->instance_id;
   context->implementation_identifier = eprosima_fastrtps_identifier;
