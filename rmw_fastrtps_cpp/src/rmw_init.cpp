@@ -87,7 +87,8 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     return RMW_RET_INVALID_ARGUMENT;
   }
 
-  auto cleanup = rcpputils::make_scope_exit([context]() {
+  auto cleanup = rcpputils::make_scope_exit(
+    [context]() {
       delete context->impl;
       *context = rmw_get_zero_initialized_context();
     });
