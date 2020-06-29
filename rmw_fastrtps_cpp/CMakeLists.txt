@@ -31,6 +31,7 @@ endif()
 
 find_package(ament_cmake_ros REQUIRED)
 
+find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw_dds_common REQUIRED)
 find_package(rmw_fastrtps_shared_cpp REQUIRED)
@@ -93,6 +94,7 @@ target_link_libraries(rmw_fastrtps_cpp
 
 # specific order: dependents before dependencies
 ament_target_dependencies(rmw_fastrtps_cpp
+  "rcpputils"
   "rcutils"
   "rosidl_typesupport_fastrtps_c"
   "rosidl_typesupport_fastrtps_cpp"
