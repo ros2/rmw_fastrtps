@@ -13,6 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cassert>
+#include <cstring>
 #include <memory>
 
 #include "rcutils/strdup.h"
@@ -87,26 +89,31 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     return RMW_RET_INVALID_ARGUMENT;
   }
 
-  auto cleanup = rcpputils::make_scope_exit(
-    [context]() {
-      delete context->impl;
-      *context = rmw_get_zero_initialized_context();
-    });
+  const rmw_context_t zero_context = rmw_get_zero_initialized_context();
+  assert(0 == std::memcmp(context, &zero_context, sizeof(rmw_context_t)));
+  auto restore_context = rcpputils::make_scope_exit(
+    [context, &zero_context]() {*context = zero_context;});
 
   context->instance_id = options->instance_id;
   context->implementation_identifier = eprosima_fastrtps_identifier;
+
   context->impl = new (std::nothrow) rmw_context_impl_t();
   if (nullptr == context->impl) {
     RMW_SET_ERROR_MSG("failed to allocate context impl");
     return RMW_RET_BAD_ALLOC;
   }
+  auto cleanup_impl = rcpputils::make_scope_exit(
+    [context]() {delete context->impl;});
+
   context->impl->is_shutdown = false;
   context->options = rmw_get_zero_initialized_init_options();
   rmw_ret_t ret = rmw_init_options_copy(options, &context->options);
   if (RMW_RET_OK != ret) {
     return ret;
   }
-  cleanup.cancel();
+
+  cleanup_impl.cancel();
+  restore_context.cancel();
   return RMW_RET_OK;
 }
 
