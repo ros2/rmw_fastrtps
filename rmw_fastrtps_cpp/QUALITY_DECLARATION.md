@@ -160,7 +160,7 @@ This package conforms to the Vulnerability Disclosure Policy in [REP-2006](https
 
 # Current status Summary
 
-The chart below compares the requirements in the REP-2004 with the current state of the `rmw_dds_common` package.
+The chart below compares the requirements in the REP-2004 with the current state of the `rmw_fastrtps_cpp` package.
 
 |Number| Requirement| Current state |
 |--|--|--|
