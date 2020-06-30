@@ -105,7 +105,12 @@ This includes:
 
 Changes are required to make a best effort to keep or increase coverage before being accepted, but decreases are allowed if properly justified and accepted by reviewers.
 
-Current coverage statistics can be viewed [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/install_rmw_fastrtps_shared_cpp_include_rmw_fastrtps_shared_cpp/), [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_include_rmw_fastrtps_shared_cpp/), [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_src/) and [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_src_types/). This package does not yet meet the 95% coverage guideline.
+Current coverage statistics can be viewed 
+[here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/install_rmw_fastrtps_shared_cpp_include_rmw_fastrtps_shared_cpp/), 
+[here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_include_rmw_fastrtps_shared_cpp/), 
+[here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_src/), and 
+[here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_src_types/).
+This package does not yet meet the 95% coverage guideline.
 
 A summary of how these statistics are calculated can be found in the [ROS 2 On-boarding guide](https://index.ros.org/doc/ros2/Contributing/ROS-2-On-boarding-Guide/#note-on-coverage-runs).
 
