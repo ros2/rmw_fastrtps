@@ -84,6 +84,10 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     options->implementation_identifier,
     eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    options->enclave,
+    "expected non-null enclave",
+    return RMW_RET_INVALID_ARGUMENT);
   if (NULL != context->implementation_identifier) {
     RMW_SET_ERROR_MSG("expected a zero-initialized context");
     return RMW_RET_INVALID_ARGUMENT;
