@@ -20,7 +20,6 @@
 #include <string>
 
 #include "rcutils/logging_macros.h"
-#include "rcutils/strdup.h"
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
@@ -74,33 +73,37 @@ __rmw_create_node(
   auto common_context = static_cast<rmw_dds_common::Context *>(context->impl->common);
   rmw_dds_common::GraphCache & graph_cache = common_context->graph_cache;
   rcutils_allocator_t allocator = context->options.allocator;
-  rmw_node_t * node = reinterpret_cast<rmw_node_t *>(
-    allocator.zero_allocate(1u, sizeof(rmw_node_t), allocator.state));
-  if (nullptr == node) {
+  rmw_node_t * node_handle = rmw_node_allocate();
+  if (nullptr == node_handle) {
     RMW_SET_ERROR_MSG("failed to allocate node");
     return nullptr;
   }
   auto cleanup_node = rcpputils::make_scope_exit(
-    [node, allocator]() {
-      allocator.deallocate(const_cast<char *>(node->name), allocator.state);
-      allocator.deallocate(const_cast<char *>(node->namespace_), allocator.state);
-      allocator.deallocate(node, allocator.state);
+    [node_handle, allocator]() {
+      rmw_free(const_cast<char *>(node_handle->name));
+      rmw_free(const_cast<char *>(node_handle->namespace_));
+      rmw_node_free(node_handle);
     });
-  node->implementation_identifier = context->implementation_identifier;
-  node->data = nullptr;
+  node_handle->implementation_identifier = context->implementation_identifier;
+  node_handle->data = nullptr;
 
-  node->name = rcutils_strdup(name, allocator);
-  if (nullptr == node->name) {
+  node_handle->name =
+    static_cast<const char *>(rmw_allocate(sizeof(char) * strlen(name) + 1));
+  if (nullptr == node_handle->name) {
     RMW_SET_ERROR_MSG("failed to copy node name");
     return nullptr;
   }
+  memcpy(const_cast<char *>(node_handle->name), name, strlen(name) + 1);
 
-  node->namespace_ = rcutils_strdup(namespace_, allocator);
-  if (nullptr == node->namespace_) {
+  node_handle->namespace_ =
+    static_cast<const char *>(rmw_allocate(sizeof(char) * strlen(namespace_) + 1));
+  if (nullptr == node_handle->namespace_) {
     RMW_SET_ERROR_MSG("failed to copy node namespace");
     return nullptr;
   }
-  node->context = context;
+  memcpy(const_cast<char *>(node_handle->namespace_), namespace_, strlen(namespace_) + 1);
+
+  node_handle->context = context;
 
   {
     // Though graph_cache methods are thread safe, both cache update and publishing have to also
@@ -112,7 +115,7 @@ __rmw_create_node(
     rmw_dds_common::msg::ParticipantEntitiesInfo participant_msg =
       graph_cache.add_node(common_context->gid, name, namespace_);
     if (RMW_RET_OK != __rmw_publish(
-        node->implementation_identifier,
+        node_handle->implementation_identifier,
         common_context->pub,
         static_cast<void *>(&participant_msg),
         nullptr))
@@ -121,7 +124,7 @@ __rmw_create_node(
     }
   }
   cleanup_node.cancel();
-  return node;
+  return node_handle;
 }
 
 rmw_ret_t
@@ -151,10 +154,9 @@ __rmw_destroy_node(
       return ret;
     }
   }
-  rcutils_allocator_t allocator = node->context->options.allocator;
-  allocator.deallocate(const_cast<char *>(node->name), allocator.state);
-  allocator.deallocate(const_cast<char *>(node->namespace_), allocator.state);
-  allocator.deallocate(node, allocator.state);
+  rmw_free(const_cast<char *>(node->name));
+  rmw_free(const_cast<char *>(node->namespace_));
+  rmw_node_free(node);
   return RMW_RET_OK;
 }
 
