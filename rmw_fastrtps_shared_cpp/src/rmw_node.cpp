@@ -134,11 +134,7 @@ __rmw_destroy_node(
 {
   assert(node != nullptr);
   assert(node->implementation_identifier == identifier);
-  static_cast<void>(identifier);
 
-  assert(node->context != nullptr);
-  assert(node->context->impl != nullptr);
-  assert(node->context->impl->common != nullptr);
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   rmw_dds_common::GraphCache & graph_cache = common_context->graph_cache;
   {
@@ -146,7 +142,7 @@ __rmw_destroy_node(
     rmw_dds_common::msg::ParticipantEntitiesInfo participant_msg =
       graph_cache.remove_node(common_context->gid, node->name, node->namespace_);
     rmw_ret_t ret = __rmw_publish(
-      node->implementation_identifier,
+      identifier,
       common_context->pub,
       static_cast<void *>(&participant_msg),
       nullptr);

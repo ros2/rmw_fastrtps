@@ -83,7 +83,6 @@ rmw_destroy_node(rmw_node_t * node)
     node->implementation_identifier,
     eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  assert(node->context != nullptr);
   rmw_context_t * context = node->context;
   rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_destroy_node(
     eprosima_fastrtps_identifier, node);
