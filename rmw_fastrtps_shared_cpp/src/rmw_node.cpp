@@ -46,10 +46,7 @@ __rmw_create_node(
   const char * name,
   const char * namespace_)
 {
-  assert(nullptr != context);
-  assert(nullptr != context->impl);
   assert(identifier == context->implementation_identifier);
-  static_cast<void>(identifier);
 
   int validation_result = RMW_NODE_NAME_VALID;
   rmw_ret_t ret = rmw_validate_node_name(name, &validation_result, nullptr);
@@ -84,7 +81,7 @@ __rmw_create_node(
       rmw_free(const_cast<char *>(node_handle->namespace_));
       rmw_node_free(node_handle);
     });
-  node_handle->implementation_identifier = context->implementation_identifier;
+  node_handle->implementation_identifier = identifier;
   node_handle->data = nullptr;
 
   node_handle->name =
@@ -132,7 +129,6 @@ __rmw_destroy_node(
   const char * identifier,
   rmw_node_t * node)
 {
-  assert(node != nullptr);
   assert(node->implementation_identifier == identifier);
 
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
