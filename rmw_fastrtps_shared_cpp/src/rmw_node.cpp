@@ -71,14 +71,13 @@ __rmw_create_node(
 
   auto common_context = static_cast<rmw_dds_common::Context *>(context->impl->common);
   rmw_dds_common::GraphCache & graph_cache = common_context->graph_cache;
-  rcutils_allocator_t allocator = context->options.allocator;
   rmw_node_t * node_handle = rmw_node_allocate();
   if (nullptr == node_handle) {
     RMW_SET_ERROR_MSG("failed to allocate node");
     return nullptr;
   }
   auto cleanup_node = rcpputils::make_scope_exit(
-    [node_handle, allocator]() {
+    [node_handle]() {
       rmw_free(const_cast<char *>(node_handle->name));
       rmw_free(const_cast<char *>(node_handle->namespace_));
       rmw_node_free(node_handle);
