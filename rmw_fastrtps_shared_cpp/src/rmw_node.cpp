@@ -50,19 +50,21 @@ __rmw_create_node(
 
   int validation_result = RMW_NODE_NAME_VALID;
   rmw_ret_t ret = rmw_validate_node_name(name, &validation_result, nullptr);
-  if (RMW_RET_OK != ret || RMW_NODE_NAME_VALID != validation_result) {
-    const char * reason = RMW_RET_OK == ret ?
-      rmw_node_name_validation_result_string(validation_result) :
-      rmw_get_error_string().str;
+  if (RMW_RET_OK != ret) {
+    return nullptr;
+  }
+  if (RMW_NODE_NAME_VALID != validation_result) {
+    const char * reason = rmw_node_name_validation_result_string(validation_result);
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("invalid node name: %s", reason);
     return nullptr;
   }
   validation_result = RMW_NAMESPACE_VALID;
   ret = rmw_validate_namespace(namespace_, &validation_result, nullptr);
-  if (RMW_RET_OK != ret || RMW_NAMESPACE_VALID != validation_result) {
-    const char * reason = RMW_RET_OK == ret ?
-      rmw_node_name_validation_result_string(validation_result) :
-      rmw_get_error_string().str;
+  if (RMW_RET_OK != ret) {
+    return nullptr;
+  }
+  if (RMW_NAMESPACE_VALID != validation_result) {
+    const char * reason = rmw_node_name_validation_result_string(validation_result);
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("invalid node namespace: %s", reason);
     return nullptr;
   }
