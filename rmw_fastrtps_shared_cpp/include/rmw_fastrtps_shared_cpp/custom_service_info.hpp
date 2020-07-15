@@ -179,11 +179,13 @@ public:
     const eprosima::fastrtps::rtps::GUID_t & guid,
     const std::chrono::duration<Rep, Period> & rel_time)
   {
-    std::unique_lock<std::mutex> lock(mutex_);
-    auto guid_is_present = [this, guid]() -> bool
+    auto guid_is_present = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_) -> bool
       {
+
         return subscriptions_.find(guid) != subscriptions_.end();
       };
+
+    std::unique_lock<std::mutex> lock(mutex_);
     return cv_.wait_for(lock, rel_time, guid_is_present);
   }
 
