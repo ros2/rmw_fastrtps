@@ -28,6 +28,7 @@
 
 #include "rmw_fastrtps_shared_cpp/init_rmw_context_impl.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/init_rmw_context_impl.hpp"
@@ -44,13 +45,21 @@ rmw_create_node(
 {
   (void)domain_id;
   (void)localhost_only;
-  RCUTILS_CHECK_ARGUMENT_FOR_NULL(context, NULL);
+  RMW_CHECK_ARGUMENT_FOR_NULL(context, nullptr);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     init context,
     context->implementation_identifier,
     eprosima_fastrtps_identifier,
     // TODO(wjwwood): replace this with RMW_RET_INCORRECT_RMW_IMPLEMENTATION when refactored
     return nullptr);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    context->impl,
+    "expected initialized context",
+    return nullptr);
+  if (context->impl->is_shutdown) {
+    RCUTILS_SET_ERROR_MSG("context has been shutdown");
+    return nullptr;
+  }
 
   if (RMW_RET_OK != rmw_fastrtps_cpp::increment_context_impl_ref_count(context)) {
     return nullptr;
@@ -72,6 +81,13 @@ rmw_create_node(
 rmw_ret_t
 rmw_destroy_node(rmw_node_t * node)
 {
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
   rmw_context_t * context = node->context;
   rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_destroy_node(
     eprosima_fastrtps_identifier, node);
