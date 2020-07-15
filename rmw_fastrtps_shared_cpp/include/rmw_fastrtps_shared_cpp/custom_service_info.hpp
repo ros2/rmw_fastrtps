@@ -181,7 +181,6 @@ public:
   {
     auto guid_is_present = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_) -> bool
       {
-
         return subscriptions_.find(guid) != subscriptions_.end();
       };
 
