@@ -179,7 +179,7 @@ public:
     const eprosima::fastrtps::rtps::GUID_t & guid,
     const std::chrono::duration<Rep, Period> & rel_time)
   {
-    auto guid_is_present = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_) -> bool
+    auto guid_is_present = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_)->bool
     {
       return subscriptions_.find(guid) != subscriptions_.end();
     };
