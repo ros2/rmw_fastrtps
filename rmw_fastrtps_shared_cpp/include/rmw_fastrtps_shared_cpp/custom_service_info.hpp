@@ -180,9 +180,9 @@ public:
     const std::chrono::duration<Rep, Period> & rel_time)
   {
     auto guid_is_present = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_) -> bool
-      {
-        return subscriptions_.find(guid) != subscriptions_.end();
-      };
+    {
+      return subscriptions_.find(guid) != subscriptions_.end();
+    };
 
     std::unique_lock<std::mutex> lock(mutex_);
     return cv_.wait_for(lock, rel_time, guid_is_present);
