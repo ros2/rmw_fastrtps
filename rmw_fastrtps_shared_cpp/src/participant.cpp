@@ -166,9 +166,9 @@ rmw_fastrtps_shared_cpp::create_participant(
 
   // No custom handling of RMW_DEFAULT_DOMAIN_ID. Simply use a reasonable domain id.
 #if FASTRTPS_VERSION_MAJOR < 2
-  participantAttrs.rtps.builtin.domainId = domain_id;
+  participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
 #else
-  participantAttrs.domainId = domain_id;
+  participantAttrs.domainId = static_cast<uint32_t>(domain_id);
 #endif
 
   size_t length = snprintf(nullptr, 0, "enclave=%s;", enclave) + 1;
