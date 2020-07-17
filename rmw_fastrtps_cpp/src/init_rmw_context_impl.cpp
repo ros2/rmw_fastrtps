@@ -60,7 +60,7 @@ init_context_impl(rmw_context_t * context)
   participant_info(
     rmw_fastrtps_shared_cpp::create_participant(
       eprosima_fastrtps_identifier,
-      context->options.domain_id,
+      context->actual_domain_id,
       &context->options.security_options,
       (context->options.localhost_only == RMW_LOCALHOST_ONLY_ENABLED) ? 1 : 0,
       context->options.enclave,
