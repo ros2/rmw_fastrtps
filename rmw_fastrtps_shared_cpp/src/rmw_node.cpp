@@ -232,7 +232,12 @@ __rmw_create_node(
   // Load default XML profile.
   Domain::getDefaultParticipantAttributes(participantAttrs);
 
+#if FASTRTPS_VERSION_MAJOR < 2
   participantAttrs.rtps.builtin.domainId = static_cast<uint32_t>(domain_id);
+#else
+  participantAttrs.domainId = static_cast<uint32_t>(domain_id);
+#endif
+
   // since the participant name is not part of the DDS spec
   participantAttrs.rtps.setName(name);
 
