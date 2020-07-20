@@ -93,10 +93,8 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     return RMW_RET_INVALID_ARGUMENT;
   }
 
-  const rmw_context_t zero_context = rmw_get_zero_initialized_context();
-  assert(0 == std::memcmp(context, &zero_context, sizeof(rmw_context_t)));
   auto restore_context = rcpputils::make_scope_exit(
-    [context, &zero_context]() {*context = zero_context;});
+    [context]() {*context = rmw_get_zero_initialized_context();});
 
   context->instance_id = options->instance_id;
   context->implementation_identifier = eprosima_fastrtps_identifier;
