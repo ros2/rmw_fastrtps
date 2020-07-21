@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.0 (2020-07-21)
+------------------
+* Add missing thread-safety annotation in ServicePubListener (`#409 <https://github.com/ros2/rmw_fastrtps/issues/409>`_) (`#413 <https://github.com/ros2/rmw_fastrtps/issues/413>`_)
+* Make service wait for response reader (`#390 <https://github.com/ros2/rmw_fastrtps/issues/390>`_) (`#412 <https://github.com/ros2/rmw_fastrtps/issues/412>`_)
+* Contributors: Michel Hidalgo, Miguel Company
+
 1.0.2 (2020-07-07)
 ------------------
 * Handle RMW_DEFAULT_DOMAIN_ID (`#394 <https://github.com/ros2/rmw_fastrtps/issues/394>`_) (`#398 <https://github.com/ros2/rmw_fastrtps/issues/398>`_)
