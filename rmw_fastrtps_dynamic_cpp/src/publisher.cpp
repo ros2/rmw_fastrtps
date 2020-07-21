@@ -18,6 +18,9 @@
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
+#include "rmw/validate_full_topic_name.h"
+
+#include "rcpputils/scope_exit.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
@@ -51,25 +54,23 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   (void)keyed;
   (void)create_publisher_listener;
 
-  if (!participant_info) {
-    RMW_SET_ERROR_MSG("participant_info is null");
-    return nullptr;
+  RMW_CHECK_ARGUMENT_FOR_NULL(participant_info, nullptr);
+  RMW_CHECK_ARGUMENT_FOR_NULL(type_supports, nullptr);
+  RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, nullptr);
+  RMW_CHECK_ARGUMENT_FOR_NULL(qos_policies, nullptr);
+  if (!qos_policies->avoid_ros_namespace_conventions) {
+    int validation_result = RMW_TOPIC_VALID;
+    rmw_ret_t ret = rmw_validate_full_topic_name(topic_name, &validation_result, nullptr);
+    if (RMW_RET_OK != ret) {
+      return nullptr;
+    }
+    if (RMW_TOPIC_VALID != validation_result) {
+      const char * reason = rmw_full_topic_name_validation_result_string(validation_result);
+      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("invalid topic name: %s", reason);
+      return nullptr;
+    }
   }
-
-  if (!topic_name || strlen(topic_name) == 0) {
-    RMW_SET_ERROR_MSG("publisher topic is null or empty string");
-    return nullptr;
-  }
-
-  if (!qos_policies) {
-    RMW_SET_ERROR_MSG("qos_policies is null");
-    return nullptr;
-  }
-
-  if (!publisher_options) {
-    RMW_SET_ERROR_MSG("publisher_options is null");
-    return nullptr;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher_options, nullptr);
 
   Participant * participant = participant_info->participant;
   if (!participant) {
@@ -104,14 +105,25 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
     RMW_SET_ERROR_MSG("failed to allocate CustomPublisherInfo");
     return nullptr;
   }
+  auto cleanup_info = rcpputils::make_scope_exit(
+    [info, participant]() {
+      if (info->type_support_) {
+        _unregister_type(participant, info->type_support_);
+      }
+      delete info->listener_;
+      delete info;
+    });
 
   TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
   auto type_impl = type_registry.get_message_type_support(type_support);
   if (!type_impl) {
-    delete info;
     RMW_SET_ERROR_MSG("failed to allocate type support");
     return nullptr;
   }
+  auto return_type_support = rcpputils::make_scope_exit(
+    [&type_registry, type_support]() {
+      type_registry.return_message_type_support(type_support);
+    });
 
   info->typesupport_identifier_ = type_support->typesupport_identifier;
   info->type_support_impl_ = type_impl;
@@ -126,7 +138,7 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
     info->type_support_ = new (std::nothrow) TypeSupportProxy(type_impl);
     if (!info->type_support_) {
       RMW_SET_ERROR_MSG("failed to allocate TypeSupportProxy");
-      goto fail;
+      return nullptr;
     }
     _register_type(participant, info->type_support_);
   }
@@ -150,20 +162,19 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   // publisherParam.throughputController = throughputController;
 
   if (!get_datawriter_qos(*qos_policies, publisherParam)) {
-    RMW_SET_ERROR_MSG("failed to get datawriter qos");
-    goto fail;
+    return nullptr;
   }
 
   info->listener_ = new (std::nothrow) PubListener(info);
   if (!info->listener_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher listener");
-    goto fail;
+    return nullptr;
   }
 
   info->publisher_ = Domain::createPublisher(participant, publisherParam, info->listener_);
   if (!info->publisher_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
-    goto fail;
+    return nullptr;
   }
 
   info->publisher_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
@@ -172,32 +183,29 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   rmw_publisher = rmw_publisher_allocate();
   if (!rmw_publisher) {
     RMW_SET_ERROR_MSG("failed to allocate publisher");
-    goto fail;
+    return nullptr;
   }
+  auto cleanup_publisher = rcpputils::make_scope_exit(
+    [rmw_publisher]() {
+      rmw_free(const_cast<char *>(rmw_publisher->topic_name));
+      rmw_publisher_free(rmw_publisher);
+    });
+
   rmw_publisher->can_loan_messages = false;
   rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_publisher->data = info;
-  rmw_publisher->topic_name = static_cast<char *>(rmw_allocate(strlen(topic_name) + 1));
 
+  rmw_publisher->topic_name = static_cast<char *>(rmw_allocate(strlen(topic_name) + 1));
   if (!rmw_publisher->topic_name) {
     RMW_SET_ERROR_MSG("failed to allocate memory for publisher topic name");
-    goto fail;
+    return nullptr;
   }
-
   memcpy(const_cast<char *>(rmw_publisher->topic_name), topic_name, strlen(topic_name) + 1);
 
   rmw_publisher->options = *publisher_options;
 
+  cleanup_publisher.cancel();
+  cleanup_info.cancel();
+  return_type_support.cancel();
   return rmw_publisher;
-
-fail:
-  if (info) {
-    delete info->type_support_;
-    delete info->listener_;
-    delete info;
-  }
-  type_registry.return_message_type_support(type_support);
-  rmw_publisher_free(rmw_publisher);
-
-  return nullptr;
 }
