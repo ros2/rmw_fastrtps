@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Set context actual domain id (`#410 <https://github.com/ros2/rmw_fastrtps/issues/410>`_)
+* Contributors: Ivan Santiago Paunovic
+
 2.1.0 (2020-07-20)
 ------------------
 * Add missing thread-safety annotation in ServicePubListener (`#409 <https://github.com/ros2/rmw_fastrtps/issues/409>`_)
