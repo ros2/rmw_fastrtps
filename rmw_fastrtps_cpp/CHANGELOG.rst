@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.2.0 (2020-07-22)
+------------------
 * Set context actual domain id (`#410 <https://github.com/ros2/rmw_fastrtps/issues/410>`_)
 * Contributors: Ivan Santiago Paunovic
 
