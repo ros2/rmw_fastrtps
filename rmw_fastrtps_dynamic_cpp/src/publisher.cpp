@@ -73,10 +73,7 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   RMW_CHECK_ARGUMENT_FOR_NULL(publisher_options, nullptr);
 
   Participant * participant = participant_info->participant;
-  if (!participant) {
-    RMW_SET_ERROR_MSG("participant handle is null");
-    return nullptr;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(participant, nullptr);
 
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
