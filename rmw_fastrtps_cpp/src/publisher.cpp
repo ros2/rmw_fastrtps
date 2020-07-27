@@ -55,6 +55,10 @@ rmw_fastrtps_cpp::create_publisher(
   RMW_CHECK_ARGUMENT_FOR_NULL(participant_info, nullptr);
   RMW_CHECK_ARGUMENT_FOR_NULL(type_supports, nullptr);
   RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, nullptr);
+  if (0 == strlen(topic_name)) {
+    RMW_SET_ERROR_MSG("topic_name argument is an empty string");
+    return nullptr;
+  }
   RMW_CHECK_ARGUMENT_FOR_NULL(qos_policies, nullptr);
   if (!qos_policies->avoid_ros_namespace_conventions) {
     int validation_result = RMW_TOPIC_VALID;
