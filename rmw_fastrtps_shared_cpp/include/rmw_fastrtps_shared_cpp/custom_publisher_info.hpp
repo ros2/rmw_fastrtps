@@ -36,12 +36,12 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
 {
   virtual ~CustomPublisherInfo() = default;
 
-  eprosima::fastrtps::Publisher * publisher_;
-  PubListener * listener_;
-  rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
-  const void * type_support_impl_;
-  rmw_gid_t publisher_gid;
-  const char * typesupport_identifier_;
+  eprosima::fastrtps::Publisher * publisher_{nullptr};
+  PubListener * listener_{nullptr};
+  rmw_fastrtps_shared_cpp::TypeSupport * type_support_{nullptr};
+  const void * type_support_impl_{nullptr};
+  rmw_gid_t publisher_gid{};
+  const char * typesupport_identifier_{nullptr};
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *
