@@ -37,25 +37,11 @@ __rmw_destroy_publisher(
   const rmw_node_t * node,
   rmw_publisher_t * publisher)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
-    return RMW_RET_ERROR;
-  }
+  assert(node->implementation_identifier == identifier);
+  assert(publisher->implementation_identifier == identifier);
 
-  if (node->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("publisher handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  if (!publisher) {
-    RMW_SET_ERROR_MSG("publisher handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (publisher->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("publisher handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
+  rmw_ret_t ret = RMW_RET_OK;
+  rmw_error_state_t error_state;
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
   {
@@ -64,22 +50,36 @@ __rmw_destroy_publisher(
     rmw_dds_common::msg::ParticipantEntitiesInfo msg =
       common_context->graph_cache.dissociate_writer(
       info->publisher_gid, common_context->gid, node->name, node->namespace_);
-    rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
+    rmw_ret_t publish_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
       identifier,
       common_context->pub,
       &msg,
       nullptr);
-    if (RMW_RET_OK != rmw_ret) {
-      return rmw_ret;
+    if (RMW_RET_OK != publish_ret) {
+      error_state = *rmw_get_error_state();
+      ret = publish_ret;
+      rmw_reset_error();
     }
   }
 
   auto participant_info =
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
-  return destroy_publisher(
-    identifier,
-    participant_info,
-    publisher);
+  rmw_ret_t inner_ret = destroy_publisher(identifier, participant_info, publisher);
+  if (RMW_RET_OK != inner_ret) {
+    if (RMW_RET_OK != ret) {
+      RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
+      RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "'\n");
+    } else {
+      error_state = *rmw_get_error_state();
+      ret = inner_ret;
+    }
+    rmw_reset_error();
+  }
+
+  if (RMW_RET_OK != ret) {
+    rmw_set_error_state(error_state.message, error_state.file, error_state.line_number);
+  }
+  return ret;
 }
 
 rmw_ret_t
