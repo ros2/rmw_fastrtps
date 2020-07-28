@@ -35,33 +35,17 @@ destroy_publisher(
   CustomParticipantInfo * participant_info,
   rmw_publisher_t * publisher)
 {
-  if (!publisher) {
-    RMW_SET_ERROR_MSG("publisher handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (publisher->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("publisher handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-  if (!participant_info) {
-    RMW_SET_ERROR_MSG("participant_info is null");
-    return RMW_RET_ERROR;
-  }
+  assert(publisher->implementation_identifier == identifier);
+  static_cast<void>(identifier);
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  if (info != nullptr) {
-    if (info->publisher_ != nullptr) {
-      Domain::removePublisher(info->publisher_);
-    }
-    delete info->listener_;
-    if (info->type_support_ != nullptr) {
-      Participant * participant = participant_info->participant;
-      _unregister_type(participant, info->type_support_);
-    }
-    delete info;
-  }
+  Domain::removePublisher(info->publisher_);
+  delete info->listener_;
+
+  _unregister_type(participant_info->participant, info->type_support_);
+  delete info;
+
   rmw_free(const_cast<char *>(publisher->topic_name));
-  publisher->topic_name = nullptr;
   rmw_publisher_free(publisher);
 
   return RMW_RET_OK;
