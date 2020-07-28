@@ -21,7 +21,7 @@
 #include <cassert>
 #include <memory>
 
-#include "TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
