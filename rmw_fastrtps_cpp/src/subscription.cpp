@@ -164,7 +164,9 @@ create_subscription(
 
 fail:
   if (info != nullptr) {
-    delete info->type_support_;
+    if (info->type_support_ != nullptr) {
+      _unregister_type(participant, info->type_support_);
+    }
     delete info->listener_;
     delete info;
   }
