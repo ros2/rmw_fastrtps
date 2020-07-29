@@ -142,7 +142,7 @@ public:
   }
 
   void
-  data_taken(eprosima::fastrtps::Subscriber * sub)
+  updateDataCount(eprosima::fastrtps::Subscriber * sub)
   {
     // Make sure to call into Fast-RTPS before taking the lock to avoid an
     // ABBA deadlock between internalMutex_ and mutexes inside of Fast-RTPS.

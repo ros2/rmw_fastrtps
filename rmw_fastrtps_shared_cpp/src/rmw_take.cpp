@@ -75,7 +75,7 @@ _take(
   data.data = ros_message;
   data.impl = info->type_support_impl_;
   if (info->subscriber_->takeNextData(&data, &sinfo)) {
-    info->listener_->data_taken(info->subscriber_);
+    info->listener_->updateDataCount(info->subscriber_);
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
       if (message_info) {
@@ -83,6 +83,8 @@ _take(
       }
       *taken = true;
     }
+  } else {
+    info->listener_->updateDataCount(info->subscriber_);
   }
 
   return RMW_RET_OK;
@@ -267,7 +269,7 @@ _take_serialized_message(
   data.data = &buffer;
   data.impl = nullptr;    // not used when is_cdr_buffer is true
   if (info->subscriber_->takeNextData(&data, &sinfo)) {
-    info->listener_->data_taken(info->subscriber_);
+    info->listener_->updateDataCount(info->subscriber_);
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
       auto buffer_size = static_cast<size_t>(buffer.getBufferSize());
@@ -285,6 +287,8 @@ _take_serialized_message(
       }
       *taken = true;
     }
+  } else {
+    info->listener_->updateDataCount(info->subscriber_);
   }
 
   return RMW_RET_OK;
