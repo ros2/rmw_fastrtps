@@ -39,25 +39,11 @@ __rmw_destroy_subscription(
   const rmw_node_t * node,
   rmw_subscription_t * subscription)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
-    return RMW_RET_ERROR;
-  }
+  assert(node->implementation_identifier == identifier);
+  assert(subscription->implementation_identifier == identifier);
 
-  if (node->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  if (!subscription) {
-    RMW_SET_ERROR_MSG("subscription handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (subscription->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("subscription handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
+  rmw_ret_t ret = RMW_RET_OK;
+  rmw_error_state_t error_state;
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   auto info = static_cast<const CustomSubscriberInfo *>(subscription->data);
   {
@@ -66,22 +52,33 @@ __rmw_destroy_subscription(
     rmw_dds_common::msg::ParticipantEntitiesInfo msg =
       common_context->graph_cache.dissociate_reader(
       info->subscription_gid_, common_context->gid, node->name, node->namespace_);
-    rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
+    rmw_ret_t publish_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
       identifier,
       common_context->pub,
       static_cast<void *>(&msg),
       nullptr);
-    if (RMW_RET_OK != rmw_ret) {
-      return rmw_ret;
+    if (RMW_RET_OK != publish_ret) {
+      error_state = *rmw_get_error_state();
+      ret = publish_ret;
+      rmw_reset_error();
     }
   }
 
   auto participant_info =
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
-  return destroy_subscription(
-    identifier,
-    participant_info,
-    subscription);
+  rmw_ret_t inner_ret = destroy_subscription(identifier, participant_info, subscription);
+  if (RMW_RET_OK != inner_ret) {
+    if (RMW_RET_OK != ret) {
+      RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
+      RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "'\n");
+      rmw_reset_error();
+      // Restore error state before leaving function
+      rmw_set_error_state(error_state.message, error_state.file, error_state.line_number);
+    } else {
+      ret = inner_ret;
+    }
+  }
+  return ret;
 }
 
 rmw_ret_t
@@ -104,17 +101,8 @@ __rmw_subscription_get_actual_qos(
   const rmw_subscription_t * subscription,
   rmw_qos_profile_t * qos)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(subscription, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
-
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  if (info == nullptr) {
-    return RMW_RET_ERROR;
-  }
   eprosima::fastrtps::Subscriber * fastrtps_sub = info->subscriber_;
-  if (fastrtps_sub == nullptr) {
-    return RMW_RET_ERROR;
-  }
   const eprosima::fastrtps::SubscriberAttributes & attributes =
     fastrtps_sub->getAttributes();
 
