@@ -44,6 +44,7 @@ __rmw_destroy_subscription(
 
   rmw_ret_t ret = RMW_RET_OK;
   rmw_error_state_t error_state;
+  rmw_error_string_t error_string;
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   auto info = static_cast<const CustomSubscriberInfo *>(subscription->data);
   {
@@ -52,31 +53,29 @@ __rmw_destroy_subscription(
     rmw_dds_common::msg::ParticipantEntitiesInfo msg =
       common_context->graph_cache.dissociate_reader(
       info->subscription_gid_, common_context->gid, node->name, node->namespace_);
-    rmw_ret_t publish_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
+    ret = rmw_fastrtps_shared_cpp::__rmw_publish(
       identifier,
       common_context->pub,
       static_cast<void *>(&msg),
       nullptr);
-    if (RMW_RET_OK != publish_ret) {
+    if (RMW_RET_OK != ret) {
       error_state = *rmw_get_error_state();
-      ret = publish_ret;
+      error_string = rmw_get_error_string();
       rmw_reset_error();
     }
   }
 
   auto participant_info =
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
-  rmw_ret_t inner_ret = destroy_subscription(identifier, participant_info, subscription);
-  if (RMW_RET_OK != inner_ret) {
+  rmw_ret_t local_ret = destroy_subscription(identifier, participant_info, subscription);
+  if (RMW_RET_OK != local_ret) {
     if (RMW_RET_OK != ret) {
-      RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
+      RMW_SAFE_FWRITE_TO_STDERR(error_string.str);
       RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "'\n");
-      rmw_reset_error();
-      // Restore error state before leaving function
-      rmw_set_error_state(error_state.message, error_state.file, error_state.line_number);
-    } else {
-      ret = inner_ret;
     }
+    ret = local_ret;
+  } else if (RMW_RET_OK != ret) {
+    rmw_set_error_state(error_state.message, error_state.file, error_state.line_number);
   }
   return ret;
 }
