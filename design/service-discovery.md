@@ -4,7 +4,7 @@
 
 The Service Mapping relies on the built-in discovery service provided by DDS. However, this discovery is not robust and discovery race conditions can occur, resulting in service replies being lost. The reason is that the request and reply topics are independent at DDS level, meaning that they are matched independently. Therefore, it is possible that the request topic entities are matched while the response entities are not fully matched yet. In this situation, if the client makes a request, the response will be lost.
 
-On the client side this is partially solved checking the result of method `rmw_service_server_is_available` before sending any request. However, current implementation only checks that the request publisher and resonse subscribers are matched to any remote endpoint, but not that these remote endpoints correspond to the same servers. That is, the request publisher could be matched to one server ant the response subsciber to another one, so that any request will still be missing its response.
+On the client side this is partially solved checking the result of method `rmw_service_server_is_available` before sending any request. However, rmw_fastrtps_cpp 2.3.0 only checks that the request publisher and resonse subscribers are matched to any remote endpoint, but not that these remote endpoints correspond to the same servers. That is, the request publisher could be matched to one server ant the response subsciber to another one, so that any request will still be missing its response.
 
 On the server side a workaround was implemented, which relies on blocking the `rmw_send_response`, and a non-standard (ab)use of the related sample identity data field (see pull request [#390](https://github.com/ros2/rmw_fastrtps/pull/390)).
 
@@ -25,13 +25,13 @@ Whenever a response publisher is matched, the list of half-matched servers is ch
 #### Caveats ####
 
 * Un-matching of endpoints has to deal with the new internal structures to maintain coherence. For example, removing the server guids from the fully-matched list and possibly moving it to the half-matched list, or cleaning the list of pending requests.
-* The algorithm has to be able support remote endpoints that do not add the response GUID on the `USER_DATA`. This is to keep compatibility with older versions and other vendors. In these cases, legacy behavior is acceptable.
+* The algorithm has to be able to support remote endpoints that do not add the response GUID on the `USER_DATA`. This is to keep compatibility with older versions and other vendors. In these cases, legacy behavior is acceptable.
 
 #### Note on the GUID format on the USER_DATA ####
 
 At the moment, the `USER_DATA` is not being used on the RMW endpoints. We can simply add the GUID in text form using `operator<<` and `operator>>` to read and write.
 
-In order be able to add other information on the `USER_DATA` on the future, we must *tag* the information somehow. The proposed format is:
+In order be able to add other information to the `USER_DATA` in the future, we must *tag* the information somehow. The proposed format is:
 
 ```
   responseGUID:<GUID>
@@ -39,7 +39,7 @@ In order be able to add other information on the `USER_DATA` on the future, we m
 
 where `responseGUID:` is a string literal and `<GUID>` is the char string form of the GUID of the related endpoint, as formatted by `operator<<`.
 
-Using `properties` instead of `USER_DATA` would be preferable in this case, but unfortunately `properties` are not available at publisher/subscriber level on Fast DDS at this moment.
+Using `properties` instead of `USER_DATA` would be preferable in this case, but unfortunately `properties` are not available at publisher/subscriber level on Fast DDS 2.0.1.
 
 ## Class diagram ##
 
@@ -77,7 +77,7 @@ The constructor needs to be modified to accept a `CustomParticipantInfo` paramet
 ### ParticipantListener::onPublisherDiscovery ###
 
 * When a new publisher is discovered, read the `USER_DATA` to get the corresponding response subcriber's GUID and store the relation on the `remote_response_guid_by_remote_request_guid_` map.
-* If the `USER_DATA` dos not contain a GUID, **do not add an entry to the map**. This signals that the remote endpoint is not compiant with these modifications (for backwards compatibility and with other vendors).
+* If the `USER_DATA` dos not contain a GUID, **do not add an entry to the map**. This signals that the remote endpoint is not compliant with these modifications (for backwards compatibility and with other vendors).
 * When a publisher is un-discovered, remove the entry from the `remote_response_guid_by_remote_request_guid_` map (if any).
 
 ![ParticipantListener::onPublisherDiscovery](service-discovery-images/ParticipantListener-onPublisherDiscovery.svg)
@@ -88,11 +88,15 @@ The constructor needs to be modified to accept a `CustomParticipantInfo` paramet
 * Add `pending_requests_` to hold the requests that are waiting for their response channels to be ready. It will be an unordered multimap with the client response subscriber's GUID as key:
   `std::unordered_multimap<eprosima::fastrtps::rtps::GUID_t, CustomServiceRequest, rmw_fastrtps_shared_cpp::hash_fastrtps_guid>`
 
-### ServiceListener::OnPublicationMatched ###
+### ServicePubListener::OnPublicationMatched ###
 
 * When the response publisher is matched, the pending requests originating from the matched client (if any) are made available to the user.
 
 ![ServiceListener::OnPublicationMatched](service-discovery-images/ServiceListener-OnPublicationMatched.svg)
+
+### ServicePubListener::constructor ###
+
+The constructor needs to be modified to accept a `CustomServiceInfo` parameter, for the listener callbacks to have access to the `pending_requests_` and `remote_response_guid_by_remote_request_guid_`.
 
 ### ServiceListener::OnSubscriptionMatched ###
 
@@ -100,11 +104,7 @@ The constructor needs to be modified to accept a `CustomParticipantInfo` paramet
 
 ![ServiceListener::OnSubscriptionMatched](service-discovery-images/ServiceListener-OnSubscriptionMatched.svg)
 
-### ServicePubListener::constructor ###
-
-The constructor needs to be modified to accept a `CustomServiceInfo` parameter, for the listener callbacks to have access to the `pending_requests_` and `remote_response_guid_by_remote_request_guid_`.
-
-### ServicePubListener::onNewDataMessage ###
+### ServiceListener::onNewDataMessage ###
 
 * If the response publisher is matched against the client making the request, the request is made available to the user.
 * If the response publisher is not matched against the client making the request, the request is stored in the pending requests map, waiting for the match to occur.
@@ -150,7 +150,7 @@ This method already creates the response subscriber first and the request publis
 * Add `complete_matches_` to keep track of fully matched servers. It will be an unordered map with the server response publisher's GUID as key:
   `std::unordered_map<eprosima::fastrtps::rtps::GUID_t, eprosima::fastrtps::rtps::GUID_t, rmw_fastrtps_shared_cpp::hash_fastrtps_guid>`
 
-* Add `complete_matches_count_` to hold the size of `complete_matches_`, to be used on `rmw_service_server_is_available`. It will be an atomic variable `std::atomic_size_t`.
+* Add `complete_matches_count_` to hold the size of `complete_matches_`, to be used on `rmw_service_server_is_available`. It will be an atomic variable `std::atomic_size_t`. This variable will be updated every time an entry is added or removed in `complete_matches_`, and its purpose is to avoid `rmw_service_server_is_available` competing for locks to `complete_matches_`.
 
 ### ClientPubListener::OnPublicationMatched ###
 
@@ -164,9 +164,9 @@ This method already creates the response subscriber first and the request publis
 
 * When a response publisher is found, if the remote GUID is found on `pending_matches_`, we are about to complete the discovery for the response topic. Remove the entry from `pending_matches_` and move it to `complete_matches_`.
 * In the case of an unmatch, if the remote GUID is found on `complete_matches_`, we are about to have a half-discovery for the response topic. Remove the entry from `complete_matches_` and move it to `pending_matches_`.
-* Note that having only the response subscriber matched is not being tracked as pending match, so:
-  * In the case of a match, if the remote GUID is not on `pending_matches_`, it means that either the request subscriber is still umatched or that the remote server does not implement this solution. In either case there is nothing to do.
-  * In the case of an unmatch, if the remote GUID is not on `complete_matches_`, it means that either the request subscriber is umatched and we are about to complete the un-discovery or that the remote server does not implement this solution. In either case there is nothing to do.
+* Note that having only the response subscriber matched is not being tracked as a pending match, so:
+  * In the case of a match, if the remote GUID is not on `pending_matches_`, it means that either the request publisher is still umatched or that the remote server does not implement this solution. In either case there is nothing to do.
+  * In the case of an unmatch, if the remote GUID is not on `complete_matches_`, it means that either the request publisher is umatched and we are about to complete the un-discovery or that the remote server does not implement this solution. In either case there is nothing to do.
 
 ![ClientListener::OnSubscriptionMatched](service-discovery-images/ClientListener-OnSubscriptionMatched.svg)
 
