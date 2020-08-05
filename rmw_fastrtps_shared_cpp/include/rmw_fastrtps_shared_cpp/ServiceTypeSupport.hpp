@@ -19,7 +19,7 @@
 #include <fastcdr/Cdr.h>
 #include <cassert>
 
-#include "TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 struct CustomServiceInfo;
 
