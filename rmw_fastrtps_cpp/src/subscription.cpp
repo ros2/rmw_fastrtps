@@ -181,12 +181,11 @@ create_subscription(
   rmw_subscription->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_subscription->data = info;
 
-  rmw_subscription->topic_name = static_cast<char *>(rmw_allocate(strlen(topic_name) + 1));
+  rmw_subscription->topic_name = rcutils_strdup(topic_name, rcutils_get_default_allocator());
   if (!rmw_subscription->topic_name) {
     RMW_SET_ERROR_MSG("failed to allocate memory for subscription topic name");
     return nullptr;
   }
-  memcpy(const_cast<char *>(rmw_subscription->topic_name), topic_name, strlen(topic_name) + 1);
   rmw_subscription->options = *subscription_options;
   rmw_subscription->can_loan_messages = false;
 
