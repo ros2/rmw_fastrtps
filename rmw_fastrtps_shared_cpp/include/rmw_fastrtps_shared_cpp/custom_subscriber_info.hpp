@@ -67,34 +67,23 @@ public:
   // SubscriberListener implementation
   void
   onSubscriptionMatched(
-    eprosima::fastrtps::Subscriber * /*sub*/, eprosima::fastrtps::rtps::MatchingInfo & info) final
+    eprosima::fastrtps::Subscriber * sub, eprosima::fastrtps::rtps::MatchingInfo & info) final
   {
-    std::lock_guard<std::mutex> lock(internalMutex_);
-    if (eprosima::fastrtps::rtps::MATCHED_MATCHING == info.status) {
-      publishers_.insert(info.remoteEndpointGuid);
-    } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == info.status) {
-      publishers_.erase(info.remoteEndpointGuid);
+    {
+      std::lock_guard<std::mutex> lock(internalMutex_);
+      if (eprosima::fastrtps::rtps::MATCHED_MATCHING == info.status) {
+        publishers_.insert(info.remoteEndpointGuid);
+      } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == info.status) {
+        publishers_.erase(info.remoteEndpointGuid);
+      }
     }
+    update_unread_count(sub);
   }
 
   void
   onNewDataMessage(eprosima::fastrtps::Subscriber * sub) final
   {
-    // Make sure to call into Fast-RTPS before taking the lock to avoid an
-    // ABBA deadlock between internalMutex_ and mutexes inside of Fast-RTPS.
-#if FASTRTPS_VERSION_MAJOR == 1 && FASTRTPS_VERSION_MINOR < 9
-    uint64_t unread_count = sub->getUnreadCount();
-#else
-    uint64_t unread_count = sub->get_unread_count();
-#endif
-
-    std::lock_guard<std::mutex> lock(internalMutex_);
-
-    // the change to liveliness_lost_count_ needs to be mutually exclusive with
-    // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
-    ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
-
-    data_.store(unread_count, std::memory_order_relaxed);
+    update_unread_count(sub);
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -142,7 +131,7 @@ public:
   }
 
   void
-  data_taken(eprosima::fastrtps::Subscriber * sub)
+  update_unread_count(eprosima::fastrtps::Subscriber * sub)
   {
     // Make sure to call into Fast-RTPS before taking the lock to avoid an
     // ABBA deadlock between internalMutex_ and mutexes inside of Fast-RTPS.
@@ -153,7 +142,7 @@ public:
 #endif
 
     std::lock_guard<std::mutex> lock(internalMutex_);
-    ConditionalScopedLock clock(conditionMutex_);
+    ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
     data_.store(unread_count, std::memory_order_relaxed);
   }
 
