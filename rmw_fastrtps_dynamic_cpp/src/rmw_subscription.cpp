@@ -63,15 +63,12 @@ rmw_create_subscription(
   const rmw_qos_profile_t * qos_policies,
   const rmw_subscription_options_t * subscription_options)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
-    return nullptr;
-  }
-
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return nullptr;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, nullptr);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return nullptr);
 
   auto participant_info =
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
@@ -102,8 +99,18 @@ rmw_create_subscription(
       static_cast<void *>(&msg),
       nullptr);
     if (RMW_RET_OK != rmw_ret) {
-      rmw_fastrtps_shared_cpp::__rmw_destroy_subscription(
+      rmw_error_state_t error_state = *rmw_get_error_state();
+      rmw_reset_error();
+      static_cast<void>(common_context->graph_cache.dissociate_writer(
+        info->subscription_gid_, common_context->gid, node->name, node->namespace_));
+      rmw_ret = rmw_fastrtps_shared_cpp::__rmw_destroy_subscription(
         eprosima_fastrtps_identifier, node, subscription);
+      if (RMW_RET_OK != rmw_ret) {
+        RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
+        RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "' cleanup\n");
+        rmw_reset_error();
+      }
+      rmw_set_error_state(error_state.message, error_state.file, error_state.line_number);
       return nullptr;
     }
   }
@@ -124,8 +131,15 @@ rmw_subscription_get_actual_qos(
   const rmw_subscription_t * subscription,
   rmw_qos_profile_t * qos)
 {
-  return rmw_fastrtps_shared_cpp::__rmw_subscription_get_actual_qos(
-    subscription, qos);
+  RMW_CHECK_ARGUMENT_FOR_NULL(subscription, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription,
+    subscription->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
+
+  return rmw_fastrtps_shared_cpp::__rmw_subscription_get_actual_qos(subscription, qos);
 }
 
 using BaseTypeSupport = rmw_fastrtps_dynamic_cpp::BaseTypeSupport;
@@ -133,12 +147,21 @@ using BaseTypeSupport = rmw_fastrtps_dynamic_cpp::BaseTypeSupport;
 rmw_ret_t
 rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 {
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(subscription, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription,
+    subscription->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "subscription info pointer is null", return RMW_RET_ERROR);
-
   auto impl = static_cast<const BaseTypeSupport *>(info->type_support_impl_);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(impl, "publisher type support is null", return RMW_RET_ERROR);
-
   auto ros_type_support = static_cast<const rosidl_message_type_support_t *>(
     impl->ros_type_support());
 
