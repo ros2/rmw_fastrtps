@@ -44,35 +44,23 @@ destroy_subscription(
   CustomParticipantInfo * participant_info,
   rmw_subscription_t * subscription)
 {
-  if (!subscription) {
-    RMW_SET_ERROR_MSG("subscription handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (subscription->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("subscription handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-  if (!participant_info) {
-    RMW_SET_ERROR_MSG("participant_info is null");
-    return RMW_RET_ERROR;
-  }
+  assert(subscription->implementation_identifier == identifier);
 
+  rmw_ret_t ret = RMW_RET_OK;
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  if (info != nullptr) {
-    if (info->subscriber_ != nullptr) {
-      Domain::removeSubscriber(info->subscriber_);
-    }
-    delete info->listener_;
-    if (info->type_support_ != nullptr) {
-      Participant * participant = participant_info->participant;
-      _unregister_type(participant, info->type_support_);
-    }
-    delete info;
+  if (!Domain::removeSubscriber(info->subscriber_)) {
+    RMW_SET_ERROR_MSG("failed to remove subscriber");
+    ret = RMW_RET_ERROR;
   }
+  delete info->listener_;
+
+  Participant * participant = participant_info->participant;
+  _unregister_type(participant, info->type_support_);
+  delete info;
+
   rmw_free(const_cast<char *>(subscription->topic_name));
-  subscription->topic_name = nullptr;
   rmw_subscription_free(subscription);
 
-  return RMW_RET_OK;
+  return ret;
 }
 }  // namespace rmw_fastrtps_shared_cpp

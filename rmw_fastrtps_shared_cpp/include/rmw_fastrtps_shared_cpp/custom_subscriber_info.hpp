@@ -38,12 +38,12 @@ struct CustomSubscriberInfo : public CustomEventInfo
 {
   virtual ~CustomSubscriberInfo() = default;
 
-  eprosima::fastrtps::Subscriber * subscriber_;
-  SubListener * listener_;
-  rmw_fastrtps_shared_cpp::TypeSupport * type_support_;
-  const void * type_support_impl_;
-  rmw_gid_t subscription_gid_;
-  const char * typesupport_identifier_;
+  eprosima::fastrtps::Subscriber * subscriber_{nullptr};
+  SubListener * listener_{nullptr};
+  rmw_fastrtps_shared_cpp::TypeSupport * type_support_{nullptr};
+  const void * type_support_impl_{nullptr};
+  rmw_gid_t subscription_gid_{};
+  const char * typesupport_identifier_{nullptr};
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *
