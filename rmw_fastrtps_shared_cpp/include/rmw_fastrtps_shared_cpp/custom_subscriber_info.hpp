@@ -77,13 +77,13 @@ public:
         publishers_.erase(info.remoteEndpointGuid);
       }
     }
-    update_unread_count(sub);
+    data_taken(sub);
   }
 
   void
   onNewDataMessage(eprosima::fastrtps::Subscriber * sub) final
   {
-    update_unread_count(sub);
+    data_taken(sub);
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -131,7 +131,7 @@ public:
   }
 
   void
-  update_unread_count(eprosima::fastrtps::Subscriber * sub)
+  data_taken(eprosima::fastrtps::Subscriber * sub)
   {
     // Make sure to call into Fast-RTPS before taking the lock to avoid an
     // ABBA deadlock between internalMutex_ and mutexes inside of Fast-RTPS.
