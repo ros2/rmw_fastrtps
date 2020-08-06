@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+2.4.0 (2020-08-06)
+------------------
 * Ensure compliant subscription API. (`#419 <https://github.com/ros2/rmw_fastrtps/issues/419>`_)
 * Use package path to TypeSupport.hpp headers in ServiceTypeSupport and MessageTypeSupport (`#415 <https://github.com/ros2/rmw_fastrtps/issues/415>`_)
   Use package in path to TypeSupport header for ServiceTypeSupport/MessageTypeSupport
