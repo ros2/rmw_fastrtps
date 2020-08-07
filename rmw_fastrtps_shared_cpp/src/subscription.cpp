@@ -45,6 +45,7 @@ destroy_subscription(
   rmw_subscription_t * subscription)
 {
   assert(subscription->implementation_identifier == identifier);
+  static_cast<void>(identifier);
 
   rmw_ret_t ret = RMW_RET_OK;
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
