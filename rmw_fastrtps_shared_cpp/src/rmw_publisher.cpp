@@ -125,22 +125,13 @@ __rmw_publisher_get_actual_qos(
   const rmw_publisher_t * publisher,
   rmw_qos_profile_t * qos)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
+ auto info = static_cast<CustomPublisherInfo *>(publisher->data);
+ eprosima::fastrtps::Publisher * fastrtps_pub = info->publisher_;
+ const eprosima::fastrtps::PublisherAttributes & attributes =
+   fastrtps_pub->getAttributes();
 
-  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  if (info == nullptr) {
-    return RMW_RET_ERROR;
-  }
-  eprosima::fastrtps::Publisher * fastrtps_pub = info->publisher_;
-  if (fastrtps_pub == nullptr) {
-    return RMW_RET_ERROR;
-  }
-  const eprosima::fastrtps::PublisherAttributes & attributes =
-    fastrtps_pub->getAttributes();
+ dds_attributes_to_rmw_qos(attributes, qos);
 
-  dds_attributes_to_rmw_qos(attributes, qos);
-
-  return RMW_RET_OK;
+ return RMW_RET_OK;
 }
 }  // namespace rmw_fastrtps_shared_cpp
