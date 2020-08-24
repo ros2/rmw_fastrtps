@@ -125,17 +125,8 @@ __rmw_publisher_get_actual_qos(
   const rmw_publisher_t * publisher,
   rmw_qos_profile_t * qos)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_ARGUMENT_FOR_NULL(qos, RMW_RET_INVALID_ARGUMENT);
-
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  if (info == nullptr) {
-    return RMW_RET_ERROR;
-  }
   eprosima::fastrtps::Publisher * fastrtps_pub = info->publisher_;
-  if (fastrtps_pub == nullptr) {
-    return RMW_RET_ERROR;
-  }
   const eprosima::fastrtps::PublisherAttributes & attributes =
     fastrtps_pub->getAttributes();
 
