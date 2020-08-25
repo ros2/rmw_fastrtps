@@ -150,7 +150,11 @@ This method already creates the response subscriber first and the request publis
 * Add `complete_matches_` to keep track of fully matched servers. It will be an unordered map with the server response publisher's GUID as key:
   `std::unordered_map<eprosima::fastrtps::rtps::GUID_t, eprosima::fastrtps::rtps::GUID_t, rmw_fastrtps_shared_cpp::hash_fastrtps_guid>`
 
-* Add `complete_matches_count_` to hold the size of `complete_matches_`, to be used on `rmw_service_server_is_available`. It will be an atomic variable `std::atomic_size_t`. This variable will be updated every time an entry is added or removed in `complete_matches_`, and its purpose is to avoid `rmw_service_server_is_available` competing for locks to `complete_matches_`.
+* Add `complete_matches_count_` to hold the size of `complete_matches_`, to be used on `rmw_service_server_is_available`.
+  It will be an atomic variable `std::atomic_size_t`.
+  This variable will be updated every time an entry is added or removed in `complete_matches_`, and its purpose is to avoid `rmw_service_server_is_available` competing for locks to `complete_matches_`.
+  Load/store operations must be tagged with `std::memory_order_seq_cst` (the default memory synchronization ordering).
+  
 
 ### ClientPubListener::OnPublicationMatched ###
 
