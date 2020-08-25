@@ -144,6 +144,11 @@ node_listener(rmw_context_t * context)
     {
       TERMINATE_THREAD("rmw_wait failed");
     }
+    if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_destroy_wait_set(
+        context->implementation_identifier, wait_set))
+    {
+      TERMINATE_THREAD("failed to destroy wait set");
+    }
     if (subscriptions_buffer[0]) {
       rmw_dds_common::msg::ParticipantEntitiesInfo msg;
       bool taken;
@@ -167,11 +172,6 @@ node_listener(rmw_context_t * context)
         }
         common_context->graph_cache.update_participant_entities(msg);
       }
-    }
-    if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_destroy_wait_set(
-        context->implementation_identifier, wait_set))
-    {
-      TERMINATE_THREAD("failed to destroy wait set");
     }
   }
 }
