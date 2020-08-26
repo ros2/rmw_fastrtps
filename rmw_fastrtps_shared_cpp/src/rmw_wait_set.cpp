@@ -35,32 +35,34 @@ __rmw_create_wait_set(const char * identifier, rmw_context_t * context, size_t m
     return nullptr);
 
   (void)max_conditions;
-  rmw_wait_set_t * wait_set = rmw_wait_set_allocate();
-  CustomWaitsetInfo * wait_set_info = nullptr;
 
   // From here onward, error results in unrolling in the goto fail block.
+  CustomWaitsetInfo * wait_set_info = nullptr;
+  rmw_wait_set_t * wait_set = rmw_wait_set_allocate();
   if (!wait_set) {
     RMW_SET_ERROR_MSG("failed to allocate wait set");
     goto fail;
   }
   wait_set->implementation_identifier = identifier;
   wait_set->data = rmw_allocate(sizeof(CustomWaitsetInfo));
-  // This should default-construct the fields of CustomWaitsetInfo
-  wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
-  // cppcheck-suppress syntaxError
-  RMW_TRY_PLACEMENT_NEW(wait_set_info, wait_set_info, goto fail, CustomWaitsetInfo, )
-  if (!wait_set_info) {
-    RMW_SET_ERROR_MSG("failed to construct wait set info struct");
+  if (!wait_set->data) {
+    RMW_SET_ERROR_MSG("failed to allocate wait set info");
     goto fail;
   }
+  // This should default-construct the fields of CustomWaitsetInfo
+  // cppcheck-suppress syntaxError
+  RMW_TRY_PLACEMENT_NEW(
+    wait_set_info,
+    wait_set->data,
+    goto fail,
+    CustomWaitsetInfo, )
+  (void)wait_set_info;
 
   return wait_set;
 
 fail:
   if (wait_set) {
     if (wait_set->data) {
-      RMW_TRY_DESTRUCTOR_FROM_WITHIN_FAILURE(
-        wait_set_info->~CustomWaitsetInfo(), wait_set_info)
       rmw_free(wait_set->data);
     }
     rmw_wait_set_free(wait_set);
