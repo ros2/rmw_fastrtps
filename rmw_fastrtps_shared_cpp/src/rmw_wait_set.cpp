@@ -50,13 +50,13 @@ __rmw_create_wait_set(const char * identifier, rmw_context_t * context, size_t m
     goto fail;
   }
   // This should default-construct the fields of CustomWaitsetInfo
-  // cppcheck-suppress syntaxError
   RMW_TRY_PLACEMENT_NEW(
     wait_set_info,
     wait_set->data,
     goto fail,
-    CustomWaitsetInfo, )
-  (void)wait_set_info;
+    // cppcheck-suppress syntaxError
+    CustomWaitsetInfo, );
+  (void) wait_set_info;
 
   return wait_set;
 
