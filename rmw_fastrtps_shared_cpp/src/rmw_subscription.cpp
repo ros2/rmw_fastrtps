@@ -85,13 +85,10 @@ __rmw_subscription_count_matched_publishers(
   const rmw_subscription_t * subscription,
   size_t * publisher_count)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(subscription, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_ARGUMENT_FOR_NULL(publisher_count, RMW_RET_INVALID_ARGUMENT);
-
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  if (info != nullptr) {
-    *publisher_count = info->listener_->publisherCount();
-  }
+
+  *publisher_count = info->listener_->publisherCount();
+
   return RMW_RET_OK;
 }
 
