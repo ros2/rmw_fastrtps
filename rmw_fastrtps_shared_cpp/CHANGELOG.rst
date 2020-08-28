@@ -2,6 +2,14 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Improve __rmw_create_wait_set() implementation. (`#427 <https://github.com/ros2/rmw_fastrtps/issues/427>`_)
+* Ensure compliant matched pub/sub count API. (`#424 <https://github.com/ros2/rmw_fastrtps/issues/424>`_)
+* Ensure compliant publisher QoS queries. (`#425 <https://github.com/ros2/rmw_fastrtps/issues/425>`_)
+* Fix memory leak that wait_set might be not destoryed in some case. (`#423 <https://github.com/ros2/rmw_fastrtps/issues/423>`_)
+* Contributors: Chen Lihui, Michel Hidalgo
+
 2.5.0 (2020-08-07)
 ------------------
 * Avoid unused identifier variable warnings. (`#422 <https://github.com/ros2/rmw_fastrtps/issues/422>`_)
