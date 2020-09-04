@@ -730,8 +730,7 @@ template<typename T>
 void deserialize_field(
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
   void * field,
-  eprosima::fastcdr::Cdr & deser,
-  bool call_new)
+  eprosima::fastcdr::Cdr & deser)
 {
   if (!member->is_array_) {
     deser >> *static_cast<T *>(field);
@@ -739,9 +738,6 @@ void deserialize_field(
     deser.deserializeArray(static_cast<T *>(field), member->array_size_);
   } else {
     auto & vector = *reinterpret_cast<std::vector<T> *>(field);
-    if (call_new) {
-      new(&vector) std::vector<T>;
-    }
     deser >> vector;
   }
 }
@@ -750,30 +746,15 @@ template<>
 inline void deserialize_field<std::string>(
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
   void * field,
-  eprosima::fastcdr::Cdr & deser,
-  bool call_new)
+  eprosima::fastcdr::Cdr & deser)
 {
   if (!member->is_array_) {
-    if (call_new) {
-      // Because std::string is a complex datatype, we need to make sure that
-      // the memory is initialized to something reasonable before eventually
-      // passing it as a reference to Fast-CDR.
-      new(field) std::string();
-    }
     deser >> *static_cast<std::string *>(field);
   } else if (member->array_size_ && !member->is_upper_bound_) {
     std::string * array = static_cast<std::string *>(field);
-    if (call_new) {
-      for (size_t i = 0; i < member->array_size_; ++i) {
-        new(&array[i]) std::string();
-      }
-    }
     deser.deserializeArray(array, member->array_size_);
   } else {
     auto & vector = *reinterpret_cast<std::vector<std::string> *>(field);
-    if (call_new) {
-      new(&vector) std::vector<std::string>;
-    }
     deser >> vector;
   }
 }
@@ -782,10 +763,8 @@ template<>
 inline void deserialize_field<std::wstring>(
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
   void * field,
-  eprosima::fastcdr::Cdr & deser,
-  bool call_new)
+  eprosima::fastcdr::Cdr & deser)
 {
-  (void)call_new;
   std::wstring wstr;
   if (!member->is_array_) {
     deser >> wstr;
@@ -812,10 +791,8 @@ template<typename T>
 void deserialize_field(
   const rosidl_typesupport_introspection_c__MessageMember * member,
   void * field,
-  eprosima::fastcdr::Cdr & deser,
-  bool call_new)
+  eprosima::fastcdr::Cdr & deser)
 {
-  (void)call_new;
   if (!member->is_array_) {
     deser >> *static_cast<T *>(field);
   } else if (member->array_size_ && !member->is_upper_bound_) {
@@ -833,13 +810,11 @@ template<>
 inline void deserialize_field<std::string>(
   const rosidl_typesupport_introspection_c__MessageMember * member,
   void * field,
-  eprosima::fastcdr::Cdr & deser,
-  bool call_new)
+  eprosima::fastcdr::Cdr & deser)
 {
-  (void)call_new;
   if (!member->is_array_) {
     using CStringHelper = StringHelper<rosidl_typesupport_introspection_c__MessageMembers>;
-    CStringHelper::assign(deser, field, call_new);
+    CStringHelper::assign(deser, field);
   } else {
     if (member->array_size_ && !member->is_upper_bound_) {
       auto deser_field = static_cast<rosidl_runtime_c__String *>(field);
@@ -881,10 +856,8 @@ template<>
 inline void deserialize_field<std::wstring>(
   const rosidl_typesupport_introspection_c__MessageMember * member,
   void * field,
-  eprosima::fastcdr::Cdr & deser,
-  bool call_new)
+  eprosima::fastcdr::Cdr & deser)
 {
-  (void)call_new;
   std::wstring wstr;
   if (!member->is_array_) {
     deser >> wstr;
@@ -915,7 +888,6 @@ inline size_t get_submessage_array_deserialize(
   eprosima::fastcdr::Cdr & deser,
   void * field,
   void * & subros_message,
-  bool call_new,
   size_t sub_members_size,
   size_t max_align)
 {
@@ -924,9 +896,6 @@ inline size_t get_submessage_array_deserialize(
   // Deserialize length
   deser >> vsize;
   auto vector = reinterpret_cast<std::vector<unsigned char> *>(field);
-  if (call_new) {
-    new(vector) std::vector<unsigned char>;
-  }
   void * ptr = reinterpret_cast<void *>(sub_members_size);
   vector->resize(vsize * (size_t)align_(max_align, ptr));
   subros_message = reinterpret_cast<void *>(vector->data());
@@ -938,7 +907,6 @@ inline size_t get_submessage_array_deserialize(
   eprosima::fastcdr::Cdr & deser,
   void * field,
   void * & subros_message,
-  bool,
   size_t sub_members_size,
   size_t)
 {
@@ -956,8 +924,7 @@ template<typename MembersType>
 bool TypeSupport<MembersType>::deserializeROSmessage(
   eprosima::fastcdr::Cdr & deser,
   const MembersType * members,
-  void * ros_message,
-  bool call_new) const
+  void * ros_message) const
 {
   assert(members);
   assert(ros_message);
@@ -967,57 +934,56 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
     void * field = static_cast<char *>(ros_message) + member->offset_;
     switch (member->type_id_) {
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-        deserialize_field<bool>(member, field, deser, call_new);
+        deserialize_field<bool>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
-        deserialize_field<uint8_t>(member, field, deser, call_new);
+        deserialize_field<uint8_t>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-        deserialize_field<char>(member, field, deser, call_new);
+        deserialize_field<char>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
-        deserialize_field<float>(member, field, deser, call_new);
+        deserialize_field<float>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
-        deserialize_field<double>(member, field, deser, call_new);
+        deserialize_field<double>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
-        deserialize_field<int16_t>(member, field, deser, call_new);
+        deserialize_field<int16_t>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-        deserialize_field<uint16_t>(member, field, deser, call_new);
+        deserialize_field<uint16_t>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
-        deserialize_field<int32_t>(member, field, deser, call_new);
+        deserialize_field<int32_t>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-        deserialize_field<uint32_t>(member, field, deser, call_new);
+        deserialize_field<uint32_t>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
-        deserialize_field<int64_t>(member, field, deser, call_new);
+        deserialize_field<int64_t>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-        deserialize_field<uint64_t>(member, field, deser, call_new);
+        deserialize_field<uint64_t>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-        deserialize_field<std::string>(member, field, deser, call_new);
+        deserialize_field<std::string>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING:
-        deserialize_field<std::wstring>(member, field, deser, call_new);
+        deserialize_field<std::wstring>(member, field, deser);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
           auto sub_members = (const MembersType *)member->members_->data;
           if (!member->is_array_) {
-            deserializeROSmessage(deser, sub_members, field, call_new);
+            deserializeROSmessage(deser, sub_members, field);
           } else {
             void * subros_message = nullptr;
             size_t array_size = 0;
             size_t sub_members_size = sub_members->size_of_;
             size_t max_align = calculateMaxAlign(sub_members);
-            bool recall_new = call_new;
 
             if (member->array_size_ && !member->is_upper_bound_) {
               subros_message = field;
@@ -1025,12 +991,11 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
             } else {
               array_size = get_submessage_array_deserialize(
                 member, deser, field, subros_message,
-                call_new, sub_members_size, max_align);
-              recall_new = true;
+                sub_members_size, max_align);
             }
 
             for (size_t index = 0; index < array_size; ++index) {
-              deserializeROSmessage(deser, sub_members, subros_message, recall_new);
+              deserializeROSmessage(deser, sub_members, subros_message);
               subros_message = static_cast<char *>(subros_message) + sub_members_size;
               subros_message = align_(max_align, subros_message);
             }
@@ -1179,7 +1144,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
 
   (void)impl;
   if (members_->member_count_ != 0) {
-    TypeSupport::deserializeROSmessage(deser, members_, ros_message, false);
+    TypeSupport::deserializeROSmessage(deser, members_, ros_message);
   } else {
     uint8_t dump = 0;
     deser >> dump;
