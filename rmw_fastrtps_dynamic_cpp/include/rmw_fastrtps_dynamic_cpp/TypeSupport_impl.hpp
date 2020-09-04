@@ -23,6 +23,9 @@
 
 #include "rmw_fastrtps_dynamic_cpp/TypeSupport.hpp"
 #include "rmw_fastrtps_dynamic_cpp/macros.hpp"
+
+#include "rmw/error_handling.h"
+
 #include "rosidl_typesupport_fastrtps_c/wstring_conversion.hpp"
 #include "rosidl_typesupport_fastrtps_cpp/wstring_conversion.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
@@ -883,41 +886,30 @@ inline void deserialize_field<std::wstring>(
   }
 }
 
-inline size_t get_submessage_array_deserialize(
+inline
+void * get_subros_message(
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
-  eprosima::fastcdr::Cdr & deser,
   void * field,
-  void * & subros_message,
-  size_t sub_members_size,
-  size_t max_align)
+  size_t index,
+  size_t,
+  bool)
 {
-  (void)member;
-  uint32_t vsize = 0;
-  // Deserialize length
-  deser >> vsize;
-  auto vector = reinterpret_cast<std::vector<unsigned char> *>(field);
-  void * ptr = reinterpret_cast<void *>(sub_members_size);
-  vector->resize(vsize * (size_t)align_(max_align, ptr));
-  subros_message = reinterpret_cast<void *>(vector->data());
-  return vsize;
+  return member->get_function(field, index);
 }
 
-inline size_t get_submessage_array_deserialize(
+inline
+void * get_subros_message(
   const rosidl_typesupport_introspection_c__MessageMember * member,
-  eprosima::fastcdr::Cdr & deser,
   void * field,
-  void * & subros_message,
-  size_t sub_members_size,
-  size_t)
+  size_t index,
+  size_t array_size,
+  bool is_upper_bound)
 {
-  (void)member;
-  // Deserialize length
-  uint32_t vsize = 0;
-  deser >> vsize;
-  auto tmpsequence = static_cast<rosidl_runtime_c__void__Sequence *>(field);
-  rosidl_runtime_c__void__Sequence__init(tmpsequence, vsize, sub_members_size);
-  subros_message = reinterpret_cast<void *>(tmpsequence->data);
-  return vsize;
+  if (array_size && !is_upper_bound) {
+    return member->get_function(&field, index);
+  }
+
+  return member->get_function(field, index);
 }
 
 template<typename MembersType>
@@ -980,24 +972,32 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
           if (!member->is_array_) {
             deserializeROSmessage(deser, sub_members, field);
           } else {
-            void * subros_message = nullptr;
             size_t array_size = 0;
-            size_t sub_members_size = sub_members->size_of_;
-            size_t max_align = calculateMaxAlign(sub_members);
 
             if (member->array_size_ && !member->is_upper_bound_) {
-              subros_message = field;
               array_size = member->array_size_;
             } else {
-              array_size = get_submessage_array_deserialize(
-                member, deser, field, subros_message,
-                sub_members_size, max_align);
+              uint32_t num_elems = 0;
+              deser >> num_elems;
+              array_size = static_cast<size_t>(num_elems);
+              
+              if (!member->resize_function) {
+                RMW_SET_ERROR_MSG("unexpected error: resize function is null");
+                return false;
+              }
+              member->resize_function(field, array_size);
             }
 
+            if (array_size != 0 && !member->get_function) {
+              RMW_SET_ERROR_MSG("unexpected error: get_function function is null");
+              return false;
+            }
             for (size_t index = 0; index < array_size; ++index) {
-              deserializeROSmessage(deser, sub_members, subros_message);
-              subros_message = static_cast<char *>(subros_message) + sub_members_size;
-              subros_message = align_(max_align, subros_message);
+              deserializeROSmessage(
+                deser, sub_members,
+                get_subros_message(
+                  member, field, index, member->array_size_,
+                  member->is_upper_bound_));
             }
           }
         }
