@@ -980,7 +980,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
               uint32_t num_elems = 0;
               deser >> num_elems;
               array_size = static_cast<size_t>(num_elems);
-              
+
               if (!member->resize_function) {
                 RMW_SET_ERROR_MSG("unexpected error: resize function is null");
                 return false;
