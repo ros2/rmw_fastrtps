@@ -58,157 +58,12 @@ SPECIALIZE_GENERIC_C_SEQUENCE(uint32, uint32_t)
 SPECIALIZE_GENERIC_C_SEQUENCE(int64, int64_t)
 SPECIALIZE_GENERIC_C_SEQUENCE(uint64, uint64_t)
 
-typedef struct rosidl_runtime_c__void__Sequence
-{
-  void * data;
-  /// The number of valid items in data
-  size_t size;
-  /// The number of allocated items in data
-  size_t capacity;
-} rosidl_runtime_c__void__Sequence;
-
-inline
-bool
-rosidl_runtime_c__void__Sequence__init(
-  rosidl_runtime_c__void__Sequence * sequence, size_t size, size_t member_size)
-{
-  if (!sequence) {
-    return false;
-  }
-  void * data = nullptr;
-  if (size) {
-    data = static_cast<void *>(calloc(size, member_size));
-    if (!data) {
-      return false;
-    }
-  }
-  sequence->data = data;
-  sequence->size = size;
-  sequence->capacity = size;
-  return true;
-}
-
-inline
-void
-rosidl_runtime_c__void__Sequence__fini(rosidl_runtime_c__void__Sequence * sequence)
-{
-  if (!sequence) {
-    return;
-  }
-  if (sequence->data) {
-    // ensure that data and capacity values are consistent
-    assert(sequence->capacity > 0);
-    // finalize all sequence elements
-    free(sequence->data);
-    sequence->data = nullptr;
-    sequence->size = 0;
-    sequence->capacity = 0;
-  } else {
-    // ensure that data, size, and capacity values are consistent
-    assert(0 == sequence->size);
-    assert(0 == sequence->capacity);
-  }
-}
-
 template<typename MembersType>
 TypeSupport<MembersType>::TypeSupport(const void * ros_type_support)
 : BaseTypeSupport(ros_type_support)
 {
   m_isGetKeyDefined = false;
   max_size_bound_ = false;
-}
-
-static inline void *
-align_(size_t __align, void * & __ptr) noexcept
-{
-  const auto __intptr = reinterpret_cast<uintptr_t>(__ptr);
-  const auto __aligned = (__intptr - 1u + __align) & ~(__align - 1);
-  return __ptr = reinterpret_cast<void *>(__aligned);
-}
-
-template<typename MembersType>
-static size_t calculateMaxAlign(const MembersType * members)
-{
-  size_t max_align = 0;
-
-  for (uint32_t i = 0; i < members->member_count_; ++i) {
-    size_t alignment = 0;
-    const auto & member = members->members_[i];
-
-    if (member.is_array_ && (!member.array_size_ || member.is_upper_bound_)) {
-      alignment = alignof(std::vector<unsigned char>);
-    } else {
-      switch (member.type_id_) {
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
-          alignment = alignof(bool);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
-          alignment = alignof(uint8_t);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-          alignment = alignof(char);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
-          alignment = alignof(float);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
-          alignment = alignof(double);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
-          alignment = alignof(int16_t);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-          alignment = alignof(uint16_t);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
-          alignment = alignof(int32_t);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-          alignment = alignof(uint32_t);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
-          alignment = alignof(int64_t);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-          alignment = alignof(uint64_t);
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-          // Note: specialization needed because calculateMaxAlign is called before
-          // casting submembers as std::string, returned value is the same on i386
-          if (std::is_same<MembersType,
-            rosidl_typesupport_introspection_c__MessageMembers>::value)
-          {
-            alignment = alignof(rosidl_runtime_c__String);
-          } else {
-            alignment = alignof(std::string);
-          }
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING:
-          if (std::is_same<MembersType,
-            rosidl_typesupport_introspection_c__MessageMembers>::value)
-          {
-            alignment = alignof(rosidl_runtime_c__U16String);
-          } else {
-            alignment = alignof(std::u16string);
-          }
-          break;
-        case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
-          {
-            auto sub_members = static_cast<const MembersType *>(member.members_->data);
-            alignment = calculateMaxAlign(sub_members);
-          }
-          break;
-      }
-    }
-
-    if (alignment > max_align) {
-      max_align = alignment;
-    }
-  }
-
-  return max_align;
 }
 
 // C++ specialization
@@ -366,39 +221,6 @@ void * get_subros_message(
   }
 
   return member->get_function(field, index);
-}
-
-inline
-size_t get_array_size_and_assign_field(
-  const rosidl_typesupport_introspection_cpp::MessageMember * member,
-  void * field,
-  void * & subros_message,
-  size_t sub_members_size,
-  size_t max_align)
-{
-  auto vector = reinterpret_cast<std::vector<unsigned char> *>(field);
-  void * ptr = reinterpret_cast<void *>(sub_members_size);
-  size_t vsize = vector->size() / reinterpret_cast<size_t>(align_(max_align, ptr));
-  if (member->is_upper_bound_ && vsize > member->array_size_) {
-    throw std::runtime_error("vector overcomes the maximum length");
-  }
-  subros_message = reinterpret_cast<void *>(vector->data());
-  return vsize;
-}
-
-inline
-size_t get_array_size_and_assign_field(
-  const rosidl_typesupport_introspection_c__MessageMember * member,
-  void * field,
-  void * & subros_message,
-  size_t, size_t)
-{
-  auto tmpsequence = static_cast<rosidl_runtime_c__void__Sequence *>(field);
-  if (member->is_upper_bound_ && tmpsequence->size > member->array_size_) {
-    throw std::runtime_error("vector overcomes the maximum length");
-  }
-  subros_message = reinterpret_cast<void *>(tmpsequence->data);
-  return tmpsequence->size;
 }
 
 template<typename MembersType>
