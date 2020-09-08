@@ -341,6 +341,33 @@ void serialize_field<std::wstring>(
     }
   }
 }
+
+inline
+void * get_subros_message(
+  const rosidl_typesupport_introspection_cpp::MessageMember * member,
+  void * field,
+  size_t index,
+  size_t,
+  bool)
+{
+  return member->get_function(field, index);
+}
+
+inline
+void * get_subros_message(
+  const rosidl_typesupport_introspection_c__MessageMember * member,
+  void * field,
+  size_t index,
+  size_t array_size,
+  bool is_upper_bound)
+{
+  if (array_size && !is_upper_bound) {
+    return member->get_function(&field, index);
+  }
+
+  return member->get_function(field, index);
+}
+
 inline
 size_t get_array_size_and_assign_field(
   const rosidl_typesupport_introspection_cpp::MessageMember * member,
@@ -440,26 +467,31 @@ bool TypeSupport<MembersType>::serializeROSmessage(
           if (!member->is_array_) {
             serializeROSmessage(ser, sub_members, field);
           } else {
-            void * subros_message = nullptr;
             size_t array_size = 0;
-            size_t sub_members_size = sub_members->size_of_;
-            size_t max_align = calculateMaxAlign(sub_members);
 
             if (member->array_size_ && !member->is_upper_bound_) {
-              subros_message = field;
               array_size = member->array_size_;
             } else {
-              array_size = get_array_size_and_assign_field(
-                member, field, subros_message, sub_members_size, max_align);
+              if (!member->size_function) {
+                RMW_SET_ERROR_MSG("unexpected error: size function is null");
+                return false;
+              }
+              array_size = member->size_function(field);
 
               // Serialize length
               ser << (uint32_t)array_size;
             }
 
+            if (array_size != 0 && !member->get_function) {
+              RMW_SET_ERROR_MSG("unexpected error: get_function function is null");
+              return false;
+            }
             for (size_t index = 0; index < array_size; ++index) {
-              serializeROSmessage(ser, sub_members, subros_message);
-              subros_message = static_cast<char *>(subros_message) + sub_members_size;
-              subros_message = align_(max_align, subros_message);
+              serializeROSmessage(
+                ser, sub_members,
+                get_subros_message(
+                  member, field, index, member->array_size_,
+                  member->is_upper_bound_));
             }
           }
         }
@@ -884,32 +916,6 @@ inline void deserialize_field<std::wstring>(
       rosidl_typesupport_fastrtps_c::wstring_to_u16string(wstr, sequence->data[i]);
     }
   }
-}
-
-inline
-void * get_subros_message(
-  const rosidl_typesupport_introspection_cpp::MessageMember * member,
-  void * field,
-  size_t index,
-  size_t,
-  bool)
-{
-  return member->get_function(field, index);
-}
-
-inline
-void * get_subros_message(
-  const rosidl_typesupport_introspection_c__MessageMember * member,
-  void * field,
-  size_t index,
-  size_t array_size,
-  bool is_upper_bound)
-{
-  if (array_size && !is_upper_bound) {
-    return member->get_function(&field, index);
-  }
-
-  return member->get_function(field, index);
 }
 
 template<typename MembersType>
