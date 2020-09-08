@@ -196,7 +196,7 @@ static size_t calculateMaxAlign(const MembersType * members)
           break;
         case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
           {
-            auto sub_members = (const MembersType *)member.members_->data;
+            auto sub_members = static_cast<const MembersType *>(member.members_->data);
             alignment = calculateMaxAlign(sub_members);
           }
           break;
@@ -968,7 +968,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
         {
-          auto sub_members = (const MembersType *)member->members_->data;
+          auto sub_members = static_cast<const MembersType *>(member->members_->data);
           if (!member->is_array_) {
             deserializeROSmessage(deser, sub_members, field);
           } else {
