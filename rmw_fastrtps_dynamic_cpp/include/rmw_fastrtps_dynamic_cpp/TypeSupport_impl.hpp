@@ -728,27 +728,32 @@ size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
           if (!member->is_array_) {
             current_alignment += getEstimatedSerializedSize(sub_members, field, current_alignment);
           } else {
-            void * subros_message = nullptr;
             size_t array_size = 0;
-            size_t sub_members_size = sub_members->size_of_;
-            size_t max_align = calculateMaxAlign(sub_members);
 
             if (member->array_size_ && !member->is_upper_bound_) {
-              subros_message = field;
               array_size = member->array_size_;
             } else {
-              array_size = get_array_size_and_assign_field(
-                member, field, subros_message, sub_members_size, max_align);
+              if (!member->size_function) {
+                RMW_SET_ERROR_MSG("unexpected error: size function is null");
+                return false;
+              }
+              array_size = member->size_function(field);
 
               // Length serialization
               current_alignment += 4 + eprosima::fastcdr::Cdr::alignment(current_alignment, 4);
             }
 
+            if (array_size != 0 && !member->get_function) {
+              RMW_SET_ERROR_MSG("unexpected error: get_function function is null");
+              return false;
+            }
             for (size_t index = 0; index < array_size; ++index) {
               current_alignment += getEstimatedSerializedSize(
-                sub_members, subros_message, current_alignment);
-              subros_message = static_cast<char *>(subros_message) + sub_members_size;
-              subros_message = align_(max_align, subros_message);
+                sub_members,
+                get_subros_message(
+                  member, field, index, member->array_size_,
+                  member->is_upper_bound_),
+                current_alignment);
             }
           }
         }
