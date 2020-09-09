@@ -33,13 +33,13 @@ __rmw_publish(
   rmw_publisher_allocation_t * allocation)
 {
   (void) allocation;
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(publisher, "publisher pointer is null", return RMW_RET_ERROR);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(publisher, "publisher pointer is null", return RMW_RET_INVALID_ARGUMENT);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    ros_message, "ros_message pointer is null", return RMW_RET_ERROR);
+    ros_message, "ros_message pointer is null", return RMW_RET_INVALID_ARGUMENT);
 
   if (publisher->implementation_identifier != identifier) {
     RMW_SET_ERROR_MSG("publisher handle not from this implementation");
-    return RMW_RET_ERROR;
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION;
   }
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
