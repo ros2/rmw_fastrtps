@@ -33,7 +33,8 @@ __rmw_publish(
   rmw_publisher_allocation_t * allocation)
 {
   (void) allocation;
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(publisher, "publisher pointer is null", return RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
+    publisher, "publisher pointer is null", return RMW_RET_INVALID_ARGUMENT);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(
     ros_message, "ros_message pointer is null", return RMW_RET_INVALID_ARGUMENT);
 
