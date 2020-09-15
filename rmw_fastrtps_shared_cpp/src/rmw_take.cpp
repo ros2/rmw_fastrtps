@@ -176,7 +176,7 @@ __rmw_take(
   rmw_subscription_allocation_t * allocation)
 {
   RMW_CHECK_FOR_NULL_WITH_MSG(
-    subscription, "subscription info is null",
+    subscription, "subscription handle is null",
     return RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_FOR_NULL_WITH_MSG(
     ros_message, "ros message handle is null",
