@@ -106,6 +106,13 @@ rmw_fastrtps_cpp::create_publisher(
   }
   auto cleanup_info = rcpputils::make_scope_exit(
     [info, participant]() {
+      if (info->publisher_) {
+        if (!Domain::removePublisher(info->publisher_)) {
+          RMW_SAFE_FWRITE_TO_STDERR(
+            "Failed to remove publisher after '"
+            RCUTILS_STRINGIFY(__function__) "' failed.\n");
+        }
+      }
       if (info->type_support_) {
         _unregister_type(participant, info->type_support_);
       }
