@@ -42,21 +42,16 @@ __rmw_get_topic_names_and_types(
   bool no_demangle,
   rmw_names_and_types_t * topic_names_and_types)
 {
-  if (!allocator) {
-    RMW_SET_ERROR_MSG("allocator is null");
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RCUTILS_CHECK_ALLOCATOR_WITH_MSG(
+    allocator, "allocator argument is invalid", return RMW_RET_INVALID_ARGUMENT);
+  if (RMW_RET_OK != rmw_names_and_types_check_zero(topic_names_and_types)) {
     return RMW_RET_INVALID_ARGUMENT;
-  }
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-  rmw_ret_t ret = rmw_names_and_types_check_zero(topic_names_and_types);
-  if (ret != RMW_RET_OK) {
-    return ret;
-  }
-  if (node->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_ERROR;
   }
 
   DemangleFunction demangle_topic = _demangle_ros_topic_from_topic;

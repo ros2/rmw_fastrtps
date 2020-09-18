@@ -32,6 +32,8 @@
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/names_and_types.h"
 #include "rmw/rmw.h"
+#include "rmw/validate_namespace.h"
+#include "rmw/validate_node_name.h"
 
 #include "rmw_dds_common/context.hpp"
 
@@ -44,53 +46,6 @@
 
 namespace rmw_fastrtps_shared_cpp
 {
-
-/**
- * Validate the input data of node_info_and_types functions.
- *
- * \return RMW_RET_INVALID_ARGUMENT for null input args
- * \return RMW_RET_ERROR if identifier is not the same as the input node
- * \return RMW_RET_OK if all input is valid
- */
-rmw_ret_t __validate_input(
-  const char * identifier,
-  const rmw_node_t * node,
-  rcutils_allocator_t * allocator,
-  const char * node_name,
-  const char * node_namespace,
-  rmw_names_and_types_t * topic_names_and_types)
-{
-  if (!allocator) {
-    RMW_SET_ERROR_MSG("allocator is null");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-
-  if (!node_name) {
-    RMW_SET_ERROR_MSG("null node name");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-
-  if (!node_namespace) {
-    RMW_SET_ERROR_MSG("null node namespace");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-
-  rmw_ret_t ret = rmw_names_and_types_check_zero(topic_names_and_types);
-  if (ret != RMW_RET_OK) {
-    return ret;
-  }
-
-  // Get participant pointer from node
-  if (node->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-  return RMW_RET_OK;
-}
 
 using GetNamesAndTypesByNodeFunction = rmw_ret_t (*)(
   rmw_dds_common::Context *,
@@ -114,10 +69,37 @@ __rmw_get_topic_names_and_types_by_node(
   GetNamesAndTypesByNodeFunction get_names_and_types_by_node,
   rmw_names_and_types_t * topic_names_and_types)
 {
-  rmw_ret_t valid_input = __validate_input(
-    identifier, node, allocator, node_name, node_namespace, topic_names_and_types);
-  if (valid_input != RMW_RET_OK) {
-    return valid_input;
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RCUTILS_CHECK_ALLOCATOR_WITH_MSG(
+    allocator, "allocator argument is invalid", return RMW_RET_INVALID_ARGUMENT);
+  int validation_result = RMW_NODE_NAME_VALID;
+  rmw_ret_t ret = rmw_validate_node_name(node_name, &validation_result, nullptr);
+  if (RMW_RET_OK != ret) {
+    return ret;
+  }
+  if (RMW_NODE_NAME_VALID != validation_result) {
+    const char * reason = rmw_node_name_validation_result_string(validation_result);
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("node_name argument is invalid: %s", reason);
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+  validation_result = RMW_NAMESPACE_VALID;
+  ret = rmw_validate_namespace(node_namespace, &validation_result, nullptr);
+  if (RMW_RET_OK != ret) {
+    return ret;
+  }
+  if (RMW_NAMESPACE_VALID != validation_result) {
+    const char * reason = rmw_namespace_validation_result_string(validation_result);
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("node_namespace argument is invalid: %s", reason);
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+  ret = rmw_names_and_types_check_zero(topic_names_and_types);
+  if (RMW_RET_OK != ret) {
+    return ret;
   }
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
 
