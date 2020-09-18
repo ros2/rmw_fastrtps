@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.0.0 (2020-09-18)
+------------------
 * Update rmw_take_serialized() and rmw_take_with_message_info() error returns  (`#435 <https://github.com/ros2/rmw_fastrtps/issues/435>`_)
 * Update rmw_take() error returns (`#432 <https://github.com/ros2/rmw_fastrtps/issues/432>`_)
 * Update rmw_publish() error returns (`#430 <https://github.com/ros2/rmw_fastrtps/issues/430>`_)
