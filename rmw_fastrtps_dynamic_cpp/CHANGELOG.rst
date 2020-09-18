@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Call Domain::removePublisher while failure occurs in create_publisher (`#434 <https://github.com/ros2/rmw_fastrtps/issues/434>`_)
+* Avoid memory leaks and undefined behavior in rmw_fastrtps_dynamic_cpp typesupport code (`#429 <https://github.com/ros2/rmw_fastrtps/issues/429>`_)
+* Contributors: Barry Xu, Miguel Company
+
 2.6.0 (2020-08-28)
 ------------------
 * Ensure compliant matched pub/sub count API. (`#424 <https://github.com/ros2/rmw_fastrtps/issues/424>`_)
