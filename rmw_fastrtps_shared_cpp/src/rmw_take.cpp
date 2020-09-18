@@ -209,8 +209,8 @@ __rmw_take_sequence(
   RMW_CHECK_ARGUMENT_FOR_NULL(
     taken, RMW_RET_INVALID_ARGUMENT);
 
-  if (count == 0u) {
-    RMW_SET_ERROR_MSG("count cant be 0");
+  if (0u == count) {
+    RMW_SET_ERROR_MSG("count cannot be 0");
     return RMW_RET_INVALID_ARGUMENT;
   }
 
