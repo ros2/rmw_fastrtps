@@ -106,13 +106,6 @@ rmw_fastrtps_cpp::create_publisher(
   }
   auto cleanup_info = rcpputils::make_scope_exit(
     [info, participant]() {
-      if (info->publisher_) {
-        if (!Domain::removePublisher(info->publisher_)) {
-          RMW_SAFE_FWRITE_TO_STDERR(
-            "Failed to remove publisher after '"
-            RCUTILS_STRINGIFY(__function__) "' failed.\n");
-        }
-      }
       if (info->type_support_) {
         _unregister_type(participant, info->type_support_);
       }
@@ -169,6 +162,14 @@ rmw_fastrtps_cpp::create_publisher(
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
     return nullptr;
   }
+  auto cleanup_publisher = rcpputils::make_scope_exit(
+    [info]() {
+      if (!Domain::removePublisher(info->publisher_)) {
+        RMW_SAFE_FWRITE_TO_STDERR(
+          "Failed to remove publisher after '"
+          RCUTILS_STRINGIFY(__function__) "' failed.\n");
+      }
+    });
 
   info->publisher_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
     eprosima_fastrtps_identifier, info->publisher_->getGuid());
@@ -178,7 +179,7 @@ rmw_fastrtps_cpp::create_publisher(
     RMW_SET_ERROR_MSG("failed to allocate publisher");
     return nullptr;
   }
-  auto cleanup_publisher = rcpputils::make_scope_exit(
+  auto cleanup_rmw_publisher = rcpputils::make_scope_exit(
     [rmw_publisher]() {
       rmw_free(const_cast<char *>(rmw_publisher->topic_name));
       rmw_publisher_free(rmw_publisher);
@@ -196,6 +197,7 @@ rmw_fastrtps_cpp::create_publisher(
 
   rmw_publisher->options = *publisher_options;
 
+  cleanup_rmw_publisher.cancel();
   cleanup_publisher.cancel();
   cleanup_info.cancel();
   return rmw_publisher;
