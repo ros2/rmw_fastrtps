@@ -265,10 +265,10 @@ _take_serialized_message(
   (void) allocation;
   *taken = false;
 
-  if (subscription->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("publisher handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription handle,
+    subscription->implementation_identifier, identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
   CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
@@ -312,11 +312,14 @@ __rmw_take_serialized_message(
   bool * taken,
   rmw_subscription_allocation_t * allocation)
 {
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    subscription, "subscription pointer is null", return RMW_RET_ERROR);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    serialized_message, "ros_message pointer is null", return RMW_RET_ERROR);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(taken, "boolean flag for taken is null", return RMW_RET_ERROR);
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    subscription, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    serialized_message, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    taken, RMW_RET_INVALID_ARGUMENT);
 
   return _take_serialized_message(
     identifier, subscription, serialized_message, taken, nullptr, allocation);
@@ -331,13 +334,17 @@ __rmw_take_serialized_message_with_info(
   rmw_message_info_t * message_info,
   rmw_subscription_allocation_t * allocation)
 {
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    subscription, "subscription pointer is null", return RMW_RET_ERROR);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    serialized_message, "ros_message pointer is null", return RMW_RET_ERROR);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(taken, "boolean flag for taken is null", return RMW_RET_ERROR);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    message_info, "message info pointer is null", return RMW_RET_ERROR);
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    subscription, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    serialized_message, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    taken, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    message_info, RMW_RET_INVALID_ARGUMENT);
 
   return _take_serialized_message(
     identifier, subscription, serialized_message, taken, message_info, allocation);
