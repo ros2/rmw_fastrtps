@@ -175,15 +175,14 @@ __rmw_take(
   bool * taken,
   rmw_subscription_allocation_t * allocation)
 {
-  RMW_CHECK_FOR_NULL_WITH_MSG(
-    subscription, "subscription handle is null",
-    return RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_FOR_NULL_WITH_MSG(
-    ros_message, "ros message handle is null",
-    return RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_FOR_NULL_WITH_MSG(
-    taken, "taken handle is null",
-    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    subscription, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    ros_message, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    taken, RMW_RET_INVALID_ARGUMENT);
 
   return _take(identifier, subscription, ros_message, taken, nullptr, allocation);
 }
@@ -239,18 +238,18 @@ __rmw_take_with_info(
   rmw_message_info_t * message_info,
   rmw_subscription_allocation_t * allocation)
 {
-  RMW_CHECK_FOR_NULL_WITH_MSG(
-    message_info, "message info is null",
-    return RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_FOR_NULL_WITH_MSG(
-    taken, "taken handle is null",
-    return RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_FOR_NULL_WITH_MSG(
-    ros_message, "ros message handle is null",
-    return RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_FOR_NULL_WITH_MSG(
-    subscription, "subscription handle is null",
-    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    message_info, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    taken, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    ros_message, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    subscription, RMW_RET_INVALID_ARGUMENT);
+
   return _take(identifier, subscription, ros_message, taken, message_info, allocation);
 }
 
