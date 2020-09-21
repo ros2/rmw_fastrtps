@@ -24,6 +24,7 @@
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
+#include "rmw_fastrtps_shared_cpp/subscription.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/subscription.hpp"
@@ -100,8 +101,8 @@ rmw_create_subscription(
       rmw_reset_error();
       static_cast<void>(common_context->graph_cache.dissociate_writer(
         info->subscription_gid_, common_context->gid, node->name, node->namespace_));
-      rmw_ret = rmw_fastrtps_shared_cpp::__rmw_destroy_subscription(
-        eprosima_fastrtps_identifier, node, subscription);
+      rmw_ret = rmw_fastrtps_shared_cpp::destroy_subscription(
+        eprosima_fastrtps_identifier, participant_info, subscription);
       if (RMW_RET_OK != rmw_ret) {
         RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
         RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "' cleanup\n");
