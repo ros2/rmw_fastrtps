@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 
@@ -27,28 +28,15 @@ __rmw_get_gid_for_publisher(
   const rmw_publisher_t * publisher,
   rmw_gid_t * gid)
 {
-  if (!publisher) {
-    RMW_SET_ERROR_MSG("publisher is null");
-    return RMW_RET_ERROR;
-  }
-
-  if (publisher->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("publisher handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  if (!gid) {
-    RMW_SET_ERROR_MSG("gid is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher,
+    publisher->implementation_identifier,
+    identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(gid, RMW_RET_INVALID_ARGUMENT);
 
   auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
-
-  if (!info) {
-    RMW_SET_ERROR_MSG("publisher info handle is null");
-    return RMW_RET_ERROR;
-  }
-
   *gid = info->publisher_gid;
   return RMW_RET_OK;
 }
