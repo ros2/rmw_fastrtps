@@ -144,6 +144,17 @@ register_rmw_implementation(
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
   ament_lint_auto_find_test_dependencies()
+
+  find_package(ament_cmake_gtest REQUIRED)
+  find_package(osrf_testing_tools_cpp REQUIRED)
+  find_package(test_msgs REQUIRED)
+
+  ament_add_gtest(test_get_native_entities
+    test/test_get_native_entities.cpp)
+  ament_target_dependencies(test_get_native_entities
+    osrf_testing_tools_cpp rcutils rmw test_msgs
+  )
+  target_link_libraries(test_get_native_entities rmw_fastrtps_dynamic_cpp)
 endif()
 
 ament_package(
