@@ -21,8 +21,10 @@
 #include "rcutils/logging_macros.h"
 
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
+#include "rmw/validate_full_topic_name.h"
 
 #include "rmw_dds_common/context.hpp"
 
@@ -41,14 +43,24 @@ __rmw_count_publishers(
   const char * topic_name,
   size_t * count)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, RMW_RET_INVALID_ARGUMENT);
+  int validation_result = RMW_TOPIC_VALID;
+  rmw_ret_t ret = rmw_validate_full_topic_name(topic_name, &validation_result, nullptr);
+  if (RMW_RET_OK != ret) {
+    return ret;
+  }
+  if (RMW_TOPIC_VALID != validation_result) {
+    const char * reason = rmw_full_topic_name_validation_result_string(validation_result);
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("topic_name argument is invalid: %s", reason);
     return RMW_RET_INVALID_ARGUMENT;
   }
-  if (node->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(count, RMW_RET_INVALID_ARGUMENT);
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   const std::string mangled_topic_name =
     _mangle_topic_name(ros_topic_prefix, topic_name).to_string();
@@ -62,14 +74,24 @@ __rmw_count_subscribers(
   const char * topic_name,
   size_t * count)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, RMW_RET_INVALID_ARGUMENT);
+  int validation_result = RMW_TOPIC_VALID;
+  rmw_ret_t ret = rmw_validate_full_topic_name(topic_name, &validation_result, nullptr);
+  if (RMW_RET_OK != ret) {
+    return ret;
+  }
+  if (RMW_TOPIC_VALID != validation_result) {
+    const char * reason = rmw_full_topic_name_validation_result_string(validation_result);
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("topic_name argument is invalid: %s", reason);
     return RMW_RET_INVALID_ARGUMENT;
   }
-  if (node->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(count, RMW_RET_INVALID_ARGUMENT);
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   const std::string mangled_topic_name =
     _mangle_topic_name(ros_topic_prefix, topic_name).to_string();

@@ -18,6 +18,7 @@
 #include <tuple>
 #include <vector>
 
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
 #include "rmw/topic_endpoint_info_array.h"
@@ -35,48 +36,27 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
-rmw_ret_t
-_validate_params(
+static rmw_ret_t __validate_arguments(
   const char * identifier,
   const rmw_node_t * node,
   rcutils_allocator_t * allocator,
   const char * topic_name,
   rmw_topic_endpoint_info_array_t * participants_info)
 {
-  if (!identifier) {
-    RMW_SET_ERROR_MSG("null implementation identifier provided");
-    return RMW_RET_ERROR;
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RCUTILS_CHECK_ALLOCATOR_WITH_MSG(
+    allocator, "allocator argument is invalid", return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, RMW_RET_INVALID_ARGUMENT);
+  if (RMW_RET_OK != rmw_topic_endpoint_info_array_check_zero(participants_info)) {
+    return RMW_RET_INVALID_ARGUMENT;
   }
-
-  if (!topic_name) {
-    RMW_SET_ERROR_MSG("null topic_name provided");
-    return RMW_RET_ERROR;
-  }
-
-  if (!allocator) {
-    RMW_SET_ERROR_MSG("null allocator provided");
-    return RMW_RET_ERROR;
-  }
-
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
-    return RMW_RET_ERROR;
-  }
-
-  // Get participant pointer from node
-  if (node->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
-  if (!participants_info) {
-    RMW_SET_ERROR_MSG("null participants_info provided");
-    return RMW_RET_ERROR;
-  }
-
   return RMW_RET_OK;
 }
-
 
 rmw_ret_t
 __rmw_get_publishers_info_by_topic(
@@ -87,7 +67,7 @@ __rmw_get_publishers_info_by_topic(
   bool no_mangle,
   rmw_topic_endpoint_info_array_t * publishers_info)
 {
-  rmw_ret_t ret = _validate_params(
+  rmw_ret_t ret = __validate_arguments(
     identifier,
     node,
     allocator,
@@ -120,7 +100,7 @@ __rmw_get_subscriptions_info_by_topic(
   bool no_mangle,
   rmw_topic_endpoint_info_array_t * subscriptions_info)
 {
-  rmw_ret_t ret = _validate_params(
+  rmw_ret_t ret = __validate_arguments(
     identifier,
     node,
     allocator,
