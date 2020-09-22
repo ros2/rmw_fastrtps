@@ -44,6 +44,8 @@ node_listener(rmw_context_t * context);
 rmw_ret_t
 rmw_fastrtps_shared_cpp::run_listener_thread(rmw_context_t * context)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);
+
   auto common_context = static_cast<rmw_dds_common::Context *>(context->impl->common);
   common_context->thread_is_running.store(true);
   common_context->listener_thread_gc = rmw_fastrtps_shared_cpp::__rmw_create_guard_condition(
