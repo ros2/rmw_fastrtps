@@ -145,6 +145,10 @@ if(BUILD_TESTING)
     osrf_testing_tools_cpp rcutils rmw test_msgs
   )
   target_link_libraries(test_get_native_entities rmw_fastrtps_cpp)
+
+  ament_add_gtest(test_logging test/test_logging.cpp)
+  ament_target_dependencies(test_logging rmw)
+  target_link_libraries(test_logging rmw_fastrtps_cpp)
 endif()
 
 ament_package(
