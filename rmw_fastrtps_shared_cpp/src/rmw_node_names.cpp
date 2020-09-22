@@ -24,6 +24,7 @@
 #include "rmw/allocators.h"
 #include "rmw/convert_rcutils_ret_to_rmw_ret.h"
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 #include "rmw/sanity_checks.h"
 
@@ -44,19 +45,17 @@ __rmw_get_node_names(
   rcutils_string_array_t * node_names,
   rcutils_string_array_t * node_namespaces)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
-    return RMW_RET_ERROR;
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (RMW_RET_OK != rmw_check_zero_rmw_string_array(node_names)) {
+    return RMW_RET_INVALID_ARGUMENT;
   }
-  if (rmw_check_zero_rmw_string_array(node_names) != RMW_RET_OK) {
-    return RMW_RET_ERROR;
-  }
-  if (rmw_check_zero_rmw_string_array(node_namespaces) != RMW_RET_OK) {
-    return RMW_RET_ERROR;
-  }
-  if (node->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_ERROR;
+  if (RMW_RET_OK != rmw_check_zero_rmw_string_array(node_namespaces)) {
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
@@ -76,22 +75,20 @@ __rmw_get_node_names_with_enclaves(
   rcutils_string_array_t * node_namespaces,
   rcutils_string_array_t * enclaves)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("null node handle");
-    return RMW_RET_ERROR;
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (RMW_RET_OK != rmw_check_zero_rmw_string_array(node_names)) {
+    return RMW_RET_INVALID_ARGUMENT;
   }
-  if (rmw_check_zero_rmw_string_array(node_names) != RMW_RET_OK) {
-    return RMW_RET_ERROR;
+  if (RMW_RET_OK != rmw_check_zero_rmw_string_array(node_namespaces)) {
+    return RMW_RET_INVALID_ARGUMENT;
   }
-  if (rmw_check_zero_rmw_string_array(node_namespaces) != RMW_RET_OK) {
-    return RMW_RET_ERROR;
-  }
-  if (rmw_check_zero_rmw_string_array(enclaves) != RMW_RET_OK) {
-    return RMW_RET_ERROR;
-  }
-  if (node->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_ERROR;
+  if (RMW_RET_OK != rmw_check_zero_rmw_string_array(enclaves)) {
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
