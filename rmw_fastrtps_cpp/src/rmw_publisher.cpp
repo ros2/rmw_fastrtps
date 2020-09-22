@@ -23,6 +23,7 @@
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
+#include "rmw_fastrtps_shared_cpp/publisher.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 
@@ -72,8 +73,11 @@ rmw_create_publisher(
     eprosima_fastrtps_identifier,
     return nullptr);
 
+  auto participant_info =
+    static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
+
   rmw_publisher_t * publisher = rmw_fastrtps_cpp::create_publisher(
-    static_cast<CustomParticipantInfo *>(node->context->impl->participant_info),
+    participant_info,
     type_supports,
     topic_name,
     qos_policies,
@@ -104,8 +108,8 @@ rmw_create_publisher(
       rmw_reset_error();
       static_cast<void>(common_context->graph_cache.dissociate_writer(
         info->publisher_gid, common_context->gid, node->name, node->namespace_));
-      rmw_ret = rmw_fastrtps_shared_cpp::__rmw_destroy_publisher(
-        eprosima_fastrtps_identifier, node, publisher);
+      rmw_ret = rmw_fastrtps_shared_cpp::destroy_publisher(
+        eprosima_fastrtps_identifier, participant_info, publisher);
       if (RMW_RET_OK != rmw_ret) {
         RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
         RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "' cleanup\n");
