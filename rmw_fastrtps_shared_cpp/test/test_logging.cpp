@@ -14,6 +14,8 @@
 
 #include <gtest/gtest.h>
 
+#include "fastrtps/log/Log.h"
+
 #include "rmw/rmw.h"
 #include "rmw/error_handling.h"
 
@@ -24,12 +26,25 @@ TEST(TestLogging, rmw_logging)
   rmw_ret_t ret;
   ret = rmw_fastrtps_shared_cpp::__rmw_set_log_severity(RMW_LOG_SEVERITY_DEBUG);
   EXPECT_EQ(ret, RMW_RET_OK);
+  EXPECT_EQ(eprosima::fastrtps::Log::Kind::Info, eprosima::fastrtps::Log::GetVerbosity());
   ret = rmw_fastrtps_shared_cpp::__rmw_set_log_severity(RMW_LOG_SEVERITY_INFO);
   EXPECT_EQ(ret, RMW_RET_OK);
+  EXPECT_EQ(eprosima::fastrtps::Log::Kind::Info, eprosima::fastrtps::Log::GetVerbosity());
   ret = rmw_fastrtps_shared_cpp::__rmw_set_log_severity(RMW_LOG_SEVERITY_WARN);
   EXPECT_EQ(ret, RMW_RET_OK);
+  EXPECT_EQ(eprosima::fastrtps::Log::Kind::Warning, eprosima::fastrtps::Log::GetVerbosity());
   ret = rmw_fastrtps_shared_cpp::__rmw_set_log_severity(RMW_LOG_SEVERITY_ERROR);
   EXPECT_EQ(ret, RMW_RET_OK);
+  EXPECT_EQ(eprosima::fastrtps::Log::Kind::Error, eprosima::fastrtps::Log::GetVerbosity());
   ret = rmw_fastrtps_shared_cpp::__rmw_set_log_severity(RMW_LOG_SEVERITY_FATAL);
   EXPECT_EQ(ret, RMW_RET_OK);
+  EXPECT_EQ(eprosima::fastrtps::Log::Kind::Error, eprosima::fastrtps::Log::GetVerbosity());
+}
+
+TEST(TestLogging, rmw_logging_bad_verbosity)
+{
+  rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_set_log_severity(
+    static_cast<rmw_log_severity_t>(RMW_LOG_SEVERITY_FATAL + 1));
+  EXPECT_EQ(ret, RMW_RET_ERROR);
+  EXPECT_EQ(eprosima::fastrtps::Log::Kind::Error, eprosima::fastrtps::Log::GetVerbosity());
 }
