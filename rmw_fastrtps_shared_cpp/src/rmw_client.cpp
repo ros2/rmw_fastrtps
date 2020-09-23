@@ -77,6 +77,7 @@ __rmw_destroy_client(
   rmw_free(const_cast<char *>(client->service_name));
   rmw_client_free(client);
 
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
   return ret;
 }
 }  // namespace rmw_fastrtps_shared_cpp

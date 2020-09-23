@@ -144,6 +144,8 @@ rmw_fastrtps_shared_cpp::create_participant(
   const char * enclave,
   rmw_dds_common::Context * common_context)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(nullptr);
+
   if (!security_options) {
     RMW_SET_ERROR_MSG("security_options is null");
     return nullptr;
@@ -261,7 +263,6 @@ rmw_fastrtps_shared_cpp::create_participant(
 rmw_ret_t
 rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant_info)
 {
-  rmw_ret_t result_ret = RMW_RET_OK;
   if (!participant_info) {
     RMW_SET_ERROR_MSG("participant_info is null");
     return RMW_RET_ERROR;
@@ -270,5 +271,7 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
   delete participant_info->listener;
   participant_info->listener = nullptr;
   delete participant_info;
-  return result_ret;
+
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
+  return RMW_RET_OK;
 }

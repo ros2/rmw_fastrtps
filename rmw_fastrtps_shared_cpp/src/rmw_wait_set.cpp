@@ -96,6 +96,8 @@ __rmw_destroy_wait_set(const char * identifier, rmw_wait_set_t * wait_set)
     rmw_free(wait_set->data);
   }
   rmw_wait_set_free(wait_set);
+
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
   return result;
 }
 }  // namespace rmw_fastrtps_shared_cpp

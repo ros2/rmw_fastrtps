@@ -48,6 +48,7 @@ destroy_publisher(
   rmw_free(const_cast<char *>(publisher->topic_name));
   rmw_publisher_free(publisher);
 
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
   return RMW_RET_OK;
 }
 }  // namespace rmw_fastrtps_shared_cpp

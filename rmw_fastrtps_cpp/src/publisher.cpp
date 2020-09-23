@@ -18,6 +18,8 @@
 #include "fastrtps/Domain.h"
 #include "fastrtps/participant/Participant.h"
 
+#include "rcutils/macros.h"
+
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -52,6 +54,8 @@ rmw_fastrtps_cpp::create_publisher(
   bool keyed,
   bool create_publisher_listener)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(nullptr);
+
   RMW_CHECK_ARGUMENT_FOR_NULL(participant_info, nullptr);
   RMW_CHECK_ARGUMENT_FOR_NULL(type_supports, nullptr);
   RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, nullptr);
