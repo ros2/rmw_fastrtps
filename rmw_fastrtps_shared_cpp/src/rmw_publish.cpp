@@ -33,6 +33,10 @@ __rmw_publish(
   const void * ros_message,
   rmw_publisher_allocation_t * allocation)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);
+
   (void) allocation;
   RMW_CHECK_FOR_NULL_WITH_MSG(
     publisher, "publisher handle is null",
@@ -66,6 +70,10 @@ __rmw_publish_serialized_message(
   const rmw_serialized_message_t * serialized_message,
   rmw_publisher_allocation_t * allocation)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);
+
   (void) allocation;
   RMW_CHECK_FOR_NULL_WITH_MSG(
     publisher, "publisher handle is null",
