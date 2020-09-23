@@ -118,13 +118,6 @@ create_subscription(
       if (info->type_support_) {
         _unregister_type(participant, info->type_support_);
       }
-      if (info->subscriber_) {
-        if (!Domain::removeSubscriber(info->subscriber_)) {
-          RMW_SAFE_FWRITE_TO_STDERR(
-            "Failed to remove subscriber after '"
-            RCUTILS_STRINGIFY(__function__) "' function failed.\n");
-        }
-      }
       delete info->listener_;
       delete info;
     });
@@ -177,6 +170,14 @@ create_subscription(
     RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber");
     return nullptr;
   }
+  auto cleanup_subscription = rcpputils::make_scope_exit(
+    [info]() {
+      if (!Domain::removeSubscriber(info->subscriber_)) {
+        RMW_SAFE_FWRITE_TO_STDERR(
+          "Failed to remove subscriber after '"
+          RCUTILS_STRINGIFY(__function__) "' failed.\n");
+      }
+    });
   info->subscription_gid_ = rmw_fastrtps_shared_cpp::create_rmw_gid(
     eprosima_fastrtps_identifier, info->subscriber_->getGuid());
 
@@ -185,7 +186,7 @@ create_subscription(
     RMW_SET_ERROR_MSG("failed to allocate subscription");
     return nullptr;
   }
-  auto cleanup_subscription = rcpputils::make_scope_exit(
+  auto cleanup_rmw_subscription = rcpputils::make_scope_exit(
     [rmw_subscription]() {
       rmw_free(const_cast<char *>(rmw_subscription->topic_name));
       rmw_subscription_free(rmw_subscription);
@@ -204,6 +205,7 @@ create_subscription(
   rmw_subscription->options = *subscription_options;
   rmw_subscription->can_loan_messages = false;
 
+  cleanup_rmw_subscription.cancel();
   cleanup_subscription.cancel();
   cleanup_info.cancel();
   return rmw_subscription;
