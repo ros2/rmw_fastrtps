@@ -21,8 +21,7 @@
 
 TEST(TestLogging, rmw_logging)
 {
-  rmw_ret_t ret;
-  ret = rmw_set_log_severity(RMW_LOG_SEVERITY_DEBUG);
+  rmw_ret_t ret = rmw_set_log_severity(RMW_LOG_SEVERITY_DEBUG);
   EXPECT_EQ(ret, RMW_RET_OK);
   EXPECT_EQ(eprosima::fastrtps::Log::Kind::Info, eprosima::fastrtps::Log::GetVerbosity());
   ret = rmw_set_log_severity(RMW_LOG_SEVERITY_INFO);
@@ -43,5 +42,4 @@ TEST(TestLogging, rmw_logging_bad_verbosity)
 {
   rmw_ret_t ret = rmw_set_log_severity(static_cast<rmw_log_severity_t>(RMW_LOG_SEVERITY_FATAL + 1));
   EXPECT_EQ(ret, RMW_RET_ERROR);
-  EXPECT_EQ(eprosima::fastrtps::Log::Kind::Error, eprosima::fastrtps::Log::GetVerbosity());
 }
