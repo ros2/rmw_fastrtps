@@ -118,13 +118,6 @@ create_subscription(
       if (info->type_support_) {
         _unregister_type(participant, info->type_support_);
       }
-      if (info->subscriber_) {
-        if (!Domain::removeSubscriber(info->subscriber_)) {
-          RMW_SAFE_FWRITE_TO_STDERR(
-            "Failed to remove subscriber after '"
-            RCUTILS_STRINGIFY(__function__) "' function failed.\n");
-        }
-      }
       delete info->listener_;
       delete info;
     });
