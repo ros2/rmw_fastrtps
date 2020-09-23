@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.1.0 (2020-09-23)
+------------------
 * Add tests for native entity getters. (`#439 <https://github.com/ros2/rmw_fastrtps/issues/439>`_)
 * Avoid deadlock if graph update fails. (`#438 <https://github.com/ros2/rmw_fastrtps/issues/438>`_)
 * Contributors: Michel Hidalgo

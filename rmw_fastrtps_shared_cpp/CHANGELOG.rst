@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+3.1.0 (2020-09-23)
+------------------
 * Inject faults on __rmw_publish() and run_listener_thread() call. (`#441 <https://github.com/ros2/rmw_fastrtps/issues/441>`_)
 * Update gid API return codes. (`#440 <https://github.com/ros2/rmw_fastrtps/issues/440>`_)
 * Update graph API return codes. (`#436 <https://github.com/ros2/rmw_fastrtps/issues/436>`_)
