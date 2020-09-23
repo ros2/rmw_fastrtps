@@ -341,16 +341,16 @@ rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
 {
   RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-                                   node,
-                                   node->implementation_identifier,
-                                   eprosima_fastrtps_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+    node,
+    node->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RMW_CHECK_ARGUMENT_FOR_NULL(service, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-                                   service,
-                                   service->implementation_identifier,
-                                   eprosima_fastrtps_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+    service,
+    service->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   auto info = static_cast<CustomServiceInfo *>(service->data);
 

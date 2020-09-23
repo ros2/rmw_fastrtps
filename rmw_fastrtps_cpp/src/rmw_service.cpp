@@ -233,8 +233,8 @@ rmw_create_service(
       if (info->response_publisher_) {
         if (!Domain::removePublisher(info->response_publisher_)) {
           RMW_SAFE_FWRITE_TO_STDERR(
-              "Failed to remove response publisher after '"
-              RCUTILS_STRINGIFY(__function__) "' failed.\n");
+            "Failed to remove response publisher after '"
+            RCUTILS_STRINGIFY(__function__) "' failed.\n");
         }
       }
       if (info->pub_listener_) {
@@ -242,7 +242,7 @@ rmw_create_service(
       }
     });
   info->pub_listener_ = new (std::nothrow) ServicePubListener();
-  if(!info->pub_listener_) {
+  if (!info->pub_listener_) {
     RMW_SET_ERROR_MSG("failed to create service response publisher listener");
     return nullptr;
   }
@@ -288,10 +288,10 @@ rmw_create_service(
       eprosima_fastrtps_identifier, info->response_publisher_->getGuid());
     rmw_dds_common::msg::ParticipantEntitiesInfo msg =
       common_context->graph_cache.associate_writer(
-          response_publisher_gid,
-          common_context->gid,
-          node->name,
-          node->namespace_);
+      response_publisher_gid,
+      common_context->gid,
+      node->name,
+      node->namespace_);
     rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_publish(
       eprosima_fastrtps_identifier,
       common_context->pub,
@@ -299,15 +299,15 @@ rmw_create_service(
       nullptr);
     if (RMW_RET_OK != ret) {
       common_context->graph_cache.dissociate_writer(
-         response_publisher_gid,
-         common_context->gid,
-         node->name,
-         node->namespace_);
+        response_publisher_gid,
+        common_context->gid,
+        node->name,
+        node->namespace_);
       common_context->graph_cache.dissociate_reader(
-         request_subscriber_gid,
-         common_context->gid,
-         node->name,
-         node->namespace_);
+        request_subscriber_gid,
+        common_context->gid,
+        node->name,
+        node->namespace_);
       return nullptr;
     }
   }
@@ -324,16 +324,16 @@ rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
 {
   RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-                                   node,
-                                   node->implementation_identifier,
-                                   eprosima_fastrtps_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+    node,
+    node->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RMW_CHECK_ARGUMENT_FOR_NULL(service, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-                                   service,
-                                   service->implementation_identifier,
-                                   eprosima_fastrtps_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+    service,
+    service->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   return rmw_fastrtps_shared_cpp::__rmw_destroy_service(
     eprosima_fastrtps_identifier, node, service);

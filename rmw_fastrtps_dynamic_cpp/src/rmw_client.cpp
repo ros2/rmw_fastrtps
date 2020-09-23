@@ -344,16 +344,16 @@ rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
 {
   RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-                                   node,
-                                   node->implementation_identifier,
-                                   eprosima_fastrtps_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+    node,
+    node->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RMW_CHECK_ARGUMENT_FOR_NULL(client, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-                                   client,
-                                   client->implementation_identifier,
-                                   eprosima_fastrtps_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+    client,
+    client->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
 
   auto info = static_cast<CustomClientInfo *>(client->data);

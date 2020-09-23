@@ -224,8 +224,8 @@ rmw_create_client(
       if (info->request_publisher_) {
         if (!Domain::removePublisher(info->request_publisher_)) {
           RMW_SAFE_FWRITE_TO_STDERR(
-              "Failed to remove request publisher after '"
-              RCUTILS_STRINGIFY(__function__) "' failed.\n");
+            "Failed to remove request publisher after '"
+            RCUTILS_STRINGIFY(__function__) "' failed.\n");
         }
       }
       if (info->pub_listener_) {
@@ -282,10 +282,10 @@ rmw_create_client(
       eprosima_fastrtps_identifier, info->response_subscriber_->getGuid());
     rmw_dds_common::msg::ParticipantEntitiesInfo msg =
       common_context->graph_cache.associate_reader(
-        response_subscriber_gid,
-        common_context->gid,
-        node->name,
-        node->namespace_);
+      response_subscriber_gid,
+      common_context->gid,
+      node->name,
+      node->namespace_);
     rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_publish(
       eprosima_fastrtps_identifier,
       common_context->pub,
@@ -318,16 +318,16 @@ rmw_destroy_client(rmw_node_t * node, rmw_client_t * client)
 {
   RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-                                   node,
-                                   node->implementation_identifier,
-                                   eprosima_fastrtps_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+    node,
+    node->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RMW_CHECK_ARGUMENT_FOR_NULL(client, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-                                   client,
-                                   client->implementation_identifier,
-                                   eprosima_fastrtps_identifier,
-                                   return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+    client,
+    client->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   return rmw_fastrtps_shared_cpp::__rmw_destroy_client(
     eprosima_fastrtps_identifier, node, client);
