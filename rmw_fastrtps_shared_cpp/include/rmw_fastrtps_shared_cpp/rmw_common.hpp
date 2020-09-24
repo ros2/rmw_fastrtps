@@ -355,6 +355,7 @@ __rmw_get_topic_names_and_types(
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 __rmw_wait(
+  const char* identifier,
   rmw_subscriptions_t * subscriptions,
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,

@@ -134,6 +134,7 @@ node_listener(rmw_context_t * context)
       TERMINATE_THREAD("failed to create wait set");
     }
     if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_wait(
+        context->implementation_identifier,
         &subscriptions,
         &guard_conditions,
         nullptr,

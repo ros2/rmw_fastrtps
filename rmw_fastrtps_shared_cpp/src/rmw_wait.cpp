@@ -90,6 +90,7 @@ namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
 __rmw_wait(
+  const char* identifier,
   rmw_subscriptions_t * subscriptions,
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
@@ -102,6 +103,11 @@ __rmw_wait(
     RMW_SET_ERROR_MSG("wait set handle is null");
     return RMW_RET_INVALID_ARGUMENT;
   }
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    wait set handle,
+    wait_set->implementation_identifier, identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
+
   CustomWaitsetInfo * wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
   if (!wait_set_info) {
     RMW_SET_ERROR_MSG("Waitset info struct is null");
