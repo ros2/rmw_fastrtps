@@ -40,16 +40,16 @@ class ServicePubListener;
 
 typedef struct CustomServiceInfo
 {
-  rmw_fastrtps_shared_cpp::TypeSupport * request_type_support_;
-  const void * request_type_support_impl_;
-  rmw_fastrtps_shared_cpp::TypeSupport * response_type_support_;
-  const void * response_type_support_impl_;
-  eprosima::fastrtps::Subscriber * request_subscriber_;
-  eprosima::fastrtps::Publisher * response_publisher_;
-  ServiceListener * listener_;
-  ServicePubListener * pub_listener_;
-  eprosima::fastrtps::Participant * participant_;
-  const char * typesupport_identifier_;
+  rmw_fastrtps_shared_cpp::TypeSupport * request_type_support_{nullptr};
+  const void * request_type_support_impl_{nullptr};
+  rmw_fastrtps_shared_cpp::TypeSupport * response_type_support_{nullptr};
+  const void * response_type_support_impl_{nullptr};
+  eprosima::fastrtps::Subscriber * request_subscriber_{nullptr};
+  eprosima::fastrtps::Publisher * response_publisher_{nullptr};
+  ServiceListener * listener_{nullptr};
+  ServicePubListener * pub_listener_{nullptr};
+  eprosima::fastrtps::Participant * participant_{nullptr};
+  const char * typesupport_identifier_{nullptr};
 } CustomServiceInfo;
 
 typedef struct CustomServiceRequest

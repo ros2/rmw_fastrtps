@@ -17,6 +17,8 @@
 #include "rcutils/logging_macros.h"
 
 #include "rmw/allocators.h"
+#include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
 #include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
@@ -39,16 +41,7 @@ __rmw_destroy_client(
   rmw_node_t * node,
   rmw_client_t * client)
 {
-  (void)node;
-  if (!client) {
-    RMW_SET_ERROR_MSG("client handle is null");
-    return RMW_RET_ERROR;
-  }
-  if (client->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("publisher handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
-
+  rmw_ret_t ret = RMW_RET_OK;
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   auto info = static_cast<CustomClientInfo *>(client->data);
   {
@@ -66,43 +59,24 @@ __rmw_destroy_client(
     rmw_dds_common::msg::ParticipantEntitiesInfo msg =
       common_context->graph_cache.dissociate_reader(
       gid, common_context->gid, node->name, node->namespace_);
-    rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
+    ret = rmw_fastrtps_shared_cpp::__rmw_publish(
       identifier,
       common_context->pub,
       static_cast<void *>(&msg),
       nullptr);
-    if (RMW_RET_OK != rmw_ret) {
-      return rmw_ret;
-    }
   }
 
-  if (info != nullptr) {
-    if (info->response_subscriber_ != nullptr) {
-      Domain::removeSubscriber(info->response_subscriber_);
-    }
-    if (info->request_publisher_ != nullptr) {
-      Domain::removePublisher(info->request_publisher_);
-    }
-    if (info->pub_listener_ != nullptr) {
-      delete info->pub_listener_;
-    }
-    if (info->listener_ != nullptr) {
-      delete info->listener_;
-    }
-    if (info->request_type_support_ != nullptr) {
-      _unregister_type(info->participant_, info->request_type_support_);
-    }
-    if (info->response_type_support_ != nullptr) {
-      _unregister_type(info->participant_, info->response_type_support_);
-    }
-    delete info;
-  }
-  if (client->service_name != nullptr) {
-    rmw_free(const_cast<char *>(client->service_name));
-    client->service_name = nullptr;
-  }
+  Domain::removeSubscriber(info->response_subscriber_);
+  Domain::removePublisher(info->request_publisher_);
+  delete info->pub_listener_;
+  delete info->listener_;
+  _unregister_type(info->participant_, info->request_type_support_);
+  _unregister_type(info->participant_, info->response_type_support_);
+  delete info;
+
+  rmw_free(const_cast<char *>(client->service_name));
   rmw_client_free(client);
 
-  return RMW_RET_OK;
+  return ret;
 }
 }  // namespace rmw_fastrtps_shared_cpp
