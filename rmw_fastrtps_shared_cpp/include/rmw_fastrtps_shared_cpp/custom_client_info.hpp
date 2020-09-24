@@ -41,18 +41,18 @@ class ClientPubListener;
 
 typedef struct CustomClientInfo
 {
-  rmw_fastrtps_shared_cpp::TypeSupport * request_type_support_;
-  const void * request_type_support_impl_;
-  rmw_fastrtps_shared_cpp::TypeSupport * response_type_support_;
-  const void * response_type_support_impl_;
-  eprosima::fastrtps::Subscriber * response_subscriber_;
-  eprosima::fastrtps::Publisher * request_publisher_;
-  ClientListener * listener_;
+  rmw_fastrtps_shared_cpp::TypeSupport * request_type_support_{nullptr};
+  const void * request_type_support_impl_{nullptr};
+  rmw_fastrtps_shared_cpp::TypeSupport * response_type_support_{nullptr};
+  const void * response_type_support_impl_{nullptr};
+  eprosima::fastrtps::Subscriber * response_subscriber_{nullptr};
+  eprosima::fastrtps::Publisher * request_publisher_{nullptr};
+  ClientListener * listener_{nullptr};
   eprosima::fastrtps::rtps::GUID_t writer_guid_;
   eprosima::fastrtps::rtps::GUID_t reader_guid_;
-  eprosima::fastrtps::Participant * participant_;
-  const char * typesupport_identifier_;
-  ClientPubListener * pub_listener_;
+  eprosima::fastrtps::Participant * participant_{nullptr};
+  const char * typesupport_identifier_{nullptr};
+  ClientPubListener * pub_listener_{nullptr};
   std::atomic_size_t response_subscriber_matched_count_;
   std::atomic_size_t request_publisher_matched_count_;
 } CustomClientInfo;
