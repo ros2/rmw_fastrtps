@@ -197,32 +197,6 @@ void serialize_field<std::wstring>(
   }
 }
 
-inline
-void * get_subros_message(
-  const rosidl_typesupport_introspection_cpp::MessageMember * member,
-  void * field,
-  size_t index,
-  size_t,
-  bool)
-{
-  return member->get_function(field, index);
-}
-
-inline
-void * get_subros_message(
-  const rosidl_typesupport_introspection_c__MessageMember * member,
-  void * field,
-  size_t index,
-  size_t array_size,
-  bool is_upper_bound)
-{
-  if (array_size && !is_upper_bound) {
-    return member->get_function(&field, index);
-  }
-
-  return member->get_function(field, index);
-}
-
 template<typename MembersType>
 bool TypeSupport<MembersType>::serializeROSmessage(
   eprosima::fastcdr::Cdr & ser,
@@ -309,11 +283,7 @@ bool TypeSupport<MembersType>::serializeROSmessage(
               return false;
             }
             for (size_t index = 0; index < array_size; ++index) {
-              serializeROSmessage(
-                ser, sub_members,
-                get_subros_message(
-                  member, field, index, member->array_size_,
-                  member->is_upper_bound_));
+              serializeROSmessage(ser, sub_members, member->get_function(field, index));
             }
           }
         }
@@ -572,9 +542,7 @@ size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
             for (size_t index = 0; index < array_size; ++index) {
               current_alignment += getEstimatedSerializedSize(
                 sub_members,
-                get_subros_message(
-                  member, field, index, member->array_size_,
-                  member->is_upper_bound_),
+                member->get_function(field, i),
                 current_alignment);
             }
           }
@@ -826,11 +794,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
               return false;
             }
             for (size_t index = 0; index < array_size; ++index) {
-              deserializeROSmessage(
-                deser, sub_members,
-                get_subros_message(
-                  member, field, index, member->array_size_,
-                  member->is_upper_bound_));
+              deserializeROSmessage(deser, sub_members, member->get_function(field, i));
             }
           }
         }
