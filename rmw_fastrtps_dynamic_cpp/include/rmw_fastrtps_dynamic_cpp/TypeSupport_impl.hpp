@@ -542,7 +542,7 @@ size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
             for (size_t index = 0; index < array_size; ++index) {
               current_alignment += getEstimatedSerializedSize(
                 sub_members,
-                member->get_function(field, i),
+                member->get_function(field, index),
                 current_alignment);
             }
           }
@@ -794,7 +794,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
               return false;
             }
             for (size_t index = 0; index < array_size; ++index) {
-              deserializeROSmessage(deser, sub_members, member->get_function(field, i));
+              deserializeROSmessage(deser, sub_members, member->get_function(field, index));
             }
           }
         }
