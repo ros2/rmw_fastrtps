@@ -28,7 +28,10 @@
 #include "rcutils/logging_macros.h"
 
 #include "rmw/allocators.h"
+#include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
+#include "rmw/validate_full_topic_name.h"
 
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
@@ -62,24 +65,30 @@ rmw_create_service(
   const rosidl_service_type_support_t * type_supports,
   const char * service_name, const rmw_qos_profile_t * qos_policies)
 {
-  if (!node) {
-    RMW_SET_ERROR_MSG("node handle is null");
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, nullptr);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return nullptr);
+  RMW_CHECK_ARGUMENT_FOR_NULL(type_supports, nullptr);
+  RMW_CHECK_ARGUMENT_FOR_NULL(service_name, nullptr);
+  if (0 == strlen(service_name)) {
+    RMW_SET_ERROR_MSG("service_name argument is an empty string");
     return nullptr;
   }
-
-  if (node->implementation_identifier != eprosima_fastrtps_identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return nullptr;
-  }
-
-  if (!service_name || strlen(service_name) == 0) {
-    RMW_SET_ERROR_MSG("service topic is null or empty string");
-    return nullptr;
-  }
-
-  if (!qos_policies) {
-    RMW_SET_ERROR_MSG("qos_profile is null");
-    return nullptr;
+  RMW_CHECK_ARGUMENT_FOR_NULL(qos_policies, nullptr);
+  if (!qos_policies->avoid_ros_namespace_conventions) {
+    int validation_result = RMW_TOPIC_VALID;
+    rmw_ret_t ret = rmw_validate_full_topic_name(service_name, &validation_result, nullptr);
+    if (RMW_RET_OK != ret) {
+      return nullptr;
+    }
+    if (RMW_TOPIC_VALID != validation_result) {
+      const char * reason = rmw_full_topic_name_validation_result_string(validation_result);
+      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("service_name argument is invalid: %s", reason);
+      return nullptr;
+    }
   }
 
   const CustomParticipantInfo * impl =
@@ -330,27 +339,30 @@ fail:
 rmw_ret_t
 rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
 {
+  RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    node,
+    node->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(service, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    service,
+    service->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
   auto info = static_cast<CustomServiceInfo *>(service->data);
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "service info pointer is null", return RMW_RET_ERROR);
-
-  auto impl = static_cast<BaseTypeSupport *>(const_cast<void *>(info->request_type_support_impl_));
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    impl, "client's request type support is null",
-    return RMW_RET_ERROR);
-
-  auto ros_type_support = static_cast<const rosidl_service_type_support_t *>(
-    impl->ros_type_support());
 
   TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
+
+  auto impl = static_cast<BaseTypeSupport *>(const_cast<void *>(info->request_type_support_impl_));
+  auto ros_type_support =
+    static_cast<const rosidl_service_type_support_t *>(impl->ros_type_support());
   type_registry.return_request_type_support(ros_type_support);
 
   impl = static_cast<BaseTypeSupport *>(const_cast<void *>(info->response_type_support_impl_));
-  RCUTILS_CHECK_FOR_NULL_WITH_MSG(
-    impl, "client's response type support is null",
-    return RMW_RET_ERROR);
-
-  ros_type_support = static_cast<const rosidl_service_type_support_t *>(
-    impl->ros_type_support());
+  ros_type_support = static_cast<const rosidl_service_type_support_t *>(impl->ros_type_support());
   type_registry.return_response_type_support(ros_type_support);
 
   return rmw_fastrtps_shared_cpp::__rmw_destroy_service(
