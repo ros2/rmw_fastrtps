@@ -13,9 +13,11 @@
 // limitations under the License.
 
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 
 extern "C"
 {
@@ -29,6 +31,16 @@ rmw_wait(
   rmw_wait_set_t * wait_set,
   const rmw_time_t * wait_timeout)
 {
+  if (!wait_set) {
+    RMW_SET_ERROR_MSG("wait set handle is null");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    wait set handle,
+    wait_set->implementation_identifier, eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
+
   return rmw_fastrtps_shared_cpp::__rmw_wait(
     subscriptions, guard_conditions, services, clients, events, wait_set, wait_timeout);
 }
