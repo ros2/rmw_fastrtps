@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add tests for RMW QoS to DDS attribute conversion. (`#449 <https://github.com/ros2/rmw_fastrtps/issues/449>`_)
+* Make service/client construction/destruction implementation compliant (`#445 <https://github.com/ros2/rmw_fastrtps/issues/445>`_)
+* Contributors: Michel Hidalgo
+
 3.1.0 (2020-09-23)
 ------------------
 * Inject faults on __rmw_publish() and run_listener_thread() call. (`#441 <https://github.com/ros2/rmw_fastrtps/issues/441>`_)
