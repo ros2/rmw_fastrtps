@@ -100,7 +100,7 @@ __rmw_wait(
 {
   if (!wait_set) {
     RMW_SET_ERROR_MSG("wait set handle is null");
-    return RMW_RET_ERROR;
+    return RMW_RET_INVALID_ARGUMENT;
   }
   CustomWaitsetInfo * wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
   if (!wait_set_info) {
