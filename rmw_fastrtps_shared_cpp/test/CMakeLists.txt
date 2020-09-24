@@ -7,6 +7,11 @@ if(TARGET test_dds_attributes_to_rmw_qos)
     target_link_libraries(test_dds_attributes_to_rmw_qos ${PROJECT_NAME})
 endif()
 
+ament_add_gtest(test_rmw_qos_to_dds_attributes test_rmw_qos_to_dds_attributes.cpp)
+if(TARGET test_rmw_qos_to_dds_attributes)
+  target_link_libraries(test_rmw_qos_to_dds_attributes ${PROJECT_NAME})
+endif()
+
 ament_add_gmock(test_security_logging test_security_logging.cpp)
 if(TARGET test_security_logging)
     ament_target_dependencies(test_security_logging)
