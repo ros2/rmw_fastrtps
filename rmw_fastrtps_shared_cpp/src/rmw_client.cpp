@@ -39,7 +39,10 @@ __rmw_destroy_client(
   rmw_node_t * node,
   rmw_client_t * client)
 {
-  (void)node;
+  if (!node){
+    RMW_SET_ERROR_MSG("node handle is null");
+    return RMW_RET_ERROR;
+  }
   if (!client) {
     RMW_SET_ERROR_MSG("client handle is null");
     return RMW_RET_ERROR;
