@@ -29,3 +29,10 @@ if(TARGET test_names)
   ament_target_dependencies(test_names rmw)
   target_link_libraries(test_names ${PROJECT_NAME})
 endif()
+
+ament_add_gtest(test_logging test_logging.cpp)
+if(TARGET test_logging)
+  ament_target_dependencies(test_logging
+    osrf_testing_tools_cpp rcutils rmw)
+  target_link_libraries(test_logging rmw_fastrtps_shared_cpp)
+endif()
