@@ -73,26 +73,20 @@ fail:
 rmw_ret_t
 __rmw_destroy_wait_set(const char * identifier, rmw_wait_set_t * wait_set)
 {
-  if (!wait_set) {
-    RMW_SET_ERROR_MSG("wait set handle is null");
-    return RMW_RET_ERROR;
-  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(wait_set, RMW_RET_ERROR);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     wait set handle,
     wait_set->implementation_identifier, identifier,
-    return RMW_RET_ERROR)
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
   auto result = RMW_RET_OK;
+  // If wait_set_info is ever nullptr, it can only mean one of three things:
+  // - Wait set is invalid. Caller did not respect preconditions.
+  // - Implementation is logically broken. Definitely not something we want to treat as a normal
+  // error.
+  // - Heap is corrupt.
+  // In all three cases, it's better if this crashes soon enough.
   auto wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
-  if (!wait_set_info) {
-    RMW_SET_ERROR_MSG("wait set info is null");
-    return RMW_RET_ERROR;
-  }
-  std::mutex * conditionMutex = &wait_set_info->condition_mutex;
-  if (!conditionMutex) {
-    RMW_SET_ERROR_MSG("wait set mutex is null");
-    return RMW_RET_ERROR;
-  }
 
   if (wait_set->data) {
     if (wait_set_info) {
