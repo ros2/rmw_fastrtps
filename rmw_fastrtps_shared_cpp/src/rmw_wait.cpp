@@ -90,7 +90,7 @@ namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
 __rmw_wait(
-  const char* identifier,
+  const char * identifier,
   rmw_subscriptions_t * subscriptions,
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
@@ -107,7 +107,8 @@ __rmw_wait(
 
   // If wait_set_info is ever nullptr, it can only mean one of three things:
   // - Wait set is invalid. Caller did not respect preconditions.
-  // - Implementation is logically broken. Definitely not something we want to treat as a normal error.
+  // - Implementation is logically broken. Definitely not something we want to treat as a normal
+  // error.
   // - Heap is corrupt.
   // In all three cases, it's better if this crashes soon enough.
   CustomWaitsetInfo * wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);

@@ -82,7 +82,8 @@ __rmw_destroy_wait_set(const char * identifier, rmw_wait_set_t * wait_set)
   auto result = RMW_RET_OK;
   // If wait_set_info is ever nullptr, it can only mean one of three things:
   // - Wait set is invalid. Caller did not respect preconditions.
-  // - Implementation is logically broken. Definitely not something we want to treat as a normal error.
+  // - Implementation is logically broken. Definitely not something we want to treat as a normal
+  // error.
   // - Heap is corrupt.
   // In all three cases, it's better if this crashes soon enough.
   auto wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
