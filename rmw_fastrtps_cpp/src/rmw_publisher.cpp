@@ -46,7 +46,7 @@ rmw_init_publisher_allocation(
   (void) message_bounds;
   (void) allocation;
   RMW_SET_ERROR_MSG("unimplemented");
-  return RMW_RET_ERROR;
+  return RMW_RET_UNSUPPORTED;
 }
 
 rmw_ret_t
@@ -55,7 +55,7 @@ rmw_fini_publisher_allocation(rmw_publisher_allocation_t * allocation)
   // Unused in current implementation.
   (void) allocation;
   RMW_SET_ERROR_MSG("unimplemented");
-  return RMW_RET_ERROR;
+  return RMW_RET_UNSUPPORTED;
 }
 
 rmw_publisher_t *
