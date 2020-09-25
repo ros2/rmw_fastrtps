@@ -86,7 +86,6 @@ __rmw_destroy_wait_set(const char * identifier, rmw_wait_set_t * wait_set)
   // - Heap is corrupt.
   // In all three cases, it's better if this crashes soon enough.
   auto wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
-  std::mutex * conditionMutex = &wait_set_info->condition_mutex;
 
   if (wait_set->data) {
     if (wait_set_info) {
