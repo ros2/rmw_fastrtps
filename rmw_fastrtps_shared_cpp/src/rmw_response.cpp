@@ -91,8 +91,6 @@ __rmw_send_response(
 
   rmw_ret_t returnedValue = RMW_RET_ERROR;
 
-
-
   auto info = static_cast<CustomServiceInfo *>(service->data);
   assert(info);
 
