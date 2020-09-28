@@ -81,16 +81,17 @@ __rmw_send_response(
   rmw_request_id_t * request_header,
   void * ros_response)
 {
-  assert(service);
-  assert(request_header);
-  assert(ros_response);
+  RMW_CHECK_ARGUMENT_FOR_NULL(service, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    service,
+    service->implementation_identifier, identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(request_header, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(ros_response, RMW_RET_INVALID_ARGUMENT);
 
   rmw_ret_t returnedValue = RMW_RET_ERROR;
 
-  if (service->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("service handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
+
 
   auto info = static_cast<CustomServiceInfo *>(service->data);
   assert(info);
