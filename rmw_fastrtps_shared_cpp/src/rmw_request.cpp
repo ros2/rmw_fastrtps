@@ -21,6 +21,7 @@
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/types.h"
 
 #include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
@@ -38,16 +39,15 @@ __rmw_send_request(
   const void * ros_request,
   int64_t * sequence_id)
 {
-  assert(client);
-  assert(ros_request);
-  assert(sequence_id);
+  RMW_CHECK_ARGUMENT_FOR_NULL(client, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    client,
+    client->implementation_identifier, identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(ros_request, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(sequence_id, RMW_RET_INVALID_ARGUMENT);
 
   rmw_ret_t returnedValue = RMW_RET_ERROR;
-
-  if (client->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("node handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
 
   auto info = static_cast<CustomClientInfo *>(client->data);
   assert(info);
@@ -77,17 +77,16 @@ __rmw_take_request(
   void * ros_request,
   bool * taken)
 {
-  assert(service);
-  assert(request_header);
-  assert(ros_request);
-  assert(taken);
+  RMW_CHECK_ARGUMENT_FOR_NULL(service, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    service,
+    service->implementation_identifier, identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(request_header, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(ros_request, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(taken, RMW_RET_INVALID_ARGUMENT);
 
   *taken = false;
-
-  if (service->implementation_identifier != identifier) {
-    RMW_SET_ERROR_MSG("service handle not from this implementation");
-    return RMW_RET_ERROR;
-  }
 
   auto info = static_cast<CustomServiceInfo *>(service->data);
   assert(info);
