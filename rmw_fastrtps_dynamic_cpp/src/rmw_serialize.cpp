@@ -100,6 +100,6 @@ rmw_get_serialized_message_size(
   size_t * /*size*/)
 {
   RMW_SET_ERROR_MSG("unimplemented");
-  return RMW_RET_ERROR;
+  return RMW_RET_UNSUPPORTED;
 }
 }  // extern "C"
