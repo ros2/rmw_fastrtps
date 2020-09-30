@@ -85,14 +85,10 @@ bool fill_entity_qos_from_profile(
       return false;
   }
 
-  if (qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT) {
-    history_qos.depth = static_cast<int32_t>(qos_policies.depth);
-  }
-
   // ensure the history depth is at least the requested queue size
   assert(history_qos.depth >= 0);
   if (
-    eprosima::fastrtps::KEEP_LAST_HISTORY_QOS == history_qos.kind &&
+    qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT &&
     static_cast<size_t>(history_qos.depth) < qos_policies.depth)
   {
     if (qos_policies.depth > static_cast<size_t>((std::numeric_limits<int32_t>::max)())) {
