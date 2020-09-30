@@ -108,10 +108,15 @@ TEST_F(GetDataReaderQoSTest, large_depth_conversion) {
   EXPECT_EQ(
     eprosima::fastrtps::KEEP_LAST_HISTORY_QOS,
     subscriber_attributes_.topic.historyQos.kind);
-  EXPECT_GE(depth, static_cast<size_t>(subscriber_attributes_.topic.historyQos.depth));
+  EXPECT_LE(depth, static_cast<size_t>(subscriber_attributes_.topic.historyQos.depth));
 
   using depth_type = decltype(subscriber_attributes_.topic.historyQos.depth);
-  size_t max_depth = static_cast<size_t>(std::numeric_limits<depth_type>::max());
+  constexpr size_t max_depth = static_cast<size_t>(std::numeric_limits<depth_type>::max());
+
+  qos_profile_.depth = max_depth;
+  EXPECT_TRUE(get_datareader_qos(qos_profile_, subscriber_attributes_));
+  EXPECT_LE(depth, static_cast<size_t>(subscriber_attributes_.topic.historyQos.depth));
+
   if (max_depth < std::numeric_limits<size_t>::max()) {
     qos_profile_.depth = max_depth + 1;
     EXPECT_FALSE(get_datareader_qos(qos_profile_, subscriber_attributes_));
@@ -201,10 +206,15 @@ TEST_F(GetDataWriterQoSTest, large_depth_conversion) {
   EXPECT_EQ(
     eprosima::fastrtps::KEEP_LAST_HISTORY_QOS,
     publisher_attributes_.topic.historyQos.kind);
-  EXPECT_GE(depth, static_cast<size_t>(publisher_attributes_.topic.historyQos.depth));
+  EXPECT_LE(depth, static_cast<size_t>(publisher_attributes_.topic.historyQos.depth));
 
   using depth_type = decltype(publisher_attributes_.topic.historyQos.depth);
-  size_t max_depth = static_cast<size_t>(std::numeric_limits<depth_type>::max());
+  constexpr size_t max_depth = static_cast<size_t>(std::numeric_limits<depth_type>::max());
+
+  qos_profile_.depth = max_depth;
+  EXPECT_TRUE(get_datawriter_qos(qos_profile_, publisher_attributes_));
+  EXPECT_LE(depth, static_cast<size_t>(publisher_attributes_.topic.historyQos.depth));
+
   if (max_depth < std::numeric_limits<size_t>::max()) {
     qos_profile_.depth = max_depth + 1;
     EXPECT_FALSE(get_datawriter_qos(qos_profile_, publisher_attributes_));
