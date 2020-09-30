@@ -12,6 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <limits>
 #include <tuple>
 
 #include "gtest/gtest.h"
@@ -94,7 +95,27 @@ TEST_F(GetDataReaderQoSTest, nominal_conversion) {
   EXPECT_EQ(
     eprosima::fastrtps::KEEP_LAST_HISTORY_QOS,
     subscriber_attributes_.topic.historyQos.kind);
-  EXPECT_EQ(10, subscriber_attributes_.topic.historyQos.depth);
+  EXPECT_GE(10, subscriber_attributes_.topic.historyQos.depth);
+}
+
+TEST_F(GetDataReaderQoSTest, large_depth_conversion) {
+  size_t depth = subscriber_attributes_.topic.historyQos.depth + 1;
+  qos_profile_.depth = depth;
+  qos_profile_.history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
+
+  EXPECT_TRUE(get_datareader_qos(qos_profile_, subscriber_attributes_));
+
+  EXPECT_EQ(
+    eprosima::fastrtps::KEEP_LAST_HISTORY_QOS,
+    subscriber_attributes_.topic.historyQos.kind);
+  EXPECT_GE(depth, static_cast<size_t>(subscriber_attributes_.topic.historyQos.depth));
+
+  using depth_type = decltype(subscriber_attributes_.topic.historyQos.depth);
+  size_t max_depth = static_cast<size_t>(std::numeric_limits<depth_type>::max());
+  if (max_depth < std::numeric_limits<size_t>::max()) {
+    qos_profile_.depth = max_depth + 1;
+    EXPECT_FALSE(get_datareader_qos(qos_profile_, subscriber_attributes_));
+  }
 }
 
 using eprosima::fastrtps::PublisherAttributes;
@@ -167,5 +188,25 @@ TEST_F(GetDataWriterQoSTest, nominal_conversion) {
   EXPECT_EQ(
     eprosima::fastrtps::KEEP_LAST_HISTORY_QOS,
     publisher_attributes_.topic.historyQos.kind);
-  EXPECT_EQ(10, publisher_attributes_.topic.historyQos.depth);
+  EXPECT_GE(10, publisher_attributes_.topic.historyQos.depth);
+}
+
+TEST_F(GetDataWriterQoSTest, large_depth_conversion) {
+  size_t depth = publisher_attributes_.topic.historyQos.depth + 1;
+  qos_profile_.depth = depth;
+  qos_profile_.history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
+
+  EXPECT_TRUE(get_datawriter_qos(qos_profile_, publisher_attributes_));
+
+  EXPECT_EQ(
+    eprosima::fastrtps::KEEP_LAST_HISTORY_QOS,
+    publisher_attributes_.topic.historyQos.kind);
+  EXPECT_GE(depth, static_cast<size_t>(publisher_attributes_.topic.historyQos.depth));
+
+  using depth_type = decltype(publisher_attributes_.topic.historyQos.depth);
+  size_t max_depth = static_cast<size_t>(std::numeric_limits<depth_type>::max());
+  if (max_depth < std::numeric_limits<size_t>::max()) {
+    qos_profile_.depth = max_depth + 1;
+    EXPECT_FALSE(get_datawriter_qos(qos_profile_, publisher_attributes_));
+  }
 }
