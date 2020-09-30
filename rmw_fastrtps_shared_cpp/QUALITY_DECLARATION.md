@@ -88,7 +88,7 @@ The results of the test can be found [here](https://ci.ros2.org/view/nightly/job
 
 All `rmw_fastrtps_shared_cpp` public features support ROS middleware feature implementations in `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp`.
 
-Thus, unit, integration, and system tests for ROS middlewares up the stack, such as those found in [`test_rmw_implementation`](https://github.com/ros2/rmw_implementation/tree/master/test_rmw_implementation), [`test_rclcpp`](https://github.com/ros2/system_tests/tree/master/test_rclcpp), and [`test_communication`](https://github.com/ros2/system_tests/tree/master/test_communication) packages, provide coverage.
+Unit, integration, and system tests for ROS middlewares higher up in the stack, such as those found in [`test_rmw_implementation`](https://github.com/ros2/rmw_implementation/tree/master/test_rmw_implementation), [`test_rclcpp`](https://github.com/ros2/system_tests/tree/master/test_rclcpp), and [`test_communication`](https://github.com/ros2/system_tests/tree/master/test_communication) packages, provide coverage.
 
 ### Public API Testing [4.ii]
 
@@ -97,7 +97,7 @@ All `rmw_fastrtps_shared_cpp` public API supports API implementations in  in `rm
 Unit tests for many parts of this API provide coverage, and they are located in the [`test`](https://github.com/ros2/rmw_fastrtps/tree/master/rmw_fastrtps_shared_cpp/test) directory.
 New additions or changes to this API require tests before being added.
 
-Unit, integration, and system tests for `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` up the stack, such as those found in [`test_rmw_implementation`](https://github.com/ros2/rmw_implementation/tree/master/test_rmw_implementation), [`test_rclcpp`](https://github.com/ros2/system_tests/tree/master/test_rclcpp), and [`test_communication`](https://github.com/ros2/system_tests/tree/master/test_communication) packages, further extend coverage.
+Unit, integration, and system tests for `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` higher up in the stack, such as those found in [`test_rmw_implementation`](https://github.com/ros2/rmw_implementation/tree/master/test_rmw_implementation), [`test_rclcpp`](https://github.com/ros2/system_tests/tree/master/test_rclcpp), and [`test_communication`](https://github.com/ros2/system_tests/tree/master/test_communication) packages, further extend coverage.
 
 ### Coverage [4.iii]
 
@@ -111,12 +111,14 @@ This includes:
 
 Changes are required to make a best effort to keep or increase coverage before being accepted, but decreases are allowed if properly justified and accepted by reviewers.
 
-This package does not meet the 95% coverage guideline, as error handling behavior is currently not being tested on system resource exhaustion and on `fastrtps` internal failure.
 Current coverage statistics can be viewed 
 [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/install_rmw_fastrtps_shared_cpp_include_rmw_fastrtps_shared_cpp/), 
 [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_include_rmw_fastrtps_shared_cpp/), 
 [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_src/), and 
 [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_src_types/).
+
+This package claims to meet the coverage requirements for the current quality level, even though it doesn't have 95% line coverage.
+The justification is that the only uncovered lines have to do with system resource exhaustion and Fast-DDS internal failure.
 
 A summary of how these statistics are calculated can be found in the [ROS 2 On-boarding guide](https://index.ros.org/doc/ros2/Contributing/ROS-2-On-boarding-Guide/#note-on-coverage-runs).
 
