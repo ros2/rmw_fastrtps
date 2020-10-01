@@ -81,6 +81,12 @@ The following example configures Fast DDS to publish synchronously, and to have 
 
 ## Quality Declaration files
 
+Quality Declarations for each package in this repository:
+
+* [`rmw_fastrtps_shared_cpp`](rmw_fastrtps_shared_cpp/QUALITY_DECLARATION.md)
+* [`rmw_fastrps_cpp`](rmw_fastrtps_cpp/QUALITY_DECLARATION.md)
+* [`rmw_fastrtps_dynamic_cpp`](rmw_fastrtps_dynamic_cpp/QUALITY_DECLARATION.md)
+
 Quality Declarations for the external dependencies of these packages can be found in:
 
 * [Fast DDS Quality Declaration](https://github.com/eProsima/Fast-DDS/blob/master/QUALITY.md)
