@@ -60,7 +60,7 @@ All pull requests must resolve related documentation changes before merging.
 ### Feature Documentation [3.i]
 
 Some of the `rmw_fastrtps_shared_cpp` features are documented on the repository level [README](../README.md).
-Much of Fast RTPS itself has feature documentation [hosted publicly](https://fast-rtps.docs.eprosima.com/en/latest).
+Much of Fast DDS itself has feature documentation [hosted publicly](https://fast-dds.docs.eprosima.com/en/latest/).
 
 ### Public API Documentation [3.ii]
 
@@ -118,7 +118,7 @@ Current coverage statistics can be viewed
 [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_src_types/).
 
 This package claims to meet the coverage requirements for the current quality level, even though it doesn't have 95% line coverage.
-The justification is that the only uncovered lines have to do with system resource exhaustion and Fast-DDS internal failure.
+The justification is that the only uncovered lines have to do with system resource exhaustion and Fast DDS internal failure.
 
 A summary of how these statistics are calculated can be found in the [ROS 2 On-boarding guide](https://index.ros.org/doc/ros2/Contributing/ROS-2-On-boarding-Guide/#note-on-coverage-runs).
 
