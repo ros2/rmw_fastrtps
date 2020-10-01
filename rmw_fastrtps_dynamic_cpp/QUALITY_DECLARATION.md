@@ -139,8 +139,8 @@ It also has several test dependencies, which do not affect the resulting quality
 ### Direct Runtime Non-ROS Dependencies [5.iii]
 
 `rmw_fastrtps_cpp` has the following runtime non-ROS dependencies.
-* `fastcdr`
-* `fastrtps`
+* `fastcdr`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-CDR/blob/master/QUALITY.md)
+* `fastrtps`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-DDS/blob/master/QUALITY.md)
 
 ## Platform Support [6]
 
