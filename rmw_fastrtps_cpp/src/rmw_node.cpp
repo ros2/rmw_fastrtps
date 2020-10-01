@@ -85,12 +85,34 @@ rmw_destroy_node(rmw_node_t * node)
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   rmw_context_t * context = node->context;
-  rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_destroy_node(
+
+  rmw_ret_t ret = RMW_RET_OK;
+  rmw_error_state_t error_state;
+  rmw_ret_t inner_ret = rmw_fastrtps_shared_cpp::__rmw_destroy_node(
     eprosima_fastrtps_identifier, node);
   if (RMW_RET_OK != ret) {
-    return ret;
+    error_state = *rmw_get_error_state();
+    ret = inner_ret;
+    rmw_reset_error();
   }
-  return rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(context);
+
+  inner_ret = rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(context);
+  if (RMW_RET_OK != inner_ret) {
+    if (RMW_RET_OK != ret) {
+      RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
+      RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "'\n");
+    } else {
+      error_state = *rmw_get_error_state();
+      ret = inner_ret;
+    }
+    rmw_reset_error();
+  }
+
+  if (RMW_RET_OK != ret) {
+    rmw_set_error_state(error_state.message, error_state.file, error_state.line_number);
+  }
+
+  return ret;
 }
 
 const rmw_guard_condition_t *

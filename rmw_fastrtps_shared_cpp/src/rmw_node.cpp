@@ -131,26 +131,23 @@ __rmw_destroy_node(
   rmw_node_t * node)
 {
   assert(node->implementation_identifier == identifier);
-
+  rmw_ret_t ret = RMW_RET_OK;
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   rmw_dds_common::GraphCache & graph_cache = common_context->graph_cache;
   {
     std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
     rmw_dds_common::msg::ParticipantEntitiesInfo participant_msg =
       graph_cache.remove_node(common_context->gid, node->name, node->namespace_);
-    rmw_ret_t ret = __rmw_publish(
+    ret = __rmw_publish(
       identifier,
       common_context->pub,
       static_cast<void *>(&participant_msg),
       nullptr);
-    if (RMW_RET_OK != ret) {
-      return ret;
-    }
   }
   rmw_free(const_cast<char *>(node->name));
   rmw_free(const_cast<char *>(node->namespace_));
   rmw_node_free(node);
-  return RMW_RET_OK;
+  return ret;
 }
 
 const rmw_guard_condition_t *
