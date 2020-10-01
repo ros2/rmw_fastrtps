@@ -60,7 +60,7 @@ All pull requests must resolve related documentation changes before merging.
 ### Feature Documentation [3.i]
 
 Some of the `rmw_fastrtps_cpp` features are documented on the repository level [README](../README.md).
-Much of Fast RTPS itself has feature documentation [hosted publicly](https://fast-rtps.docs.eprosima.com/en/latest).
+Much of Fast DDS itself has feature documentation [hosted publicly](https://fast-dds.docs.eprosima.com/en/latest/).
 
 ### Public API Documentation [3.ii]
 
@@ -104,7 +104,10 @@ This includes:
 
 Changes are required to make a best effort to keep or increase coverage before being accepted, but decreases are allowed if properly justified and accepted by reviewers.
 
-Current coverage statistics can be viewed [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_cpp_src/). This package does not yet meet the 95% coverage guideline.
+Current coverage statistics can be viewed [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_cpp_src/).
+
+This package claims to meet the coverage requirements for the current quality level, even though it doesn't have 95% line coverage.
+The justification is that the only uncovered lines have to do with system resource exhaustion and Fast DDS internal failure.
 
 A summary of how these statistics are calculated can be found in the [ROS 2 On-boarding guide](https://index.ros.org/doc/ros2/Contributing/ROS-2-On-boarding-Guide/#note-on-coverage-runs).
 
@@ -186,7 +189,7 @@ The chart below compares the requirements in the REP-2004 with the current state
 |3.v.b| Centralized declaration available for peer review |✓|
 |4| **Testing** | --- |
 |4.i| Feature items tests | ✓ |
-|4.ii| Public API tests | None |
+|4.ii| Public API tests | * |
 |4.iii.a| Using coverage | ✓ |
 |4.iii.a| Coverage policy | ✓ |
 |4.iv.a| Performance tests (if applicable) | ☓ |
