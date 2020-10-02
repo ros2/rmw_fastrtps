@@ -133,15 +133,15 @@ Results of the nightly linter tests can be found [here](https://ci.ros2.org/view
 ### Direct Runtime ROS Dependencies [5.i]/[5.ii]
 
 `rmw_fastrtps_cpp` has the following runtime ROS dependencies:
-* `fastrtps_cmake_module`
-* `rcutils`
-* `rmw`
-* `rmw_dds_common`
-* `rmw_fastrtps_shared_cpp`
-* `rosidl_runtime_c`
-* `rosidl_runtime_cpp`
-* `rosidl_typesupport_fastrtps_c`
-* `rosidl_typesupport_fastrtps_cpp`
+* `fastrtps_cmake_module`: [QUALITY DECLARATION](https://github.com/ros2/rosidl_typesupport_fastrtps/blob/master/fastrtps_cmake_module/QUALITY_DECLARATION.md)
+* `rcutils`: [QUALITY DECLARATION](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md)
+* `rmw`: [QUALITY DECLARATION](https://github.com/ros2/rmw/blob/master/rmw/QUALITY_DECLARATION.md)
+* `rmw_dds_common`: [QUALITY DECLARATION](https://github.com/ros2/rmw_dds_common/blob/master/rmw_dds_common/QUALITY_DECLARATION.md)
+* `rmw_fastrtps_shared_cpp`: [QUALITY DECLARATION](https://github.com/ros2/rmw_fastrtps/blob/master/rmw_fastrtps_shared_cpp/QUALITY_DECLARATION.md)
+* `rosidl_runtime_c`: [QUALITY DECLARATION](https://github.com/ros2/rosidl/blob/master/rosidl_runtime_c/QUALITY_DECLARATION.md)
+* `rosidl_runtime_cpp`: [QUALITY DECLARATION](https://github.com/ros2/rosidl/blob/master/rosidl_runtime_cpp/QUALITY_DECLARATION.md)
+* `rosidl_typesupport_fastrtps_c`: [QUALITY DECLARATION](https://github.com/ros2/rosidl_typesupport_fastrtps/blob/master/rosidl_typesupport_fastrtps_c/QUALITY_DECLARATION.md)
+* `rosidl_typesupport_fastrtps_cpp`: [QUALITY DECLARATION](https://github.com/ros2/rosidl_typesupport_fastrtps/blob/master/rosidl_typesupport_fastrtps_cpp/QUALITY_DECLARATION.md)
 
 It has several "buildtool" dependencies, which do not affect the resulting quality of the package, because they do not contribute to the public library API.
 It also has several test dependencies, which do not affect the resulting quality of the package, because they are only used to build and run the test code.
@@ -149,8 +149,8 @@ It also has several test dependencies, which do not affect the resulting quality
 ### Direct Runtime Non-ROS Dependencies [5.iii]
 
 `rmw_fastrtps_cpp` has the following runtime non-ROS dependencies.
-* `fastcdr`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-CDR/blob/master/QUALITY.md)
-* `fastrtps`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-DDS/blob/master/QUALITY.md)
+* `fastcdr`: *eProsima Fast CDR* claims to be Quality Level 2. For more information, please refer to its [QUALITY DECLARATION](https://github.com/eProsima/Fast-CDR/blob/master/QUALITY.md)
+* `fastrtps`: *eProsima Fast DDS* claims to be Quality Level 2. For more information, please refer to its [QUALITY DECLARATION](https://github.com/eProsima/Fast-DDS/blob/master/QUALITY.md)
 
 ## Platform Support [6]
 
