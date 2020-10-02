@@ -14,6 +14,8 @@
 
 #include "fastrtps/subscriber/Subscriber.h"
 
+#include "rcutils/macros.h"
+
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
@@ -99,6 +101,9 @@ __rmw_wait(
   rmw_wait_set_t * wait_set,
   const rmw_time_t * wait_timeout)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
   RMW_CHECK_ARGUMENT_FOR_NULL(wait_set, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     wait set handle,

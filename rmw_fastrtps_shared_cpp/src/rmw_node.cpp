@@ -147,6 +147,7 @@ __rmw_destroy_node(
   rmw_free(const_cast<char *>(node->name));
   rmw_free(const_cast<char *>(node->namespace_));
   rmw_node_free(node);
+
   return ret;
 }
 

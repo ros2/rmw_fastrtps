@@ -16,6 +16,7 @@
 #include <utility>
 
 #include "rcutils/allocator.h"
+#include "rcutils/macros.h"
 #include "rcutils/strdup.h"
 
 #include "rmw/allocators.h"
@@ -58,6 +59,8 @@ create_subscription(
   bool keyed,
   bool create_subscription_listener)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(nullptr);
+
   RMW_CHECK_ARGUMENT_FOR_NULL(participant_info, nullptr);
   RMW_CHECK_ARGUMENT_FOR_NULL(type_supports, nullptr);
   RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, nullptr);
