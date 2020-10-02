@@ -167,4 +167,16 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
   return rmw_fastrtps_shared_cpp::__rmw_destroy_subscription(
     eprosima_fastrtps_identifier, node, subscription);
 }
+
+rmw_ret_t
+rmw_subscription_set_listener_callback(
+  rmw_subscription_t * rmw_subscription,
+  rmw_listener_callback_t callback,
+  const void * user_data)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_subscription_set_listener_callback(
+    rmw_subscription,
+    callback,
+    user_data);
+}
 }  // extern "C"

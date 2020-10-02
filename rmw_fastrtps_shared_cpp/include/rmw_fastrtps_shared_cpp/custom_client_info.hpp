@@ -42,6 +42,8 @@
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
+#include "rmw/listener_callback_type.h"
+
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 class ClientListener;
@@ -125,6 +127,15 @@ public:
             list.emplace_back(std::move(response));
             list_has_data_.store(true);
           }
+
+          // Add the client event to the event queue
+          std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
+
+          if(listener_callback_) {
+            listener_callback_(user_data_);
+          } else {
+            unread_count_++;
+          }
         }
       }
     }
@@ -181,6 +192,32 @@ public:
     info_->response_subscriber_matched_count_.store(publishers_.size());
   }
 
+  // Provide handlers to perform an action when a
+  // new event from this listener has ocurred
+  void
+  clientSetExecutorCallback(
+    const void * user_data,
+    rmw_listener_callback_t callback)
+  {
+    std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
+
+    if (callback) {
+      // Push events arrived before setting the the executor callback
+      for(uint64_t i = 0; i < unread_count_; i++) {
+        callback(user_data);
+      }
+      user_data_ = user_data;
+      listener_callback_ = callback;
+    } else {
+      user_data_ = nullptr;
+      listener_callback_ = nullptr;
+      return;
+    }
+
+    // Reset unread count
+    unread_count_ = 0;
+  }
+
 private:
   bool popResponse(CustomClientResponse & response) RCPPUTILS_TSA_REQUIRES(internalMutex_)
   {
@@ -200,6 +237,11 @@ private:
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_;
+
+  rmw_listener_callback_t listener_callback_{nullptr};
+  const void * user_data_{nullptr};
+  std::mutex listener_callback_mutex_;
+  uint64_t unread_count_ = 0;
 };
 
 class ClientPubListener : public eprosima::fastdds::dds::DataWriterListener

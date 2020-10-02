@@ -486,6 +486,43 @@ __rmw_subscription_get_network_flow_endpoints(
   rcutils_allocator_t * allocator,
   rmw_network_flow_endpoint_array_t * network_flow_endpoint_array);
 
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_subscription_set_listener_callback(
+  rmw_subscription_t * rmw_subscription,
+  rmw_listener_callback_t callback,
+  const void * user_data);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_service_set_listener_callback(
+  rmw_service_t * rmw_service,
+  rmw_listener_callback_t callback,
+  const void * user_data);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_client_set_listener_callback(
+  rmw_client_t * rmw_client,
+  rmw_listener_callback_t callback,
+  const void * user_data);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_guard_condition_set_listener_callback(
+  rmw_guard_condition_t * rmw_guard_condition,
+  rmw_listener_callback_t callback,
+  const void * user_data,
+  bool use_previous_events);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_event_set_listener_callback(
+  rmw_event_t * rmw_event,
+  rmw_listener_callback_t callback,
+  const void * user_data,
+  bool use_previous_events);
+
 }  // namespace rmw_fastrtps_shared_cpp
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__RMW_COMMON_HPP_

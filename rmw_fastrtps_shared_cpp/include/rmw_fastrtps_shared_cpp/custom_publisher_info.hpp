@@ -101,6 +101,12 @@ public:
   hasEvent(rmw_event_type_t event_type) const final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void eventSetExecutorCallback(
+    const void * user_data,
+    rmw_listener_callback_t callback,
+    bool use_previous_events) final;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool
   takeNextEvent(rmw_event_type_t event_type, void * event_info) final;
 

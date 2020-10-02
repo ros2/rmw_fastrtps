@@ -35,6 +35,7 @@
 #include "rcpputils/thread_safety_annotations.hpp"
 
 #include "rmw/impl/cpp/macros.hpp"
+#include "rmw/listener_callback_type.h"
 
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
 
@@ -97,7 +98,14 @@ public:
   void
   on_data_available(eprosima::fastdds::dds::DataReader * reader) final
   {
-    update_has_data(reader);
+    // Callback: add the subscription event to the event queue
+    std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
+
+    if (listener_callback_) {
+      listener_callback_(user_data_);
+    } else {
+      update_has_data(reader);
+    }
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -116,6 +124,12 @@ public:
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool
   hasEvent(rmw_event_type_t event_type) const final;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void eventSetExecutorCallback(
+    const void * user_data,
+    rmw_listener_callback_t callback,
+    bool use_previous_events) final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool
@@ -163,6 +177,33 @@ public:
     return publishers_.size();
   }
 
+  // Provide handlers to perform an action when a
+  // new event from this listener has ocurred
+  void
+  subcriptionSetExecutorCallback(
+    const void * user_data,
+    rmw_listener_callback_t callback)
+  {
+    std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
+
+    if (callback) {
+      // Push events arrived before setting the executor's callback
+      for(uint64_t i = 0; i < new_data_unread_count_; i++) {
+        callback(user_data);
+      }
+
+      user_data_ = user_data;
+      listener_callback_ = callback;
+    } else {
+      user_data_ = nullptr;
+      listener_callback_ = nullptr;
+      return;
+    }
+
+    // Reset unread count
+    new_data_unread_count_ = 0;
+  }
+
 private:
   mutable std::mutex internalMutex_;
 
@@ -180,6 +221,8 @@ private:
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
+  uint64_t new_data_unread_count_ = 0;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
