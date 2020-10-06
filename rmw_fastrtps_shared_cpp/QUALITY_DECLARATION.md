@@ -60,7 +60,7 @@ All pull requests must resolve related documentation changes before merging.
 ### Feature Documentation [3.i]
 
 Some of the `rmw_fastrtps_shared_cpp` features are documented on the repository level [README](../README.md).
-Much of Fast RTPS itself has feature documentation [hosted publicly](https://fast-rtps.docs.eprosima.com/en/latest).
+Much of Fast DDS itself has feature documentation [hosted publicly](https://fast-dds.docs.eprosima.com/en/latest/).
 
 ### Public API Documentation [3.ii]
 
@@ -118,7 +118,7 @@ Current coverage statistics can be viewed
 [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_src_types/).
 
 This package claims to meet the coverage requirements for the current quality level, even though it doesn't have 95% line coverage.
-The justification is that the only uncovered lines have to do with system resource exhaustion and Fast-DDS internal failure.
+The justification is that the only uncovered lines have to do with system resource exhaustion and Fast DDS internal failure.
 
 A summary of how these statistics are calculated can be found in the [ROS 2 On-boarding guide](https://index.ros.org/doc/ros2/Contributing/ROS-2-On-boarding-Guide/#note-on-coverage-runs).
 
@@ -137,11 +137,11 @@ Results of the nightly linter tests can be found [here](https://ci.ros2.org/view
 ### Direct Runtime ROS Dependencies [5.i]/[5.ii]
 
 `rmw_fastrtps_shared_cpp` has the following runtime ROS dependencies:
-* `fastrtps_cmake_module`
-* `rcutils`
-* `rcpputils`
-* `rmw`
-* `rmw_dds_common`
+* `fastrtps_cmake_module`: [QUALITY DECLARATION](https://github.com/ros2/rosidl_typesupport_fastrtps/blob/master/fastrtps_cmake_module/QUALITY_DECLARATION.md)
+* `rcutils`: [QUALITY DECLARATION](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md)
+* `rcpputils`: [QUALITY DECLARATION](https://github.com/ros2/rcpputils/blob/master/QUALITY_DECLARATION.md)
+* `rmw`: [QUALITY DECLARATION](https://github.com/ros2/rmw/blob/master/rmw/QUALITY_DECLARATION.md)
+* `rmw_dds_common`: [QUALITY DECLARATION](https://github.com/ros2/rmw_dds_common/blob/master/rmw_dds_common/QUALITY_DECLARATION.md)
 
 It has several "buildtool" dependencies, which do not affect the resulting quality of the package, because they do not contribute to the public library API.
 It also has several test dependencies, which do not affect the resulting quality of the package, because they are only used to build and run the test code.
@@ -149,8 +149,8 @@ It also has several test dependencies, which do not affect the resulting quality
 ### Direct Runtime Non-ROS Dependencies [5.iii]
 
 `rmw_fastrtps_shared_cpp` has the following runtime non-ROS dependencies.
-* `fastcdr`
-* `fastrtps`
+* `fastcdr`: *eProsima Fast CDR* claims to be Quality Level 2. For more information, please refer to its [QUALITY DECLARATION](https://github.com/eProsima/Fast-CDR/blob/master/QUALITY.md)
+* `fastrtps`: *eProsima Fast DDS* claims to be Quality Level 2. For more information, please refer to its [QUALITY DECLARATION](https://github.com/eProsima/Fast-DDS/blob/master/QUALITY.md)
 
 ## Platform Support [6]
 
