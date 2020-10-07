@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.1 (2020-10-07)
+------------------
+* Fix memory leak that wait_set might be not destoryed in some case (`#423 <https://github.com/ros2/rmw_fastrtps/issues/423>`_) (`#426 <https://github.com/ros2/rmw_fastrtps/issues/426>`_)
+* Use package path to TypeSupport.hpp headers in ServiceTypeSupport and MessageTypeSupport (`#415 <https://github.com/ros2/rmw_fastrtps/issues/415>`_) (`#420 <https://github.com/ros2/rmw_fastrtps/issues/420>`_)
+* Fix trying to get topic data that was already removed (`#421 <https://github.com/ros2/rmw_fastrtps/issues/421>`_)
+* Contributors: Chen Lihui, Dirk Thomas, Jose Luis Rivero
+
 1.2.0 (2020-07-21)
 ------------------
 * Add missing thread-safety annotation in ServicePubListener (`#409 <https://github.com/ros2/rmw_fastrtps/issues/409>`_) (`#413 <https://github.com/ros2/rmw_fastrtps/issues/413>`_)
