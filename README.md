@@ -34,10 +34,11 @@ You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment varia
 
 However, it is possible to fully configure Fast DDS (including the history memory policy and the publication mode) using an XML file as described in [Fast DDS documentation](https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html).
 If you want to modify the history memory policy or the publication mode you must set environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` to 1 (it is set to 0 by default).
-This tells `rmw_fastrtps` that it should override neither the history memory policy nor the publication mode from the XML.
-Bear on mind that if you set this environment variable without giving any value for any of these policies, the default Fast DDS value will be used:
-* History memory policy: `PREALLOCATED_MEMORY_MODE`.
-* Publication mode: `SYNCHRONOUS_PUBLISH_MODE`.
+This tells `rmw_fastrtps` that it should override both the history memory policy and the publication mode using the XML.
+Bear in mind that if you set this environment variable but do not give a value to either of these policies, defaults will be used.
+Current Fast-DDS defaults are:
+* [History memory policy](https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#memorymanagementpolicy): `PREALLOCATED_MEMORY_MODE`.
+* [Publication mode](https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#publishmodeqospolicy): `SYNCHRONOUS_PUBLISH_MODE`.
 
 You have two ways of telling you ROS 2 application which XML to use:
 1. Placing your XML file in the running directory under the name `DEFAULT_FASTRTPS_PROFILES.xml`.
