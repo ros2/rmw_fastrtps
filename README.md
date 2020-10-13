@@ -37,7 +37,7 @@ If you want to modify the history memory policy or the publication mode you must
 This tells `rmw_fastrtps` that it should override both the history memory policy and the publication mode using the XML.
 Bear in mind that if you set this environment variable but do not give a value to either of these policies, defaults will be used.
 Current Fast-DDS defaults are:
-* [History memory policy](https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#memorymanagementpolicy): `PREALLOCATED_MEMORY_MODE`.
+* [History memory policy](https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#rtpsendpointqos): `PREALLOCATED_MEMORY_MODE`.
 * [Publication mode](https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#publishmodeqospolicy): `SYNCHRONOUS_PUBLISH_MODE`.
 
 You have two ways of telling you ROS 2 application which XML to use:
