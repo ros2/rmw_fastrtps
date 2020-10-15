@@ -2,6 +2,33 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Set context actual domain id (`#410 <https://github.com/ros2/rmw_fastrtps/issues/410>`_)
+* Improve __rmw_create_wait_set() implementation. (`#427 <https://github.com/ros2/rmw_fastrtps/issues/427>`_)
+  Handle errors consistently.
+* Add tests for RMW QoS to DDS attribute conversion. (`#449 <https://github.com/ros2/rmw_fastrtps/issues/449>`_)
+* checked client implementation and return RMW_RET_INCORRECT_RMW_IMPLEMENTATION (`#451 <https://github.com/ros2/rmw_fastrtps/issues/451>`_)
+* Update service/client request/response API error returns (`#450 <https://github.com/ros2/rmw_fastrtps/issues/450>`_)
+* Updated rmw\_* return codes (`#443 <https://github.com/ros2/rmw_fastrtps/issues/443>`_)
+* Make service/client construction/destruction implementation compliant (`#445 <https://github.com/ros2/rmw_fastrtps/issues/445>`_)
+* Added rmw_logging tests (`#442 <https://github.com/ros2/rmw_fastrtps/issues/442>`_)
+* Update gid API return codes. (`#440 <https://github.com/ros2/rmw_fastrtps/issues/440>`_)
+* Update graph API return codes. (`#436 <https://github.com/ros2/rmw_fastrtps/issues/436>`_)
+* Updated error returns on rmw_take_serialized and with_message_info  (`#435 <https://github.com/ros2/rmw_fastrtps/issues/435>`_)
+* Updated error returns on rmw_take (`#432 <https://github.com/ros2/rmw_fastrtps/issues/432>`_)
+* Update rmw_publish error returns (`#430 <https://github.com/ros2/rmw_fastrtps/issues/430>`_)
+* Update rmw_publish_serialized_message() error returns (`#431 <https://github.com/ros2/rmw_fastrtps/issues/431>`_)
+* Ensure compliant publisher QoS queries. (`#425 <https://github.com/ros2/rmw_fastrtps/issues/425>`_)
+  Follow-up after 8fc9ca3d98a64118590a205b2162559e17309a27.
+* Ensure compliant matched pub/sub count API. (`#424 <https://github.com/ros2/rmw_fastrtps/issues/424>`_)
+* Ensure compliant subscription API. (`#419 <https://github.com/ros2/rmw_fastrtps/issues/419>`_)
+* Ensure compliant publisher API. (`#414 <https://github.com/ros2/rmw_fastrtps/issues/414>`_)
+* Ensure compliant init options API implementations. (`#399 <https://github.com/ros2/rmw_fastrtps/issues/399>`_)
+* Finalize context iff shutdown. (`#396 <https://github.com/ros2/rmw_fastrtps/issues/396>`_)
+* Ensure compliant node construction/destruction API. (`#408 <https://github.com/ros2/rmw_fastrtps/issues/408>`_)
+* Contributors: Alejandro Hernández Cordero, Ivan Santiago Paunovic, Jose Tomas Lorente, Michel Hidalgo
+
 1.2.1 (2020-10-07)
 ------------------
 * Fix memory leak that wait_set might be not destoryed in some case (`#423 <https://github.com/ros2/rmw_fastrtps/issues/423>`_) (`#426 <https://github.com/ros2/rmw_fastrtps/issues/426>`_)
