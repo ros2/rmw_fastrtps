@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.2.2 (2020-10-15)
+------------------
 * Fixed test
 * Set context actual domain id (`#410 <https://github.com/ros2/rmw_fastrtps/issues/410>`_)
 * Fixed rmw_create_node
