@@ -112,14 +112,6 @@ __rmw_take_request(
     delete request.buffer_;
 
     *taken = true;
-
-    // Save both endpoint GUIDs in the clients_endpoints map
-    ServicePubListener * listener = info->pub_listener_;
-    eprosima::fastrtps::rtps::GUID_t related_guid = request.sample_identity_.writer_guid();
-    eprosima::fastrtps::rtps::GUID_t writer_guid =
-      request.sample_info_.sample_identity.writer_guid();
-    listener->clients_endpoints().emplace(related_guid, writer_guid);
-    listener->clients_endpoints().emplace(writer_guid, related_guid);
   }
 
   return RMW_RET_OK;

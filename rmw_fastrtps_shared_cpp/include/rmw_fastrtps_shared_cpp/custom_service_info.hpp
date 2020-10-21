@@ -205,6 +205,12 @@ public:
           request.sample_identity_.writer_guid() = reader_guid;
         }
 
+        // Save both guids in the clients_endpoints map
+        const eprosima::fastrtps::rtps::GUID_t & writer_guid =
+          request.sample_info_.sample_identity.writer_guid();
+        info_->pub_listener_->clients_endpoints().emplace(reader_guid, writer_guid);
+        info_->pub_listener_->clients_endpoints().emplace(writer_guid, reader_guid);
+
         std::lock_guard<std::mutex> lock(internalMutex_);
 
         if (conditionMutex_ != nullptr) {
