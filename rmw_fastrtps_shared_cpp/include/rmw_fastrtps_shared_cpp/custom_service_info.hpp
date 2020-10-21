@@ -20,6 +20,7 @@
 #include <list>
 #include <mutex>
 #include <unordered_set>
+#include <unordered_map>
 
 #include "fastcdr/FastBuffer.h"
 
@@ -37,6 +38,14 @@
 
 class ServiceListener;
 class ServicePubListener;
+
+enum class client_present_t
+{
+  FAILURE,  // an error occurred when checking
+  MAYBE,    // reader not matched, writer still present
+  YES,      // reader matched
+  GONE      // neither reader nor writer
+};
 
 typedef struct CustomServiceInfo
 {
@@ -62,6 +71,92 @@ typedef struct CustomServiceRequest
   : buffer_(nullptr) {}
 } CustomServiceRequest;
 
+class ServicePubListener : public eprosima::fastrtps::PublisherListener
+{
+  using subscriptions_set_t =
+    std::unordered_set<eprosima::fastrtps::rtps::GUID_t,
+      rmw_fastrtps_shared_cpp::hash_fastrtps_guid>;
+  using clients_endpoints_map_t =
+    std::unordered_map<eprosima::fastrtps::rtps::GUID_t,
+      eprosima::fastrtps::rtps::GUID_t,
+      rmw_fastrtps_shared_cpp::hash_fastrtps_guid>;
+
+public:
+  explicit ServicePubListener(CustomServiceInfo * info)
+  : info_(info)
+  {
+    (void)info_;
+  }
+
+  void
+  onPublicationMatched(
+    eprosima::fastrtps::Publisher * pub,
+    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
+  {
+    (void) pub;
+    std::lock_guard<std::mutex> lock(mutex_);
+    if (eprosima::fastrtps::rtps::MATCHED_MATCHING == matchingInfo.status) {
+      subscriptions_.insert(matchingInfo.remoteEndpointGuid);
+    } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == matchingInfo.status) {
+      subscriptions_.erase(matchingInfo.remoteEndpointGuid);
+      auto endpoint = clients_endpoints_.find(matchingInfo.remoteEndpointGuid);
+      if (endpoint != clients_endpoints_.end()) {
+        clients_endpoints_.erase(endpoint->second);
+        clients_endpoints_.erase(matchingInfo.remoteEndpointGuid);
+      }
+    } else {
+      return;
+    }
+    cv_.notify_all();
+  }
+
+  template<class Rep, class Period>
+  bool
+  wait_for_subscription(
+    const eprosima::fastrtps::rtps::GUID_t & guid,
+    const std::chrono::duration<Rep, Period> & rel_time)
+  {
+    auto guid_is_present = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_)->bool
+    {
+      return subscriptions_.find(guid) != subscriptions_.end();
+    };
+
+    std::unique_lock<std::mutex> lock(mutex_);
+    return cv_.wait_for(lock, rel_time, guid_is_present);
+  }
+
+  client_present_t
+  check_for_subscription(
+    const eprosima::fastrtps::rtps::GUID_t & guid)
+  {
+    // Check if the guid is still in the map
+    if (clients_endpoints_.find(guid) != clients_endpoints_.end()) {
+      // Wait for subscription
+      if (!wait_for_subscription(guid, std::chrono::milliseconds(100))) {
+        return client_present_t::MAYBE;
+      }
+    } else {
+      // Client has gone
+      return client_present_t::GONE;
+    }
+    return client_present_t::YES;
+  }
+
+  // Accesors
+  clients_endpoints_map_t & clients_endpoints()
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+    return clients_endpoints_;
+  }
+
+private:
+  CustomServiceInfo * info_;
+  std::mutex mutex_;
+  subscriptions_set_t subscriptions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  clients_endpoints_map_t clients_endpoints_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  std::condition_variable cv_;
+};
+
 class ServiceListener : public eprosima::fastrtps::SubscriberListener
 {
 public:
@@ -72,6 +167,21 @@ public:
     (void)info_;
   }
 
+  void
+  onSubscriptionMatched(
+    eprosima::fastrtps::Subscriber * sub,
+    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
+  {
+    (void) sub;
+    if (eprosima::fastrtps::rtps::REMOVED_MATCHING == matchingInfo.status) {
+      auto endpoint = info_->pub_listener_->clients_endpoints().find(
+        matchingInfo.remoteEndpointGuid);
+      if (endpoint != info_->pub_listener_->clients_endpoints().end()) {
+        info_->pub_listener_->clients_endpoints().erase(endpoint->second);
+        info_->pub_listener_->clients_endpoints().erase(matchingInfo.remoteEndpointGuid);
+      }
+    }
+  }
 
   void
   onNewDataMessage(eprosima::fastrtps::Subscriber * sub)
@@ -167,51 +277,6 @@ private:
   std::atomic_bool list_has_data_;
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
-};
-
-class ServicePubListener : public eprosima::fastrtps::PublisherListener
-{
-public:
-  ServicePubListener() = default;
-
-  template<class Rep, class Period>
-  bool wait_for_subscription(
-    const eprosima::fastrtps::rtps::GUID_t & guid,
-    const std::chrono::duration<Rep, Period> & rel_time)
-  {
-    auto guid_is_present = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_)->bool
-    {
-      return subscriptions_.find(guid) != subscriptions_.end();
-    };
-
-    std::unique_lock<std::mutex> lock(mutex_);
-    return cv_.wait_for(lock, rel_time, guid_is_present);
-  }
-
-  void onPublicationMatched(
-    eprosima::fastrtps::Publisher * pub,
-    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
-  {
-    (void) pub;
-    std::lock_guard<std::mutex> lock(mutex_);
-    if (eprosima::fastrtps::rtps::MATCHED_MATCHING == matchingInfo.status) {
-      subscriptions_.insert(matchingInfo.remoteEndpointGuid);
-    } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == matchingInfo.status) {
-      subscriptions_.erase(matchingInfo.remoteEndpointGuid);
-    } else {
-      return;
-    }
-    cv_.notify_all();
-  }
-
-private:
-  using subscriptions_set_t =
-    std::unordered_set<eprosima::fastrtps::rtps::GUID_t,
-      rmw_fastrtps_shared_cpp::hash_fastrtps_guid>;
-
-  std::mutex mutex_;
-  subscriptions_set_t subscriptions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
-  std::condition_variable cv_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_

@@ -241,7 +241,7 @@ rmw_create_service(
         delete info->pub_listener_;
       }
     });
-  info->pub_listener_ = new (std::nothrow) ServicePubListener();
+  info->pub_listener_ = new (std::nothrow) ServicePubListener(info);
   if (!info->pub_listener_) {
     RMW_SET_ERROR_MSG("failed to create service response publisher listener");
     return nullptr;
