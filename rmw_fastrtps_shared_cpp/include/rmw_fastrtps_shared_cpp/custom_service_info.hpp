@@ -133,7 +133,7 @@ public:
     if (clients_endpoints_.find(guid) == clients_endpoints_.end()) {
       // Client is gone
       return client_present_t::GONE;
-    }  
+    }
     // Wait for subscription
     if (!wait_for_subscription(guid, std::chrono::milliseconds(100))) {
       return client_present_t::MAYBE;
