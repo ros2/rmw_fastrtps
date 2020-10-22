@@ -231,7 +231,7 @@ rmw_create_service(
     RMW_SET_ERROR_MSG("failed to get datawriter qos");
     goto fail;
   }
-  info->pub_listener_ = new ServicePubListener();
+  info->pub_listener_ = new ServicePubListener(info);
   info->response_publisher_ =
     Domain::createPublisher(participant, publisherParam, info->pub_listener_);
   if (!info->response_publisher_) {
