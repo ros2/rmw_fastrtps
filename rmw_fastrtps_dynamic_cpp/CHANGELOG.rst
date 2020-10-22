@@ -2,6 +2,20 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Discriminate when the Client has gone from when the Client has not completely matched (`#467 <https://github.com/ros2/rmw_fastrtps/issues/467>`_)
+  * Workaround when the client is gone before server sends response
+  * Change add to the map to listener callback
+* Update the package.xml files with the latest Open Robotics maintainers (`#459 <https://github.com/ros2/rmw_fastrtps/issues/459>`_)
+* Update Quality Declarations and READMEs (`#455 <https://github.com/ros2/rmw_fastrtps/issues/455>`_)
+  * Add QL of external dependencies to rmw_fastrtps_dynamic_cpp QD
+  * Add QD links for dependencies to rmw_fastrtps_dynamic_cpp QD
+  * Provide external dependencies QD links
+  * Add README to rmw_fastrtps_dynamic
+  * Add QD for rmw_fastrtps_dynamic
+* Contributors: JLBuenoLopez-eProsima, Jaime Martin Losa, José Luis Bueno López, Michael Jeronimo
+
 3.1.4 (2020-10-02)
 ------------------
 * Ensure rmw_destroy_node() completes despite run-time errors. (`#458 <https://github.com/ros2/rmw_fastrtps/issues/458>`_)

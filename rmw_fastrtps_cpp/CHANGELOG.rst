@@ -2,6 +2,20 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Discriminate when the Client has gone from when the Client has not completely matched (`#467 <https://github.com/ros2/rmw_fastrtps/issues/467>`_)
+  * Workaround when the client is gone before server sends response
+  * Change add to the map to listener callback
+* Update the package.xml files with the latest Open Robotics maintainers (`#459 <https://github.com/ros2/rmw_fastrtps/issues/459>`_)
+* Update Quality Declarations and READMEs (`#455 <https://github.com/ros2/rmw_fastrtps/issues/455>`_)
+  * Add QD links for dependencies to rmw_fastrtps_cpp QD
+  * Provide external dependencies QD links
+  * Update rmw_fastrtps README to use Fast DDS
+  * Update rmw_fastrtps_cpp QD: Fast DDS & unit test
+  * Update README rmw_fastrtps_cpp to QL2
+* Contributors: JLBuenoLopez-eProsima, Jaime Martin Losa, José Luis Bueno López, Michael Jeronimo
+
 3.1.4 (2020-10-02)
 ------------------
 * Perform fault injection in all creation/destruction APIs. (`#453 <https://github.com/ros2/rmw_fastrtps/issues/453>`_)
