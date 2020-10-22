@@ -130,14 +130,13 @@ public:
     const eprosima::fastrtps::rtps::GUID_t & guid)
   {
     // Check if the guid is still in the map
-    if (clients_endpoints_.find(guid) != clients_endpoints_.end()) {
-      // Wait for subscription
-      if (!wait_for_subscription(guid, std::chrono::milliseconds(100))) {
-        return client_present_t::MAYBE;
-      }
-    } else {
-      // Client has gone
+    if (clients_endpoints_.find(guid) == clients_endpoints_.end()) {
+      // Client is gone
       return client_present_t::GONE;
+    }  
+    // Wait for subscription
+    if (!wait_for_subscription(guid, std::chrono::milliseconds(100))) {
+      return client_present_t::MAYBE;
     }
     return client_present_t::YES;
   }
