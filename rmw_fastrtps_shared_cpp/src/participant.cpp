@@ -197,7 +197,7 @@ rmw_fastrtps_shared_cpp::create_participant(
   }
   if (env_value != nullptr) {
     leave_middleware_default_qos = strcmp(env_value, "1") == 0;
-  } else if (env_value == nullptr || !leave_middleware_default_qos){
+  } else if (env_value == nullptr || !leave_middleware_default_qos) {
     error_str = rcutils_get_env("ROS_PUBLICATION_MODE", &env_value);
     if (error_str != NULL) {
       RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Error getting env var: %s\n", error_str);
