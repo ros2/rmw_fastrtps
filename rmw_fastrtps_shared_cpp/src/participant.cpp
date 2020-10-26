@@ -94,6 +94,7 @@ __create_participant(
   const char * identifier,
   ParticipantAttributes participantAttrs,
   bool leave_middleware_default_qos,
+  publishing_mode_t publishing_mode,
   rmw_dds_common::Context * common_context)
 {
   // Declare everything before beginning to create things.
@@ -122,6 +123,7 @@ __create_participant(
     goto fail;
   }
   participant_info->leave_middleware_default_qos = leave_middleware_default_qos;
+  participant_info->publishing_mode = publishing_mode;
 
   participant_info->participant = participant;
   participant_info->listener = listener;
@@ -185,6 +187,7 @@ rmw_fastrtps_shared_cpp::create_participant(
   participantAttrs.rtps.setName(enclave);
 
   bool leave_middleware_default_qos = false;
+  publishing_mode_t publishing_mode = publishing_mode_t::ASYNCHRONOUS;
   const char * env_value;
   const char * error_str;
   error_str = rcutils_get_env("RMW_FASTRTPS_USE_QOS_FROM_XML", &env_value);
@@ -194,6 +197,20 @@ rmw_fastrtps_shared_cpp::create_participant(
   }
   if (env_value != nullptr) {
     leave_middleware_default_qos = strcmp(env_value, "1") == 0;
+  } else if (env_value == nullptr || !leave_middleware_default_qos){
+    error_str = rcutils_get_env("ROS_PUBLICATION_MODE", &env_value);
+    if (error_str != NULL) {
+      RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Error getting env var: %s\n", error_str);
+      return nullptr;
+    }
+    if (env_value != nullptr) {
+      // Synchronous publishing
+      if (strcmp(env_value, "SYNCHRONOUS") == 0) {
+        publishing_mode = publishing_mode_t::SYNCHRONOUS;
+      } else if (strcmp(env_value, "AUTO") == 0) {
+        publishing_mode = publishing_mode_t::AUTO;
+      }
+    }
   }
   // allow reallocation to support discovery messages bigger than 5000 bytes
   if (!leave_middleware_default_qos) {
@@ -257,6 +274,7 @@ rmw_fastrtps_shared_cpp::create_participant(
     identifier,
     participantAttrs,
     leave_middleware_default_qos,
+    publishing_mode,
     common_context);
 }
 
