@@ -44,6 +44,17 @@ You have two ways of telling you ROS 2 application which XML to use:
 1. Placing your XML file in the running directory under the name `DEFAULT_FASTRTPS_PROFILES.xml`.
 2. Setting environment variable `FASTRTPS_DEFAULT_PROFILES_FILE` to your XML file.
 
+### Change publication mode
+
+Another way to change easily the publication mode is to use the environment variable `ROS_PUBLICATION_MODE`.
+The admissible values are:
+* `ASYNCHRONOUS`: asynchronous publication mode
+* `SYNCHRONOUS`: synchronous publication mode
+* `AUTO`: let the rmw implementation select the publication mode.
+
+By default, `rmw_fastrtps` assumes this variable to be `ASYNCHRONOUS`.
+Also, if you set the variable to `AUTO`, `rmw_fastrtps` will use the publication mode set in the XML file or, failing that, the default value set in Fast DDS (currently set to `SYNCHRONOUS`).
+
 ## Example
 
 The following example configures Fast DDS to publish synchronously, and to have a pre-allocated history that can be expanded whenever it gets filled.
