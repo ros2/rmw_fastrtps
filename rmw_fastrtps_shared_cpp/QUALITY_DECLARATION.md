@@ -86,7 +86,7 @@ The results of the test can be found [here](https://ci.ros2.org/view/nightly/job
 
 ### Feature Testing [4.i]
 
-Many of the features have testing in `rmw_fastrtps_shared_cpp`. Since `rmw_fastrtps_shared_cpp` supports `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp`, integration and system tests for ROS middlewares up the stack, such as those found in [`test_rclcpp`](https://github.com/ros2/system_tests/tree/master/test_rclcpp) and [`test_communication`](https://github.com/ros2/system_tests/tree/master/test_communication) packages, provide coverage.
+Many of the features have testing in `rmw_fastrtps_shared_cpp`. Since `rmw_fastrtps_shared_cpp` supports `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp`, integration and system tests for ROS middlewares up the stack, such as those found in [`test_rclcpp`](https://github.com/ros2/system_tests/tree/foxy/test_rclcpp) and [`test_communication`](https://github.com/ros2/system_tests/tree/foxy/test_communication) packages, provide coverage.
 
 ### Public API Testing [4.ii]
 
@@ -141,8 +141,8 @@ It also has several test dependencies, which do not affect the resulting quality
 ### Direct Runtime Non-ROS Dependencies [5.iii]
 
 `rmw_fastrtps_shared_cpp` has the following runtime non-ROS dependencies.
-* `fastcdr`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-CDR/blob/master/QUALITY.md)
-* `fastrtps`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-DDS/blob/master/QUALITY.md)
+* `fastcdr`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-CDR/blob/foxy/QUALITY.md)
+* `fastrtps`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-DDS/blob/foxy/QUALITY.md)
 
 ## Platform Support [6]
 

@@ -88,16 +88,16 @@ The results of the test can be found [here](https://ci.ros2.org/view/nightly/job
 
 All `rmw_fastrtps_dynamic_cpp` public features are ROS middleware features.
 
-Unit, integration, and system tests higher up in the stack, such as those found in [`test_rmw_implementation`](https://github.com/ros2/rmw_implementation/tree/master/test_rmw_implementation), [`test_rclcpp`](https://github.com/ros2/system_tests/tree/master/test_rclcpp), and [`test_communication`](https://github.com/ros2/system_tests/tree/master/test_communication) packages, provide feature coverage. [Nightly `extra_rmw_release` CI jobs](https://ci.ros2.org/view/nightly/) also test this middleware implementation.
+Unit, integration, and system tests higher up in the stack, such as those found in [`test_rmw_implementation`](https://github.com/ros2/rmw_implementation/tree/foxy/test_rmw_implementation), [`test_rclcpp`](https://github.com/ros2/system_tests/tree/foxy/test_rclcpp), and [`test_communication`](https://github.com/ros2/system_tests/tree/foxy/test_communication) packages, provide feature coverage. [Nightly `extra_rmw_release` CI jobs](https://ci.ros2.org/view/nightly/) also test this middleware implementation.
 
 ### Public API Testing [4.ii]
 
 `rmw_fastrtps_dynamic_cpp` implements the ROS middleware public API, but also provides public API of its own.
 
-Unit tests located in the [`test`](https://github.com/eProsima/rmw_fastrtps/tree/master/rmw_fastrtps_dynamic_cpp/test) directory provide coverage for public but `rmw_fastrtps_dynamic_cpp` specific API.
+Unit tests located in the [`test`](https://github.com/eProsima/rmw_fastrtps/tree/foxy/rmw_fastrtps_dynamic_cpp/test) directory provide coverage for public but `rmw_fastrtps_dynamic_cpp` specific API.
 New additions or changes to this API require tests before being added.
 
-Unit, integration, and system tests higher up in the stack, such as those found in [`test_rmw_implementation`](https://github.com/ros2/rmw_implementation/tree/master/test_rmw_implementation), [`test_rclcpp`](https://github.com/ros2/system_tests/tree/master/test_rclcpp), and [`test_communication`](https://github.com/ros2/system_tests/tree/master/test_communication) packages, ensure compliance with the ROS middleware API specification (see [`rmw`](https://github.com/ros2/rmw) package) and further extend coverage.
+Unit, integration, and system tests higher up in the stack, such as those found in [`test_rmw_implementation`](https://github.com/ros2/rmw_implementation/tree/foxy/test_rmw_implementation), [`test_rclcpp`](https://github.com/ros2/system_tests/tree/foxy/test_rclcpp), and [`test_communication`](https://github.com/ros2/system_tests/tree/foxy/test_communication) packages, ensure compliance with the ROS middleware API specification (see [`rmw`](https://github.com/ros2/rmw) package) and further extend coverage.
 
 ### Coverage [4.iii]
 
@@ -139,8 +139,8 @@ It also has several test dependencies, which do not affect the resulting quality
 ### Direct Runtime Non-ROS Dependencies [5.iii]
 
 `rmw_fastrtps_cpp` has the following runtime non-ROS dependencies.
-* `fastcdr`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-CDR/blob/master/QUALITY.md)
-* `fastrtps`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-DDS/blob/master/QUALITY.md)
+* `fastcdr`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-CDR/blob/foxy/QUALITY.md)
+* `fastrtps`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-DDS/blob/foxy/QUALITY.md)
 
 ## Platform Support [6]
 
