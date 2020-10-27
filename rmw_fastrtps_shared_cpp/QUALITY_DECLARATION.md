@@ -2,9 +2,9 @@ This document is a declaration of software quality for the `rmw_fastrtps_shared_
 
 # `rmw_fastrtps_shared_cpp` Quality Declaration
 
-The package `rmw_fastrtps_shared_cpp` claims to be in the **Quality Level 3** category.
+The package `rmw_fastrtps_shared_cpp` claims to be in the **Quality Level 2** category.
 
-Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Requirements for Quality Level 3 in REP-2004](https://www.ros.org/reps/rep-2004.html).
+Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Requirements for Quality Level 2 in REP-2004](https://www.ros.org/reps/rep-2004.html).
 
 ## Version Policy [1]
 
@@ -105,10 +105,10 @@ This includes:
 
 Changes are required to make a best effort to keep or increase coverage before being accepted, but decreases are allowed if properly justified and accepted by reviewers.
 
-Current coverage statistics can be viewed 
-[here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/install_rmw_fastrtps_shared_cpp_include_rmw_fastrtps_shared_cpp/), 
-[here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_include_rmw_fastrtps_shared_cpp/), 
-[here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_src/), and 
+Current coverage statistics can be viewed
+[here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/install_rmw_fastrtps_shared_cpp_include_rmw_fastrtps_shared_cpp/),
+[here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_include_rmw_fastrtps_shared_cpp/),
+[here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_src/), and
 [here](https://ci.ros2.org/job/ci_linux_coverage/lastSuccessfulBuild/cobertura/src_ros2_rmw_fastrtps_rmw_fastrtps_shared_cpp_src_types/).
 This package does not yet meet the 95% coverage guideline.
 
@@ -141,8 +141,8 @@ It also has several test dependencies, which do not affect the resulting quality
 ### Direct Runtime Non-ROS Dependencies [5.iii]
 
 `rmw_fastrtps_shared_cpp` has the following runtime non-ROS dependencies.
-* `fastcdr`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-CDR/blob/foxy/QUALITY.md)
-* `fastrtps`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-DDS/blob/foxy/QUALITY.md)
+* `fastcdr`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-CDR/blob/master/QUALITY.md)
+* `fastrtps`: [QUALITY DECLARATION](https://github.com/eProsima/Fast-DDS/blob/2.0.x/QUALITY.md)
 
 ## Platform Support [6]
 

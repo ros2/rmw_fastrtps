@@ -2,9 +2,9 @@ This document is a declaration of software quality for the `rmw_fastrtps_cpp` pa
 
 # `rmw_fastrtps_cpp` Quality Declaration
 
-The package `rmw_fastrtps_cpp` claims to be in the **Quality Level 3** category.
+The package `rmw_fastrtps_cpp` claims to be in the **Quality Level 2** category.
 
-Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Requirements for Quality Level 3 in REP-2004](https://www.ros.org/reps/rep-2004.html).
+Below are the rationales, notes, and caveats for this claim, organized by each requirement listed in the [Package Requirements for Quality Level 2 in REP-2004](https://www.ros.org/reps/rep-2004.html).
 
 ## Version Policy [1]
 
@@ -142,8 +142,8 @@ It also has several test dependencies, which do not affect the resulting quality
 ### Direct Runtime Non-ROS Dependencies [5.iii]
 
 `rmw_fastrtps_cpp` has the following runtime non-ROS dependencies.
-* `fastcdr`: *eProsima Fast CDR* claims to be Quality Level 2. For more information, please refer to its [QUALITY DECLARATION](https://github.com/eProsima/Fast-CDR/blob/foxy/QUALITY.md)
-* `fastrtps`: *eProsima Fast DDS* claims to be Quality Level 2. For more information, please refer to its [QUALITY DECLARATION](https://github.com/eProsima/Fast-DDS/blob/foxy/QUALITY.md)
+* `fastcdr`: *eProsima Fast CDR* claims to be Quality Level 2. For more information, please refer to its [QUALITY DECLARATION](https://github.com/eProsima/Fast-CDR/blob/master/QUALITY.md)
+* `fastrtps`: *eProsima Fast DDS* claims to be Quality Level 2. For more information, please refer to its [QUALITY DECLARATION](https://github.com/eProsima/Fast-DDS/blob/2.0.x/QUALITY.md)
 
 ## Platform Support [6]
 
