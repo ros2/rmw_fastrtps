@@ -4,9 +4,11 @@
   <name>rmw_fastrtps_cpp</name>
   <version>0.7.7</version>
   <description>Implement the ROS middleware interface using eProsima FastRTPS static code generation in C++.</description>
-  <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
+  <maintainer email="michel@ekumenlabs.com">Michel Hidalgo</maintainer>
+  <maintainer email="michael.jeronimo@openrobotics.org">Michael Jeronimo</maintainer>
   <license>Apache License 2.0</license>
   <author>Ricardo González</author>
+  <author email="dthomas@osrfoundation.org">Dirk Thomas</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
   <buildtool_depend>rosidl_cmake</buildtool_depend>
