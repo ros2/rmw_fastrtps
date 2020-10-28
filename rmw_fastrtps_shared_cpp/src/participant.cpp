@@ -197,7 +197,7 @@ rmw_fastrtps_shared_cpp::create_participant(
   }
   if (env_value != nullptr) {
     leave_middleware_default_qos = strcmp(env_value, "1") == 0;
-  } 
+  }
   if (!leave_middleware_default_qos) {
     error_str = rcutils_get_env("RMW_FASTRTPS_PUBLICATION_MODE", &env_value);
     if (error_str != NULL) {
@@ -211,7 +211,8 @@ rmw_fastrtps_shared_cpp::create_participant(
       } else if (strcmp(env_value, "AUTO") == 0) {
         publishing_mode = publishing_mode_t::AUTO;
       } else if (strcmp(env_value, "ASYNCHRONOUS") != 0 && strcmp(env_value, "") != 0) {
-        RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_shared_cpp",
+        RCUTILS_LOG_WARN_NAMED(
+          "rmw_fastrtps_shared_cpp",
           "Value %s unknown for environment variable RMW_FASTRTPS_PUBLICATION_MODE"
           ". Using default ASYNCHRONOUS publishing mode.", env_value);
       }
