@@ -15,6 +15,7 @@
 
 #include <limits.h>
 #include <string>
+#include <memory>
 
 #include "fastrtps/config.h"
 #include "fastrtps/Domain.h"
@@ -161,7 +162,7 @@ rmw_fastrtps_shared_cpp::create_participant(
   if (localhost_only) {
     // In order to use the interface white list, we need to disable the default transport config
     participantAttrs.rtps.useBuiltinTransports = false;
-    
+
     // Add a UDPv4 transport with only localhost enabled
     auto udp_transport = std::make_shared<UDPv4TransportDescriptor>();
     udp_transport->interfaceWhiteList.emplace_back("127.0.0.1");
@@ -172,7 +173,6 @@ rmw_fastrtps_shared_cpp::create_participant(
     auto shm_transport = std::make_shared<SharedMemTransportDescriptor>();
     participantAttrs.rtps.userTransports.push_back(shm_transport);
 #endif
-    
   }
 
   // No custom handling of RMW_DEFAULT_DOMAIN_ID. Simply use a reasonable domain id.
