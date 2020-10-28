@@ -82,11 +82,7 @@ class ServicePubListener : public eprosima::fastrtps::PublisherListener
       rmw_fastrtps_shared_cpp::hash_fastrtps_guid>;
 
 public:
-  explicit ServicePubListener(CustomServiceInfo * info)
-  : info_(info)
-  {
-    (void)info_;
-  }
+  ServicePubListener() = default;
 
   void
   onPublicationMatched(
