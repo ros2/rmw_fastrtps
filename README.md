@@ -46,7 +46,7 @@ You have two ways of telling you ROS 2 application which XML to use:
 
 ### Change publication mode
 
-Another way to change easily the publication mode is to use the environment variable `ROS_PUBLICATION_MODE`.
+Another way to change easily the publication mode is to use the environment variable `RMW_FASTRTPS_PUBLICATION_MODE`.
 The admissible values are:
 * `ASYNCHRONOUS`: asynchronous publication mode
 * `SYNCHRONOUS`: synchronous publication mode
