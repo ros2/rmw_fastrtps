@@ -48,12 +48,14 @@ You have two ways of telling you ROS 2 application which XML to use:
 
 Another way to change easily the publication mode is to use the environment variable `RMW_FASTRTPS_PUBLICATION_MODE`.
 The admissible values are:
-* `ASYNCHRONOUS`: asynchronous publication mode
-* `SYNCHRONOUS`: synchronous publication mode
-* `AUTO`: let the rmw implementation select the publication mode.
+* `ASYNCHRONOUS`: asynchronous publication mode.
+This implies that when the publisher calls the write operation, the data is copied in a queue and control is returned to the user thread before the data is actually sent.
+The asynchronous thread is in charge of consuming the queue and send the data to any matched reader.
+* `SYNCHRONOUS`: synchronous publication mode.
+This implies that the data is sent directly in the context of the user thread.
+* `AUTO`: let Fast DDS select the publication mode. This implies using the publication mode set in the XML file or, failing that, the default value set in Fast DDS (which currently is set to `SYNCHRONOUS`).
 
-By default, `rmw_fastrtps` assumes this variable to be `ASYNCHRONOUS`.
-Also, if you set the variable to `AUTO`, `rmw_fastrtps` will use the publication mode set in the XML file or, failing that, the default value set in Fast DDS (currently set to `SYNCHRONOUS`).
+By default, `rmw_fastrtps` assumes this variable to be `ASYNCHRONOUS` and it is the publication mode in use if this environment variable is not set.
 
 ## Example
 
