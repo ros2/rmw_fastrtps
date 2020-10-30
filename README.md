@@ -49,7 +49,7 @@ You have two ways of telling you ROS 2 application which XML to use:
 Another way to change easily the publication mode is to use the environment variable `RMW_FASTRTPS_PUBLICATION_MODE`.
 The admissible values are:
 * `ASYNCHRONOUS`: asynchronous publication mode.
-Setting this mode implies that when the publisher invoques the write operation, the data is copied into a queue, a notification about the addition to the queue is performed, and control of the thread is returned to the user before the data is actually sent.
+Setting this mode implies that when the publisher invokes the write operation, the data is copied into a queue, a notification about the addition to the queue is performed, and control of the thread is returned to the user before the data is actually sent.
 A background thread (asynchronous thread) is in turn in charge of consuming the queue and sending the data to every matched reader.
 * `SYNCHRONOUS`: synchronous publication mode.
 Setting this mode implies that the data is sent directly within the context of the user thread.
