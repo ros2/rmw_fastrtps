@@ -31,7 +31,7 @@ rmw_time_to_fastrtps(const rmw_time_t & time)
 
   // TODO(mjeronimo): Since we're going to truncate the 64-bit values
   // down to 32-bit, make sure at least that the seconds value does
-  // not overflow. If the coming value is greater than INT_MAX, move
+  // not overflow. If the incoming value is greater than INT_MAX, move
   // the excess seconds over to the nanoseconds field.
   if (t.sec > INT_MAX) {
     uint64_t diff = t.sec - INT_MAX;
