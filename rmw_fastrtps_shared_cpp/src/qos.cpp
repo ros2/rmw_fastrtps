@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <limits>
+#include <limits.h>
 
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 
@@ -20,14 +21,36 @@
 #include "fastrtps/attributes/SubscriberAttributes.h"
 
 #include "rmw/error_handling.h"
+#include "rcutils/logging_macros.h"
 
 static
 eprosima::fastrtps::Duration_t
 rmw_time_to_fastrtps(const rmw_time_t & time)
 {
+  rmw_time_t t = time;
+
+  // TODO(mjeronimo): Since we're going to truncate the 64-bit values
+  // down to 32-bit, make sure at least that the seconds value does
+  // not overflow. If the coming value is greater than INT_MAX, move
+  // the excess seconds over to the nanoseconds field.
+  if (t.sec > INT_MAX) {
+    uint64_t diff = t.sec - INT_MAX;
+    t.sec = INT_MAX;
+    t.nsec += diff * (1000LL * 1000LL * 1000LL);
+  }
+
+  // In case the nanoseconds value is too large for a 32-bit unsigned,
+  // we can at least emit a warning
+  if (t.nsec > UINT_MAX) {
+    RCUTILS_LOG_WARN_NAMED(
+      "rmw_fastrtps_shared_cpp",
+      "nanoseconds value truncated when converting rmw_time to Duration_t");
+    t.nsec = UINT_MAX;
+  }
+
   return eprosima::fastrtps::Duration_t(
-    static_cast<int32_t>(time.sec),
-    static_cast<uint32_t>(time.nsec));
+    static_cast<int32_t>(t.sec),
+    static_cast<uint32_t>(t.nsec));
 }
 
 static
