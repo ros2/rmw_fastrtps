@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <limits>
 #include <limits.h>
+#include <limits>
 
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 
