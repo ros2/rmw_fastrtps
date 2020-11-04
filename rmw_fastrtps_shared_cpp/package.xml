@@ -4,9 +4,11 @@
   <name>rmw_fastrtps_shared_cpp</name>
   <version>1.2.2</version>
   <description>Code shared on static and dynamic type support of rmw_fastrtps_cpp.</description>
-  <maintainer email="dthomas@osrfoundation.org">Dirk Thomas</maintainer>
+  <maintainer email="michel@ekumenlabs.com">Michel Hidalgo</maintainer>
+  <maintainer email="michael.jeronimo@openrobotics.org">Michael Jeronimo</maintainer>
   <license>Apache License 2.0</license>
   <author>Ricardo González</author>
+  <author email="dthomas@osrfoundation.org">Dirk Thomas</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
   <buildtool_depend>fastrtps_cmake_module</buildtool_depend>
