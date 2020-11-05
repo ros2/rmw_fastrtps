@@ -33,7 +33,7 @@ You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment varia
 * Publication mode: `ASYNCHRONOUS_PUBLISH_MODE`
 
 However, it is possible to fully configure Fast DDS (including the history memory policy and the publication mode) using an XML file as described in [Fast DDS documentation](https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html).
-If you want to modify the history memory policy or the publication mode you must set environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` to 1 (it is set to 0 by default).
+Bear in mind that if you want to modify the history memory policy or the publication mode you must set environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` to 1 (it is set to 0 by default) besides defining the XML file.
 This tells `rmw_fastrtps` that it should override both the history memory policy and the publication mode using the XML.
 Bear in mind that if you set this environment variable but do not give a value to either of these policies, defaults will be used.
 Current Fast-DDS defaults are:
@@ -46,7 +46,9 @@ You have two ways of telling you ROS 2 application which XML to use:
 
 ### Change publication mode
 
-Another way to change easily the publication mode is to use the environment variable `RMW_FASTRTPS_PUBLICATION_MODE`.
+Another way to change easily the publication mode without the need of defining a XML file is to use the environment variable `RMW_FASTRTPS_PUBLICATION_MODE`.
+This variable has lower precedence than `RMW_FASTRTPS_USE_QOS_FROM_XML`.
+Therefore, it is only taken into account when `RMW_FASTRTPS_USE_QOS_FROM_XML` is not set (or given a value different than `1`).
 The admissible values are:
 * `ASYNCHRONOUS`: asynchronous publication mode.
 Setting this mode implies that when the publisher invokes the write operation, the data is copied into a queue, a notification about the addition to the queue is performed, and control of the thread is returned to the user before the data is actually sent.
