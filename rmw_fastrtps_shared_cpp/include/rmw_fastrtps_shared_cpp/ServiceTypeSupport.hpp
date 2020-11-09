@@ -27,7 +27,7 @@ namespace rmw_fastrtps_shared_cpp
 {
 
 template<typename MembersType>
-class ServiceTypeSupport : public TypeSupport<MembersType>
+class ServiceTypeSupport : public TypeSupport
 {
 protected:
   ServiceTypeSupport();

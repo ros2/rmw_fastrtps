@@ -27,7 +27,7 @@ namespace rmw_fastrtps_shared_cpp
 {
 
 template<typename MembersType>
-class MessageTypeSupport : public TypeSupport<MembersType>
+class MessageTypeSupport : public TypeSupport
 {
 public:
   explicit MessageTypeSupport(const MembersType * members);
