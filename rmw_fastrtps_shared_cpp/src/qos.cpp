@@ -26,7 +26,7 @@ static
 eprosima::fastrtps::Duration_t
 rmw_time_to_fastrtps(const rmw_time_t & time)
 {
-  auto clamped_time = rmw_dds_common::clamp_rmw_time_to_dds_time(time);
+  rmw_time_t clamped_time = rmw_dds_common::clamp_rmw_time_to_dds_time(time);
   return eprosima::fastrtps::Duration_t(
     static_cast<int32_t>(clamped_time.sec),
     static_cast<uint32_t>(clamped_time.nsec));
