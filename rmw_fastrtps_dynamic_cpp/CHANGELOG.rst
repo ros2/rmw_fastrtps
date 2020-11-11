@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.3 (2020-11-10)
+------------------
+* Update maintainer list for Foxy (`#474 <https://github.com/ros2/rmw_fastrtps/issues/474>`_)
+* Updated QD
+* Provide external dependencies QD links
+* Contributors: Alejandro Hernández Cordero, JLBuenoLopez-eProsima, Michael Jeronimo
+
 1.2.2 (2020-10-15)
 ------------------
 * Fixed test

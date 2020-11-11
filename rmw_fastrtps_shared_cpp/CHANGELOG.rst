@@ -2,6 +2,15 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.3 (2020-11-10)
+------------------
+* Remove unused headers MessageTypeSupport.hpp and ServiceTypeSupport.hpp (`#481 <https://github.com/ros2/rmw_fastrtps/issues/481>`_) (`#482 <https://github.com/ros2/rmw_fastrtps/issues/482>`_)
+* Update maintainer list for Foxy (`#474 <https://github.com/ros2/rmw_fastrtps/issues/474>`_)
+* Updated QD
+* Provide external dependencies QD links
+* Update Quality Declarations to QL3 (`#404 <https://github.com/ros2/rmw_fastrtps/issues/404>`_)
+* Contributors: Alejandro Hernández Cordero, JLBuenoLopez-eProsima, Jacob Perron, Michael Jeronimo, Michel Hidalgo
+
 1.2.2 (2020-10-15)
 ------------------
 * Set context actual domain id (`#410 <https://github.com/ros2/rmw_fastrtps/issues/410>`_)
