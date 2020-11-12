@@ -135,9 +135,13 @@ rmw_fastrtps_cpp::create_publisher(
   }
 
   if (!participant_info->leave_middleware_default_qos) {
-    publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
     publisherParam.historyMemoryPolicy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+    if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS) {
+      publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
+    } else if (participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
+      publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::SYNCHRONOUS_PUBLISH_MODE;
+    }
   }
 
   publisherParam.topic.topicKind =
