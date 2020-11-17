@@ -68,6 +68,10 @@ __rmw_create_node(
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("invalid node namespace: %s", reason);
     return nullptr;
   }
+  if (context->impl->is_shutdown) {
+    RMW_SET_ERROR_MSG("Trying to create node in a shutdown context");
+    return nullptr;
+  }
 
   auto common_context = static_cast<rmw_dds_common::Context *>(context->impl->common);
   rmw_dds_common::GraphCache & graph_cache = common_context->graph_cache;

@@ -134,6 +134,10 @@ rmw_shutdown(rmw_context_t * context)
     context->implementation_identifier,
     eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (context->impl->count > 0) {
+    RMW_SET_ERROR_MSG("Shutting down context with active nodes");
+    return RMW_RET_ERROR;
+  }
   context->impl->is_shutdown = true;
   return RMW_RET_OK;
 }
