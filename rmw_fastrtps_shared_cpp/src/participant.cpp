@@ -24,12 +24,7 @@
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/publisher/Publisher.h"
 #include "fastrtps/publisher/PublisherListener.h"
-#include "fastrtps/rtps/RTPSDomain.h"
 #include "fastrtps/rtps/common/Locator.h"
-#include "fastrtps/rtps/builtin/discovery/endpoint/EDPSimple.h"
-#include "fastrtps/rtps/reader/ReaderListener.h"
-#include "fastrtps/rtps/reader/RTPSReader.h"
-#include "fastrtps/rtps/reader/StatefulReader.h"
 #include "fastrtps/subscriber/Subscriber.h"
 #include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/subscriber/SampleInfo.h"
@@ -49,7 +44,6 @@ using IPLocator = eprosima::fastrtps::rtps::IPLocator;
 using Locator_t = eprosima::fastrtps::rtps::Locator_t;
 using Participant = eprosima::fastrtps::Participant;
 using ParticipantAttributes = eprosima::fastrtps::ParticipantAttributes;
-using StatefulReader = eprosima::fastrtps::rtps::StatefulReader;
 
 #if HAVE_SECURITY
 static
@@ -92,7 +86,7 @@ static
 CustomParticipantInfo *
 __create_participant(
   const char * identifier,
-  ParticipantAttributes participantAttrs,
+  const ParticipantAttributes & participantAttrs,
   bool leave_middleware_default_qos,
   publishing_mode_t publishing_mode,
   rmw_dds_common::Context * common_context)
