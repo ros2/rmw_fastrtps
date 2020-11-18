@@ -86,7 +86,7 @@ static
 CustomParticipantInfo *
 __create_participant(
   const char * identifier,
-  ParticipantAttributes participantAttrs,
+  const ParticipantAttributes & participantAttrs,
   bool leave_middleware_default_qos,
   publishing_mode_t publishing_mode,
   rmw_dds_common::Context * common_context)
