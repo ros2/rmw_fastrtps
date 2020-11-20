@@ -102,6 +102,7 @@ rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(rmw_context_t * contex
     delete common_context;
     context->impl->common = nullptr;
     context->impl->participant_info = nullptr;
+    return ret;
   }
   return RMW_RET_OK;
 }
