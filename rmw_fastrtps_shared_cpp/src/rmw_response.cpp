@@ -118,13 +118,10 @@ __rmw_send_response(
   if ((related_guid.entityId.value[3] & entity_id_is_reader_bit) != 0) {
     // Related guid is a reader, so it is the response subscription guid.
     // Wait for the response writer to be matched with it.
-    auto listener = static_cast<PatchedServicePubListener *>(info->pub_listener_);
-    client_present_t ret = listener->check_for_subscription(related_guid);
-    if (ret == client_present_t::GONE) {
-      return RMW_RET_OK;
-    } else if (ret == client_present_t::MAYBE) {
+    auto listener = info->pub_listener_;
+    if (!listener->wait_for_subscription(related_guid, std::chrono::milliseconds(100))) {
       RMW_SET_ERROR_MSG("client will not receive response");
-      return RMW_RET_TIMEOUT;
+      return RMW_RET_ERROR;
     }
   }
 
