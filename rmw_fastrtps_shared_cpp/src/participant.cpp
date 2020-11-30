@@ -15,6 +15,7 @@
 
 #include <limits.h>
 #include <string>
+#include <memory>
 
 #include "fastrtps/config.h"
 #include "fastrtps/Domain.h"
@@ -28,6 +29,7 @@
 #include "fastrtps/subscriber/Subscriber.h"
 #include "fastrtps/subscriber/SubscriberListener.h"
 #include "fastrtps/subscriber/SampleInfo.h"
+#include "fastrtps/transport/UDPv4TransportDescriptor.h"
 
 #include "rcutils/filesystem.h"
 #include "rcutils/get_env.h"
@@ -44,6 +46,12 @@ using IPLocator = eprosima::fastrtps::rtps::IPLocator;
 using Locator_t = eprosima::fastrtps::rtps::Locator_t;
 using Participant = eprosima::fastrtps::Participant;
 using ParticipantAttributes = eprosima::fastrtps::ParticipantAttributes;
+using UDPv4TransportDescriptor = eprosima::fastrtps::rtps::UDPv4TransportDescriptor;
+
+#if FASTRTPS_VERSION_MAJOR >= 2
+#include "fastdds/rtps/transport/shared_mem/SharedMemTransportDescriptor.h"
+using SharedMemTransportDescriptor = eprosima::fastdds::rtps::SharedMemTransportDescriptor;
+#endif
 
 #if HAVE_SECURITY
 static
@@ -152,14 +160,19 @@ rmw_fastrtps_shared_cpp::create_participant(
   Domain::getDefaultParticipantAttributes(participantAttrs);
 
   if (localhost_only) {
-    Locator_t local_network_interface_locator;
-    static const std::string local_ip_name("127.0.0.1");
-    local_network_interface_locator.kind = 1;
-    local_network_interface_locator.port = 0;
-    IPLocator::setIPv4(local_network_interface_locator, local_ip_name);
-    participantAttrs.rtps.builtin.metatrafficUnicastLocatorList.push_back(
-      local_network_interface_locator);
-    participantAttrs.rtps.builtin.initialPeersList.push_back(local_network_interface_locator);
+    // In order to use the interface white list, we need to disable the default transport config
+    participantAttrs.rtps.useBuiltinTransports = false;
+
+    // Add a UDPv4 transport with only localhost enabled
+    auto udp_transport = std::make_shared<UDPv4TransportDescriptor>();
+    udp_transport->interfaceWhiteList.emplace_back("127.0.0.1");
+    participantAttrs.rtps.userTransports.push_back(udp_transport);
+
+    // Add SHM transport if available
+#if FASTRTPS_VERSION_MAJOR >= 2
+    auto shm_transport = std::make_shared<SharedMemTransportDescriptor>();
+    participantAttrs.rtps.userTransports.push_back(shm_transport);
+#endif
   }
 
   // No custom handling of RMW_DEFAULT_DOMAIN_ID. Simply use a reasonable domain id.
