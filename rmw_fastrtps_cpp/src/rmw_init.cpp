@@ -156,7 +156,7 @@ rmw_context_fini(rmw_context_t * context)
     return RMW_RET_INVALID_ARGUMENT;
   }
   if (context->impl->count > 0) {
-    RMW_SET_ERROR_MSG("Deleting a context with active nodes");
+    RMW_SET_ERROR_MSG("Finalizing a context with active nodes");
     return RMW_RET_ERROR;
   }
   rmw_ret_t ret = rmw_init_options_fini(&context->options);
