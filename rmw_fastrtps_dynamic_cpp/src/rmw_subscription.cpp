@@ -151,6 +151,34 @@ rmw_subscription_get_actual_qos(
   return rmw_fastrtps_shared_cpp::__rmw_subscription_get_actual_qos(subscription, qos);
 }
 
+rmw_ret_t
+rmw_subscription_set_cft_expression_parameters(
+  const rmw_subscription_t * subscription,
+  const char * filter_expression,
+  const rcutils_string_array_t * expression_parameters)
+{
+  // Unused in current implementation.
+  (void) subscription;
+  (void) filter_expression;
+  (void) expression_parameters;
+  RMW_SET_ERROR_MSG("unimplemented");
+  return RMW_RET_UNSUPPORTED;
+}
+
+rmw_ret_t
+rmw_subscription_get_cft_expression_parameters(
+  const rmw_subscription_t * subscription,
+  char ** filter_expression,
+  rcutils_string_array_t * expression_parameters)
+{
+  // Unused in current implementation.
+  (void) subscription;
+  (void) filter_expression;
+  (void) expression_parameters;
+  RMW_SET_ERROR_MSG("unimplemented");
+  return RMW_RET_UNSUPPORTED;
+}
+
 using BaseTypeSupport = rmw_fastrtps_dynamic_cpp::BaseTypeSupport;
 
 rmw_ret_t

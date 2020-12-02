@@ -149,6 +149,34 @@ rmw_subscription_get_actual_qos(
 }
 
 rmw_ret_t
+rmw_subscription_set_cft_expression_parameters(
+  const rmw_subscription_t * subscription,
+  const char * filter_expression,
+  const rcutils_string_array_t * expression_parameters)
+{
+  // Unused in current implementation.
+  (void) subscription;
+  (void) filter_expression;
+  (void) expression_parameters;
+  RMW_SET_ERROR_MSG("unimplemented");
+  return RMW_RET_UNSUPPORTED;
+}
+
+rmw_ret_t
+rmw_subscription_get_cft_expression_parameters(
+  const rmw_subscription_t * subscription,
+  char ** filter_expression,
+  rcutils_string_array_t * expression_parameters)
+{
+  // Unused in current implementation.
+  (void) subscription;
+  (void) filter_expression;
+  (void) expression_parameters;
+  RMW_SET_ERROR_MSG("unimplemented");
+  return RMW_RET_UNSUPPORTED;
+}
+
+rmw_ret_t
 rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 {
   RMW_CHECK_ARGUMENT_FOR_NULL(node, RMW_RET_INVALID_ARGUMENT);
