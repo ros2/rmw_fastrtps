@@ -155,6 +155,10 @@ rmw_context_fini(rmw_context_t * context)
     RCUTILS_SET_ERROR_MSG("context has not been shutdown");
     return RMW_RET_INVALID_ARGUMENT;
   }
+  if (context->impl->count > 0) {
+    RMW_SET_ERROR_MSG("Finalizing a context with active nodes");
+    return RMW_RET_ERROR;
+  }
   rmw_ret_t ret = rmw_init_options_fini(&context->options);
   delete context->impl;
   *context = rmw_get_zero_initialized_context();
