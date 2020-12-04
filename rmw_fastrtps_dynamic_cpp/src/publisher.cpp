@@ -193,7 +193,11 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
     return nullptr;
   }
 
-  info->publisher_ = Domain::createPublisher(participant, publisherParam, info->listener_);
+  info->publisher_ = Domain::createPublisher(
+          participant,
+          publisherParam,
+          info->listener_,
+          publisher_options->unique_network_flow);
   if (!info->publisher_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
     return nullptr;
