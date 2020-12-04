@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.2 (2020-12-04)
+------------------
+* Remove unused headers MessageTypeSupport.hpp and ServiceTypeSupport.hpp (`#481 <https://github.com/ros2/rmw_fastrtps/issues/481>`_) (`#483 <https://github.com/ros2/rmw_fastrtps/issues/483>`_)
+* Update maintainer list for Eloquent (`#473 <https://github.com/ros2/rmw_fastrtps/issues/473>`_)
+* Contributors: Jacob Perron, Michael Jeronimo
+
 0.8.1 (2019-10-23)
 ------------------
 * Restrict traffic to localhost only if env var is provided (`#331 <https://github.com/ros2/rmw_fastrtps/issues/331>`_)

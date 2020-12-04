@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+0.8.2 (2020-12-04)
+------------------
+* Update maintainer list for Eloquent (`#473 <https://github.com/ros2/rmw_fastrtps/issues/473>`_)
+* Contributors: Michael Jeronimo
+
 0.8.1 (2019-10-23)
 ------------------
 * use return_loaned_message_from (`#334 <https://github.com/ros2/rmw_fastrtps/issues/334>`_)
