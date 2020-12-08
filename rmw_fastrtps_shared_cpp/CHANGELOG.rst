@@ -2,6 +2,16 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.1.0 (2020-12-08)
+------------------
+* Use interface whitelist for localhost only (`#476 <https://github.com/ros2/rmw_fastrtps/issues/476>`_)
+* Make use of error return value in decrement_context_impl_ref_count (`#488 <https://github.com/ros2/rmw_fastrtps/issues/488>`_)
+* Remove unnecessary includes (`#487 <https://github.com/ros2/rmw_fastrtps/issues/487>`_)
+* Use new time_utils function to limit rmw_time_t values to 32-bits (`#485 <https://github.com/ros2/rmw_fastrtps/issues/485>`_)
+* New environment variable to change easily the publication mode (`#470 <https://github.com/ros2/rmw_fastrtps/issues/470>`_)
+* Remove unused headers MessageTypeSupport.hpp and ServiceTypeSupport.hpp (`#481 <https://github.com/ros2/rmw_fastrtps/issues/481>`_)
+* Contributors: Jacob Perron, José Luis Bueno López, Michael Jeronimo, Miguel Company, Stephen Brawner
+
 4.0.0 (2020-10-22)
 ------------------
 * Discriminate when the Client has gone from when the Client has not completely matched (`#467 <https://github.com/ros2/rmw_fastrtps/issues/467>`_)

@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.1.0 (2020-12-08)
+------------------
+* Check for correct context shutdown (`#486 <https://github.com/ros2/rmw_fastrtps/issues/486>`_)
+* New environment variable to change easily the publication mode (`#470 <https://github.com/ros2/rmw_fastrtps/issues/470>`_)
+* Contributors: Ignacio Montesino Valle, José Luis Bueno López
+
 4.0.0 (2020-10-22)
 ------------------
 * Discriminate when the Client has gone from when the Client has not completely matched (`#467 <https://github.com/ros2/rmw_fastrtps/issues/467>`_)
