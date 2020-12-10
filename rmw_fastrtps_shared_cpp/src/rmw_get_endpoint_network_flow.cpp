@@ -208,7 +208,7 @@ fill_network_flow(
 
     // Set the port
     if( RMW_RET_OK !=
-        (res = rmw_network_flow_set_port(
+        (res = rmw_network_flow_set_transport_port(
              network_flow,
              IPLocator::getPhysicalPort(locator))) )
     {
