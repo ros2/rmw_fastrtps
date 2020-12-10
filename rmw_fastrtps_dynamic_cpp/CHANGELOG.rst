@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.4 (2020-12-09)
+------------------
+* Discriminate when the Client has gone from when the Client has not completely matched (`#479 <https://github.com/ros2/rmw_fastrtps/issues/479>`_) (`#489 <https://github.com/ros2/rmw_fastrtps/issues/489>`_) (`#490 <https://github.com/ros2/rmw_fastrtps/issues/490>`_)
+* Contributors: Jacob Perron
+
 1.2.3 (2020-11-10)
 ------------------
 * Update maintainer list for Foxy (`#474 <https://github.com/ros2/rmw_fastrtps/issues/474>`_)

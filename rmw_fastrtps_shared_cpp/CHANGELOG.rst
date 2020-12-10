@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.4 (2020-12-09)
+------------------
+* Make sure to lock the mutex protecting client_endpoints\_ (`#492 <https://github.com/ros2/rmw_fastrtps/issues/492>`_) (`#493 <https://github.com/ros2/rmw_fastrtps/issues/493>`_)
+* Discriminate when the Client has gone from when the Client has not completely matched (`#479 <https://github.com/ros2/rmw_fastrtps/issues/479>`_)
+* Contributors: Chris Lalancette, Jacob Perron
+
 1.2.3 (2020-11-10)
 ------------------
 * Remove unused headers MessageTypeSupport.hpp and ServiceTypeSupport.hpp (`#481 <https://github.com/ros2/rmw_fastrtps/issues/481>`_) (`#482 <https://github.com/ros2/rmw_fastrtps/issues/482>`_)
