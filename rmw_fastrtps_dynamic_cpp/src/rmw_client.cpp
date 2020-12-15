@@ -97,9 +97,11 @@ rmw_create_client(
   const rosidl_service_type_support_t * type_support = get_service_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
   if (!type_support) {
+    rcutils_reset_error();
     type_support = get_service_typesupport_handle(
       type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
     if (!type_support) {
+      rcutils_reset_error();
       RMW_SET_ERROR_MSG("type support not from this implementation");
       return nullptr;
     }
