@@ -110,8 +110,9 @@ create_subscription(
     return nullptr;
   }
 
-  // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load subscriber which profile name
-  // matches with topic_name. If such profile does not exist, then use the default attributes.
+  // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
+  // subscriber which profile name matches with topic_name. If such profile does not exist, then use
+  // the default attributes.
   eprosima::fastrtps::SubscriberAttributes subscriberParam;
   Domain::getDefaultSubscriberAttributes(subscriberParam);  // Loads the XML file if not loaded
   XMLProfileManager::fillSubscriberAttributes(topic_name, subscriberParam, false);

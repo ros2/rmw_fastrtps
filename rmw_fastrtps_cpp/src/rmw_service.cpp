@@ -186,7 +186,7 @@ rmw_create_service(
   Domain::getDefaultSubscriberAttributes(subscriberParam);
 
   if (XMLProfileManager::fillSubscriberAttributes(
-    sub_topic_name.to_string(), subscriberParam, false) != XMLP_ret::XML_OK)
+      sub_topic_name.to_string(), subscriberParam, false) != XMLP_ret::XML_OK)
   {
     XMLProfileManager::fillSubscriberAttributes(topic_name_fallback, subscriberParam, false);
   }
@@ -208,7 +208,7 @@ rmw_create_service(
   Domain::getDefaultPublisherAttributes(publisherParam);
 
   if (XMLProfileManager::fillPublisherAttributes(
-    pub_topic_name.to_string(), publisherParam, false) != XMLP_ret::XML_OK)
+      pub_topic_name.to_string(), publisherParam, false) != XMLP_ret::XML_OK)
   {
     XMLProfileManager::fillPublisherAttributes(topic_name_fallback, publisherParam, false);
   }
