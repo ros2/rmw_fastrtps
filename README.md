@@ -28,28 +28,25 @@ You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment varia
 
 ## Advance usage
 
-`rmw_fastrtps` sets some of the Fast DDS configurable parameters:
+[`rclcpp`](https://github.com/ros2/rclcpp) and [`rclpy`](https://github.com/ros2/rclpy) only allow for the configuration of certain middleware QoS (see [ROS 2 QoS policies](https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings/#qos-policies)).
+In addition to ROS 2 QoS policies, `rmw_fastrtps` sets two more Fast DDS configurable parameters:
+
 * History memory policy: `PREALLOCATED_WITH_REALLOC_MEMORY_MODE`
 * Publication mode: `ASYNCHRONOUS_PUBLISH_MODE`
 
-However, it is possible to fully configure Fast DDS (including the history memory policy and the publication mode) using an XML file as described in [Fast DDS documentation](https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html).
-Bear in mind that if you want to modify the history memory policy or the publication mode you must set environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` to 1 (it is set to 0 by default) besides defining the XML file.
-This tells `rmw_fastrtps` that it should override both the history memory policy and the publication mode using the XML.
-Bear in mind that if you set this environment variable but do not give a value to either of these policies, defaults will be used.
-Current Fast-DDS defaults are:
-* [History memory policy](https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#rtpsendpointqos): `PREALLOCATED_MEMORY_MODE`.
-* [Publication mode](https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#publishmodeqospolicy): `SYNCHRONOUS_PUBLISH_MODE`.
+However, `rmw_fastrtps` offers the possibility to further configure Fast DDS:
 
-You have two ways of telling you ROS 2 application which XML to use:
-1. Placing your XML file in the running directory under the name `DEFAULT_FASTRTPS_PROFILES.xml`.
-2. Setting environment variable `FASTRTPS_DEFAULT_PROFILES_FILE` to your XML file.
+* [Change publication mode](#change-publication-mode)
+* [Full QoS configuration](#full-qos-configuration)
 
 ### Change publication mode
 
-Another way to change easily the publication mode without the need of defining a XML file is to use the environment variable `RMW_FASTRTPS_PUBLICATION_MODE`.
-This variable has lower precedence than `RMW_FASTRTPS_USE_QOS_FROM_XML`.
-Therefore, it is only taken into account when `RMW_FASTRTPS_USE_QOS_FROM_XML` is not set (or given a value different than `1`).
+Fast DDS feats two different [publication modes](https://fast-dds.docs.eprosima.com/en/v2.1.0/fastdds/dds_layer/core/policy/eprosimaExtensions.html?highlight=synchronous#publishmodeqospolicykind): synchronous and asynchronous.
+To learn more about the implications of choosing one mode over the other, please refer to [DDS: Asynchronous vs Synchronous Publishing](https://www.eprosima.com/index.php/resources-all/performance/dds-asynchronous-vs-synchronous-publishing):
+
+`rmw_fastrtps` offers an easy way to change Fast DDS' publication mode without the need of defining a XML file. That is environment variable `RMW_FASTRTPS_PUBLICATION_MODE`.
 The admissible values are:
+
 * `ASYNCHRONOUS`: asynchronous publication mode.
 Setting this mode implies that when the publisher invokes the write operation, the data is copied into a queue, a notification about the addition to the queue is performed, and control of the thread is returned to the user before the data is actually sent.
 A background thread (asynchronous thread) is in turn in charge of consuming the queue and sending the data to every matched reader.
@@ -59,9 +56,65 @@ This entails that any blocking call occurring during the write operation would b
 It is important to note that this mode typically yields higher throughput rates at lower latencies, since the notification and context switching between threads is not present.
 * `AUTO`: let Fast DDS select the publication mode. This implies using the publication mode set in the XML file or, failing that, the default value set in Fast DDS (which currently is set to `SYNCHRONOUS`).
 
-If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` behave as if it were set to `ASYNCHRONOUS`.
+If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` behave as if it were set to `ASYNCHRONOUS`.
 
-## Example
+### Full QoS configuration
+
+With `rmw_fastrtps`, it is possible to fully configure Fast DDS using an XML file as described in [Fast DDS documentation](https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html).
+When configuring the middleware using XML files, there are certain points that have to be taken into account:
+
+1. QoS set by `rclcpp`/`rclpy` are always honored.
+This means that setting any of them in the XML files has no effect, since they do not override what was used to create the publisher, subscription, service, or client.
+1. In order to modify the history memory policy or publication mode using XML files, environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` must be set to 1 (it is set to 0 by default).
+This tells `rmw_fastrtps` that it should override both the history memory policy and the publication mode using the XML.
+Bear in mind that setting this environment variable but not setting either of these policies in the XML results in Fast DDS' defaults configurations being used.
+Current Fast-DDS defaults are:
+
+    * [History memory policy](https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#rtpsendpointqos): `PREALLOCATED_MEMORY_MODE`.
+    * [Publication mode](https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#publishmodeqospolicy): `SYNCHRONOUS_PUBLISH_MODE`.
+
+1. Setting `RMW_FASTRTPS_USE_QOS_FROM_XML` effectively overrides whatever configuration was set with `RMW_FASTRTPS_PUBLICATION_MODE`, setting the publication mode to Fast DDS' default publication mode unless specified otherwise using an XML file.
+
+There are two ways of telling a ROS 2 application which XML to use:
+
+1. Placing your XML file in the running directory under the name `DEFAULT_FASTRTPS_PROFILES.xml`.
+1. Setting environment variable `FASTRTPS_DEFAULT_PROFILES_FILE` to contain the path to your XML file (relative to the working directory).
+
+#### Applying different profiles to different entities
+
+`rmw_fastrtps` allows for the configuration of different entities with different QoS using the same XML file.
+For doing so, `rmw_fastrtps` locates profiles in the XML based on topic names abiding to the following rules:
+
+##### Creating publishers/subscriptions with different profiles
+
+To configure a publisher/subscription, define a `<publisher>`/`<subscriber>` profile with attribute `profile_name=topic_name`.
+If such profile is not defined, `rmw_fastrtps` attempts to load the `<publisher>`/`<subscriber>` profile with attribute `is_default_profile="true"`.
+
+##### Creating services with different profiles
+
+ROS 2 services contain a subscription for receiving requests, and a publisher to reply to them.
+`rmw_fastrtps` allows for configuring each of these endpoints separately in the following manner:
+
+1. To configure the request subscription, define a `<subscriber>` profile with attribute `profile_name=topic_name`, where topic name is the name of the service after mangling.
+If such profile is not defined, `rmw_fastrtps` attempts to load a `<subscriber>` profile with attribute `profile_name="service"`.
+If neither of the previous profiles exist, `rmw_fastrtps` attempts to load the `<subscriber>` profile with attribute `is_default_profile="true"`.
+1. To configure the reply publisher, define a `<publisher>` profile with attribute `profile_name=topic_name`, where topic name is the name of the service after mangling.
+If such profile is not defined, `rmw_fastrtps` attempts to load a `<publisher>` profile with attribute `profile_name="service"`.
+If neither of the previous profiles exist, `rmw_fastrtps` attempts to load the `<publisher>` profile with attribute `is_default_profile="true"`.
+
+##### Creating clients with different profiles
+
+ROS 2 clients contain a publisher to send requests, and a subscription to receive the service's replies.
+`rmw_fastrtps` allows for configuring each of these endpoints separately in the following manner:
+
+1. To configure the requests publisher, define a `<publisher>` profile with attribute `profile_name=topic_name`, where topic name is the name of the service after mangling.
+If such profile is not defined, `rmw_fastrtps` attempts to load a `<publisher>` profile with attribute `profile_name="client"`.
+If neither of the previous profiles exist, `rmw_fastrtps` attempts to load the `<publisher>` profile with attribute `is_default_profile="true"`.
+1. To configure the reply subscription, define a `<subscriber>` profile with attribute `profile_name=topic_name`, where topic name is the name of the service after mangling.
+If such profile is not defined, `rmw_fastrtps` attempts to load a `<subscriber>` profile with attribute `profile_name="client"`.
+If neither of the previous profiles exist, `rmw_fastrtps` attempts to load the `<subscriber>` profile with attribute `is_default_profile="true"`.
+
+#### Example
 
 The following example configures Fast DDS to publish synchronously, and to have a pre-allocated history that can be expanded whenever it gets filled.
 
@@ -112,4 +165,4 @@ Quality Declarations for the external dependencies of these packages can be foun
 
 * [Fast DDS Quality Declaration](https://github.com/eProsima/Fast-DDS/blob/master/QUALITY.md)
 * [Fast CDR Quality Declaration](https://github.com/eProsima/Fast-CDR/blob/master/QUALITY.md)
-* [`foonathan_memory` Quality Declaration](https://github.com/eProsima/Fast-DDS/blob/master/Quality_Declaration_foonathan_memory.md)  
+* [`foonathan_memory` Quality Declaration](https://github.com/eProsima/Fast-DDS/blob/master/Quality_Declaration_foonathan_memory.md)

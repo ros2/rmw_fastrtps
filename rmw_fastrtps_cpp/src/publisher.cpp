@@ -17,6 +17,7 @@
 
 #include "fastrtps/Domain.h"
 #include "fastrtps/participant/Participant.h"
+#include "fastrtps/xmlparser/XMLProfileManager.h"
 
 #include "rcutils/error_handling.h"
 #include "rcutils/macros.h"
@@ -44,6 +45,7 @@
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
 using TopicDataType = eprosima::fastrtps::TopicDataType;
+using XMLProfileManager = eprosima::fastrtps::xmlparser::XMLProfileManager;
 
 rmw_publisher_t *
 rmw_fastrtps_cpp::create_publisher(
@@ -104,14 +106,17 @@ rmw_fastrtps_cpp::create_publisher(
 
   CustomPublisherInfo * info = nullptr;
   rmw_publisher_t * rmw_publisher = nullptr;
-  eprosima::fastrtps::PublisherAttributes publisherParam;
 
   if (!is_valid_qos(*qos_policies)) {
     return nullptr;
   }
 
-  // Load default XML profile.
-  Domain::getDefaultPublisherAttributes(publisherParam);
+  // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
+  // publisher which profile name matches with topic_name. If such profile does not exist,
+  // then use the default attributes.
+  eprosima::fastrtps::PublisherAttributes publisherParam;
+  Domain::getDefaultPublisherAttributes(publisherParam);  // Loads the XML file if not loaded
+  XMLProfileManager::fillPublisherAttributes(topic_name, publisherParam, false);
 
   info = new (std::nothrow) CustomPublisherInfo();
   if (!info) {
