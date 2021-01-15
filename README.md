@@ -60,7 +60,7 @@ If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and 
 
 ### Full QoS configuration
 
-It is possible to full configure Fast DDS through a combination of 'rclcpp'/'rclpy' QoS, and the XML file as described in [Fast DDS documentation](https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html).
+It is possible to fully configure Fast DDS through a combination of 'rclcpp'/'rclpy' QoS, and the XML file as described in [Fast DDS documentation](https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html).
 
 1. QoS configuration contained in `rclcpp`/`rclpy` QoS class, can only be set using `rclcpp`/`rclpy`.
 Setting any of them in the XML files has no effect, since they do not override what was used to create the publisher, subscription, service, or client.
