@@ -60,8 +60,7 @@ If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and 
 
 ### Full QoS configuration
 
-With `rmw_fastrtps`, it is possible to fully configure Fast DDS using an XML file as described in [Fast DDS documentation](https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html).
-When configuring the middleware using XML files, there are certain points that have to be taken into account:
+It is possible to full configure Fast DDS through a combination of 'rclcpp'/'rclpy' QoS, and the XML file as described in [Fast DDS documentation](https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html).
 
 1. ROS 2 QoS contained in [`rmw_qos_profile_t`](http://docs.ros2.org/latest/api/rmw/structrmw__qos__profile__t.html) are always honored, unless set to `*_SYSTEM_DEFAULT`.
 In that case, XML values, or Fast DDS default values in the absences of XML ones, are applied.
