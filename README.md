@@ -62,7 +62,7 @@ If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and 
 
 It is possible to fully configure Fast DDS through a combination of 'rclcpp'/'rclpy' QoS, and the XML file as described in [Fast DDS documentation](https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html).
 
-1. QoS configuration contained in `rclcpp`/`rclpy` QoS class, can only be set using `rclcpp`/`rclpy`.
+1. QoS configuration contained in [`rclcpp`/`rclpy` QoS class](https://github.com/ros2/rclcpp/blob/master/rclcpp/include/rclcpp/qos.hpp), can only be set using `rclcpp`/`rclpy`.
 Setting any of them in the XML files has no effect, since they do not override what was used to create the publisher, subscription, service, or client.
 1. QoS configuration not contained `rclcpp`/`rclpy`, such as the history memory policy or publication mode, can be overridden using XML files. The environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` must be set to 1 (it is set to 0 by default).
 Bear in mind that setting this environment variable but not setting either of these policies in the XML results in Fast DDS' defaults configurations being used.
