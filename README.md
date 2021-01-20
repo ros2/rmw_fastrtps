@@ -28,7 +28,7 @@ You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment varia
 
 ## Advance usage
 
-[`rclcpp`](https://github.com/ros2/rclcpp) and [`rclpy`](https://github.com/ros2/rclpy) only allow for the configuration of certain middleware QoS (see [ROS 2 QoS policies](https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings/#qos-policies)).
+ROS 2 only allows for the configuration of certain middleware QoS (see [ROS 2 QoS policies](https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings/#qos-policies)).
 In addition to ROS 2 QoS policies, `rmw_fastrtps` sets two more Fast DDS configurable parameters:
 
 * History memory policy: `PREALLOCATED_WITH_REALLOC_MEMORY_MODE`
@@ -63,8 +63,9 @@ If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and 
 With `rmw_fastrtps`, it is possible to fully configure Fast DDS using an XML file as described in [Fast DDS documentation](https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html).
 When configuring the middleware using XML files, there are certain points that have to be taken into account:
 
-1. QoS set by `rclcpp`/`rclpy` are always honored.
-This means that setting any of them in the XML files has no effect, since they do not override what was used to create the publisher, subscription, service, or client.
+1. ROS 2 QoS contained in [`rmw_qos_profile_t`](http://docs.ros2.org/latest/api/rmw/structrmw__qos__profile__t.html) are always honored, unless set to `*_SYSTEM_DEFAULT`.
+In that case, XML values, or Fast DDS default values in the absences of XML ones, are applied.
+Setting any QoS in `rmw_qos_profile_t` to something other than `*_SYSTEM_DEFAULT` entails that specifying it via XML files has no effect, since they do not override what was used to create the publisher, subscription, service, or client.
 1. In order to modify the history memory policy or publication mode using XML files, environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` must be set to 1 (it is set to 0 by default).
 This tells `rmw_fastrtps` that it should override both the history memory policy and the publication mode using the XML.
 Bear in mind that setting this environment variable but not setting either of these policies in the XML results in Fast DDS' defaults configurations being used.
@@ -87,7 +88,7 @@ For doing so, `rmw_fastrtps` locates profiles in the XML based on topic names ab
 
 ##### Creating publishers/subscriptions with different profiles
 
-To configure a publisher/subscription, define a `<publisher>`/`<subscriber>` profile with attribute `profile_name=topic_name`, where topic name is the name of the topic before mangling, i.e. the topic name used to create the publisher/subscription on `rclcpp`/`rclpy`.
+To configure a publisher/subscription, define a `<publisher>`/`<subscriber>` profile with attribute `profile_name=topic_name`, where topic name is the name of the topic before mangling, i.e. the topic name used to create the publisher/subscription.
 If such profile is not defined, `rmw_fastrtps` attempts to load the `<publisher>`/`<subscriber>` profile with attribute `is_default_profile="true"`.
 
 ##### Creating services with different profiles
