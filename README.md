@@ -28,7 +28,7 @@ You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment varia
 
 ## Advance usage
 
-[`rclcpp`](https://github.com/ros2/rclcpp) and [`rclpy`](https://github.com/ros2/rclpy) only allow for the configuration of certain middleware QoS (see [ROS 2 QoS policies](https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings/#qos-policies)).
+ROS 2 only allows for the configuration of certain middleware QoS (see [ROS 2 QoS policies](https://index.ros.org/doc/ros2/Concepts/About-Quality-of-Service-Settings/#qos-policies)).
 In addition to ROS 2 QoS policies, `rmw_fastrtps` sets two more Fast DDS configurable parameters:
 
 * History memory policy: `PREALLOCATED_WITH_REALLOC_MEMORY_MODE`
@@ -102,7 +102,7 @@ For doing so, `rmw_fastrtps` locates profiles in the XML based on topic names ab
 
 ##### Creating publishers/subscriptions with different profiles
 
-To configure a publisher/subscription, define a `<publisher>`/`<subscriber>` profile with attribute `profile_name=topic_name`.
+To configure a publisher/subscription, define a `<publisher>`/`<subscriber>` profile with attribute `profile_name=topic_name`, where topic name is the name of the topic before mangling, i.e. the topic name used to create the publisher/subscription.
 If such profile is not defined, `rmw_fastrtps` attempts to load the `<publisher>`/`<subscriber>` profile with attribute `is_default_profile="true"`.
 
 ##### Creating services with different profiles
@@ -110,7 +110,7 @@ If such profile is not defined, `rmw_fastrtps` attempts to load the `<publisher>
 ROS 2 services contain a subscription for receiving requests, and a publisher to reply to them.
 `rmw_fastrtps` allows for configuring each of these endpoints separately in the following manner:
 
-1. To configure the request subscription, define a `<subscriber>` profile with attribute `profile_name=topic_name`, where topic name is the name of the service after mangling.
+1. To configure the request subscription, define a `<subscriber>` profile with attribute `profile_name=topic_name`, where topic name is the name of the service after mangling. For more information on name mangling, please refer to [Topic and Service name mapping to DDS](https://design.ros2.org/articles/topic_and_service_names.html).
 If such profile is not defined, `rmw_fastrtps` attempts to load a `<subscriber>` profile with attribute `profile_name="service"`.
 If neither of the previous profiles exist, `rmw_fastrtps` attempts to load the `<subscriber>` profile with attribute `is_default_profile="true"`.
 1. To configure the reply publisher, define a `<publisher>` profile with attribute `profile_name=topic_name`, where topic name is the name of the service after mangling.
@@ -139,7 +139,8 @@ The following example configures Fast DDS to publish synchronously, and to have 
     <?xml version="1.0" encoding="UTF-8"?>
     <dds xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
         <profiles>
-            <publisher profile_name="publisher profile" is_default_profile="true">
+            <!-- Default publisher profile -->
+            <publisher profile_name="default publisher profile" is_default_profile="true">
                 <qos>
                     <publishMode>
                         <kind>SYNCHRONOUS</kind>
@@ -148,7 +149,36 @@ The following example configures Fast DDS to publish synchronously, and to have 
                 <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
             </publisher>
 
-            <subscriber profile_name="subscriber profile" is_default_profile="true">
+            <!-- Publisher profile for topic helloworld -->
+            <publisher profile_name="helloworld">
+                <qos>
+                    <publishMode>
+                        <kind>SYNCHRONOUS</kind>
+                    </publishMode>
+                </qos>
+            </publisher>
+
+            <!-- Request subscriber profile for services -->
+            <subscriber profile_name="service">
+                <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
+            </subscriber>
+
+            <!-- Request publisher profile for clients -->
+            <publisher profile_name="client">
+                <qos>
+                    <publishMode>
+                        <kind>ASYNCHRONOUS</kind>
+                    </publishMode>
+                </qos>
+            </publisher>
+
+            <!-- Request subscriber profile for server of service "add_two_ints" -->
+            <subscriber profile_name="rq/add_two_intsRequest">
+                <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
+            </subscriber>
+
+            <!-- Reply subscriber profile for client of service "add_two_ints" -->
+            <subscriber profile_name="rr/add_two_intsReply">
                 <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
             </subscriber>
         </profiles>
