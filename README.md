@@ -62,24 +62,24 @@ If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and 
 
 Fast DDS QoS policies can be fully configured through a combination of the [`rclcpp`/`rclpy` QoS] API, and the [Fast DDS XML] file's QoS elements. Configuraton depends on the environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML`.
 
-| RMW_FASTRTPS_USE_QOS_FROM_XML | [`rclcpp`/`rclpy` QoS]    | [Fast DDS XML] QoS                                               |
-| ----------------------------- | ------------------------- | ---------------------------------------------------------------- |
-| 0 (default)                   | Use default values        | Ignored - overridden by rclcpp/rclpy Qos                         |
-| 0 (default)                   | Set to non system default | Ignored - overridden by rclcpp/rclpy Qos                         |
-| 0 (default)                   | Set to system default     | Used                                                             |
-| 1                             | Use default values        | [History memory policy], [Publication mode] used, others ignored |
-| 1                             | Set to non system default | [History memory policy], [Publication mode] used, others ignored |
-| 1                             | Set to system default     | Used                                                             |
+| RMW_FASTRTPS_USE_QOS_FROM_XML | [`rclcpp`/`rclpy` QoS]    | [Fast DDS XML] QoS                   | [Fast DDS XML] [history memory policy] and [publication mode] |
+| ----------------------------- | ------------------------- | ------------------------------------ | ------------------------------------- |
+| 0 (default)                   | Use default values        | Ignored - overridden by rclcpp/rclpy | Ignored - overrided by `rmw_fastrtps` |
+| 0 (default)                   | Set to non system default | Ignored - overridden by rclcpp/rclpy | Ignored - overrided by `rmw_fastrtps` |
+| 0 (default)                   | Set to system default     | Used                                 | Ignored - overrided by `rmw_fastrtps` |
+| 1                             | Use default values        | Ignored - overridden by rclcpp/rclpy | Used                                  | 
+| 1                             | Set to non system default | Ignored - overridden by rclcpp/rclpy | Used                                  |
+| 1                             | Set to system default     | Used                                 | Used                                  |
 
 [`rclcpp`/`rclpy` QoS]: https://github.com/ros2/rclcpp/blob/master/rclcpp/include/rclcpp/qos.hpp
 [Fast DDS XML]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html
-[History memory policy]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#rtpsendpointqos
-[Publication mode]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#publishmodeqospolicy
+[history memory policy]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#rtpsendpointqos
+[publication mode]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#publishmodeqospolicy
 
-Note: If `RMW_FASTRTPS_USE_QOS_FROM_XML` is set to 1, and [History memory policy] or [Publication mode] are not specified in the XML, then the Fast DDS' defaults configurations will be used: 
+Note: If `RMW_FASTRTPS_USE_QOS_FROM_XML` is set to 1, and [history memory policy] or [publication mode] are not specified in the XML, then the Fast DDS' defaults configurations will be used: 
 
-* [History memory policy] : `PREALLOCATED_MEMORY_MODE`.
-* [Publication mode] : `SYNCHRONOUS_PUBLISH_MODE`.
+* [history memory policy] : `PREALLOCATED_MEMORY_MODE`.
+* [publication mode] : `SYNCHRONOUS_PUBLISH_MODE`.
 
 There are two ways of telling a ROS 2 application which XML to use:
 
