@@ -83,7 +83,7 @@ Bear in mind that setting this environment variable but not setting either of th
 [history memory policy]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#rtpsendpointqos
 [publication mode]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#publishmodeqospolicy
 
-Note: If `RMW_FASTRTPS_USE_QOS_FROM_XML` is set to 1, and [history memory policy] or [publication mode] are not specified in the XML, then the Fast DDS' defaults configurations will be used:
+Note: If `RMW_FASTRTPS_USE_QOS_FROM_XML` is set to 1, and [history memory policy] or [publication mode] are not specified in the XML, then the Fast DDS' default configurations will be used:
 
 * [history memory policy] : `PREALLOCATED_MEMORY_MODE`.
 * [publication mode] : `SYNCHRONOUS_PUBLISH_MODE`.
