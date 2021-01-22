@@ -17,6 +17,8 @@
 
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
+#include <fastcdr/exceptions/Exception.h>
+
 #include <cassert>
 #include <string>
 #include <vector>
@@ -936,16 +938,21 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
   assert(ros_message);
   assert(members_);
 
-  // Deserialize encapsulation.
-  deser.read_encapsulation();
+  try {
+    // Deserialize encapsulation.
+    deser.read_encapsulation();
+  
+    (void)impl;
+    if (members_->member_count_ != 0) {
+      return TypeSupport::deserializeROSmessage(deser, members_, ros_message);
+    }
 
-  (void)impl;
-  if (members_->member_count_ != 0) {
-    TypeSupport::deserializeROSmessage(deser, members_, ros_message);
-  } else {
     uint8_t dump = 0;
     deser >> dump;
     (void)dump;
+  }
+  catch(const eprosima::fastcdr::exception::Exception&) {
+    return false;
   }
 
   return true;

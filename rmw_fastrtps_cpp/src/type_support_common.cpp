@@ -14,6 +14,8 @@
 
 #include <string>
 
+#include <fastcdr/exceptions/Exception.h>
+
 #include "rmw/error_handling.h"
 
 #include "type_support_common.hpp"
@@ -88,19 +90,24 @@ bool TypeSupport::deserializeROSmessage(
   assert(ros_message);
   assert(impl);
 
-  // Deserialize encapsulation.
-  deser.read_encapsulation();
-
-  // If type is not empty, deserialize message
-  if (has_data_) {
-    auto callbacks = static_cast<const message_type_support_callbacks_t *>(impl);
-    return callbacks->cdr_deserialize(deser, ros_message);
+  try {
+    // Deserialize encapsulation.
+    deser.read_encapsulation();
+  
+    // If type is not empty, deserialize message
+    if (has_data_) {
+      auto callbacks = static_cast<const message_type_support_callbacks_t *>(impl);
+        return callbacks->cdr_deserialize(deser, ros_message);
+    }
+  
+    // Otherwise, consume dummy byte
+    uint8_t dump = 0;
+    deser >> dump;
+    (void)dump;
   }
-
-  // Otherwise, consume dummy byte
-  uint8_t dump = 0;
-  deser >> dump;
-  (void)dump;
+  catch(const eprosima::fastcdr::exception::Exception&) {
+    return false;
+  }
 
   return true;
 }
