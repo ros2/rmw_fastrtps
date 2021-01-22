@@ -86,7 +86,7 @@ There are two ways of telling a ROS 2 application which XML to use:
 1. Placing your XML file in the running directory under the name `DEFAULT_FASTRTPS_PROFILES.xml`.
 1. Setting environment variable `FASTRTPS_DEFAULT_PROFILES_FILE` to contain the path to your XML file (relative to the working directory).
 
-To verify the actual QoS settings:
+To verify the actual QoS settings using rclcpp:
 
 ```cpp
 auto rcl_publisher = my_rclcpp_publisher->get_publisher_handle();
