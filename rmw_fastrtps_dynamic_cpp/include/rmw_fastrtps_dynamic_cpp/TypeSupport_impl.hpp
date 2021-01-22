@@ -773,7 +773,9 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
         {
           auto sub_members = static_cast<const MembersType *>(member->members_->data);
           if (!member->is_array_) {
-            deserializeROSmessage(deser, sub_members, field);
+            if (!deserializeROSmessage(deser, sub_members, field)) {
+              return false;
+            }
           } else {
             size_t array_size = 0;
 
@@ -796,7 +798,9 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
               return false;
             }
             for (size_t index = 0; index < array_size; ++index) {
-              deserializeROSmessage(deser, sub_members, member->get_function(field, index));
+              if (!deserializeROSmessage(deser, sub_members, member->get_function(field, index))) {
+                return false;
+              }
             }
           }
         }

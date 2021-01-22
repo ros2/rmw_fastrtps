@@ -96,22 +96,22 @@ __rmw_take_request(
   if (request.buffer_ != nullptr) {
     eprosima::fastcdr::Cdr deser(*request.buffer_, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::Cdr::DDS_CDR);
-    info->request_type_support_->deserializeROSmessage(
-      deser, ros_request, info->request_type_support_impl_);
-
-    // Get header
-    rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(
-      request.sample_identity_.writer_guid(),
-      request_header->request_id.writer_guid);
-    request_header->request_id.sequence_number =
-      ((int64_t)request.sample_identity_.sequence_number().high) <<
-      32 | request.sample_identity_.sequence_number().low;
-    request_header->source_timestamp = request.sample_info_.sourceTimestamp.to_ns();
-    request_header->received_timestamp = request.sample_info_.receptionTimestamp.to_ns();
+    if (info->request_type_support_->deserializeROSmessage(
+      deser, ros_request, info->request_type_support_impl_))
+    {
+      // Get header
+      rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(
+        request.sample_identity_.writer_guid(),
+        request_header->request_id.writer_guid);
+      request_header->request_id.sequence_number =
+        ((int64_t)request.sample_identity_.sequence_number().high) <<
+        32 | request.sample_identity_.sequence_number().low;
+      request_header->source_timestamp = request.sample_info_.sourceTimestamp.to_ns();
+      request_header->received_timestamp = request.sample_info_.receptionTimestamp.to_ns();
+      *taken = true;
+    }
 
     delete request.buffer_;
-
-    *taken = true;
   }
 
   return RMW_RET_OK;
