@@ -60,7 +60,7 @@ If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and 
 
 ### Full QoS configuration
 
-Fast DDS QoS policies can be fully configured through a combination of the [`rclcpp`/`rclpy` QoS] API, and the [Fast DDS XML] file's QoS elements. Configuration depends on the environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML`.
+Fast DDS QoS policies can be fully configured through a combination of the [rmw QoS profile] API, and the [Fast DDS XML] file's QoS elements. Configuration depends on the environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML`.
 
 1. ROS 2 QoS contained in [`rmw_qos_profile_t`](http://docs.ros2.org/latest/api/rmw/structrmw__qos__profile__t.html) are always honored, unless set to `*_SYSTEM_DEFAULT`.
 In that case, XML values, or Fast DDS default values in the absences of XML ones, are applied.
@@ -69,7 +69,7 @@ Setting any QoS in `rmw_qos_profile_t` to something other than `*_SYSTEM_DEFAULT
 This tells `rmw_fastrtps` that it should override both the history memory policy and the publication mode using the XML.
 Bear in mind that setting this environment variable but not setting either of these policies in the XML results in Fast DDS' defaults configurations being used.
 
-| RMW_FASTRTPS_USE_QOS_FROM_XML | [`rclcpp`/`rclpy` QoS]    | [Fast DDS XML] QoS                   | [Fast DDS XML] [history memory policy] and [publication mode] |
+| RMW_FASTRTPS_USE_QOS_FROM_XML | [rmw QoS profile]         | [Fast DDS XML] QoS                   | [Fast DDS XML] [history memory policy] and [publication mode] |
 | ----------------------------- | ------------------------- | ------------------------------------ | ------------------------------------- |
 | 0 (default)                   | Use default values        | Ignored - overridden by rclcpp/rclpy | Ignored - overrided by `rmw_fastrtps` |
 | 0 (default)                   | Set to non system default | Ignored - overridden by rclcpp/rclpy | Ignored - overrided by `rmw_fastrtps` |
@@ -78,7 +78,7 @@ Bear in mind that setting this environment variable but not setting either of th
 | 1                             | Set to non system default | Ignored - overridden by rclcpp/rclpy | Used                                  |
 | 1                             | Set to system default     | Used                                 | Used                                  |
 
-[`rclcpp`/`rclpy` QoS]: https://github.com/ros2/rclcpp/blob/master/rclcpp/include/rclcpp/qos.hpp
+[rmw QoS profile]: http://docs.ros2.org/latest/api/rmw/structrmw__qos__profile__t.html
 [Fast DDS XML]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html
 [history memory policy]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#rtpsendpointqos
 [publication mode]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#publishmodeqospolicy
