@@ -97,7 +97,7 @@ __rmw_take_request(
     eprosima::fastcdr::Cdr deser(*request.buffer_, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::Cdr::DDS_CDR);
     if (info->request_type_support_->deserializeROSmessage(
-      deser, ros_request, info->request_type_support_impl_))
+        deser, ros_request, info->request_type_support_impl_))
     {
       // Get header
       rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(

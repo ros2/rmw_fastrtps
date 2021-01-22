@@ -945,7 +945,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
   try {
     // Deserialize encapsulation.
     deser.read_encapsulation();
-  
+
     (void)impl;
     if (members_->member_count_ != 0) {
       return TypeSupport::deserializeROSmessage(deser, members_, ros_message);
@@ -954,8 +954,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
     uint8_t dump = 0;
     deser >> dump;
     (void)dump;
-  }
-  catch(const eprosima::fastcdr::exception::Exception&) {
+  } catch (const eprosima::fastcdr::exception::Exception &) {
     return false;
   }
 

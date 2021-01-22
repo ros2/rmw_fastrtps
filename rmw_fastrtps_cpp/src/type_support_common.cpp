@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <string>
-
 #include <fastcdr/exceptions/Exception.h>
+
+#include <string>
 
 #include "rmw/error_handling.h"
 
@@ -93,19 +93,18 @@ bool TypeSupport::deserializeROSmessage(
   try {
     // Deserialize encapsulation.
     deser.read_encapsulation();
-  
+
     // If type is not empty, deserialize message
     if (has_data_) {
       auto callbacks = static_cast<const message_type_support_callbacks_t *>(impl);
-        return callbacks->cdr_deserialize(deser, ros_message);
+      return callbacks->cdr_deserialize(deser, ros_message);
     }
-  
+
     // Otherwise, consume dummy byte
     uint8_t dump = 0;
     deser >> dump;
     (void)dump;
-  }
-  catch(const eprosima::fastcdr::exception::Exception&) {
+  } catch (const eprosima::fastcdr::exception::Exception &) {
     return false;
   }
 
