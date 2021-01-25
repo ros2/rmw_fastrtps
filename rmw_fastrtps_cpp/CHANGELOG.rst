@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Load profiles based on topic names (`#335 <https://github.com/ros2/rmw_fastrtps/issues/335>`_)
+* Set rmw_dds_common::GraphCache callback after init succeeds. (`#496 <https://github.com/ros2/rmw_fastrtps/issues/496>`_)
+* Handle typesupport errors on fetch. (`#495 <https://github.com/ros2/rmw_fastrtps/issues/495>`_)
+* Contributors: Eduardo Ponz Segrelles, Michel Hidalgo
+
 4.2.0 (2020-12-10)
 ------------------
 
