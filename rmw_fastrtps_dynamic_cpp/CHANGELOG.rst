@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+4.3.0 (2021-01-25)
+------------------
 * Set rmw_dds_common::GraphCache callback after init succeeds. (`#496 <https://github.com/ros2/rmw_fastrtps/issues/496>`_)
 * Handle typesupport errors on fetch. (`#495 <https://github.com/ros2/rmw_fastrtps/issues/495>`_)
 * Contributors: Michel Hidalgo
