@@ -63,7 +63,7 @@ If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and 
 Fast DDS QoS policies can be fully configured through a combination of the [rmw QoS profile] API, and the [Fast DDS XML] file's QoS elements. Configuration depends on the environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML`.
 
 1. ROS 2 QoS contained in [`rmw_qos_profile_t`](http://docs.ros2.org/latest/api/rmw/structrmw__qos__profile__t.html) are always honored, unless set to `*_SYSTEM_DEFAULT`.
-In that case, XML values, or Fast DDS default values in the absences of XML ones, are applied.
+In that case, XML values, or Fast DDS default values in the absence of XML ones, are applied.
 Setting any QoS in `rmw_qos_profile_t` to something other than `*_SYSTEM_DEFAULT` entails that specifying it via XML files has no effect, since they do not override what was used to create the publisher, subscription, service, or client.
 1. In order to modify the history memory policy or publication mode using XML files, environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` must be set to 1 (it is set to 0 by default).
 This tells `rmw_fastrtps` that it should override both the history memory policy and the publication mode using the XML.
