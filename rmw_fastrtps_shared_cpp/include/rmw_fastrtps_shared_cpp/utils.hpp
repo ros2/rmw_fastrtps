@@ -1,4 +1,4 @@
-// Copyright 2019 Open Source Robotics Foundation, Inc.
+// Copyright 2021 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_SHARED_CPP__CREATE_RMW_GID_HPP_
-#define RMW_FASTRTPS_SHARED_CPP__CREATE_RMW_GID_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__UTILS_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__UTILS_HPP_
 
-#include "fastdds/rtps/common/Guid.h"
+#include "fastrtps/types/TypesBase.h"
 
-#include "rmw/types.h"
+#include "rmw/rmw.h"
 
-#include "rmw_fastrtps_shared_cpp/visibility_control.h"
 
 namespace rmw_fastrtps_shared_cpp
 {
 
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
-rmw_gid_t
-create_rmw_gid(const char * identifier, const eprosima::fastrtps::rtps::GUID_t & guid);
+rmw_ret_t cast_error_dds_to_rmw(eprosima::fastrtps::types::ReturnCode_t);
 
-}  // namespace rmw_fastrtps_shared_cpp
+}
 
-#endif  // RMW_FASTRTPS_SHARED_CPP__CREATE_RMW_GID_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__UTILS_HPP_

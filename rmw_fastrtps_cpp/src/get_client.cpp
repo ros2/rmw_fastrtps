@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "fastdds/dds/publisher/DataWriter.hpp"
+#include "fastdds/dds/subscriber/DataReader.hpp"
+
 #include "rmw_fastrtps_cpp/get_client.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
@@ -20,7 +23,7 @@
 namespace rmw_fastrtps_cpp
 {
 
-eprosima::fastrtps::Publisher *
+eprosima::fastdds::dds::DataWriter *
 get_request_publisher(rmw_client_t * client)
 {
   if (!client) {
@@ -33,7 +36,7 @@ get_request_publisher(rmw_client_t * client)
   return impl->request_publisher_;
 }
 
-eprosima::fastrtps::Subscriber *
+eprosima::fastdds::dds::DataReader *
 get_response_subscriber(rmw_client_t * client)
 {
   if (!client) {

@@ -30,9 +30,8 @@ create_subscription(
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
   const rmw_subscription_options_t * subscription_options,
-  bool keyed,
+  bool keyed, // unused
   bool create_subscription_listener);
-
 }  // namespace rmw_fastrtps_cpp
 
 #endif  // RMW_FASTRTPS_CPP__SUBSCRIPTION_HPP_

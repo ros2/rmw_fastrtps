@@ -73,10 +73,10 @@ __rmw_service_server_is_available(
   }
 
   auto pub_topic_name =
-    client_info->request_publisher_->getAttributes().topic.getTopicName().to_string();
+    client_info->request_topic_->get_name();
 
   auto sub_topic_name =
-    client_info->response_subscriber_->getAttributes().topic.getTopicName().to_string();
+    client_info->response_topic_->get_name();
 
   *is_available = false;
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);

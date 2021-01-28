@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw_fastrtps_dynamic_cpp/get_participant.hpp"
+#include "fastdds/dds/domain/DomainParticipant.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
@@ -21,7 +21,7 @@
 namespace rmw_fastrtps_dynamic_cpp
 {
 
-eprosima::fastrtps::Participant *
+eprosima::fastdds::dds::DomainParticipant *
 get_participant(rmw_node_t * node)
 {
   if (!node) {
@@ -31,7 +31,7 @@ get_participant(rmw_node_t * node)
     return nullptr;
   }
   auto impl = static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
-  return impl->participant;
+  return impl->participant_;
 }
 
 }  // namespace rmw_fastrtps_dynamic_cpp

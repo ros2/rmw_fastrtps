@@ -15,9 +15,9 @@
 #ifndef RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_IMPL_HPP_
 #define RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_IMPL_HPP_
 
-#include <fastcdr/FastBuffer.h>
-#include <fastcdr/Cdr.h>
-#include <fastcdr/exceptions/Exception.h>
+#include "fastcdr/Cdr.h"
+#include "fastcdr/FastBuffer.h"
+#include "fastcdr/exceptions/Exception.h"
 
 #include <cassert>
 #include <string>

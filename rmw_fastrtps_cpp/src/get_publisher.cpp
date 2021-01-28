@@ -20,7 +20,7 @@
 namespace rmw_fastrtps_cpp
 {
 
-eprosima::fastrtps::Publisher *
+eprosima::fastdds::dds::DataWriter *
 get_publisher(rmw_publisher_t * publisher)
 {
   if (!publisher) {

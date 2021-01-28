@@ -20,7 +20,8 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "fastrtps/subscriber/Subscriber.h"
+#include "fastdds/dds/subscriber/DataReader.hpp"
+#include "fastdds/dds/subscriber/Subscriber.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
@@ -98,9 +99,9 @@ __rmw_subscription_get_actual_qos(
   rmw_qos_profile_t * qos)
 {
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  eprosima::fastrtps::Subscriber * fastrtps_sub = info->subscriber_;
-  const eprosima::fastrtps::SubscriberAttributes & attributes =
-    fastrtps_sub->getAttributes();
+  eprosima::fastdds::dds::DataReader * fastrtps_sub = info->subscriber_;
+  const eprosima::fastdds::dds::DataReaderQos & attributes =
+    fastrtps_sub->get_qos();
 
   dds_attributes_to_rmw_qos(attributes, qos);
 

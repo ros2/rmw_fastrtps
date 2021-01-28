@@ -15,11 +15,11 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__TYPESUPPORT_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__TYPESUPPORT_HPP_
 
-#include <fastrtps/Domain.h>
-#include <fastrtps/TopicDataType.h>
+#include "fastdds/dds/domain/DomainParticipant.hpp"
+#include "fastdds/dds/topic/TopicDataType.hpp"
 
-#include <fastcdr/FastBuffer.h>
-#include <fastcdr/Cdr.h>
+#include "fastcdr/FastBuffer.h"
+#include "fastcdr/Cdr.h"
 #include <cassert>
 #include <string>
 
@@ -38,7 +38,7 @@ struct SerializedData
   const void * impl;   // RMW implementation specific data
 };
 
-class TypeSupport : public eprosima::fastrtps::TopicDataType
+class TypeSupport : public eprosima::fastdds::dds::TopicDataType
 {
 public:
   virtual size_t getEstimatedSerializedSize(const void * ros_message, const void * impl) const = 0;
@@ -84,15 +84,16 @@ protected:
   bool max_size_bound_;
 };
 
-inline void
-_unregister_type(
-  eprosima::fastrtps::Participant * participant,
-  TypeSupport * typed_typesupport)
-{
-  if (eprosima::fastrtps::Domain::unregisterType(participant, typed_typesupport->getName())) {
-    delete typed_typesupport;
-  }
-}
+// TODO eprosima
+// inline void
+// _unregister_type(
+//   eprosima::fastrtps::Participant * participant,
+//   TypeSupport * typed_typesupport)
+// {
+//   if (eprosima::fastrtps::Domain::unregisterType(participant, typed_typesupport->getName())) {
+//     delete typed_typesupport;
+//   }
+// }
 
 }  // namespace rmw_fastrtps_shared_cpp
 

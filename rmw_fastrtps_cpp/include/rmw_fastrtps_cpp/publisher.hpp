@@ -28,9 +28,8 @@ create_publisher(
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
   const rmw_publisher_options_t * publisher_options,
-  bool keyed,
+  bool keyed, // unused
   bool create_publisher_listener);
-
 }  // namespace rmw_fastrtps_cpp
 
 #endif  // RMW_FASTRTPS_CPP__PUBLISHER_HPP_

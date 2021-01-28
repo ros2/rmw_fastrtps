@@ -15,8 +15,8 @@
 #ifndef RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_IMPL_HPP_
 #define RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_IMPL_HPP_
 
-#include <fastcdr/FastBuffer.h>
-#include <fastcdr/Cdr.h>
+#include "fastcdr/FastBuffer.h"
+#include "fastcdr/Cdr.h"
 #include <cassert>
 #include <sstream>
 #include <string>

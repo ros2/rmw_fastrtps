@@ -24,12 +24,12 @@
 
 #include "fastcdr/FastBuffer.h"
 
-#include "fastrtps/participant/Participant.h"
-#include "fastrtps/publisher/Publisher.h"
-#include "fastrtps/publisher/PublisherListener.h"
-#include "fastrtps/subscriber/Subscriber.h"
-#include "fastrtps/subscriber/SubscriberListener.h"
-#include "fastrtps/subscriber/SampleInfo.h"
+#include "fastdds/dds/domain/DomainParticipant.hpp"
+#include "fastdds/dds/publisher/DataWriter.hpp"
+#include "fastdds/dds/publisher/DataWriterListener.hpp"
+#include "fastdds/dds/subscriber/DataReader.hpp"
+#include "fastdds/dds/subscriber/DataReaderListener.hpp"
+#include "fastdds/dds/subscriber/SampleInfo.hpp"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
@@ -53,11 +53,16 @@ typedef struct CustomServiceInfo
   const void * request_type_support_impl_{nullptr};
   rmw_fastrtps_shared_cpp::TypeSupport * response_type_support_{nullptr};
   const void * response_type_support_impl_{nullptr};
-  eprosima::fastrtps::Subscriber * request_subscriber_{nullptr};
-  eprosima::fastrtps::Publisher * response_publisher_{nullptr};
+  eprosima::fastdds::dds::DataReader * request_subscriber_{nullptr};
+  eprosima::fastdds::dds::DataWriter * response_publisher_{nullptr};
+  eprosima::fastdds::dds::Topic * response_topic_{nullptr};
+  eprosima::fastdds::dds::Topic * request_topic_{nullptr};
+
   ServiceListener * listener_{nullptr};
   ServicePubListener * pub_listener_{nullptr};
-  eprosima::fastrtps::Participant * participant_{nullptr};
+  eprosima::fastdds::dds::DomainParticipant * domainParticipant_{nullptr};
+  eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
+  eprosima::fastdds::dds::Publisher * publisher_{nullptr};
   const char * typesupport_identifier_{nullptr};
 } CustomServiceInfo;
 

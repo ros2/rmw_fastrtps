@@ -15,7 +15,8 @@
 #ifndef RMW_FASTRTPS_DYNAMIC_CPP__GET_SUBSCRIBER_HPP_
 #define RMW_FASTRTPS_DYNAMIC_CPP__GET_SUBSCRIBER_HPP_
 
-#include "fastrtps/subscriber/Subscriber.h"
+#include "fastdds/dds/subscriber/DataReader.hpp"
+
 #include "rmw/rmw.h"
 #include "rmw_fastrtps_dynamic_cpp/visibility_control.h"
 
@@ -30,7 +31,7 @@ namespace rmw_fastrtps_dynamic_cpp
  * \return native FastRTPS subscriber handle if successful, otherwise `NULL`
  */
 RMW_FASTRTPS_DYNAMIC_CPP_PUBLIC
-eprosima::fastrtps::Subscriber *
+eprosima::fastdds::dds::DataReader *
 get_subscriber(rmw_subscription_t * subscription);
 
 }  // namespace rmw_fastrtps_dynamic_cpp

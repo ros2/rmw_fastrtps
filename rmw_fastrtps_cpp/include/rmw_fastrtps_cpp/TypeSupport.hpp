@@ -15,13 +15,11 @@
 #ifndef RMW_FASTRTPS_CPP__TYPESUPPORT_HPP_
 #define RMW_FASTRTPS_CPP__TYPESUPPORT_HPP_
 
-#include <rosidl_runtime_c/string.h>
-#include <rosidl_runtime_c/string_functions.h>
+#include "rosidl_runtime_c/string.h"
+#include "rosidl_runtime_c/string_functions.h"
 
-#include <fastrtps/TopicDataType.h>
-
-#include <fastcdr/FastBuffer.h>
-#include <fastcdr/Cdr.h>
+#include "fastcdr/Cdr.h"
+#include "fastcdr/FastBuffer.h"
 #include <cassert>
 #include <string>
 

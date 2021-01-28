@@ -18,8 +18,8 @@
 #include <sstream>
 #include <string>
 
-#include "fastrtps/Domain.h"
-#include "fastrtps/participant/Participant.h"
+#include "fastdds/dds/domain/DomainParticipant.hpp"
+#include "fastdds/dds/topic/TopicDataType.hpp"
 
 #include "rmw/error_handling.h"
 
@@ -63,10 +63,11 @@ _create_type_name(
 
 inline void
 _register_type(
-  eprosima::fastrtps::Participant * participant,
+  eprosima::fastdds::dds::DomainParticipant * participant,
   rmw_fastrtps_shared_cpp::TypeSupport * typed_typesupport)
 {
-  eprosima::fastrtps::Domain::registerType(participant, typed_typesupport);
+  // TODO eprosima
+  // eprosima::fastrtps::Domain::registerType(participant, typed_typesupport);
 }
 
 #endif  // TYPE_SUPPORT_COMMON_HPP_

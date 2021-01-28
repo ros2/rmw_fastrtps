@@ -17,8 +17,6 @@
 #include "fastcdr/Cdr.h"
 #include "fastcdr/FastBuffer.h"
 
-#include "fastrtps/subscriber/Subscriber.h"
-
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/impl/cpp/macros.hpp"

@@ -13,23 +13,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <limits.h>
+#include <limits.h"
 #include <string>
 #include <memory>
 
-#include "fastrtps/config.h"
-#include "fastrtps/Domain.h"
-#include "fastrtps/attributes/ParticipantAttributes.h"
-#include "fastrtps/attributes/PublisherAttributes.h"
-#include "fastrtps/attributes/SubscriberAttributes.h"
-#include "fastrtps/participant/Participant.h"
-#include "fastrtps/publisher/Publisher.h"
-#include "fastrtps/publisher/PublisherListener.h"
-#include "fastrtps/rtps/common/Locator.h"
-#include "fastrtps/subscriber/Subscriber.h"
-#include "fastrtps/subscriber/SubscriberListener.h"
-#include "fastrtps/subscriber/SampleInfo.h"
-#include "fastrtps/transport/UDPv4TransportDescriptor.h"
+#include "fastdds/dds/domain/DomainParticipantFactory.hpp"
+#include "fastdds/dds/domain/qos/DomainParticipantQos.hpp"
+#include "fastdds/dds/publisher/qos/PublisherQos.hpp"
+#include "fastdds/dds/subscriber/qos/SubscriberQos.hpp"
 
 #include "rcutils/filesystem.h"
 #include "rcutils/get_env.h"
@@ -40,13 +31,6 @@
 #include "rmw_fastrtps_shared_cpp/participant.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_security_logging.hpp"
-
-using Domain = eprosima::fastrtps::Domain;
-using IPLocator = eprosima::fastrtps::rtps::IPLocator;
-using Locator_t = eprosima::fastrtps::rtps::Locator_t;
-using Participant = eprosima::fastrtps::Participant;
-using ParticipantAttributes = eprosima::fastrtps::ParticipantAttributes;
-using UDPv4TransportDescriptor = eprosima::fastrtps::rtps::UDPv4TransportDescriptor;
 
 #if FASTRTPS_VERSION_MAJOR >= 2
 #include "fastdds/rtps/transport/shared_mem/SharedMemTransportDescriptor.h"
@@ -90,53 +74,101 @@ get_security_file_paths(
 }
 #endif
 
-static
+// Private function to create Participant with QoS
 CustomParticipantInfo *
 __create_participant(
   const char * identifier,
-  const ParticipantAttributes & participantAttrs,
+  DomainParticipantQos domainParticipantQos,
   bool leave_middleware_default_qos,
   publishing_mode_t publishing_mode,
-  rmw_dds_common::Context * common_context)
+  rmw_dds_common::Context * common_context,
+  size_t domain_id)
 {
+  /////
   // Declare everything before beginning to create things.
-  ::ParticipantListener * listener = nullptr;
-  Participant * participant = nullptr;
   CustomParticipantInfo * participant_info = nullptr;
 
-  try {
-    listener = new ::ParticipantListener(
-      identifier, common_context);
-  } catch (std::bad_alloc &) {
-    RMW_SET_ERROR_MSG("failed to allocate participant listener");
-    goto fail;
-  }
-
-  participant = Domain::createParticipant(participantAttrs, listener);
-  if (!participant) {
-    RMW_SET_ERROR_MSG("create_node() could not create participant");
-    return nullptr;
-  }
-
+  /////
+  // Create Custom Participant
   try {
     participant_info = new CustomParticipantInfo();
   } catch (std::bad_alloc &) {
-    RMW_SET_ERROR_MSG("failed to allocate node impl struct");
-    goto fail;
+    RMW_SET_ERROR_MSG("__create_participant failed to allocate CustomParticipantInfo struct");
   }
+  // lambda to delete participant info
+  auto cleanup_participant_info = rcpputils::make_scope_exit(
+    [participant_info]() {
+      delete participant_info;
+    });
+
+  /////
+  // Create listener
+  try {
+    participant_info->listener_ = new ::ParticipantListener(
+      identifier, common_context);
+  } catch (std::bad_alloc &) {
+    RMW_SET_ERROR_MSG("__create_participant failed to allocate participant listener");
+  }
+  // lambda to delete listener
+  auto cleanup_listener = rcpputils::make_scope_exit(
+    [participant_info]() {
+      delete participant_info->listener_;
+    });
+
+  /////
+  // Create Participant
+  participant_info->participant_ = eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(
+    domain_id, domainParticipantQos, listener)
+  )
+  if (!participant_info->participant_) {
+    RMW_SET_ERROR_MSG("__create_participant failed to create participant");
+    return nullptr;
+  }
+  // lambda to delete participant
+  auto cleanup_participant = rcpputils::make_scope_exit(
+    [participant_info]() {
+      delete participant_info->participant_;
+    });
+
+  /////
+  // Set participant info parameters
   participant_info->leave_middleware_default_qos = leave_middleware_default_qos;
   participant_info->publishing_mode = publishing_mode;
 
-  participant_info->participant = participant;
-  participant_info->listener = listener;
+  /////
+  // Create Publisher
+  PublisherQos publisherQos = participant_info->participant_->get_default_publisher_qos();
+  publisherQos.entity_factory(domainParticipantQos.entity_factory());
+
+  participant_info->publisher_ = participant_info->participant_->create_publisher(publisherQos);
+  if (!participant_info->publisher_) {
+    RMW_SET_ERROR_MSG("__create_participant could not create publisher");
+    return nullptr;
+  }
+
+  // lambda to delete publisher
+  auto cleanup_publisher = rcpputils::make_scope_exit(
+    [participant_info]() {
+      participant_info->participant->delete_publisher(participant_info->publisher);
+    });
+
+  /////
+  // Create Subscriber
+  SubscriberQos subscriberQos = participant_info->participant_->get_default_subscriber_qos();
+  subscriberQos.entity_factory(domainParticipantQos.entity_factory());
+
+  participant_info->subscriber_ = participant_info->participant_->create_subscriber(subscriberQos);
+  if (!participant_info->subscriber_) {
+    RMW_SET_ERROR_MSG("__create_participant could not create subscriber");
+    return nullptr;
+  }
+
+  cleanup_publisher.cancel();
+  cleanup_participant.cancel();
+  cleanup_listener.cancel();
+  cleanup_participant_info.cancel();
 
   return participant_info;
-fail:
-  rmw_free(listener);
-  if (participant) {
-    Domain::removeParticipant(participant);
-  }
-  return nullptr;
 }
 
 CustomParticipantInfo *
@@ -156,8 +188,13 @@ rmw_fastrtps_shared_cpp::create_participant(
   }
   ParticipantAttributes participantAttrs;
 
+
+  DomainParticipantQos domainParticipantQos;
+
   // Load default XML profile.
-  Domain::getDefaultParticipantAttributes(participantAttrs);
+  DomainParticipantFactory::get_instance()->load_profiles();
+  domainParticipantQos = DomainParticipantFactory::get_instance()->get_default_participant_qos();
+
 
   if (localhost_only) {
     // In order to use the interface white list, we need to disable the default transport config

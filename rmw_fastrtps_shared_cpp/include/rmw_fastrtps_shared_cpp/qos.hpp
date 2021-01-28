@@ -16,24 +16,15 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
 
-#include "fastrtps/attributes/PublisherAttributes.h"
-#include "fastrtps/attributes/SubscriberAttributes.h"
-#include "fastrtps/qos/QosPolicies.h"
-#include "fastrtps/qos/ReaderQos.h"
-#include "fastrtps/qos/WriterQos.h"
+#include <fastdds/dds/publisher/DataWriter.hpp>
+#include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
+#include <fastdds/dds/subscriber/DataReader.hpp>
+#include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
+#include <fastdds/dds/core/policy/QosPolicies.hpp>
 
 #include "rmw/rmw.h"
 
 #include "rmw_fastrtps_shared_cpp/visibility_control.h"
-
-namespace eprosima
-{
-namespace fastrtps
-{
-class SubscriberAttributes;
-class PublisherAttributes;
-}  // namespace fastrtps
-}  // namespace eprosima
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
@@ -43,25 +34,31 @@ RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
-  eprosima::fastrtps::SubscriberAttributes & sattr);
+  eprosima::fastdds::dds::DataReaderQos & dataReaderQos);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
-  eprosima::fastrtps::PublisherAttributes & pattr);
+  eprosima::fastdds::dds::DataWriterQos & dataWriterQos);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+bool
+get_topic_qos(
+  const rmw_qos_profile_t & qos_policies,
+  eprosima::fastdds::dds::TopicQos & topicQos);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_time_t
 dds_duration_to_rmw(const eprosima::fastrtps::Duration_t & duration);
 
 /*
- * Converts the low-level QOS Policy; of type WriterQos or ReaderQos into rmw_qos_profile_t.
- * Since WriterQos or ReaderQos does not have information about history and depth, these values are not set
+ * Converts the low-level QOS Policy; of type DataWriterQos or DataReaderQos into rmw_qos_profile_t.
+ * Since DataWriterQos or DataReaderQos does not have information about history and depth, these values are not set
  * by this function.
  *
- * \param[in] dds_qos of type WriterQos or ReaderQos
- * \param[out] qos the equivalent of the data in WriterQos or ReaderQos in rmw_qos_profile_t
+ * \param[in] dds_qos of type DataWriterQos or DataReaderQos
+ * \param[out] qos the equivalent of the data in DataWriterQos or DataReaderQos in rmw_qos_profile_t
  */
 template<typename DDSQoSPolicyT>
 void
@@ -69,7 +66,7 @@ dds_qos_to_rmw_qos(
   const DDSQoSPolicyT & dds_qos,
   rmw_qos_profile_t * qos)
 {
-  switch (dds_qos.m_reliability.kind) {
+  switch (dds_qos.reliability().kind) {
     case eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS:
       qos->reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
       break;
@@ -81,7 +78,7 @@ dds_qos_to_rmw_qos(
       break;
   }
 
-  switch (dds_qos.m_durability.kind) {
+  switch (dds_qos.durability().kind) {
     case eprosima::fastrtps::TRANSIENT_LOCAL_DURABILITY_QOS:
       qos->durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
       break;
@@ -93,10 +90,10 @@ dds_qos_to_rmw_qos(
       break;
   }
 
-  qos->deadline = dds_duration_to_rmw(dds_qos.m_deadline.period);
-  qos->lifespan = dds_duration_to_rmw(dds_qos.m_lifespan.duration);
+  qos->deadline = dds_duration_to_rmw(dds_qos.deadline().period);
+  qos->lifespan = dds_duration_to_rmw(dds_qos.lifespan().duration);
 
-  switch (dds_qos.m_liveliness.kind) {
+  switch (dds_qos.liveliness().kind) {
     case eprosima::fastrtps::AUTOMATIC_LIVELINESS_QOS:
       qos->liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
       break;
@@ -107,7 +104,8 @@ dds_qos_to_rmw_qos(
       qos->liveliness = RMW_QOS_POLICY_LIVELINESS_UNKNOWN;
       break;
   }
-  qos->liveliness_lease_duration = dds_duration_to_rmw(dds_qos.m_liveliness.lease_duration);
+
+  qos->liveliness_lease_duration = dds_duration_to_rmw(dds_qos.liveliness().lease_duration);
 }
 
 template<typename AttributeT>
@@ -117,15 +115,13 @@ dds_attributes_to_rmw_qos(
   rmw_qos_profile_t * qos);
 
 extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
-void
-dds_attributes_to_rmw_qos<eprosima::fastrtps::PublisherAttributes>(
-  const eprosima::fastrtps::PublisherAttributes & dds_qos,
+void dds_attributes_to_rmw_qos<eprosima::fastdds::dds::DataWriterQos>(
+  const eprosima::fastdds::dds::DataWriterQos & dds_qos,
   rmw_qos_profile_t * qos);
 
 extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
-void
-dds_attributes_to_rmw_qos<eprosima::fastrtps::SubscriberAttributes>(
-  const eprosima::fastrtps::SubscriberAttributes & dds_qos,
+void dds_attributes_to_rmw_qos<eprosima::fastdds::dds::DataReaderQos>(
+  const eprosima::fastdds::dds::DataReaderQos & dds_qos,
   rmw_qos_profile_t * qos);
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__QOS_HPP_

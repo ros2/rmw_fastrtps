@@ -20,7 +20,7 @@
 namespace rmw_fastrtps_dynamic_cpp
 {
 
-eprosima::fastrtps::Publisher *
+eprosima::fastdds::dds::DataWriter *
 get_request_publisher(rmw_client_t * client)
 {
   if (!client) {
@@ -33,7 +33,7 @@ get_request_publisher(rmw_client_t * client)
   return impl->request_publisher_;
 }
 
-eprosima::fastrtps::Subscriber *
+eprosima::fastdds::dds::DataReader *
 get_response_subscriber(rmw_client_t * client)
 {
   if (!client) {

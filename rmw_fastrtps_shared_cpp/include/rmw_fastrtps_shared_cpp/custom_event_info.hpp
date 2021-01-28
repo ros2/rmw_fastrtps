@@ -24,13 +24,6 @@
 
 #include "fastcdr/FastBuffer.h"
 
-#include "fastrtps/subscriber/SampleInfo.h"
-#include "fastrtps/subscriber/Subscriber.h"
-#include "fastrtps/subscriber/SubscriberListener.h"
-#include "fastrtps/participant/Participant.h"
-#include "fastrtps/publisher/Publisher.h"
-#include "fastrtps/publisher/PublisherListener.h"
-
 #include "rmw/event.h"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"

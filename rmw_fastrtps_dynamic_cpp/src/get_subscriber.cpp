@@ -20,7 +20,7 @@
 namespace rmw_fastrtps_dynamic_cpp
 {
 
-eprosima::fastrtps::Subscriber *
+eprosima::fastdds::dds::DataReader *
 get_subscriber(rmw_subscription_t * subscription)
 {
   if (!subscription) {

@@ -21,8 +21,8 @@
 #include <set>
 #include <utility>
 
-#include "fastrtps/subscriber/Subscriber.h"
-#include "fastrtps/subscriber/SubscriberListener.h"
+#include "fastdds/dds/subscriber/DataReader.hpp"
+#include "fastdds/dds/subscriber/DataReaderListener.hpp"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
@@ -38,8 +38,9 @@ struct CustomSubscriberInfo : public CustomEventInfo
 {
   virtual ~CustomSubscriberInfo() = default;
 
-  eprosima::fastrtps::Subscriber * subscriber_{nullptr};
+  eprosima::fastdds::dds::DataReader * subscriber_ {nullptr};
   SubListener * listener_{nullptr};
+  eprosima::fastdds::dds::Topic * topic_{nullptr};
   rmw_fastrtps_shared_cpp::TypeSupport * type_support_{nullptr};
   const void * type_support_impl_{nullptr};
   rmw_gid_t subscription_gid_{};

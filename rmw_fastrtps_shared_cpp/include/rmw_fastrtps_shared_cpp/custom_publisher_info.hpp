@@ -20,8 +20,9 @@
 #include <condition_variable>
 #include <set>
 
-#include "fastrtps/publisher/Publisher.h"
-#include "fastrtps/publisher/PublisherListener.h"
+#include "fastdds/dds/publisher/DataWriter.hpp"
+#include "fastdds/dds/publisher/DataWriterListener.hpp"
+#include "fastdds/dds/topic/Topic.hpp"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rmw/rmw.h"
@@ -36,8 +37,9 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
 {
   virtual ~CustomPublisherInfo() = default;
 
-  eprosima::fastrtps::Publisher * publisher_{nullptr};
+  eprosima::fastdds::dds::DataWriter * publisher_{nullptr};
   PubListener * listener_{nullptr};
+  eprosima::fastdds::dds::Topic * topic_{nullptr};
   rmw_fastrtps_shared_cpp::TypeSupport * type_support_{nullptr};
   const void * type_support_impl_{nullptr};
   rmw_gid_t publisher_gid{};

@@ -20,7 +20,7 @@
 #include <cstring>
 #include <type_traits>
 
-#include "fastrtps/rtps/common/Guid.h"
+#include "fastdds/rtps/common/Guid.h"
 
 namespace rmw_fastrtps_shared_cpp
 {

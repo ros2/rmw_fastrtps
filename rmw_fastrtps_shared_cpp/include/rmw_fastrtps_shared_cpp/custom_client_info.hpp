@@ -25,12 +25,12 @@
 
 #include "fastcdr/FastBuffer.h"
 
-#include "fastrtps/subscriber/SampleInfo.h"
-#include "fastrtps/subscriber/Subscriber.h"
-#include "fastrtps/subscriber/SubscriberListener.h"
-#include "fastrtps/participant/Participant.h"
-#include "fastrtps/publisher/Publisher.h"
-#include "fastrtps/publisher/PublisherListener.h"
+#include "fastdds/dds/domain/DomainParticipant.hpp"
+#include "fastdds/dds/publisher/DataWriter.hpp"
+#include "fastdds/dds/publisher/DataWriterListener.hpp"
+#include "fastdds/dds/subscriber/DataReader.hpp"
+#include "fastdds/dds/subscriber/DataReaderListener.hpp"
+#include "fastdds/dds/subscriber/SampleInfo.hpp"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
@@ -45,12 +45,17 @@ typedef struct CustomClientInfo
   const void * request_type_support_impl_{nullptr};
   rmw_fastrtps_shared_cpp::TypeSupport * response_type_support_{nullptr};
   const void * response_type_support_impl_{nullptr};
-  eprosima::fastrtps::Subscriber * response_subscriber_{nullptr};
-  eprosima::fastrtps::Publisher * request_publisher_{nullptr};
+  eprosima::fastdds::dds::DataReader * response_subscriber_{nullptr};
+  eprosima::fastdds::dds::DataWriter * request_publisher_{nullptr};
+  eprosima::fastdds::dds::Topic * response_topic_{nullptr};
+  eprosima::fastdds::dds::Topic * request_topic_{nullptr};
+
   ClientListener * listener_{nullptr};
   eprosima::fastrtps::rtps::GUID_t writer_guid_;
   eprosima::fastrtps::rtps::GUID_t reader_guid_;
-  eprosima::fastrtps::Participant * participant_{nullptr};
+  eprosima::fastdds::dds::DomainParticipant * domainParticipant_{nullptr};
+  eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
+  eprosima::fastdds::dds::Publisher * publisher_{nullptr};
   const char * typesupport_identifier_{nullptr};
   ClientPubListener * pub_listener_{nullptr};
   std::atomic_size_t response_subscriber_matched_count_;
@@ -61,7 +66,7 @@ typedef struct CustomClientResponse
 {
   eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
   std::unique_ptr<eprosima::fastcdr::FastBuffer> buffer_;
-  eprosima::fastrtps::SampleInfo_t sample_info_ {};
+  eprosima::fastdds::dds::SampleInfo sample_info_ {};
 } CustomClientResponse;
 
 class ClientListener : public eprosima::fastrtps::SubscriberListener

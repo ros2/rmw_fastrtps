@@ -15,7 +15,7 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__RMW_SECURITY_LOGGING_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__RMW_SECURITY_LOGGING_HPP_
 
-#include "fastrtps/rtps/attributes/PropertyPolicy.h"
+#include "fastdds/rtps/attributes/PropertyPolicy.h"
 
 #include "rmw_fastrtps_shared_cpp/visibility_control.h"
 

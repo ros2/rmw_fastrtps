@@ -20,10 +20,11 @@
 #include <string>
 #include <vector>
 
-#include "fastrtps/rtps/common/InstanceHandle.h"
-#include "fastrtps/attributes/ParticipantAttributes.h"
-#include "fastrtps/participant/Participant.h"
-#include "fastrtps/participant/ParticipantListener.h"
+#include "fastdds/dds/domain/DomainParticipant.hpp"
+#include "fastdds/dds/domain/DomainParticipantListener.hpp"
+#include "fastdds/dds/publisher/Publisher.hpp"
+#include "fastdds/dds/subscriber/Subscriber.hpp"
+#include "fastdds/rtps/common/Types.h"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rcutils/logging_macros.h"
@@ -51,8 +52,11 @@ enum class publishing_mode_t
 
 typedef struct CustomParticipantInfo
 {
-  eprosima::fastrtps::Participant * participant;
-  ::ParticipantListener * listener;
+  eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
+  ::DomainParticipantListener * listener_{nullptr};
+
+  eprosima::fastdds::dds::Publisher * publisher_{nullptr};
+  eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
 
   // Flag to establish if the QoS of the participant,
   // its publishers and its subscribers are going
@@ -63,18 +67,18 @@ typedef struct CustomParticipantInfo
   publishing_mode_t publishing_mode;
 } CustomParticipantInfo;
 
-class ParticipantListener : public eprosima::fastrtps::ParticipantListener
+class ParticipantListener : public eprosima::fastdds::dds::DomainParticipantListener
 {
 public:
-  explicit ParticipantListener(
+  explicit DomainParticipantListener(
     const char * identifier,
     rmw_dds_common::Context * context)
   : context(context),
     identifier_(identifier)
   {}
 
-  void onParticipantDiscovery(
-    eprosima::fastrtps::Participant *,
+  void on_participant_discovery(
+    eprosima::fastdds::dds::DomainParticipant *,
     eprosima::fastrtps::rtps::ParticipantDiscoveryInfo && info) override
   {
     switch (info.status) {
@@ -107,8 +111,8 @@ public:
     }
   }
 
-  void onSubscriberDiscovery(
-    eprosima::fastrtps::Participant *,
+  void on_subscriber_discovery(
+    eprosima::fastdds::dds::DomainParticipant *,
     eprosima::fastrtps::rtps::ReaderDiscoveryInfo && info) override
   {
     if (eprosima::fastrtps::rtps::ReaderDiscoveryInfo::CHANGED_QOS_READER != info.status) {
@@ -118,8 +122,8 @@ public:
     }
   }
 
-  void onPublisherDiscovery(
-    eprosima::fastrtps::Participant *,
+  void on_publisher_discovery(
+    eprosima::fastdds::dds::DomainParticipant *,
     eprosima::fastrtps::rtps::WriterDiscoveryInfo && info) override
   {
     if (eprosima::fastrtps::rtps::WriterDiscoveryInfo::CHANGED_QOS_WRITER != info.status) {
@@ -137,7 +141,7 @@ private:
     {
       if (is_alive) {
         rmw_qos_profile_t qos_profile = rmw_qos_profile_unknown;
-        dds_qos_to_rmw_qos(proxyData.m_qos, &qos_profile);
+        dds_qos_to_rmw_qos(proxyData.m_qos, &qos_profile); // TODO eprosima : is this a real QoS or is it Attributes
 
         context->graph_cache.add_entity(
           rmw_fastrtps_shared_cpp::create_rmw_gid(
