@@ -61,13 +61,4 @@ _create_type_name(
   return ss.str();
 }
 
-inline void
-_register_type(
-  eprosima::fastdds::dds::DomainParticipant * participant,
-  rmw_fastrtps_shared_cpp::TypeSupport * typed_typesupport)
-{
-  // TODO eprosima
-  // eprosima::fastrtps::Domain::registerType(participant, typed_typesupport);
-}
-
 #endif  // TYPE_SUPPORT_COMMON_HPP_

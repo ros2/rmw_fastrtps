@@ -38,7 +38,7 @@ __rmw_destroy_client(
   rmw_node_t * node,
   rmw_client_t * client)
 {
-  rmw_ret_t ret = RMW_RET_OK;
+  rmw_ret_t final_ret = RMW_RET_OK;
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   auto info = static_cast<CustomClientInfo *>(client->data);
   {
@@ -56,7 +56,7 @@ __rmw_destroy_client(
     rmw_dds_common::msg::ParticipantEntitiesInfo msg =
       common_context->graph_cache.dissociate_reader(
       gid, common_context->gid, node->name, node->namespace_);
-    ret = rmw_fastrtps_shared_cpp::__rmw_publish(
+    final_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
       identifier,
       common_context->pub,
       static_cast<void *>(&msg),
@@ -67,9 +67,6 @@ __rmw_destroy_client(
   // Delete DataWriter and DataReader
   auto participant_info =
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
-
-  rmw_ret_t ret = RMW_RET_OK;
-  auto info = static_cast<CustomClientInfo *>(client->data);
 
   // NOTE: Topic deletion and unregister type is done in the participant
   if (nullptr != info){
@@ -111,13 +108,13 @@ __rmw_destroy_client(
     // Delete ClientInfo structure
     delete info;
   }else{
-    ret = RMW_RET_INVALID_ARGUMENT;
+    final_ret = RMW_RET_INVALID_ARGUMENT;
   }
 
   rmw_free(const_cast<char *>(client->service_name));
   rmw_client_free(client);
 
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
-  return ret;
+  return final_ret;
 }
 }  // namespace rmw_fastrtps_shared_cpp

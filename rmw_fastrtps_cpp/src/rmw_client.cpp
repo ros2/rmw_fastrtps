@@ -52,7 +52,8 @@ rmw_client_t *
 rmw_create_client(
   const rmw_node_t * node,
   const rosidl_service_type_support_t * type_supports,
-  const char * service_name, const rmw_qos_profile_t * qos_policies)
+  const char * service_name,
+  const rmw_qos_profile_t * qos_policies)
 {
   /////
   // Check input parameters
@@ -147,7 +148,6 @@ rmw_create_client(
       delete info;
     });
 
-  info->participant_ = domainParticipant;
   info->typesupport_identifier_ = type_support->typesupport_identifier;
   info->request_publisher_matched_count_ = 0;
   info->response_subscriber_matched_count_ = 0;
@@ -170,7 +170,6 @@ rmw_create_client(
   std::string request_type_name = _create_type_name(request_members);
   std::string response_type_name = _create_type_name(response_members);
 
-  // These structs are not used in the future, as there is no need to unregister the types
   info->request_type_support_ = new (std::nothrow) RequestTypeSupport_cpp(service_members);
   if (!info->request_type_support_) {
     RMW_SET_ERROR_MSG("failed to allocate request typesupport");
@@ -202,7 +201,7 @@ rmw_create_client(
     return nullptr;
   }
 
-  ReturnCode_t ret = domainParticipant->register_type(
+  ret = domainParticipant->register_type(
     eprosima::fastdds::dds::TypeSupport(new (std::nothrow) ResponseTypeSupport_cpp(service_members)));
   // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
   if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
@@ -217,7 +216,7 @@ rmw_create_client(
     return nullptr;
   }
 
-  auto cleanup_type_support_listener = rcpputils::make_scope_exit(
+  auto cleanup_listener = rcpputils::make_scope_exit(
     [info]() {
       delete info->listener_;
     });
@@ -228,7 +227,7 @@ rmw_create_client(
     return nullptr;
   }
 
-  auto cleanup_type_support_pub_listener = rcpputils::make_scope_exit(
+  auto cleanup_pub_listener = rcpputils::make_scope_exit(
     [info]() {
       delete info->pub_listener_;
     });
@@ -283,6 +282,9 @@ rmw_create_client(
     return nullptr;
   }
 
+  info->request_topic_ = pub_topic_name;
+  info->response_topic_ = sub_topic_name;
+
   // Key word to find DataWrtier and DataReader QoS
   std::string topic_name_fallback = "client";
 
@@ -317,7 +319,7 @@ rmw_create_client(
     info->listener_);
 
   if (!info->response_subscriber_) {
-    RMW_SET_ERROR_MSG("failed to create client request data reader");
+    RMW_SET_ERROR_MSG("failed to create client response data reader");
     return nullptr;
   }
 
@@ -326,10 +328,6 @@ rmw_create_client(
     [subscriber, info]() {
       subscriber->delete_datareader(info->response_subscriber_);
     });
-
-
-  /////
-  // Create response DataWriter
 
   // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill publisher attributes with a publisher profile
   // located based of topic name defined by _create_topic_name(). If no profile is found, a search
@@ -363,7 +361,7 @@ rmw_create_client(
   info->request_publisher_ = publisher->create_datawriter(
     pub_topic,
     dataWriterQos,
-    info->listener_);
+    info->pub_listener_);
 
   if (!info->request_publisher_) {
     RMW_SET_ERROR_MSG("failed to create client request data writer");
@@ -385,10 +383,10 @@ rmw_create_client(
     "************ Client Details *********");
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
-    "Sub Topic %s", sub_topic_name);
+    "Sub Topic %s", sub_topic_name.c_str());
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
-    "Pub Topic %s", pub_topic_name);
+    "Pub Topic %s", pub_topic_name.c_str());
   RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_cpp", "***********");
 
   info->writer_guid_ = info->request_publisher_->guid();
@@ -425,6 +423,7 @@ rmw_create_client(
       common_context->gid,
       node->name,
       node->namespace_);
+
     rmw_gid_t response_subscriber_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
       eprosima_fastrtps_identifier, info->response_subscriber_->guid());
     rmw_dds_common::msg::ParticipantEntitiesInfo msg =
@@ -456,11 +455,11 @@ rmw_create_client(
   cleanup_rmw_client.cancel();
   cleanup_datawriter.cancel();
   cleanup_datareader.cancel();
-  cleanup_type_support_pub_listener.cancel();
-  cleanup_type_support_listener.cancel();
+  cleanup_pub_listener.cancel();
+  cleanup_listener.cancel();
   cleanup_type_support_response.cancel();
   cleanup_type_support_request.cancel();
-  cleanup_info.cancel()
+  cleanup_info.cancel();
   return rmw_client;
 }
 

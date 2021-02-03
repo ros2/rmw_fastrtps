@@ -75,7 +75,7 @@ typedef struct CustomParticipantInfo
 class ParticipantListener : public eprosima::fastdds::dds::DomainParticipantListener
 {
 public:
-  explicit DomainParticipantListener(
+  explicit ParticipantListener(
     const char * identifier,
     rmw_dds_common::Context * context)
   : context(context),
@@ -146,7 +146,7 @@ private:
     {
       if (is_alive) {
         rmw_qos_profile_t qos_profile = rmw_qos_profile_unknown;
-        dds_qos_to_rmw_qos(proxyData.m_qos, &qos_profile); // TODO eprosima : is this a real QoS or is it Attributes
+        rtps_qos_to_rmw_qos(proxyData.m_qos, &qos_profile); // TODO eprosima : is this a real QoS or is it Attributes
 
         context->graph_cache.add_entity(
           rmw_fastrtps_shared_cpp::create_rmw_gid(

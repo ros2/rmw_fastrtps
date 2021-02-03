@@ -24,6 +24,7 @@
 #include "fastrtps/types/TypesBase.h"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 #include "rmw/rmw.h"
 

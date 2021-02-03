@@ -126,10 +126,10 @@ __rmw_publisher_get_actual_qos(
 {
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
   eprosima::fastdds::dds::DataWriter * fastrtps_pub = info->publisher_;
-  const eprosima::fastdds::dds::DataWriterQos & attributes =
+  const eprosima::fastdds::dds::DataWriterQos & dds_qos =
     fastrtps_pub->get_qos();
 
-  dds_attributes_to_rmw_qos(attributes, qos);
+  dds_qos_to_rmw_qos(dds_qos, qos);
 
   return RMW_RET_OK;
 }

@@ -100,10 +100,10 @@ __rmw_subscription_get_actual_qos(
 {
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   eprosima::fastdds::dds::DataReader * fastrtps_sub = info->subscriber_;
-  const eprosima::fastdds::dds::DataReaderQos & attributes =
+  const eprosima::fastdds::dds::DataReaderQos & dds_qos =
     fastrtps_sub->get_qos();
 
-  dds_attributes_to_rmw_qos(attributes, qos);
+  dds_qos_to_rmw_qos(dds_qos, qos);
 
   return RMW_RET_OK;
 }

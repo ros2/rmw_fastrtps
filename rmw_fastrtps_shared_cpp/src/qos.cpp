@@ -105,10 +105,10 @@ bool fill_entity_qos_from_profile(
   }
 
   // ensure the history depth is at least the requested queue size
-  assert(entity_qos.depth >= 0); // TODO eprosima should not be after initialization?
+  assert(entity_qos.history().depth >= 0); // TODO eprosima should not be after initialization?
   if (
     qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT &&
-    static_cast<size_t>(entity_qos.depth) < qos_policies.depth)
+    static_cast<size_t>(entity_qos.history().depth) < qos_policies.depth)
   {
     if (qos_policies.depth > static_cast<size_t>((std::numeric_limits<int32_t>::max)())) {
       RMW_SET_ERROR_MSG(
@@ -173,15 +173,13 @@ get_datawriter_qos(
 bool
 get_topic_qos(
   const rmw_qos_profile_t & qos_policies,
-  eprosima::fastdds::dds::TopicQos & topicQos)
+  eprosima::fastdds::dds::TopicQos & topic_qos)
 {
   switch (qos_policies.history) {
     case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
-      entity_qos.history().kind = eprosima::fastrtps::KEEP_LAST_HISTORY_QOS;
       topic_qos.history().kind = eprosima::fastrtps::KEEP_LAST_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
-      entity_qos.history().kind = eprosima::fastrtps::KEEP_ALL_HISTORY_QOS;
       topic_qos.history().kind = eprosima::fastrtps::KEEP_ALL_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
@@ -192,10 +190,10 @@ get_topic_qos(
   }
 
   // ensure the history depth is at least the requested queue size
-  assert(topic_qos.depth >= 0); // TODO eprosima should not be after initialization?
+  assert(topic_qos.history().depth >= 0); // TODO eprosima should not be after initialization?
   if (
     qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT &&
-    static_cast<size_t>(topic_qos.depth) < qos_policies.depth)
+    static_cast<size_t>(topic_qos.history().depth) < qos_policies.depth)
   {
     if (qos_policies.depth > static_cast<size_t>((std::numeric_limits<int32_t>::max)())) {
       RMW_SET_ERROR_MSG(
@@ -204,6 +202,8 @@ get_topic_qos(
     }
     topic_qos.history().depth = static_cast<int32_t>(qos_policies.depth);
   }
+
+  return true;
 }
 
 bool
@@ -212,14 +212,13 @@ is_valid_qos(const rmw_qos_profile_t & /* qos_policies */)
   return true;
 }
 
-
-template<typename DDSQoSPolicyT>
+template<typename AttributeT>
 void
-dds_qos_to_rmw_qos
-  const DDSQoSPolicyT & dds_qos,
+dds_attributes_to_rmw_qos(
+  const AttributeT & dds_qos,
   rmw_qos_profile_t * qos)
 {
-  switch (dds_qos.history().kind) {
+  switch (dds_qos.topic.historyQos.kind) {
     case eprosima::fastrtps::KEEP_LAST_HISTORY_QOS:
       qos->history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
       break;
@@ -230,17 +229,26 @@ dds_qos_to_rmw_qos
       qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
       break;
   }
-  qos->depth = static_cast<size_t>(dds_qos.history().depth);
-  dds_qos_to_rmw_qos(dds_qos, qos);
+  qos->depth = static_cast<size_t>(dds_qos.topic.historyQos.depth);
+  rtps_qos_to_rmw_qos(dds_qos.qos, qos);
 }
 
-// TODO eprosima
-// template
-// void dds_attributes_to_rmw_qos<eprosima::fastdds::dds::DataWriterQos>(
-//   const eprosima::fastdds::dds::DataWriterQos & dds_qos,
-//   rmw_qos_profile_t * qos);
+template
+void dds_attributes_to_rmw_qos<eprosima::fastrtps::PublisherAttributes>(
+  const eprosima::fastrtps::PublisherAttributes & dds_qos,
+  rmw_qos_profile_t * qos);
 
-// template
-// void dds_attributes_to_rmw_qos<eprosima::fastdds::dds::DataReaderQos>(
-//   const eprosima::fastdds::dds::DataReaderQos & dds_qos,
-//   rmw_qos_profile_t * qos);
+template
+void dds_attributes_to_rmw_qos<eprosima::fastrtps::SubscriberAttributes>(
+  const eprosima::fastrtps::SubscriberAttributes & dds_qos,
+  rmw_qos_profile_t * qos);
+
+template
+void dds_qos_to_rmw_qos<eprosima::fastdds::dds::DataWriterQos>(
+  const eprosima::fastdds::dds::DataWriterQos & dds_qos,
+  rmw_qos_profile_t * qos);
+
+template
+void dds_qos_to_rmw_qos<eprosima::fastdds::dds::DataReaderQos>(
+  const eprosima::fastdds::dds::DataReaderQos & dds_qos,
+  rmw_qos_profile_t * qos);

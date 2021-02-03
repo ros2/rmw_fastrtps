@@ -58,7 +58,7 @@ create_subscription(
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
   const rmw_subscription_options_t * subscription_options,
-  bool keyed,
+  bool /* keyed */,
   bool create_subscription_listener)
 {
   /////
@@ -147,7 +147,6 @@ create_subscription(
   auto callbacks = static_cast<const message_type_support_callbacks_t *>(type_support->data);
   std::string type_name = _create_type_name(callbacks);
 
-  // This struct is not used in the future, as there is no need to unregister the types
   info->type_support_ = new (std::nothrow) MessageTypeSupport_cpp(callbacks);
   if (!info->type_support_) {
     RMW_SET_ERROR_MSG("create_subscription() failed to allocate MessageTypeSupport");

@@ -53,7 +53,7 @@ rmw_fastrtps_cpp::create_publisher(
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
   const rmw_publisher_options_t * publisher_options,
-  bool keyed, // always false
+  bool /* keyed */,
   bool create_publisher_listener)
 {
   /////
@@ -141,7 +141,6 @@ rmw_fastrtps_cpp::create_publisher(
   auto callbacks = static_cast<const message_type_support_callbacks_t *>(type_support->data);
   std::string type_name = _create_type_name(callbacks);
 
-  // This struct is not used in the future, as there is no need to unregister the types
   info->type_support_ = new (std::nothrow) MessageTypeSupport_cpp(callbacks);
   if (!info->type_support_) {
     RMW_SET_ERROR_MSG("create_publisher() failed to allocate MessageTypeSupport");
@@ -160,12 +159,6 @@ rmw_fastrtps_cpp::create_publisher(
     eprosima::fastdds::dds::TypeSupport(new (std::nothrow) MessageTypeSupport_cpp(callbacks)));
   // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
   if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
-    return nullptr;
-  }
-
-  /////
-  // Check ROS QoS
-  if (!is_valid_qos(*qos_policies)) {
     return nullptr;
   }
 

@@ -32,7 +32,7 @@ get_participant(rmw_node_t * node)
     return nullptr;
   }
   auto impl = static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
-  return impl->participant;
+  return impl->participant_;
 }
 
 }  // namespace rmw_fastrtps_cpp

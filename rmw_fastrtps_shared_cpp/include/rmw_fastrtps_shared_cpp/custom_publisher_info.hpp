@@ -20,6 +20,7 @@
 #include <mutex>
 #include <set>
 
+#include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
 #include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
 #include "fastdds/dds/topic/Topic.hpp"
@@ -69,9 +70,9 @@ public:
     const eprosima::fastdds::dds::PublicationMatchedStatus & info) final
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
-    if (eprosima::fastrtps::rtps::MATCHED_MATCHING == info.status) {
+    if (info.current_count_change == 1) {
       subscriptions_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
-    } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == info.status) {
+    } else if (info.current_count_change == -1) {
       subscriptions_.erase(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
     }
   }
@@ -128,11 +129,11 @@ private:
     RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::atomic_bool deadline_changes_;
-  eprosima::fastrtps::OfferedDeadlineMissedStatus offered_deadline_missed_status_
+  eprosima::fastdds::dds::OfferedDeadlineMissedStatus offered_deadline_missed_status_
     RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::atomic_bool liveliness_changes_;
-  eprosima::fastrtps::LivelinessLostStatus liveliness_lost_status_
+  eprosima::fastdds::dds::LivelinessLostStatus liveliness_lost_status_
     RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);

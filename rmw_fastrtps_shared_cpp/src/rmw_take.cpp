@@ -125,8 +125,8 @@ _take_sequence(
     data_seq[i].impl = info->type_support_impl_;
   }
 
-
-  ReturnCode_t ret = info->subscriber_->take(data_seq, info_seq, count);
+  ReturnCode_t take_ret = info->subscriber_->take(data_seq, info_seq, count);
+  static_cast<void> (take_ret);
 
   // Update hasData from listener
   info->listener_->update_unread_count(info->subscriber_);
@@ -289,10 +289,13 @@ _take_serialized_message(
   data.is_cdr_buffer = true;
   data.data = &buffer;
   data.impl = nullptr;    // not used when is_cdr_buffer is true
-  if (info->subscriber_->takeNextData(&data, &sinfo)) {
+
+  if (info->subscriber_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
+
+    // Update hasData from listener
     info->listener_->update_unread_count(info->subscriber_);
 
-    if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
+    if (eprosima::fastdds::dds::ALIVE_INSTANCE_STATE == sinfo.instance_state) {
       auto buffer_size = static_cast<size_t>(buffer.getBufferSize());
       if (serialized_message->buffer_capacity < buffer_size) {
         auto ret = rmw_serialized_message_resize(serialized_message, buffer_size);

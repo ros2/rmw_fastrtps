@@ -65,6 +65,8 @@ rmw_create_service(
   const rosidl_service_type_support_t * type_supports,
   const char * service_name, const rmw_qos_profile_t * qos_policies)
 {
+  /////
+  // Check input parameters
   RMW_CHECK_ARGUMENT_FOR_NULL(node, nullptr);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     node,
@@ -155,7 +157,6 @@ rmw_create_service(
       delete info;
     });
 
-  info->participant_ = domainParticipant;
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
   /////
@@ -208,7 +209,7 @@ rmw_create_service(
     return nullptr;
   }
 
-  ReturnCode_t ret = domainParticipant->register_type(
+  ret = domainParticipant->register_type(
     eprosima::fastdds::dds::TypeSupport(new (std::nothrow) ResponseTypeSupport_cpp(service_members)));
   // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
   if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
@@ -368,7 +369,7 @@ rmw_create_service(
   info->response_publisher_ = publisher->create_datawriter(
     pub_topic,
     dataWriterQos,
-    info->listener_);
+    info->pub_listener_);
 
   if (!info->response_publisher_) {
     RMW_SET_ERROR_MSG("failed to create client request data writer");
@@ -390,10 +391,10 @@ rmw_create_service(
     "************ Service Details *********");
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
-    "Sub Topic %s", subscriberParam.topic.topicName.c_str());
+    "Sub Topic %s", sub_topic_name.c_str());
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
-    "Pub Topic %s", publisherParam.topic.topicName.c_str());
+    "Pub Topic %s", pub_topic_name.c_str());
   RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_cpp", "***********");
 
   rmw_service_t * rmw_service = rmw_service_allocate();

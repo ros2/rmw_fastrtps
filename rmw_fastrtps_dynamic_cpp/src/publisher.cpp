@@ -15,7 +15,12 @@
 
 #include <string>
 
-#include "fastrtps/xmlparser/XMLProfileManager.h"
+#include "fastdds/dds/domain/DomainParticipant.hpp"
+#include "fastdds/dds/publisher/Publisher.hpp"
+#include "fastdds/dds/publisher/qos/DataWriterQos.hpp"
+#include "fastdds/dds/topic/TypeSupport.hpp"
+#include "fastdds/dds/topic/Topic.hpp"
+#include "fastdds/dds/topic/qos/TopicQos.hpp"
 
 #include "rcutils/error_handling.h"
 
@@ -32,6 +37,7 @@
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 #include "rmw_fastrtps_dynamic_cpp/publisher.hpp"
@@ -39,12 +45,7 @@
 #include "type_support_common.hpp"
 #include "type_support_registry.hpp"
 
-using BaseTypeSupport = rmw_fastrtps_dynamic_cpp::BaseTypeSupport;
-using Domain = eprosima::fastrtps::Domain;
-using Participant = eprosima::fastrtps::Participant;
-using TopicDataType = eprosima::fastrtps::TopicDataType;
 using TypeSupportProxy = rmw_fastrtps_dynamic_cpp::TypeSupportProxy;
-using XMLProfileManager = eprosima::fastrtps::xmlparser::XMLProfileManager;
 
 rmw_publisher_t *
 rmw_fastrtps_dynamic_cpp::create_publisher(
@@ -56,6 +57,8 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   bool keyed,
   bool create_publisher_listener)
 {
+  /////
+  // Check input parameters
   (void)keyed;
   (void)create_publisher_listener;
 
@@ -81,9 +84,22 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(publisher_options, nullptr);
 
-  Participant * participant = participant_info->participant;
-  RMW_CHECK_ARGUMENT_FOR_NULL(participant, nullptr);
+  /////
+  // Check ROS QoS
+  if (!is_valid_qos(*qos_policies)) {
+    return nullptr;
+  }
 
+  /////
+  // Get Participant and Publisher
+  eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
+  RMW_CHECK_ARGUMENT_FOR_NULL(domainParticipant, nullptr);
+
+  eprosima::fastdds::dds::Publisher * publisher = participant_info->publisher_;
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, nullptr);
+
+  /////
+  // Get RMW Type Support
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
   if (!type_support) {
@@ -108,30 +124,23 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
     return nullptr;
   }
 
-  // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
-  // publisher which profile name matches with topic_name. If such profile does not exist,
-  // then use the default attributes.
-  eprosima::fastrtps::PublisherAttributes publisherParam;
-  Domain::getDefaultPublisherAttributes(publisherParam);  // Loads the XML file if not loaded
-  XMLProfileManager::fillPublisherAttributes(topic_name, publisherParam, false);
-
+  /////
+  // Create the RMW Publisher struct (info)
   CustomPublisherInfo * info = nullptr;
-  rmw_publisher_t * rmw_publisher = nullptr;
 
   info = new (std::nothrow) CustomPublisherInfo();
   if (!info) {
-    RMW_SET_ERROR_MSG("failed to allocate CustomPublisherInfo");
+    RMW_SET_ERROR_MSG("create_publisher() failed to allocate CustomPublisherInfo");
     return nullptr;
   }
+
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info, participant]() {
-      if (info->type_support_) {
-        _unregister_type(participant, info->type_support_);
-      }
-      delete info->listener_;
+    [info]() {
       delete info;
     });
 
+  /////
+  // Create the Type Support struct
   TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
   auto type_impl = type_registry.get_message_type_support(type_support);
   if (!type_impl) {
@@ -146,34 +155,123 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   info->typesupport_identifier_ = type_support->typesupport_identifier;
   info->type_support_impl_ = type_impl;
 
+  info->type_support_ = new (std::nothrow) TypeSupportProxy(type_impl);
+  if (!info->type_support_) {
+    RMW_SET_ERROR_MSG("create_publisher() failed to allocate MessageTypeSupport");
+    return nullptr;
+  }
+  auto cleanup_type_support = rcpputils::make_scope_exit(
+    [info]() {
+      delete info->type_support_;
+    });
+
+  /////
+  // Register the Type in the participant
   std::string type_name = _create_type_name(
     type_support->data, info->typesupport_identifier_);
-  if (
-    !Domain::getRegisteredType(
-      participant, type_name.c_str(),
-      reinterpret_cast<TopicDataType **>(&info->type_support_)))
-  {
-    info->type_support_ = new (std::nothrow) TypeSupportProxy(type_impl);
-    if (!info->type_support_) {
-      RMW_SET_ERROR_MSG("failed to allocate TypeSupportProxy");
-      return nullptr;
-    }
-    _register_type(participant, info->type_support_);
+
+  ReturnCode_t ret = domainParticipant->register_type(
+    eprosima::fastdds::dds::TypeSupport(new (std::nothrow) TypeSupportProxy(type_impl)));
+  // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
+  if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
+    return nullptr;
   }
 
+  /////
+  // Create Listener
+  info->listener_ = nullptr;
+  if (create_publisher_listener) {
+    info->listener_ = new (std::nothrow) PubListener(info);
+  }
+
+  if (!info->listener_) {
+    RMW_SET_ERROR_MSG("create_publisher() could not create publisher listener");
+    return nullptr;
+  }
+
+  auto cleanup_listener = rcpputils::make_scope_exit(
+    [info]() {
+      delete info->listener_;
+    });
+
+  /////
+  // Create and register Topic
+
+  // Create Topic name
+  auto topic_name_mangled =
+    _create_topic_name(qos_policies, ros_topic_prefix, topic_name).to_string();
+
+  // Use Topic Qos Default
+  eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
+
+  if (!get_topic_qos(*qos_policies, topicQos)) {
+    return nullptr;
+  }
+
+  // General function to create or get an already existing topic
+  eprosima::fastdds::dds::TopicDescription * des_topic =
+      rmw_fastrtps_shared_cpp::create_topic_rmw(
+          participant_info,
+          topic_name_mangled,
+          type_name,
+          topicQos);
+
+  if (des_topic == nullptr) {
+    RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
+    return nullptr;
+  }
+
+  eprosima::fastdds::dds::Topic * topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(des_topic);
+  if (des_topic == nullptr) {
+    RMW_SET_ERROR_MSG("create_publisher() failed, publisher topic can only be of class Topic");
+    return nullptr;
+  }
+
+  /////
+  // Create DataWriter
+
+  // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
+  // datawriter which profile name matches with topic_name. If such profile does not exist,
+  // then use the default QoS.
+  eprosima::fastdds::dds::DataWriterQos dataWriterQos = publisher->get_default_datawriter_qos();
+
+  // Try to load the profile with the topic name
+  // It does not need to check the return code, as if the profile does not exist, the QoS is already the default
+  publisher->get_datawriter_qos_from_profile(topic_name, dataWriterQos);
+
+  // Modify specific DataWriter Qos
   if (!participant_info->leave_middleware_default_qos) {
-    publisherParam.historyMemoryPolicy =
-      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-    if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS) {
-      publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
-    } else if (participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
-      publisherParam.qos.m_publishMode.kind = eprosima::fastrtps::SYNCHRONOUS_PUBLISH_MODE;
+    if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS){
+      dataWriterQos.publish_mode().kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
+    }else if(participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
+      dataWriterQos.publish_mode().kind = eprosima::fastrtps::SYNCHRONOUS_PUBLISH_MODE;
     }
+
+    dataWriterQos.endpoint().history_memory_policy =
+      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
 
-  publisherParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
-  publisherParam.topic.topicDataType = type_name;
-  publisherParam.topic.topicName = _create_topic_name(qos_policies, ros_topic_prefix, topic_name);
+  // Get QoS from ROS
+  if (!get_datawriter_qos(*qos_policies, dataWriterQos)) {
+    return nullptr;
+  }
+
+  // Creates DataWriter (with publisher name to not change name policy)
+  info->publisher_ = publisher->create_datawriter(
+    topic,
+    dataWriterQos,
+    info->listener_);
+
+  if (!info->publisher_) {
+    RMW_SET_ERROR_MSG("create_publisher() could not create data writer");
+    return nullptr;
+  }
+
+  // lambda to delete datawriter
+  auto cleanup_datawriter = rcpputils::make_scope_exit(
+    [publisher, info]() {
+      publisher->delete_datawriter(info->publisher_);
+    });
 
   // 1 Heartbeat every 10ms
   // publisherParam.times.heartbeatPeriod.seconds = 0;
@@ -183,34 +281,15 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   // ThroughputControllerDescriptor throughputController{3000000, 10};
   // publisherParam.throughputController = throughputController;
 
-  if (!get_datawriter_qos(*qos_policies, publisherParam)) {
-    return nullptr;
-  }
-
-  info->listener_ = new (std::nothrow) PubListener(info);
-  if (!info->listener_) {
-    RMW_SET_ERROR_MSG("create_publisher() could not create publisher listener");
-    return nullptr;
-  }
-
-  info->publisher_ = Domain::createPublisher(participant, publisherParam, info->listener_);
-  if (!info->publisher_) {
-    RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
-    return nullptr;
-  }
-  auto cleanup_publisher = rcpputils::make_scope_exit(
-    [info]() {
-      if (!Domain::removePublisher(info->publisher_)) {
-        RMW_SAFE_FWRITE_TO_STDERR(
-          "Failed to remove publisher after '"
-          RCUTILS_STRINGIFY(__function__) "' failed.\n");
-      }
-    });
-
+  /////
+  // Create RMW GID
   info->publisher_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
-    eprosima_fastrtps_identifier, info->publisher_->getGuid());
+    eprosima_fastrtps_identifier, info->publisher_->guid());
 
-  rmw_publisher = rmw_publisher_allocate();
+  /////
+  // Allocate publisher
+  rmw_publisher_t * rmw_publisher = rmw_publisher_allocate();
+
   if (!rmw_publisher) {
     RMW_SET_ERROR_MSG("failed to allocate publisher");
     return nullptr;
@@ -235,8 +314,10 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   rmw_publisher->options = *publisher_options;
 
   cleanup_rmw_publisher.cancel();
-  cleanup_publisher.cancel();
-  cleanup_info.cancel();
+  cleanup_datawriter.cancel();
+  cleanup_listener.cancel();
+  cleanup_type_support.cancel();
   return_type_support.cancel();
+  cleanup_info.cancel();
   return rmw_publisher;
 }

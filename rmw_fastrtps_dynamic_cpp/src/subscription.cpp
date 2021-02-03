@@ -15,6 +15,14 @@
 #include <string>
 #include <utility>
 
+#include "fastdds/dds/domain/DomainParticipant.hpp"
+#include "fastdds/dds/subscriber/Subscriber.hpp"
+#include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
+#include "fastdds/dds/topic/TypeSupport.hpp"
+#include "fastdds/dds/topic/Topic.hpp"
+#include "fastdds/dds/topic/TopicDataType.hpp"
+#include "fastdds/dds/topic/qos/TopicQos.hpp"
+
 #include "rcutils/error_handling.h"
 
 #include "rmw/allocators.h"
@@ -30,6 +38,7 @@
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 #include "fastrtps/participant/Participant.h"
 #include "fastrtps/subscriber/Subscriber.h"
@@ -40,13 +49,6 @@
 
 #include "type_support_common.hpp"
 #include "type_support_registry.hpp"
-
-using BaseTypeSupport = rmw_fastrtps_dynamic_cpp::BaseTypeSupport;
-using Domain = eprosima::fastrtps::Domain;
-using Participant = eprosima::fastrtps::Participant;
-using TopicDataType = eprosima::fastrtps::TopicDataType;
-using TypeSupportProxy = rmw_fastrtps_dynamic_cpp::TypeSupportProxy;
-using XMLProfileManager = eprosima::fastrtps::xmlparser::XMLProfileManager;
 
 namespace rmw_fastrtps_dynamic_cpp
 {
@@ -61,6 +63,8 @@ create_subscription(
   bool keyed,
   bool create_subscription_listener)
 {
+  /////
+  // Check input parameters
   RMW_CHECK_ARGUMENT_FOR_NULL(participant_info, nullptr);
   RMW_CHECK_ARGUMENT_FOR_NULL(type_supports, nullptr);
   RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, nullptr);
@@ -85,9 +89,22 @@ create_subscription(
   (void)keyed;
   (void)create_subscription_listener;
 
-  Participant * participant = participant_info->participant;
-  RMW_CHECK_FOR_NULL_WITH_MSG(participant, "participant handle is null", return nullptr);
+  /////
+  // Check ROS QoS
+  if (!is_valid_qos(*qos_policies)) {
+    return nullptr;
+  }
 
+  /////
+  // Get Participant and Subscriber
+  eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
+  RMW_CHECK_FOR_NULL_WITH_MSG(domainParticipant, "participant handle is null", return nullptr);
+
+  eprosima::fastdds::dds::Subscriber * subscriber = participant_info->subscriber_;
+  RMW_CHECK_ARGUMENT_FOR_NULL(subscriber, nullptr);
+
+  /////
+  // Get RMW Type Support
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
   if (!type_support) {
@@ -108,93 +125,147 @@ create_subscription(
     }
   }
 
-  if (!is_valid_qos(*qos_policies)) {
-    return nullptr;
-  }
+  /////
+  // Create the RMW Subscriber struct (info)
+  CustomSubscriberInfo * info = nullptr;
 
-  // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
-  // subscriber which profile name matches with topic_name. If such profile does not exist, then use
-  // the default attributes.
-  eprosima::fastrtps::SubscriberAttributes subscriberParam;
-  Domain::getDefaultSubscriberAttributes(subscriberParam);  // Loads the XML file if not loaded
-  XMLProfileManager::fillSubscriberAttributes(topic_name, subscriberParam, false);
-
-  CustomSubscriberInfo * info = new (std::nothrow) CustomSubscriberInfo();
+  info = new (std::nothrow) CustomSubscriberInfo();
   if (!info) {
     RMW_SET_ERROR_MSG("failed to allocate CustomSubscriberInfo");
     return nullptr;
   }
+
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info, participant, type_support]() {
-      if (info->type_support_impl_) {
-        TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
-        type_registry.return_message_type_support(type_support);
-      }
-      if (info->type_support_) {
-        _unregister_type(participant, info->type_support_);
-      }
-      delete info->listener_;
+    [info]() {
       delete info;
     });
 
+  /////
+  // Create the Type Support struct
   TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
   auto type_support_impl = type_registry.get_message_type_support(type_support);
   if (!type_support_impl) {
     RMW_SET_ERROR_MSG("failed to allocate type support");
     return nullptr;
   }
+  auto return_type_support = rcpputils::make_scope_exit(
+    [&type_registry, type_support]() {
+      type_registry.return_message_type_support(type_support);
+    });
+
   info->typesupport_identifier_ = type_support->typesupport_identifier;
   info->type_support_impl_ = type_support_impl;
 
+  info->type_support_ = new (std::nothrow) TypeSupportProxy(type_support_impl);
+  if (!info->type_support_) {
+    RMW_SET_ERROR_MSG("create_subscription() failed to allocate MessageTypeSupport");
+    return nullptr;
+  }
+  auto cleanup_type_support = rcpputils::make_scope_exit(
+    [info]() {
+      delete info->type_support_;
+    });
+
   std::string type_name = _create_type_name(
     type_support->data, info->typesupport_identifier_);
-  if (
-    !Domain::getRegisteredType(
-      participant, type_name.c_str(),
-      reinterpret_cast<TopicDataType **>(&info->type_support_)))
-  {
-    info->type_support_ = new (std::nothrow) TypeSupportProxy(type_support_impl);
-    if (!info->type_support_) {
-      RMW_SET_ERROR_MSG("failed to allocate TypeSupportProxy");
-      return nullptr;
-    }
-    _register_type(participant, info->type_support_);
+
+  /////
+  // Register the Type in the participant
+  // When a type is registered in a participant, it is converted to a shared_ptr, so it is dangerous to keep
+  // using it. Thus we use a new TypeSupport created only to register it.
+  ReturnCode_t ret = domainParticipant->register_type(
+    eprosima::fastdds::dds::TypeSupport(new (std::nothrow) TypeSupportProxy(type_support_impl)));
+  // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
+  if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
+    return nullptr;
   }
 
+  /////
+  // Create Listener
+  info->listener_ = nullptr;
+  if (create_subscription_listener) {
+    info->listener_ = new (std::nothrow) SubListener(info);
+  }
+
+  if (!info->listener_) {
+    RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
+    return nullptr;
+  }
+
+  auto cleanup_listener = rcpputils::make_scope_exit(
+    [info]() {
+      delete info->listener_;
+    });
+
+  /////
+  // Create Topic
+
+  // Create Topic name
+  auto topic_name_mangled =
+    _create_topic_name(qos_policies, ros_topic_prefix, topic_name).to_string();
+
+  // Use Topic Qos Default
+  eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
+
+  if (!get_topic_qos(*qos_policies, topicQos)) {
+    return nullptr;
+  }
+
+  // General function to create or get an already existing topic
+  eprosima::fastdds::dds::TopicDescription * des_topic =
+      rmw_fastrtps_shared_cpp::create_topic_rmw(
+          participant_info,
+          topic_name_mangled,
+          type_name,
+          topicQos);
+
+  if (des_topic == nullptr) {
+    RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
+    return nullptr;
+  }
+
+  /////
+  // Create DataReader
+
+  // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
+  // datareader which profile name matches with topic_name. If such profile does not exist,
+  // then use the default QoS.
+  eprosima::fastdds::dds::DataReaderQos dataReaderQos = subscriber->get_default_datareader_qos();
+
+  // Try to load the profile with the topic name
+  // It does not need to check the return code, as if the profile does not exist, the QoS is already the default
+  subscriber->get_datareader_qos_from_profile(topic_name, dataReaderQos);
+
   if (!participant_info->leave_middleware_default_qos) {
-    subscriberParam.historyMemoryPolicy =
+    dataReaderQos.endpoint().history_memory_policy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
 
-  subscriberParam.topic.topicKind = eprosima::fastrtps::rtps::NO_KEY;
-  subscriberParam.topic.topicDataType = type_name;
-  subscriberParam.topic.topicName = _create_topic_name(qos_policies, ros_topic_prefix, topic_name);
-
-  if (!get_datareader_qos(*qos_policies, subscriberParam)) {
+  if (!get_datareader_qos(*qos_policies, dataReaderQos)) {
     return nullptr;
   }
 
-  info->listener_ = new (std::nothrow) SubListener(info);
-  if (!info->listener_) {
-    RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber listener");
-    return nullptr;
-  }
+  // Creates DataReader (with subscriber name to not change name policy)
+  info->subscriber_ = subscriber->create_datareader(
+    des_topic,
+    dataReaderQos,
+    info->listener_);
 
-  info->subscriber_ = Domain::createSubscriber(participant, subscriberParam, info->listener_);
   if (!info->subscriber_) {
-    RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber");
+    RMW_SET_ERROR_MSG("create_subscriber() could not create data reader");
     return nullptr;
   }
-  auto cleanup_subscription = rcpputils::make_scope_exit(
-    [info]() {
-      if (!Domain::removeSubscriber(info->subscriber_)) {
-        RMW_SAFE_FWRITE_TO_STDERR(
-          "Failed to remove subscriber after '"
-          RCUTILS_STRINGIFY(__function__) "' failed.\n");
-      }
+
+  // lambda to delete datareader
+  auto cleanup_datareader = rcpputils::make_scope_exit(
+    [subscriber, info]() {
+      subscriber->delete_datareader(info->subscriber_);
     });
+
+  /////
+  // Create RMW GID
   info->subscription_gid_ = rmw_fastrtps_shared_cpp::create_rmw_gid(
-    eprosima_fastrtps_identifier, info->subscriber_->getGuid());
+    eprosima_fastrtps_identifier, info->subscriber_->guid());
 
   rmw_subscription_t * rmw_subscription = rmw_subscription_allocate();
   if (!rmw_subscription) {
@@ -221,7 +292,10 @@ create_subscription(
   rmw_subscription->can_loan_messages = false;
 
   cleanup_rmw_subscription.cancel();
-  cleanup_subscription.cancel();
+  cleanup_datareader.cancel();
+  cleanup_listener.cancel();
+  cleanup_type_support.cancel();
+  return_type_support.cancel();
   cleanup_info.cancel();
   return rmw_subscription;
 }

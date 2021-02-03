@@ -152,7 +152,7 @@ init_context_impl(rmw_context_t * context)
   }
 
   common_context->gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
-    eprosima_fastrtps_identifier, participant_info->participant->guid());
+    eprosima_fastrtps_identifier, participant_info->participant_->guid());
   common_context->pub = publisher.get();
   common_context->sub = subscription.get();
   common_context->graph_guard_condition = graph_guard_condition.get();
