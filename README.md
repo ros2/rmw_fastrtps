@@ -60,26 +60,49 @@ If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and 
 
 ### Full QoS configuration
 
-With `rmw_fastrtps`, it is possible to fully configure Fast DDS using an XML file as described in [Fast DDS documentation](https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html).
-When configuring the middleware using XML files, there are certain points that have to be taken into account:
+Fast DDS QoS policies can be fully configured through a combination of the [rmw QoS profile] API, and the [Fast DDS XML] file's QoS elements. Configuration depends on the environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML`.
 
 1. ROS 2 QoS contained in [`rmw_qos_profile_t`](http://docs.ros2.org/latest/api/rmw/structrmw__qos__profile__t.html) are always honored, unless set to `*_SYSTEM_DEFAULT`.
-In that case, XML values, or Fast DDS default values in the absences of XML ones, are applied.
+In that case, XML values, or Fast DDS default values in the absence of XML ones, are applied.
 Setting any QoS in `rmw_qos_profile_t` to something other than `*_SYSTEM_DEFAULT` entails that specifying it via XML files has no effect, since they do not override what was used to create the publisher, subscription, service, or client.
 1. In order to modify the history memory policy or publication mode using XML files, environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` must be set to 1 (it is set to 0 by default).
 This tells `rmw_fastrtps` that it should override both the history memory policy and the publication mode using the XML.
 Bear in mind that setting this environment variable but not setting either of these policies in the XML results in Fast DDS' defaults configurations being used.
-Current Fast-DDS defaults are:
 
-    * [History memory policy](https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#rtpsendpointqos): `PREALLOCATED_MEMORY_MODE`.
-    * [Publication mode](https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#publishmodeqospolicy): `SYNCHRONOUS_PUBLISH_MODE`.
+| RMW_FASTRTPS_USE_QOS_FROM_XML | [rmw QoS profile]         | [Fast DDS XML] QoS                          | [Fast DDS XML] [history memory policy] and [publication mode] |
+| ----------------------------- | ------------------------- | ------------------------------------------- | ------------------------------------------------------------- |
+| 0 (default)                   | Use default values        | Ignored - overridden by `rmw_qos_profile_t` | Ignored - overrided by `rmw_fastrtps`                         |
+| 0 (default)                   | Set to non system default | Ignored - overridden by `rmw_qos_profile_t` | Ignored - overrided by `rmw_fastrtps`                         |
+| 0 (default)                   | Set to system default     | Used                                        | Ignored - overrided by `rmw_fastrtps`                         |
+| 1                             | Use default values        | Ignored - overridden by `rmw_qos_profile_t` | Used                                                          |
+| 1                             | Set to non system default | Ignored - overridden by `rmw_qos_profile_t` | Used                                                          |
+| 1                             | Set to system default     | Used                                        | Used                                                          |
 
-1. Setting `RMW_FASTRTPS_USE_QOS_FROM_XML` effectively overrides whatever configuration was set with `RMW_FASTRTPS_PUBLICATION_MODE`, setting the publication mode to Fast DDS' default publication mode unless specified otherwise using an XML file.
+[rmw QoS profile]: http://docs.ros2.org/latest/api/rmw/structrmw__qos__profile__t.html
+[Fast DDS XML]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html
+[history memory policy]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#rtpsendpointqos
+[publication mode]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#publishmodeqospolicy
+
+Note: Setting `RMW_FASTRTPS_USE_QOS_FROM_XML` to 1 effectively overrides whatever configuration was set with `RMW_FASTRTPS_PUBLICATION_MODE`.
+Furthermore, If `RMW_FASTRTPS_USE_QOS_FROM_XML` is set to 1, and [history memory policy] or [publication mode] are not specified in the XML, then the Fast DDS' default configurations will be used:
+
+* [history memory policy] : `PREALLOCATED_MEMORY_MODE`.
+* [publication mode] : `SYNCHRONOUS_PUBLISH_MODE`.
 
 There are two ways of telling a ROS 2 application which XML to use:
 
 1. Placing your XML file in the running directory under the name `DEFAULT_FASTRTPS_PROFILES.xml`.
 1. Setting environment variable `FASTRTPS_DEFAULT_PROFILES_FILE` to contain the path to your XML file (relative to the working directory).
+
+To verify the actual QoS settings using rmw:
+
+```cpp
+// Create a publisher within a node with specific topic, type support, options, and QoS
+rmw_publisher_t* rmw_publisher = rmw_create_publisher(node, type_support, topic_name, qos_profile, publisher_options);
+// Check the actual QoS set on the publisher
+rmw_qos_profile_t qos;
+rmw_publisher_get_actual_qos(rmw_publisher, &qos);
+```
 
 #### Applying different profiles to different entities
 
