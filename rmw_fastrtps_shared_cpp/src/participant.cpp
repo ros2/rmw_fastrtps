@@ -13,7 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <limits.h"
+#include <limits.h>
 #include <string>
 #include <memory>
 
@@ -78,7 +78,7 @@ get_security_file_paths(
 CustomParticipantInfo *
 __create_participant(
   const char * identifier,
-  DomainParticipantQos domainParticipantQos,
+  eprosima::fastdds::dds::DomainParticipantQos domainParticipantQos,
   bool leave_middleware_default_qos,
   publishing_mode_t publishing_mode,
   rmw_dds_common::Context * common_context,
@@ -104,7 +104,7 @@ __create_participant(
   /////
   // Create listener
   try {
-    participant_info->listener_ = new ::ParticipantListener(
+    participant_info->listener_ = new ParticipantListener(
       identifier, common_context);
   } catch (std::bad_alloc &) {
     RMW_SET_ERROR_MSG("__create_participant failed to allocate participant listener");
@@ -118,7 +118,7 @@ __create_participant(
   /////
   // Create Participant
   participant_info->participant_ = eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(
-    domain_id, domainParticipantQos, listener)
+    domain_id, domainParticipantQos, participant_info->listener_)
   )
   if (!participant_info->participant_) {
     RMW_SET_ERROR_MSG("__create_participant failed to create participant");
@@ -335,9 +335,21 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
     RMW_SET_ERROR_MSG("participant_info is null");
     return RMW_RET_ERROR;
   }
-  Domain::removeParticipant(participant_info->participant);
-  delete participant_info->listener;
-  participant_info->listener = nullptr;
+
+  // Topics must be deleted before delete the participant
+  for (auto topic : participant_info->topics_list_)
+  {
+    participant_info->participant_->delete_topic(topic);
+  }
+
+  // Delete Domain Participant
+  ReturnCode_t ret = eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(
+    participant_info->participant_);
+
+  // Delete Listener
+  delete participant_info->listener_;
+
+  // Delete Custom Participant
   delete participant_info;
 
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion

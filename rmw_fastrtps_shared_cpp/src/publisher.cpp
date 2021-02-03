@@ -23,6 +23,7 @@
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 #include "rmw_fastrtps_shared_cpp/publisher.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
@@ -38,17 +39,39 @@ destroy_publisher(
   assert(publisher->implementation_identifier == identifier);
   static_cast<void>(identifier);
 
+  // Get RMW Publisher
+  rmw_ret_t ret = RMW_RET_OK;
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  Domain::removePublisher(info->publisher_);
-  delete info->listener_;
 
-  _unregister_type(participant_info->participant, info->type_support_);
-  delete info;
+  // NOTE: Topic deletion and unregister type is done in the participant
+  if (nullptr != info){
+    // Delete DataWriter
+    ReturnCode_t ret = participant_info->publisher_->delete_datawriter(info->publisher_);
+    if (ret != ReturnCode_t::RETCODE_OK) {
+      RMW_SET_ERROR_MSG("Fail in delete datareader");
+      return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+    }
+
+    // Delete DataWriter listener
+    if (nullptr != info->listener_){
+      delete info->listener_;
+    }
+
+    // Delete type support inside subscription
+    if (info->type_support_ != nullptr) {
+      delete info->type_support_;
+    }
+
+    // Delete PublisherInfo structure
+    delete info;
+  }else{
+    ret = RMW_RET_INVALID_ARGUMENT;
+  }
 
   rmw_free(const_cast<char *>(publisher->topic_name));
   rmw_publisher_free(publisher);
 
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
-  return RMW_RET_OK;
+  return ret;
 }
 }  // namespace rmw_fastrtps_shared_cpp

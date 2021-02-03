@@ -40,7 +40,6 @@ struct CustomSubscriberInfo : public CustomEventInfo
 
   eprosima::fastdds::dds::DataReader * subscriber_ {nullptr};
   SubListener * listener_{nullptr};
-  eprosima::fastdds::dds::Topic * topic_{nullptr};
   rmw_fastrtps_shared_cpp::TypeSupport * type_support_{nullptr};
   const void * type_support_impl_{nullptr};
   rmw_gid_t subscription_gid_{};
@@ -51,11 +50,11 @@ struct CustomSubscriberInfo : public CustomEventInfo
   getListener() const final;
 };
 
-class SubListener : public EventListenerInterface, public eprosima::fastrtps::SubscriberListener
+class SubListener : public EventListenerInterface, public eprosima::fastdds::dds::DataReaderListener
 {
 public:
   explicit SubListener(CustomSubscriberInfo * info)
-  : data_(0),
+  : data_(false),
     deadline_changes_(false),
     liveliness_changes_(false),
     conditionMutex_(nullptr),
@@ -67,36 +66,37 @@ public:
 
   // SubscriberListener implementation
   void
-  onSubscriptionMatched(
-    eprosima::fastrtps::Subscriber * sub, eprosima::fastrtps::rtps::MatchingInfo & info) final
+  on_subscription_matched(
+    eprosima::fastdds::dds::DataReader * reader,
+    const eprosima::fastdds::dds::SubscriptionMatchedStatus & info) final
   {
     {
       std::lock_guard<std::mutex> lock(internalMutex_);
-      if (eprosima::fastrtps::rtps::MATCHED_MATCHING == info.status) {
-        publishers_.insert(info.remoteEndpointGuid);
-      } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == info.status) {
-        publishers_.erase(info.remoteEndpointGuid);
+      if (info.current_count_change == 1) {
+        publishers_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
+      } else if (info.current_count_change == -1) {
+        publishers_.erase(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
       }
     }
-    update_unread_count(sub);
+    update_unread_count(reader);
   }
 
   void
-  onNewDataMessage(eprosima::fastrtps::Subscriber * sub) final
+  on_data_available(eprosima::fastdds::dds::DataReader * reader) final
   {
-    update_unread_count(sub);
+    update_unread_count(reader);
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void
   on_requested_deadline_missed(
-    eprosima::fastrtps::Subscriber *,
+    eprosima::fastdds::dds::DataReader *,
     const eprosima::fastrtps::RequestedDeadlineMissedStatus &) final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void
   on_liveliness_changed(
-    eprosima::fastrtps::Subscriber *,
+    eprosima::fastdds::dds::DataReader *,
     const eprosima::fastrtps::LivelinessChangedStatus &) final;
 
   // EventListenerInterface implementation
@@ -128,23 +128,27 @@ public:
   bool
   hasData() const
   {
-    return data_.load(std::memory_order_relaxed) > 0;
+    return data_.load(std::memory_order_relaxed);
   }
 
   void
-  update_unread_count(eprosima::fastrtps::Subscriber * sub)
+  update_unread_count(eprosima::fastdds::dds::DataReader * reader)
   {
+    // TODO (eprosima)
     // Make sure to call into Fast-RTPS before taking the lock to avoid an
     // ABBA deadlock between internalMutex_ and mutexes inside of Fast-RTPS.
-#if FASTRTPS_VERSION_MAJOR == 1 && FASTRTPS_VERSION_MINOR < 9
-    uint64_t unread_count = sub->getUnreadCount();
-#else
-    uint64_t unread_count = sub->get_unread_count();
-#endif
+    eprosima::fastdds::dds::SampleInfo info;
+    ReturnCode_t has_data_ret = reader->get_first_untaken_info(&info);
+
+    // In case there is data, get_first_untaken_info return OK. Else it returs NO_DATA
+    bool has_data = false;
+    if (has_data_ret == ReturnCode_t::RETCODE_OK){
+      has_data = true;
+    }
 
     std::lock_guard<std::mutex> lock(internalMutex_);
     ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
-    data_.store(unread_count, std::memory_order_relaxed);
+    data_.store(has_data, std::memory_order_relaxed);
   }
 
   size_t publisherCount()
@@ -156,7 +160,7 @@ public:
 private:
   mutable std::mutex internalMutex_;
 
-  std::atomic_size_t data_;
+  std::atomic_bool data_;
 
   std::atomic_bool deadline_changes_;
   eprosima::fastrtps::RequestedDeadlineMissedStatus requested_deadline_missed_status_

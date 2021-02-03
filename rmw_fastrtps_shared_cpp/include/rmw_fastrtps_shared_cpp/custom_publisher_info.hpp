@@ -16,8 +16,8 @@
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 
 #include <atomic>
-#include <mutex>
 #include <condition_variable>
+#include <mutex>
 #include <set>
 
 #include "fastdds/dds/publisher/DataWriter.hpp"
@@ -39,7 +39,6 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
 
   eprosima::fastdds::dds::DataWriter * publisher_{nullptr};
   PubListener * listener_{nullptr};
-  eprosima::fastdds::dds::Topic * topic_{nullptr};
   rmw_fastrtps_shared_cpp::TypeSupport * type_support_{nullptr};
   const void * type_support_impl_{nullptr};
   rmw_gid_t publisher_gid{};
@@ -50,7 +49,7 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   getListener() const final;
 } CustomPublisherInfo;
 
-class PubListener : public EventListenerInterface, public eprosima::fastrtps::PublisherListener
+class PubListener : public EventListenerInterface, public eprosima::fastdds::dds::DataWriterListener
 {
 public:
   explicit PubListener(CustomPublisherInfo * info)
@@ -65,29 +64,29 @@ public:
   // PublisherListener implementation
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void
-  onPublicationMatched(
-    eprosima::fastrtps::Publisher * pub, eprosima::fastrtps::rtps::MatchingInfo & info) final
+  on_publication_matched(
+    eprosima::fastdds::dds::DataWriter * /* writer */,
+    const eprosima::fastdds::dds::PublicationMatchedStatus & info) final
   {
-    (void) pub;
     std::lock_guard<std::mutex> lock(internalMutex_);
     if (eprosima::fastrtps::rtps::MATCHED_MATCHING == info.status) {
-      subscriptions_.insert(info.remoteEndpointGuid);
+      subscriptions_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
     } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == info.status) {
-      subscriptions_.erase(info.remoteEndpointGuid);
+      subscriptions_.erase(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
     }
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void
   on_offered_deadline_missed(
-    eprosima::fastrtps::Publisher * publisher,
-    const eprosima::fastrtps::OfferedDeadlineMissedStatus & status) final;
+    eprosima::fastdds::dds::DataWriter * writer,
+    const eprosima::fastdds::dds::OfferedDeadlineMissedStatus & status) final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void
   on_liveliness_lost(
-    eprosima::fastrtps::Publisher * publisher,
-    const eprosima::fastrtps::LivelinessLostStatus & status) final;
+    eprosima::fastdds::dds::DataWriter * writer,
+    const eprosima::fastdds::dds::LivelinessLostStatus & status) final;
 
 
   // EventListenerInterface implementation

@@ -41,6 +41,7 @@
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/subscription.hpp"
@@ -87,6 +88,12 @@ create_subscription(
   RMW_CHECK_ARGUMENT_FOR_NULL(subscription_options, nullptr);
 
   /////
+  // Check ROS QoS
+  if (!is_valid_qos(*qos_policies)) {
+    return nullptr;
+  }
+
+  /////
   // Get Participant and Subscriber
   eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
   RMW_CHECK_FOR_NULL_WITH_MSG(domainParticipant, "participant handle is null", return nullptr);
@@ -95,7 +102,7 @@ create_subscription(
   RMW_CHECK_ARGUMENT_FOR_NULL(subscriber, nullptr);
 
   /////
-  // Get Type Support
+  // Get RMW Type Support
 
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
     type_supports, RMW_FASTRTPS_CPP_TYPESUPPORT_C);
@@ -157,15 +164,8 @@ create_subscription(
   // using it. Thus we use a new TypeSupport created only to register it.
   ReturnCode_t ret = domainParticipant->register_type(
     eprosima::fastdds::dds::TypeSupport(new (std::nothrow) MessageTypeSupport_cpp(callbacks)));
-  info->type_support_->createData();
   // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
   if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
-    return nullptr;
-  }
-
-  /////
-  // Check ROS QoS
-  if (!is_valid_qos(*qos_policies)) {
     return nullptr;
   }
 
@@ -187,39 +187,31 @@ create_subscription(
     });
 
   /////
-  // Create and register Topic
+  // Create Topic
+
+  // Create Topic name
+  auto topic_name_mangled =
+    _create_topic_name(qos_policies, ros_topic_prefix, topic_name).to_string();
+
+  // Use Topic Qos Default
   eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
 
   if (!get_topic_qos(*qos_policies, topicQos)) {
     return nullptr;
   }
 
-  // Create Topic name
-  auto topic_name_mangled =
-    _create_topic_name(qos_policies, ros_topic_prefix, topic_name).to_string();
+  // General function to create or get an already existing topic
+  eprosima::fastdds::dds::TopicDescription * des_topic =
+      rmw_fastrtps_shared_cpp::create_topic_rmw(
+          participant_info,
+          topic_name_mangled,
+          type_name,
+          topicQos);
 
-  // Create topic
-  // it looks for the topic in case it is already created
-  // info->topic_ = domainParticipant->find_topic(topic_name_mangled, 0); // TODO eprosima
-  if (info->topic_ == nullptr){
-    // the topic does not exist yet it creates a new one
-    info->topic_ = domainParticipant->create_topic(
-      topic_name_mangled,
-      type_name,
-      topicQos);
-  }
-
-  if (info->topic_ == nullptr) {
+  if (des_topic == nullptr) {
     RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
     return nullptr;
   }
-
-  // lambda to unregister topic
-  auto cleanup_topic = rcpputils::make_scope_exit(
-    [domainParticipant, info]() {
-      domainParticipant->delete_topic(info->topic_);
-      info->topic_ = nullptr;
-    });
 
   /////
   // Create DataReader
@@ -233,19 +225,18 @@ create_subscription(
   // It does not need to check the return code, as if the profile does not exist, the QoS is already the default
   subscriber->get_datareader_qos_from_profile(topic_name, dataReaderQos);
 
-
   if (!participant_info->leave_middleware_default_qos) {
     dataReaderQos.endpoint().history_memory_policy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
 
-  if (!get_datareader_qos(*qos_policies, subscriberParam)) {
+  if (!get_datareader_qos(*qos_policies, dataReaderQos)) {
     return nullptr;
   }
 
   // Creates DataReader (with subscriber name to not change name policy)
   info->subscriber_ = subscriber->create_datareader(
-    info->topic_,
+    des_topic,
     dataReaderQos,
     info->listener_);
 
@@ -291,7 +282,6 @@ create_subscription(
 
   cleanup_rmw_subscription.cancel();
   cleanup_datareader.cancel();
-  cleanup_topic.cancel();
   cleanup_listener.cancel();
   cleanup_type_support.cancel();
   cleanup_info.cancel();

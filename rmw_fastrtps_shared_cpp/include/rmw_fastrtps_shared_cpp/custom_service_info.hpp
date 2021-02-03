@@ -60,9 +60,9 @@ typedef struct CustomServiceInfo
 
   ServiceListener * listener_{nullptr};
   ServicePubListener * pub_listener_{nullptr};
-  eprosima::fastdds::dds::DomainParticipant * domainParticipant_{nullptr};
-  eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
-  eprosima::fastdds::dds::Publisher * publisher_{nullptr};
+  // eprosima::fastdds::dds::DomainParticipant * domainParticipant_{nullptr};
+  // eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
+  // eprosima::fastdds::dds::Publisher * publisher_{nullptr};
   const char * typesupport_identifier_{nullptr};
 } CustomServiceInfo;
 

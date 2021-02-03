@@ -23,8 +23,8 @@ CustomPublisherInfo::getListener() const
 
 void
 PubListener::on_offered_deadline_missed(
-  eprosima::fastrtps::Publisher * /* publisher */,
-  const eprosima::fastrtps::OfferedDeadlineMissedStatus & status)
+  eprosima::fastdds::dds::DataWriter * /* writer */,
+  const eprosima::fastdds::dds::OfferedDeadlineMissedStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
 
@@ -41,7 +41,7 @@ PubListener::on_offered_deadline_missed(
 }
 
 void PubListener::on_liveliness_lost(
-  eprosima::fastrtps::Publisher * /* publisher */,
+  eprosima::fastdds::dds::DataWriter * /* writer */,
   const eprosima::fastrtps::LivelinessLostStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);

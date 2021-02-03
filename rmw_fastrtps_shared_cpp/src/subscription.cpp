@@ -19,11 +19,6 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "fastrtps/Domain.h"
-#include "fastrtps/TopicDataType.h"
-#include "fastrtps/participant/Participant.h"
-#include "fastrtps/subscriber/Subscriber.h"
-
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
@@ -31,10 +26,7 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/subscription.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
-
-using Domain = eprosima::fastrtps::Domain;
-using Participant = eprosima::fastrtps::Participant;
-using TopicDataType = eprosima::fastrtps::TopicDataType;
+#include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -47,17 +39,34 @@ destroy_subscription(
   assert(subscription->implementation_identifier == identifier);
   static_cast<void>(identifier);
 
+  // Get RMW Subscriber
   rmw_ret_t ret = RMW_RET_OK;
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  if (!Domain::removeSubscriber(info->subscriber_)) {
-    RMW_SET_ERROR_MSG("failed to remove subscriber");
-    ret = RMW_RET_ERROR;
-  }
-  delete info->listener_;
 
-  Participant * participant = participant_info->participant;
-  _unregister_type(participant, info->type_support_);
-  delete info;
+  // NOTE: Topic deletion and unregister type is done in the participant
+  if (nullptr != info){
+    // Delete DataReader
+    ReturnCode_t ret = participant_info->subscriber_->delete_datareader(info->subscriber_);
+    if (ret != ReturnCode_t::RETCODE_OK) {
+      RMW_SET_ERROR_MSG("Fail in delete datareader");
+      return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+    }
+
+    // Delete DataReader listener
+    if (nullptr != info->listener_){
+      delete info->listener_;
+    }
+
+    // Delete type support inside subscription
+    if (info->type_support_ != nullptr) {
+      delete info->type_support_;
+    }
+
+    // Delete SubscriberInfo structure
+    delete info;
+  }else{
+    ret = RMW_RET_INVALID_ARGUMENT;
+  }
 
   rmw_free(const_cast<char *>(subscription->topic_name));
   rmw_subscription_free(subscription);

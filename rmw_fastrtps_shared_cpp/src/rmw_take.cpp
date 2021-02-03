@@ -17,9 +17,7 @@
 #include "rmw/serialized_message.h"
 #include "rmw/rmw.h"
 
-#include "fastrtps/subscriber/Subscriber.h"
-#include "fastrtps/subscriber/SampleInfo.h"
-#include "fastrtps/attributes/SubscriberAttributes.h"
+#include "fastdds/dds/subscriber/SampleInfo.hpp"
 
 #include "fastcdr/Cdr.h"
 #include "fastcdr/FastBuffer.h"
@@ -35,10 +33,12 @@ void
 _assign_message_info(
   const char * identifier,
   rmw_message_info_t * message_info,
-  const eprosima::fastrtps::SampleInfo_t * sinfo)
+  const eprosima::fastdds::dds::SampleInfo * sinfo)
 {
-  message_info->source_timestamp = sinfo->sourceTimestamp.to_ns();
-  message_info->received_timestamp = sinfo->receptionTimestamp.to_ns();
+  message_info->source_timestamp = sinfo->source_timestamp.to_ns();
+  // TODO (eprosima)
+  // message_info->received_timestamp = sinfo->receive_timestamp.to_ns();
+  message_info->received_timestamp = sinfo->source_timestamp.to_ns();
   rmw_gid_t * sender_gid = &message_info->publisher_gid;
   sender_gid->implementation_identifier = identifier;
   memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
@@ -68,16 +68,19 @@ _take(
   CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
-  eprosima::fastrtps::SampleInfo_t sinfo;
+  eprosima::fastdds::dds::SampleInfo sinfo;
 
   rmw_fastrtps_shared_cpp::SerializedData data;
+
   data.is_cdr_buffer = false;
   data.data = ros_message;
   data.impl = info->type_support_impl_;
-  if (info->subscriber_->takeNextData(&data, &sinfo)) {
+  if (info->subscriber_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
+
+    // Update hasData from listener
     info->listener_->update_unread_count(info->subscriber_);
 
-    if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
+    if (eprosima::fastdds::dds::ALIVE_INSTANCE_STATE == sinfo.instance_state) {
       if (message_info) {
         _assign_message_info(identifier, message_info, &sinfo);
       }
@@ -110,26 +113,32 @@ _take_sequence(
   CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
-  // Limit the upper bound of reads to the number unread at the beginning.
-  // This prevents any samples that are added after the beginning of the
-  // _take_sequence call from being read.
-  auto unread_count = info->subscriber_->get_unread_count();
-  if (unread_count < count) {
-    count = unread_count;
+  // Take every message available (Maximum number of messages<count>)
+  eprosima::fastdds::dds::LoanableSequence<eprosima::fastdds::dds::SampleInfo> info_seq;
+  // Datas must be initialized before calling take
+  eprosima::fastdds::dds::LoanableSequence<rmw_fastrtps_shared_cpp::SerializedData> data_seq(count);
+
+  // Initialize all RMW Type Support Data to send sequence to take
+  for (size_t i = 0; i < count; ++i) {
+    data_seq[i].is_cdr_buffer = false;
+    data_seq[i].data = message_sequence->data[i];
+    data_seq[i].impl = info->type_support_impl_;
   }
 
-  for (size_t ii = 0; ii < count; ++ii) {
-    taken_flag = false;
-    ret = _take(
-      identifier, subscription, message_sequence->data[*taken],
-      &taken_flag, &message_info_sequence->data[*taken], allocation);
 
-    if (ret != RMW_RET_OK) {
-      break;
-    }
+  ReturnCode_t ret = info->subscriber_->take(data_seq, info_seq, count);
 
-    if (taken_flag) {
-      (*taken)++;
+  // Update hasData from listener
+  info->listener_->update_unread_count(info->subscriber_);
+
+  for (size_t ii = 0; ii < info_seq.length(); ++ii) {
+    if (info_seq[ii].valid_data){
+      if (eprosima::fastdds::dds::ALIVE_INSTANCE_STATE == info_seq[ii].instance_state) {
+        if (message_info_sequence->data + *taken) {
+          _assign_message_info(identifier, message_info_sequence->data + *taken, &info_seq[ii]);
+        }
+        (*taken)++;
+      }
     }
   }
 
@@ -274,7 +283,7 @@ _take_serialized_message(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
   eprosima::fastcdr::FastBuffer buffer;
-  eprosima::fastrtps::SampleInfo_t sinfo;
+  eprosima::fastdds::dds::SampleInfo sinfo;
 
   rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = true;

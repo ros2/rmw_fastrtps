@@ -47,15 +47,13 @@ typedef struct CustomClientInfo
   const void * response_type_support_impl_{nullptr};
   eprosima::fastdds::dds::DataReader * response_subscriber_{nullptr};
   eprosima::fastdds::dds::DataWriter * request_publisher_{nullptr};
-  eprosima::fastdds::dds::Topic * response_topic_{nullptr};
-  eprosima::fastdds::dds::Topic * request_topic_{nullptr};
 
   ClientListener * listener_{nullptr};
   eprosima::fastrtps::rtps::GUID_t writer_guid_;
   eprosima::fastrtps::rtps::GUID_t reader_guid_;
-  eprosima::fastdds::dds::DomainParticipant * domainParticipant_{nullptr};
-  eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
-  eprosima::fastdds::dds::Publisher * publisher_{nullptr};
+  // eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
+  // eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
+  // eprosima::fastdds::dds::Publisher * publisher_{nullptr};
   const char * typesupport_identifier_{nullptr};
   ClientPubListener * pub_listener_{nullptr};
   std::atomic_size_t response_subscriber_matched_count_;
@@ -69,7 +67,7 @@ typedef struct CustomClientResponse
   eprosima::fastdds::dds::SampleInfo sample_info_ {};
 } CustomClientResponse;
 
-class ClientListener : public eprosima::fastrtps::SubscriberListener
+class ClientListener : public eprosima::fastdds::dds::DataReaderListener
 {
 public:
   explicit ClientListener(CustomClientInfo * info)
@@ -78,9 +76,9 @@ public:
 
 
   void
-  onNewDataMessage(eprosima::fastrtps::Subscriber * sub)
+  on_data_available(eprosima::fastdds::dds::DataReader * reader)
   {
-    assert(sub);
+    assert(reader);
 
     CustomClientResponse response;
     // Todo(sloretz) eliminate heap allocation pending eprosima/Fast-CDR#19
@@ -90,8 +88,10 @@ public:
     data.is_cdr_buffer = true;
     data.data = response.buffer_.get();
     data.impl = nullptr;    // not used when is_cdr_buffer is true
-    if (sub->takeNextData(&data, &response.sample_info_)) {
-      if (eprosima::fastrtps::rtps::ALIVE == response.sample_info_.sampleKind) {
+    if (reader->take_next_sample(&data, &response.sample_info_) == ReturnCode_t::RETCODE_OK) {
+      if (eprosima::fastdds::dds::InstanceStateKind::ALIVE_INSTANCE_STATE ==
+        response.sample_info_.instance_state)
+      {
         response.sample_identity_ = response.sample_info_.related_sample_identity;
 
         if (response.sample_identity_.writer_guid() == info_->reader_guid_ ||
@@ -151,18 +151,17 @@ public:
     return list_has_data_.load();
   }
 
-  void onSubscriptionMatched(
-    eprosima::fastrtps::Subscriber * sub,
-    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
+  void on_subscription_matched(
+    eprosima::fastdds::dds::DataReader * /* reader */,
+    const eprosima::fastdds::dds::SubscriptionMatchedStatus & info) final
   {
-    (void)sub;
     if (info_ == nullptr) {
       return;
     }
-    if (eprosima::fastrtps::rtps::MATCHED_MATCHING == matchingInfo.status) {
-      publishers_.insert(matchingInfo.remoteEndpointGuid);
-    } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == matchingInfo.status) {
-      publishers_.erase(matchingInfo.remoteEndpointGuid);
+    if (info.current_count_change == 1) {
+      publishers_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
+    } else if (info.current_count_change == -1) {
+      publishers_.erase(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
     } else {
       return;
     }
@@ -190,7 +189,7 @@ private:
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_;
 };
 
-class ClientPubListener : public eprosima::fastrtps::PublisherListener
+class ClientPubListener : public eprosima::fastdds::dds::DataWriterListener
 {
 public:
   explicit ClientPubListener(CustomClientInfo * info)
@@ -198,18 +197,17 @@ public:
   {
   }
 
-  void onPublicationMatched(
-    eprosima::fastrtps::Publisher * pub,
-    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
+  void on_publication_matched(
+    eprosima::fastdds::dds::DataWriter * /* writer */,
+    const eprosima::fastdds::dds::PublicationMatchedStatus & info) final
   {
-    (void) pub;
     if (info_ == nullptr) {
       return;
     }
-    if (eprosima::fastrtps::rtps::MATCHED_MATCHING == matchingInfo.status) {
-      subscriptions_.insert(matchingInfo.remoteEndpointGuid);
-    } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == matchingInfo.status) {
-      subscriptions_.erase(matchingInfo.remoteEndpointGuid);
+    if (info.current_count_change == 1) {
+      subscriptions_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
+    } else if (info.current_count_change == -1) {
+      subscriptions_.erase(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
     } else {
       return;
     }

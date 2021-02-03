@@ -40,10 +40,7 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
-
-using Domain = eprosima::fastrtps::Domain;
-using Participant = eprosima::fastrtps::Participant;
-using TopicDataType = eprosima::fastrtps::TopicDataType;
+#include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -61,14 +58,14 @@ __rmw_destroy_service(
     // Update graph
     std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
     rmw_gid_t gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
-      identifier, info->request_subscriber_->getGuid());
+      identifier, info->request_subscriber_->guid());
     common_context->graph_cache.dissociate_reader(
       gid,
       common_context->gid,
       node->name,
       node->namespace_);
     gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
-      identifier, info->response_publisher_->getGuid());
+      identifier, info->response_publisher_->guid());
     rmw_dds_common::msg::ParticipantEntitiesInfo msg =
       common_context->graph_cache.dissociate_writer(
       gid, common_context->gid, node->name, node->namespace_);
@@ -79,13 +76,56 @@ __rmw_destroy_service(
       nullptr);
   }
 
-  Domain::removeSubscriber(info->request_subscriber_);
-  Domain::removePublisher(info->response_publisher_);
-  delete info->pub_listener_;
-  delete info->listener_;
-  _unregister_type(info->participant_, info->request_type_support_);
-  _unregister_type(info->participant_, info->response_type_support_);
-  delete info;
+  /////
+  // Delete DataWriter and DataReader
+  auto participant_info =
+    static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
+
+  rmw_ret_t ret = RMW_RET_OK;
+  auto info = static_cast<CustomServiceInfo *>(service->data);
+
+  // NOTE: Topic deletion and unregister type is done in the participant
+  if (nullptr != info){
+
+    // Delete DataReader
+    ReturnCode_t ret = participant_info->subscriber_->delete_datareader(info->request_subscriber_);
+    if (ret != ReturnCode_t::RETCODE_OK) {
+      RMW_SET_ERROR_MSG("Fail in delete datareader");
+      return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+    }
+
+    // Delete DataReader listener
+    if (nullptr != info->listener_){
+      delete info->listener_;
+    }
+
+    // Delete DataWriter
+    ret = participant_info->publisher_->delete_datawriter(info->response_publisher_);
+    if (ret != ReturnCode_t::RETCODE_OK) {
+      RMW_SET_ERROR_MSG("Fail in delete datareader");
+      return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+    }
+
+    // Delete DataWriter listener
+    if (nullptr != info->pub_listener_){
+      delete info->pub_listener_;
+    }
+
+    // Delete request type support inside subscription
+    if (info->request_type_support_ != nullptr) {
+      delete info->request_type_support_;
+    }
+
+    // Delete response type support inside subscription
+    if (info->response_type_support_ != nullptr) {
+      delete info->response_type_support_;
+    }
+
+    // Delete ServiceInfo structure
+    delete info;
+  }else{
+    ret = RMW_RET_INVALID_ARGUMENT;
+  }
 
   rmw_free(const_cast<char *>(service->service_name));
   rmw_service_free(service);

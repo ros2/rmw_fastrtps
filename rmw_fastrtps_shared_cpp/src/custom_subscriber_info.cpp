@@ -23,7 +23,7 @@ CustomSubscriberInfo::getListener() const
 
 void
 SubListener::on_requested_deadline_missed(
-  eprosima::fastrtps::Subscriber * /* subscriber */,
+  eprosima::fastdds::dds::DataReader * /* reader */,
   const eprosima::fastrtps::RequestedDeadlineMissedStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
@@ -41,7 +41,7 @@ SubListener::on_requested_deadline_missed(
 }
 
 void SubListener::on_liveliness_changed(
-  eprosima::fastrtps::Subscriber * /* subscriber */,
+  eprosima::fastdds::dds::DataReader * /* reader */,
   const eprosima::fastrtps::LivelinessChangedStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);

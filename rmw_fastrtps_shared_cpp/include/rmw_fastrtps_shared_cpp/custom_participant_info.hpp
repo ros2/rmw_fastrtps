@@ -53,10 +53,15 @@ enum class publishing_mode_t
 typedef struct CustomParticipantInfo
 {
   eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
-  ::DomainParticipantListener * listener_{nullptr};
+  ParticipantListener * listener_{nullptr};
 
   eprosima::fastdds::dds::Publisher * publisher_{nullptr};
   eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
+
+  // Struct to store every topic created in the local domain
+  // These variables needs to be
+  mutable std::vector<eprosima::fastdds::dds::Topic*> topics_list_;
+  mutable std::mutex topic_creation_mutex_;
 
   // Flag to establish if the QoS of the participant,
   // its publishers and its subscribers are going

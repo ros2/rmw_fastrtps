@@ -21,6 +21,7 @@ using ReturnCode_t = eprosima::fastrtps::types::ReturnCode_t;
 
 namespace rmw_fastrtps_shared_cpp
 {
+
 rmw_ret_t cast_error_dds_to_rmw(ReturnCode_t code)
 {
   // not switch because it is not an enum class
@@ -42,4 +43,28 @@ rmw_ret_t cast_error_dds_to_rmw(ReturnCode_t code)
     return RMW_RET_ERROR;
   }
 }
+
+eprosima::fastdds::dds::TopicDescription* create_topic_rmw(
+    const CustomParticipantInfo * participant_info,
+    const std::string& topic_name,
+    const std::string& type_name,
+    const eprosima::fastdds::dds::TopicQos& qos)
+{
+  // This block will lock the topic creations in this participant
+  std::lock_guard<std::mutex> lck (participant_info->topic_creation_mutex_);
+
+  // Searchs for an already existing topic
+  eprosima::fastdds::dds::TopicDescription* des_topic = participant_info->participant_->lookup_topicdescription(topic_name);
+  if (nullptr != des_topic)
+  {
+    // TODO the already existing topic type must fit with the desired type for new topic
+    return des_topic;
+  }
+
+  // Creates topic
+  eprosima::fastdds::dds::Topic* topic = participant_info->participant_->create_topic(topic_name, type_name, qos);
+  participant_info->topics_list_.push_back(topic);
+  return topic;
+}
+
 }  // namespace rmw_fastrtps_shared_cpp
