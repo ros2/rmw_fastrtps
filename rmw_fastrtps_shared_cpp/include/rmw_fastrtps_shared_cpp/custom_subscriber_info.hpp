@@ -134,7 +134,6 @@ public:
   void
   update_unread_count(eprosima::fastdds::dds::DataReader * reader)
   {
-    // TODO (eprosima)
     // Make sure to call into Fast-RTPS before taking the lock to avoid an
     // ABBA deadlock between internalMutex_ and mutexes inside of Fast-RTPS.
     eprosima::fastdds::dds::SampleInfo info;
@@ -142,7 +141,7 @@ public:
 
     // In case there is data, get_first_untaken_info return OK. Else it returs NO_DATA
     bool has_data = false;
-    if (has_data_ret == ReturnCode_t::RETCODE_OK){
+    if (has_data_ret == ReturnCode_t::RETCODE_OK) {
       has_data = true;
     }
 

@@ -195,11 +195,11 @@ rmw_fastrtps_cpp::create_publisher(
 
   // General function to create or get an already existing topic
   eprosima::fastdds::dds::TopicDescription * des_topic =
-      rmw_fastrtps_shared_cpp::create_topic_rmw(
-          participant_info,
-          topic_name_mangled,
-          type_name,
-          topicQos);
+    rmw_fastrtps_shared_cpp::create_topic_rmw(
+    participant_info,
+    topic_name_mangled,
+    type_name,
+    topicQos);
 
   if (des_topic == nullptr) {
     RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
@@ -226,9 +226,9 @@ rmw_fastrtps_cpp::create_publisher(
 
   // Modify specific DataWriter Qos
   if (!participant_info->leave_middleware_default_qos) {
-    if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS){
+    if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS) {
       dataWriterQos.publish_mode().kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
-    }else if(participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
+    } else if (participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
       dataWriterQos.publish_mode().kind = eprosima::fastrtps::SYNCHRONOUS_PUBLISH_MODE;
     }
 

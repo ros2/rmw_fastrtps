@@ -102,7 +102,7 @@ public:
       subscriptions_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
     } else if (info.current_count_change == -1) {
       eprosima::fastrtps::rtps::GUID_t erase_endpoint_guid =
-          eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle);
+        eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle);
       subscriptions_.erase(erase_endpoint_guid);
       auto endpoint = clients_endpoints_.find(erase_endpoint_guid);
       if (endpoint != clients_endpoints_.end()) {
@@ -175,7 +175,7 @@ private:
   std::condition_variable cv_;
 };
 
-class ServiceListener :  public eprosima::fastdds::dds::DataReaderListener
+class ServiceListener : public eprosima::fastdds::dds::DataReaderListener
 {
 public:
   explicit ServiceListener(CustomServiceInfo * info)

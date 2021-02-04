@@ -44,7 +44,7 @@ destroy_publisher(
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
 
   // NOTE: Topic deletion and unregister type is done in the participant
-  if (nullptr != info){
+  if (nullptr != info) {
     // Delete DataWriter
     ReturnCode_t ret = participant_info->publisher_->delete_datawriter(info->publisher_);
     if (ret != ReturnCode_t::RETCODE_OK) {
@@ -53,7 +53,7 @@ destroy_publisher(
     }
 
     // Delete DataWriter listener
-    if (nullptr != info->listener_){
+    if (nullptr != info->listener_) {
       delete info->listener_;
     }
 
@@ -64,7 +64,7 @@ destroy_publisher(
 
     // Delete PublisherInfo structure
     delete info;
-  }else{
+  } else {
     ret = RMW_RET_INVALID_ARGUMENT;
   }
 

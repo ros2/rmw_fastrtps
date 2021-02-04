@@ -60,7 +60,7 @@ typedef struct CustomParticipantInfo
 
   // Struct to store every topic created in the local domain
   // These variables needs to be
-  mutable std::vector<eprosima::fastdds::dds::Topic*> topics_list_;
+  mutable std::vector<eprosima::fastdds::dds::Topic *> topics_list_;
   mutable std::mutex topic_creation_mutex_;
 
   // Flag to establish if the QoS of the participant,
@@ -146,7 +146,7 @@ private:
     {
       if (is_alive) {
         rmw_qos_profile_t qos_profile = rmw_qos_profile_unknown;
-        rtps_qos_to_rmw_qos(proxyData.m_qos, &qos_profile); // TODO eprosima : is this a real QoS or is it Attributes
+        rtps_qos_to_rmw_qos(proxyData.m_qos, &qos_profile);
 
         context->graph_cache.add_entity(
           rmw_fastrtps_shared_cpp::create_rmw_gid(

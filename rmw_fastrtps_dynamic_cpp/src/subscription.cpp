@@ -213,11 +213,11 @@ create_subscription(
 
   // General function to create or get an already existing topic
   eprosima::fastdds::dds::TopicDescription * des_topic =
-      rmw_fastrtps_shared_cpp::create_topic_rmw(
-          participant_info,
-          topic_name_mangled,
-          type_name,
-          topicQos);
+    rmw_fastrtps_shared_cpp::create_topic_rmw(
+    participant_info,
+    topic_name_mangled,
+    type_name,
+    topicQos);
 
   if (des_topic == nullptr) {
     RMW_SET_ERROR_MSG("create_subscription() failed to create topic");

@@ -126,13 +126,13 @@ _take_sequence(
   }
 
   ReturnCode_t take_ret = info->subscriber_->take(data_seq, info_seq, count);
-  static_cast<void> (take_ret);
+  static_cast<void>(take_ret);
 
   // Update hasData from listener
   info->listener_->update_unread_count(info->subscriber_);
 
   for (size_t ii = 0; ii < info_seq.length(); ++ii) {
-    if (info_seq[ii].valid_data){
+    if (info_seq[ii].valid_data) {
       if (eprosima::fastdds::dds::ALIVE_INSTANCE_STATE == info_seq[ii].instance_state) {
         if (message_info_sequence->data + *taken) {
           _assign_message_info(identifier, message_info_sequence->data + *taken, &info_seq[ii]);

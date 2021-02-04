@@ -84,17 +84,6 @@ protected:
   bool max_size_bound_;
 };
 
-// TODO eprosima
-// inline void
-// _unregister_type(
-//   eprosima::fastrtps::Participant * participant,
-//   TypeSupport * typed_typesupport)
-// {
-//   if (eprosima::fastrtps::Domain::unregisterType(participant, typed_typesupport->getName())) {
-//     delete typed_typesupport;
-//   }
-// }
-
 }  // namespace rmw_fastrtps_shared_cpp
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__TYPESUPPORT_HPP_

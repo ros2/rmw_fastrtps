@@ -44,7 +44,7 @@ destroy_subscription(
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
 
   // NOTE: Topic deletion and unregister type is done in the participant
-  if (nullptr != info){
+  if (nullptr != info) {
     // Delete DataReader
     ReturnCode_t ret = participant_info->subscriber_->delete_datareader(info->subscriber_);
     if (ret != ReturnCode_t::RETCODE_OK) {
@@ -53,7 +53,7 @@ destroy_subscription(
     }
 
     // Delete DataReader listener
-    if (nullptr != info->listener_){
+    if (nullptr != info->listener_) {
       delete info->listener_;
     }
 
@@ -64,7 +64,7 @@ destroy_subscription(
 
     // Delete SubscriberInfo structure
     delete info;
-  }else{
+  } else {
     ret = RMW_RET_INVALID_ARGUMENT;
   }
 

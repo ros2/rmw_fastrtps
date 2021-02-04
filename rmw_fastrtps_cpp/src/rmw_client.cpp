@@ -248,11 +248,11 @@ rmw_create_client(
 
   // General function to create or get an already existing topic
   eprosima::fastdds::dds::TopicDescription * des_sub_topic =
-      rmw_fastrtps_shared_cpp::create_topic_rmw(
-          participant_info,
-          sub_topic_name,
-          response_type_name,
-          topicQos);
+    rmw_fastrtps_shared_cpp::create_topic_rmw(
+    participant_info,
+    sub_topic_name,
+    response_type_name,
+    topicQos);
 
   if (des_sub_topic == nullptr) {
     RMW_SET_ERROR_MSG("failed to create response topic");
@@ -265,18 +265,19 @@ rmw_create_client(
 
   // General function to create or get an already existing topic
   eprosima::fastdds::dds::TopicDescription * des_pub_topic =
-      rmw_fastrtps_shared_cpp::create_topic_rmw(
-          participant_info,
-          pub_topic_name,
-          request_type_name,
-          topicQos);
+    rmw_fastrtps_shared_cpp::create_topic_rmw(
+    participant_info,
+    pub_topic_name,
+    request_type_name,
+    topicQos);
 
   if (des_pub_topic == nullptr) {
     RMW_SET_ERROR_MSG("failed to create request topic");
     return nullptr;
   }
 
-  eprosima::fastdds::dds::Topic * pub_topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(des_pub_topic);
+  eprosima::fastdds::dds::Topic * pub_topic =
+    dynamic_cast<eprosima::fastdds::dds::Topic *>(des_pub_topic);
   if (pub_topic == nullptr) {
     RMW_SET_ERROR_MSG("failed, publisher topic can only be of class Topic");
     return nullptr;
@@ -343,9 +344,9 @@ rmw_create_client(
 
   // Modify specific DataWriter Qos
   if (!participant_info->leave_middleware_default_qos) {
-    if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS){
+    if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS) {
       dataWriterQos.publish_mode().kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
-    }else if(participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
+    } else if (participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
       dataWriterQos.publish_mode().kind = eprosima::fastrtps::SYNCHRONOUS_PUBLISH_MODE;
     }
 

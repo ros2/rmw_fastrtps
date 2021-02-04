@@ -116,7 +116,8 @@ __create_participant(
 
   /////
   // Create Participant
-  participant_info->participant_ = eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(
+  participant_info->participant_ =
+    eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(
     domain_id, domainParticipantQos, participant_info->listener_);
 
   if (!participant_info->participant_) {
@@ -137,7 +138,8 @@ __create_participant(
 
   /////
   // Create Publisher
-  eprosima::fastdds::dds::PublisherQos publisherQos = participant_info->participant_->get_default_publisher_qos();
+  eprosima::fastdds::dds::PublisherQos publisherQos =
+    participant_info->participant_->get_default_publisher_qos();
   publisherQos.entity_factory(domainParticipantQos.entity_factory());
 
   participant_info->publisher_ = participant_info->participant_->create_publisher(publisherQos);
@@ -154,7 +156,8 @@ __create_participant(
 
   /////
   // Create Subscriber
-  eprosima::fastdds::dds::SubscriberQos subscriberQos = participant_info->participant_->get_default_subscriber_qos();
+  eprosima::fastdds::dds::SubscriberQos subscriberQos =
+    participant_info->participant_->get_default_subscriber_qos();
   subscriberQos.entity_factory(domainParticipantQos.entity_factory());
 
   participant_info->subscriber_ = participant_info->participant_->create_subscriber(subscriberQos);
@@ -327,8 +330,7 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
   }
 
   // Topics must be deleted before delete the participant
-  for (auto topic : participant_info->topics_list_)
-  {
+  for (auto topic : participant_info->topics_list_) {
     ReturnCode_t ret = participant_info->participant_->delete_topic(topic);
     if (ret != ReturnCode_t::RETCODE_OK) {
       RMW_SET_ERROR_MSG("Fail in delete participant");
@@ -337,7 +339,8 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
   }
 
   // Delete Domain Participant
-  ReturnCode_t ret = eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(
+  ReturnCode_t ret =
+    eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(
     participant_info->participant_);
   if (ret != ReturnCode_t::RETCODE_OK) {
     RMW_SET_ERROR_MSG("Fail in delete participant");

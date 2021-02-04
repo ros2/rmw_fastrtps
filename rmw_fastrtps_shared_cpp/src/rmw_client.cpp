@@ -69,7 +69,7 @@ __rmw_destroy_client(
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
 
   // NOTE: Topic deletion and unregister type is done in the participant
-  if (nullptr != info){
+  if (nullptr != info) {
 
     // Delete DataReader
     ReturnCode_t ret = participant_info->subscriber_->delete_datareader(info->response_subscriber_);
@@ -79,7 +79,7 @@ __rmw_destroy_client(
     }
 
     // Delete DataReader listener
-    if (nullptr != info->listener_){
+    if (nullptr != info->listener_) {
       delete info->listener_;
     }
 
@@ -91,7 +91,7 @@ __rmw_destroy_client(
     }
 
     // Delete DataWriter listener
-    if (nullptr != info->pub_listener_){
+    if (nullptr != info->pub_listener_) {
       delete info->pub_listener_;
     }
 
@@ -107,7 +107,7 @@ __rmw_destroy_client(
 
     // Delete ClientInfo structure
     delete info;
-  }else{
+  } else {
     final_ret = RMW_RET_INVALID_ARGUMENT;
   }
 

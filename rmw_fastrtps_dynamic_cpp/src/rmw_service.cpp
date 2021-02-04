@@ -287,11 +287,11 @@ rmw_create_service(
 
   // General function to create or get an already existing topic
   eprosima::fastdds::dds::TopicDescription * des_sub_topic =
-      rmw_fastrtps_shared_cpp::create_topic_rmw(
-          participant_info,
-          sub_topic_name,
-          request_type_name,
-          topicQos);
+    rmw_fastrtps_shared_cpp::create_topic_rmw(
+    participant_info,
+    sub_topic_name,
+    request_type_name,
+    topicQos);
 
   if (des_sub_topic == nullptr) {
     RMW_SET_ERROR_MSG("failed to create request topic");
@@ -304,18 +304,19 @@ rmw_create_service(
 
   // General function to create or get an already existing topic
   eprosima::fastdds::dds::TopicDescription * des_pub_topic =
-      rmw_fastrtps_shared_cpp::create_topic_rmw(
-          participant_info,
-          pub_topic_name,
-          response_type_name,
-          topicQos);
+    rmw_fastrtps_shared_cpp::create_topic_rmw(
+    participant_info,
+    pub_topic_name,
+    response_type_name,
+    topicQos);
 
   if (des_pub_topic == nullptr) {
     RMW_SET_ERROR_MSG("failed to create response topic");
     return nullptr;
   }
 
-  eprosima::fastdds::dds::Topic * pub_topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(des_pub_topic);
+  eprosima::fastdds::dds::Topic * pub_topic =
+    dynamic_cast<eprosima::fastdds::dds::Topic *>(des_pub_topic);
   if (pub_topic == nullptr) {
     RMW_SET_ERROR_MSG("failed, publisher topic can only be of class Topic");
     return nullptr;
@@ -383,9 +384,9 @@ rmw_create_service(
 
   // Modify specific DataWriter Qos
   if (!participant_info->leave_middleware_default_qos) {
-    if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS){
+    if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS) {
       dataWriterQos.publish_mode().kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
-    }else if(participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
+    } else if (participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
       dataWriterQos.publish_mode().kind = eprosima::fastrtps::SYNCHRONOUS_PUBLISH_MODE;
     }
 
@@ -481,7 +482,8 @@ rmw_create_service(
         common_context->gid,
         node->name,
         node->namespace_);
-      return nullptr;    }
+      return nullptr;
+    }
   }
 
   cleanup_rmw_service.cancel();
@@ -517,12 +519,16 @@ rmw_destroy_service(rmw_node_t * node, rmw_service_t * service)
 
   TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
 
-  auto impl = static_cast<rmw_fastrtps_dynamic_cpp::BaseTypeSupport *>(const_cast<void *>(info->request_type_support_impl_));
+  auto impl =
+    static_cast<rmw_fastrtps_dynamic_cpp::BaseTypeSupport *>(const_cast<void *>(info->
+    request_type_support_impl_));
   auto ros_type_support =
     static_cast<const rosidl_service_type_support_t *>(impl->ros_type_support());
   type_registry.return_request_type_support(ros_type_support);
 
-  impl = static_cast<rmw_fastrtps_dynamic_cpp::BaseTypeSupport *>(const_cast<void *>(info->response_type_support_impl_));
+  impl =
+    static_cast<rmw_fastrtps_dynamic_cpp::BaseTypeSupport *>(const_cast<void *>(info->
+    response_type_support_impl_));
   ros_type_support = static_cast<const rosidl_service_type_support_t *>(impl->ros_type_support());
   type_registry.return_response_type_support(ros_type_support);
 
