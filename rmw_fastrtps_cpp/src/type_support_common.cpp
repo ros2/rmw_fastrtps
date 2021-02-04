@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <fastcdr/exceptions/Exception.h>
+
 #include <string>
 
 #include "rmw/error_handling.h"
