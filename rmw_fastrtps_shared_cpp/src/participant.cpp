@@ -338,10 +338,24 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
     }
   }
 
+  // Remove publisher and subcriber from participant
+  ReturnCode_t ret = participant_info->participant_->delete_publisher(participant_info->publisher_);
+  if (ret != ReturnCode_t::RETCODE_OK) {
+    RMW_SET_ERROR_MSG("Fail in delete dds publisher from participant");
+    return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+  }
+
+  ret = participant_info->participant_->delete_subscriber(participant_info->subscriber_);
+  if (ret != ReturnCode_t::RETCODE_OK) {
+    RMW_SET_ERROR_MSG("Fail in delete dds subscriber from participant");
+    return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+  }
+
   // Delete Domain Participant
-  ReturnCode_t ret =
+  ret =
     eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(
     participant_info->participant_);
+
   if (ret != ReturnCode_t::RETCODE_OK) {
     RMW_SET_ERROR_MSG("Fail in delete participant");
     return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
@@ -354,5 +368,6 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
   delete participant_info;
 
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
+
   return RMW_RET_OK;
 }

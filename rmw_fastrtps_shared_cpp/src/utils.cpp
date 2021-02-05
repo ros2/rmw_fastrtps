@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 #include "rmw/rmw.h"
@@ -57,7 +59,8 @@ eprosima::fastdds::dds::TopicDescription * create_topic_rmw(
   eprosima::fastdds::dds::TopicDescription * des_topic =
     participant_info->participant_->lookup_topicdescription(topic_name);
   if (nullptr != des_topic) {
-    // TODO the already existing topic type must fit with the desired type for new topic
+    // If this is not an instantiated object of type Topic, it cannot be used to
+    // create a new DataWriter and though the publisher creation will fail
     return des_topic;
   }
 

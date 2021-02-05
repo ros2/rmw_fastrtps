@@ -22,6 +22,7 @@
 #include <mutex>
 #include <set>
 #include <utility>
+#include <string>
 
 #include "fastcdr/FastBuffer.h"
 
@@ -54,9 +55,7 @@ typedef struct CustomClientInfo
   ClientListener * listener_{nullptr};
   eprosima::fastrtps::rtps::GUID_t writer_guid_;
   eprosima::fastrtps::rtps::GUID_t reader_guid_;
-  // eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
-  // eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
-  // eprosima::fastdds::dds::Publisher * publisher_{nullptr};
+
   const char * typesupport_identifier_{nullptr};
   ClientPubListener * pub_listener_{nullptr};
   std::atomic_size_t response_subscriber_matched_count_;

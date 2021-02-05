@@ -55,14 +55,10 @@ typedef struct CustomServiceInfo
   const void * response_type_support_impl_{nullptr};
   eprosima::fastdds::dds::DataReader * request_subscriber_{nullptr};
   eprosima::fastdds::dds::DataWriter * response_publisher_{nullptr};
-  //eprosima::fastdds::dds::Topic * response_topic_{nullptr};
-  //eprosima::fastdds::dds::Topic * request_topic_{nullptr};
 
   ServiceListener * listener_{nullptr};
   ServicePubListener * pub_listener_{nullptr};
-  // eprosima::fastdds::dds::DomainParticipant * domainParticipant_{nullptr};
-  // eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
-  // eprosima::fastdds::dds::Publisher * publisher_{nullptr};
+
   const char * typesupport_identifier_{nullptr};
 } CustomServiceInfo;
 
@@ -87,7 +83,7 @@ class ServicePubListener : public eprosima::fastdds::dds::DataWriterListener
       rmw_fastrtps_shared_cpp::hash_fastrtps_guid>;
 
 public:
-  ServicePubListener(CustomServiceInfo * info)
+  explicit ServicePubListener(CustomServiceInfo * info)
   {
     (void) info;
   }

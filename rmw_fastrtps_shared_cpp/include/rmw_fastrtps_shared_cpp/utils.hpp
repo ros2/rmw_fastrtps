@@ -16,6 +16,7 @@
 #define RMW_FASTRTPS_SHARED_CPP__UTILS_HPP_
 
 #include <mutex>
+#include <string>
 
 #include "fastdds/dds/domain/DomainParticipant.hpp"
 #include "fastdds/dds/topic/TopicDescription.hpp"
@@ -40,6 +41,6 @@ eprosima::fastdds::dds::TopicDescription * create_topic_rmw(
   const std::string & type_name,
   const eprosima::fastdds::dds::TopicQos & qos);
 
-} // rmw_fastrtps_shared_cpp
+}  // namespace rmw_fastrtps_shared_cpp
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__UTILS_HPP_

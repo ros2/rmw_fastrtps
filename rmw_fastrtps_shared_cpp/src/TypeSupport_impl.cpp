@@ -12,11 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "fastcdr/FastBuffer.h"
-#include "fastcdr/Cdr.h"
 #include <cassert>
 #include <string>
 #include <vector>
+
+#include "fastcdr/FastBuffer.h"
+#include "fastcdr/Cdr.h"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 

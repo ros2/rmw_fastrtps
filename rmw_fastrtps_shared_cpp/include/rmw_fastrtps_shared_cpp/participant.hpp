@@ -26,7 +26,8 @@ namespace rmw_fastrtps_shared_cpp
 {
 
 // The Entities Publisher and Subscriber are created with the Participant
-// Endpoint SubEntities as DataWriter and DataReader are created with create_publisher and create_subscription
+// Endpoint SubEntities as DataWriter and DataReader are created with
+// create_publisher and create_subscription
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 CustomParticipantInfo *
 create_participant(

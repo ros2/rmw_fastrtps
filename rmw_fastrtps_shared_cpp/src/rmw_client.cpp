@@ -70,7 +70,6 @@ __rmw_destroy_client(
 
   // NOTE: Topic deletion and unregister type is done in the participant
   if (nullptr != info) {
-
     // Delete DataReader
     ReturnCode_t ret = participant_info->subscriber_->delete_datareader(info->response_subscriber_);
     if (ret != ReturnCode_t::RETCODE_OK) {

@@ -105,8 +105,6 @@ __rmw_take_request(
         ((int64_t)request.sample_identity_.sequence_number().high) <<
         32 | request.sample_identity_.sequence_number().low;
       request_header->source_timestamp = request.sample_info_.source_timestamp.to_ns();
-      // TODO eprosima
-      // request_header->received_timestamp = request.sample_info_.received_timestamp.to_ns();
       request_header->received_timestamp = request.sample_info_.source_timestamp.to_ns();
       *taken = true;
     }

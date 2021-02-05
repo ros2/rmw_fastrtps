@@ -85,6 +85,7 @@ rmw_fastrtps_cpp::create_publisher(
   /////
   // Check ROS QoS
   if (!is_valid_qos(*qos_policies)) {
+    RMW_SET_ERROR_MSG("Invalid QoS");
     return nullptr;
   }
 
@@ -159,6 +160,7 @@ rmw_fastrtps_cpp::create_publisher(
     eprosima::fastdds::dds::TypeSupport(new (std::nothrow) MessageTypeSupport_cpp(callbacks)));
   // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
   if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
+    RMW_SET_ERROR_MSG("Error registering type in publisher");
     return nullptr;
   }
 
@@ -190,6 +192,7 @@ rmw_fastrtps_cpp::create_publisher(
   eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
 
   if (!get_topic_qos(*qos_policies, topicQos)) {
+    RMW_SET_ERROR_MSG("Error setting topic QoS for publisher");
     return nullptr;
   }
 

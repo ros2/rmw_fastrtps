@@ -63,9 +63,7 @@ __rmw_take_response(
         deser, ros_response, info->response_type_support_impl_))
     {
       request_header->source_timestamp = response.sample_info_.source_timestamp.to_ns();
-      // TODO eprosima
-      // request_header->received_timestamp = request.sample_info_.received_timestamp.to_ns();
-      request_header->received_timestamp = response.sample_info_.source_timestamp.to_ns();
+      request_header->received_timestamp = response.sample_info_.reception_timestamp.to_ns();
       request_header->request_id.sequence_number =
         ((int64_t)response.sample_identity_.sequence_number().high) <<
         32 | response.sample_identity_.sequence_number().low;

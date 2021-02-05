@@ -105,7 +105,7 @@ bool fill_entity_qos_from_profile(
   }
 
   // ensure the history depth is at least the requested queue size
-  assert(entity_qos.history().depth >= 0); // TODO eprosima should not be after initialization?
+  assert(entity_qos.history().depth >= 0);  // TODO(eprosima) should not be after initialization?
   if (
     qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT &&
     static_cast<size_t>(entity_qos.history().depth) < qos_policies.depth)
@@ -190,7 +190,7 @@ get_topic_qos(
   }
 
   // ensure the history depth is at least the requested queue size
-  assert(topic_qos.history().depth >= 0); // TODO eprosima should not be after initialization?
+  assert(topic_qos.history().depth >= 0);  // TODO(eprosima) should not be after initialization?
   if (
     qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT &&
     static_cast<size_t>(topic_qos.history().depth) < qos_policies.depth)

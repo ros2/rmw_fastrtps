@@ -63,7 +63,6 @@ dds_duration_to_rmw(const eprosima::fastrtps::Duration_t & duration);
 template<typename DDSQoSPolicyT>
 void
 dds_qos_to_rmw_qos(
-  // TODO (eprosima) not in use
   const DDSQoSPolicyT & dds_qos,
   rmw_qos_profile_t * qos)
 {

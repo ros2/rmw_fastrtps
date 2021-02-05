@@ -15,13 +15,14 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__TYPESUPPORT_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__TYPESUPPORT_HPP_
 
+#include <cassert>
+#include <string>
+
 #include "fastdds/dds/domain/DomainParticipant.hpp"
 #include "fastdds/dds/topic/TopicDataType.hpp"
 
 #include "fastcdr/FastBuffer.h"
 #include "fastcdr/Cdr.h"
-#include <cassert>
-#include <string>
 
 #include "rcutils/logging_macros.h"
 

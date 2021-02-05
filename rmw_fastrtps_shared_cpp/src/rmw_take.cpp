@@ -36,9 +36,7 @@ _assign_message_info(
   const eprosima::fastdds::dds::SampleInfo * sinfo)
 {
   message_info->source_timestamp = sinfo->source_timestamp.to_ns();
-  // TODO (eprosima)
-  // message_info->received_timestamp = sinfo->receive_timestamp.to_ns();
-  message_info->received_timestamp = sinfo->source_timestamp.to_ns();
+  message_info->received_timestamp = sinfo->reception_timestamp.to_ns();
   rmw_gid_t * sender_gid = &message_info->publisher_gid;
   sender_gid->implementation_identifier = identifier;
   memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
@@ -76,7 +74,6 @@ _take(
   data.data = ros_message;
   data.impl = info->type_support_impl_;
   if (info->subscriber_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
-
     // Update hasData from listener
     info->listener_->update_unread_count(info->subscriber_);
 
@@ -101,8 +98,8 @@ _take_sequence(
   size_t * taken,
   rmw_subscription_allocation_t * allocation)
 {
+  (void) allocation;
   *taken = 0;
-  bool taken_flag = false;
   rmw_ret_t ret = RMW_RET_OK;
 
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -131,7 +128,7 @@ _take_sequence(
   // Update hasData from listener
   info->listener_->update_unread_count(info->subscriber_);
 
-  for (size_t ii = 0; ii < info_seq.length(); ++ii) {
+  for (size_t ii = 0; ii < static_cast<size_t>(info_seq.length()); ++ii) {
     if (info_seq[ii].valid_data) {
       if (eprosima::fastdds::dds::ALIVE_INSTANCE_STATE == info_seq[ii].instance_state) {
         if (message_info_sequence->data + *taken) {
@@ -291,7 +288,6 @@ _take_serialized_message(
   data.impl = nullptr;    // not used when is_cdr_buffer is true
 
   if (info->subscriber_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
-
     // Update hasData from listener
     info->listener_->update_unread_count(info->subscriber_);
 
