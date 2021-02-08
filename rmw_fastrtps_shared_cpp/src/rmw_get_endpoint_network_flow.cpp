@@ -16,6 +16,7 @@
 #include "fastrtps/utils/IPLocator.h"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw/get_network_flow.h"
 
 namespace rmw_fastrtps_shared_cpp
