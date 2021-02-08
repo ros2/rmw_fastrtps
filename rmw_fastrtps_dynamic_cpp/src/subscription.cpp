@@ -180,11 +180,14 @@ create_subscription(
     return nullptr;
   }
 
+  bool request_unique_flows =
+    subscription_options->require_unique_network_flow != RMW_UNIQUE_NETWORK_FLOW_NOT_REQUIRED;
+
   info->subscriber_ = Domain::createSubscriber(
           participant,
           subscriberParam,
           info->listener_,
-          subscription_options->unique_network_flow);
+          request_unique_flows);
   if (!info->subscriber_) {
     RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber");
     return nullptr;

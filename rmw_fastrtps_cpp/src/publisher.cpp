@@ -177,11 +177,14 @@ rmw_fastrtps_cpp::create_publisher(
     }
   }
 
+  bool request_unique_flows =
+    publisher_options->require_unique_network_flow != RMW_UNIQUE_NETWORK_FLOW_NOT_REQUIRED;
+
   info->publisher_ = Domain::createPublisher(
     participant,
     publisherParam,
     info->listener_,
-    publisher_options->unique_network_flow);
+    request_unique_flows);
   if (!info->publisher_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
     return nullptr;
