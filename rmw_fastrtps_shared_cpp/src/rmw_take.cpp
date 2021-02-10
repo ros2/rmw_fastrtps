@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <vector>
+
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/serialized_message.h"
@@ -31,16 +33,16 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
-class ConstructibleLoanableSequence :
-  public eprosima::fastdds::dds::LoanableSequence<rmw_fastrtps_shared_cpp::SerializedData>
+class ConstructibleLoanableSequence
+  : public eprosima::fastdds::dds::LoanableSequence<rmw_fastrtps_shared_cpp::SerializedData>
 {
 public:
   ConstructibleLoanableSequence(
-      size_type count,
-      rmw_fastrtps_shared_cpp::SerializedData ** serialize_data)
+    size_type count,
+    rmw_fastrtps_shared_cpp::SerializedData ** serialize_data)
   {
     maximum_ = count;
-    elements_ = reinterpret_cast<element_type*>(serialize_data);
+    elements_ = reinterpret_cast<element_type *>(serialize_data);
   }
 
   ~ConstructibleLoanableSequence()
@@ -138,7 +140,7 @@ _take_sequence(
   // Two vectors are required because we want to avoid using new
   // and [<variable>] type are not recomendded
   std::vector<rmw_fastrtps_shared_cpp::SerializedData> serialized_data(count);
-  std::vector<rmw_fastrtps_shared_cpp::SerializedData*> serialized_data_p(count);
+  std::vector<rmw_fastrtps_shared_cpp::SerializedData *> serialized_data_p(count);
   for (size_t i = 0; i < count; ++i) {
     serialized_data[i].is_cdr_buffer = false;
     serialized_data[i].data = message_sequence->data[i];
@@ -151,7 +153,8 @@ _take_sequence(
     count,
     serialized_data_p.data());
 
-  rmw_fastrtps_shared_cpp::SerializedData * sd = reinterpret_cast<rmw_fastrtps_shared_cpp::SerializedData *>(data_seq.buffer()[0]);
+  rmw_fastrtps_shared_cpp::SerializedData * sd =
+    reinterpret_cast<rmw_fastrtps_shared_cpp::SerializedData *>(data_seq.buffer()[0]);
 
   ReturnCode_t take_ret = info->subscriber_->take(data_seq, info_seq, count);
   if (take_ret != ReturnCode_t::RETCODE_OK) {
