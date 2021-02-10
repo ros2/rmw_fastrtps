@@ -30,6 +30,26 @@
 
 namespace rmw_fastrtps_shared_cpp
 {
+
+class ConstructibleLoanableSequence :
+  public eprosima::fastdds::dds::LoanableSequence<rmw_fastrtps_shared_cpp::SerializedData>
+{
+public:
+  ConstructibleLoanableSequence(
+      size_type count,
+      rmw_fastrtps_shared_cpp::SerializedData ** serialize_data)
+  {
+    maximum_ = count;
+    elements_ = reinterpret_cast<element_type*>(serialize_data);
+  }
+
+  ~ConstructibleLoanableSequence()
+  {
+    maximum_ = 0;
+    elements_ = nullptr;
+  }
+};
+
 void
 _assign_message_info(
   const char * identifier,
@@ -113,21 +133,25 @@ _take_sequence(
 
   // Take every message available (Maximum number of messages<count>)
   eprosima::fastdds::dds::LoanableSequence<eprosima::fastdds::dds::SampleInfo> info_seq(count);
+
   // Datas must be initialized before calling take
-  eprosima::fastdds::dds::LoanableSequence<rmw_fastrtps_shared_cpp::SerializedData> data_seq(count);
-
-  // Work around to iniziatlize data. If length < i FastDDS throws an error
-  data_seq.length(count);
-
-  // Initialize all RMW Type Support Data to send sequence to take
+  // Two vectors are required because we want to avoid using new
+  // and [<variable>] type are not recomendded
+  std::vector<rmw_fastrtps_shared_cpp::SerializedData> serialized_data(count);
+  std::vector<rmw_fastrtps_shared_cpp::SerializedData*> serialized_data_p(count);
   for (size_t i = 0; i < count; ++i) {
-    data_seq[i].is_cdr_buffer = false;
-    data_seq[i].data = message_sequence->data[i];
-    data_seq[i].impl = info->type_support_impl_;
+    serialized_data[i].is_cdr_buffer = false;
+    serialized_data[i].data = message_sequence->data[i];
+    serialized_data[i].impl = info->type_support_impl_;
+    serialized_data_p[i] = &serialized_data[i];
   }
 
-  // After initialize all the data, length returns to 0 to add samples in first places of data_seq
-  data_seq.length(0);
+  // Creates specific Lonable collection to avoid heap allocs
+  rmw_fastrtps_shared_cpp::ConstructibleLoanableSequence data_seq(
+    count,
+    serialized_data_p.data());
+
+  rmw_fastrtps_shared_cpp::SerializedData * sd = reinterpret_cast<rmw_fastrtps_shared_cpp::SerializedData *>(data_seq.buffer()[0]);
 
   ReturnCode_t take_ret = info->subscriber_->take(data_seq, info_seq, count);
   if (take_ret != ReturnCode_t::RETCODE_OK) {
