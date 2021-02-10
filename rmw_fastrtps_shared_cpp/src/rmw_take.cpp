@@ -26,6 +26,7 @@
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -111,9 +112,12 @@ _take_sequence(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
   // Take every message available (Maximum number of messages<count>)
-  eprosima::fastdds::dds::LoanableSequence<eprosima::fastdds::dds::SampleInfo> info_seq;
+  eprosima::fastdds::dds::LoanableSequence<eprosima::fastdds::dds::SampleInfo> info_seq(count);
   // Datas must be initialized before calling take
   eprosima::fastdds::dds::LoanableSequence<rmw_fastrtps_shared_cpp::SerializedData> data_seq(count);
+
+  // Work around to iniziatlize data. If length < i FastDDS throws an error
+  data_seq.length(count);
 
   // Initialize all RMW Type Support Data to send sequence to take
   for (size_t i = 0; i < count; ++i) {
@@ -122,8 +126,14 @@ _take_sequence(
     data_seq[i].impl = info->type_support_impl_;
   }
 
+  // After initialize all the data, length returns to 0 to add samples in first places of data_seq
+  data_seq.length(0);
+
   ReturnCode_t take_ret = info->subscriber_->take(data_seq, info_seq, count);
-  static_cast<void>(take_ret);
+  if (take_ret != ReturnCode_t::RETCODE_OK)
+  {
+    return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(take_ret);
+  }
 
   // Update hasData from listener
   info->listener_->update_unread_count(info->subscriber_);

@@ -153,6 +153,7 @@ rmw_create_client(
     });
 
   // info->participant_ = domainParticipant;
+  info->typesupport_identifier_ = type_support->typesupport_identifier;
   info->request_publisher_matched_count_ = 0;
   info->response_subscriber_matched_count_ = 0;
 
@@ -171,7 +172,6 @@ rmw_create_client(
 
   auto response_type_impl = type_registry.get_response_type_support(type_support);
   if (!response_type_impl) {
-    type_registry.return_request_type_support(type_support);
     RMW_SET_ERROR_MSG("failed to allocate response type support");
     return nullptr;
   }
@@ -208,10 +208,8 @@ rmw_create_client(
   const void * untyped_request_members;
   const void * untyped_response_members;
 
-  untyped_request_members =
-    get_request_ptr(type_support->data, info->typesupport_identifier_);
-  untyped_response_members = get_response_ptr(
-    type_support->data, info->typesupport_identifier_);
+  untyped_request_members = get_request_ptr(type_support->data, info->typesupport_identifier_);
+  untyped_response_members = get_response_ptr(type_support->data, info->typesupport_identifier_);
 
   std::string request_type_name = _create_type_name(
     untyped_request_members, info->typesupport_identifier_);
@@ -312,6 +310,9 @@ rmw_create_client(
     RMW_SET_ERROR_MSG("failed, publisher topic can only be of class Topic");
     return nullptr;
   }
+
+  info->request_topic_ = pub_topic_name;
+  info->response_topic_ = sub_topic_name;
 
   // Key word to find DataWrtier and DataReader QoS
   std::string topic_name_fallback = "client";
