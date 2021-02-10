@@ -15,13 +15,14 @@
 #ifndef RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_HPP_
 #define RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_HPP_
 
+#include <cassert>
+#include <string>
+
 #include "rosidl_runtime_c/string.h"
 #include "rosidl_runtime_c/string_functions.h"
 
 #include "fastcdr/FastBuffer.h"
 #include "fastcdr/Cdr.h"
-#include <cassert>
-#include <string>
 
 #include "rcutils/logging_macros.h"
 

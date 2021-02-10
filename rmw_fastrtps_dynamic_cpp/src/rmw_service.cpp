@@ -230,12 +230,13 @@ rmw_create_service(
 
   /////
   // Register the Type in the participant
-  // When a type is registered in a participant, it is converted to a shared_ptr, so it is dangerous to keep
-  // using it. Thus we use a new TypeSupport created only to register it.
+  // When a type is registered in a participant, it is converted to a shared_ptr, so it is
+  // dangerous to keep using it. Thus we use a new TypeSupport created only to register it.
   ReturnCode_t ret = domainParticipant->register_type(
     eprosima::fastdds::dds::TypeSupport(
       new (std::nothrow) rmw_fastrtps_dynamic_cpp::TypeSupportProxy(request_type_impl)));
-  // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
+  // Register could fail if there is already a type with that name in participant,
+  // so not only OK retcode is possible
   if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
     return nullptr;
   }
@@ -243,7 +244,8 @@ rmw_create_service(
   ret = domainParticipant->register_type(
     eprosima::fastdds::dds::TypeSupport(
       new (std::nothrow) rmw_fastrtps_dynamic_cpp::TypeSupportProxy(response_type_impl)));
-  // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
+  // Register could fail if there is already a type with that name in participant,
+  // so not only OK retcode is possible
   if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
     return nullptr;
   }
@@ -252,7 +254,7 @@ rmw_create_service(
   // Create Listeners
   info->listener_ = new (std::nothrow) ServiceListener(info);
   if (!info->listener_) {
-    RMW_SET_ERROR_MSG("failed to create client response subscriber listener");
+    RMW_SET_ERROR_MSG("failed to create service response subscriber listener");
     return nullptr;
   }
 
@@ -263,7 +265,7 @@ rmw_create_service(
 
   info->pub_listener_ = new (std::nothrow) ServicePubListener(info);
   if (!info->pub_listener_) {
-    RMW_SET_ERROR_MSG("failed to create client request publisher listener");
+    RMW_SET_ERROR_MSG("failed to create service request publisher listener");
     return nullptr;
   }
 
@@ -330,13 +332,15 @@ rmw_create_service(
 
   // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill subscriber attributes with a subscriber profile
   // located based of topic name defined by _create_topic_name(). If no profile is found, a search
-  // with profile_name "client" is attempted. Else, use the default attributes.
+  // with profile_name "service" is attempted. Else, use the default attributes.
   eprosima::fastdds::dds::DataReaderQos dataReaderQos = subscriber->get_default_datareader_qos();
 
-  // Try to load the profile named "client", if it does not exist it tryes with the request topic name
+  // Try to load the profile named "service",
+  // if it does not exist it tryes with the request topic name
   // It does not need to check the return code, as if any of the profile does not exist,
   // the QoS is already set correctly:
-  //  If none exist is default, if only one exists is the one chosen, if both exist topic name is chosen
+  // If none exist is default, if only one exists is the one chosen,
+  // if both exist topic name is chosen
   subscriber->get_datareader_qos_from_profile(topic_name_fallback, dataReaderQos);
   subscriber->get_datareader_qos_from_profile(sub_topic_name, dataReaderQos);
 
@@ -356,7 +360,7 @@ rmw_create_service(
     info->listener_);
 
   if (!info->request_subscriber_) {
-    RMW_SET_ERROR_MSG("failed to create client request data reader");
+    RMW_SET_ERROR_MSG("failed to create service request data reader");
     return nullptr;
   }
 
@@ -372,13 +376,15 @@ rmw_create_service(
 
   // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill publisher attributes with a publisher profile
   // located based of topic name defined by _create_topic_name(). If no profile is found, a search
-  // with profile_name "client" is attempted. Else, use the default attributes.
+  // with profile_name "service" is attempted. Else, use the default attributes.
   eprosima::fastdds::dds::DataWriterQos dataWriterQos = publisher->get_default_datawriter_qos();
 
-  // Try to load the profile named "client", if it does not exist it tryes with the request topic name
+  // Try to load the profile named "service",
+  // if it does not exist it tryes with the request topic name
   // It does not need to check the return code, as if any of the profile does not exist,
   // the QoS is already set correctly:
-  //  If none exist is default, if only one exists is the one chosen, if both exist topic name is chosen
+  // If none exist is default, if only one exists is the one chosen,
+  // if both exist topic name is chosen
   publisher->get_datawriter_qos_from_profile(topic_name_fallback, dataWriterQos);
   publisher->get_datawriter_qos_from_profile(pub_topic_name, dataWriterQos);
 
@@ -405,7 +411,7 @@ rmw_create_service(
     info->pub_listener_);
 
   if (!info->response_publisher_) {
-    RMW_SET_ERROR_MSG("failed to create client request data writer");
+    RMW_SET_ERROR_MSG("failed to create service request data writer");
     return nullptr;
   }
 

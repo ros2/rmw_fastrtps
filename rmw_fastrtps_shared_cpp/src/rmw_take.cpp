@@ -130,8 +130,7 @@ _take_sequence(
   data_seq.length(0);
 
   ReturnCode_t take_ret = info->subscriber_->take(data_seq, info_seq, count);
-  if (take_ret != ReturnCode_t::RETCODE_OK)
-  {
+  if (take_ret != ReturnCode_t::RETCODE_OK) {
     return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(take_ret);
   }
 

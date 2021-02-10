@@ -172,7 +172,8 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
 
   ReturnCode_t ret = domainParticipant->register_type(
     eprosima::fastdds::dds::TypeSupport(new (std::nothrow) TypeSupportProxy(type_impl)));
-  // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
+  // Register could fail if there is already a type with that name in participant,
+  // so not only OK retcode is possible
   if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
     return nullptr;
   }
@@ -236,7 +237,8 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   eprosima::fastdds::dds::DataWriterQos dataWriterQos = publisher->get_default_datawriter_qos();
 
   // Try to load the profile with the topic name
-  // It does not need to check the return code, as if the profile does not exist, the QoS is already the default
+  // It does not need to check the return code, as if the profile does not exist,
+  // the QoS is already the default
   publisher->get_datawriter_qos_from_profile(topic_name, dataWriterQos);
 
   // Modify specific DataWriter Qos

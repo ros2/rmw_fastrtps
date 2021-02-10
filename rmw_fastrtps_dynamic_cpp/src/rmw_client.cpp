@@ -218,12 +218,13 @@ rmw_create_client(
 
   /////
   // Register the Type in the participant
-  // When a type is registered in a participant, it is converted to a shared_ptr, so it is dangerous to keep
-  // using it. Thus we use a new TypeSupport created only to register it.
+  // When a type is registered in a participant, it is converted to a shared_ptr, so it is
+  // dangerous to keep using it. Thus we use a new TypeSupport created only to register it.
   ReturnCode_t ret = domainParticipant->register_type(
     eprosima::fastdds::dds::TypeSupport(
       new (std::nothrow) rmw_fastrtps_dynamic_cpp::TypeSupportProxy(request_type_impl)));
-  // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
+  // Register could fail if there is already a type with that name in participant,
+  // so not only OK retcode is possible
   if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
     return nullptr;
   }
@@ -231,7 +232,8 @@ rmw_create_client(
   ret = domainParticipant->register_type(
     eprosima::fastdds::dds::TypeSupport(
       new (std::nothrow) rmw_fastrtps_dynamic_cpp::TypeSupportProxy(response_type_impl)));
-  // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
+  // Register could fail if there is already a type with that name in participant,
+  // so not only OK retcode is possible
   if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
     return nullptr;
   }
@@ -325,10 +327,12 @@ rmw_create_client(
   // with profile_name "client" is attempted. Else, use the default attributes.
   eprosima::fastdds::dds::DataReaderQos dataReaderQos = subscriber->get_default_datareader_qos();
 
-  // Try to load the profile named "client", if it does not exist it tryes with the request topic name
+  // Try to load the profile named "client",
+  // if it does not exist it tryes with the request topic name
   // It does not need to check the return code, as if any of the profile does not exist,
   // the QoS is already set correctly:
-  //  If none exist is default, if only one exists is the one chosen, if both exist topic name is chosen
+  // If none exist is default, if only one exists is the one chosen,
+  // if both exist topic name is chosen
   subscriber->get_datareader_qos_from_profile(topic_name_fallback, dataReaderQos);
   subscriber->get_datareader_qos_from_profile(sub_topic_name, dataReaderQos);
 
@@ -363,10 +367,12 @@ rmw_create_client(
   // with profile_name "client" is attempted. Else, use the default attributes.
   eprosima::fastdds::dds::DataWriterQos dataWriterQos = publisher->get_default_datawriter_qos();
 
-  // Try to load the profile named "client", if it does not exist it tryes with the request topic name
+  // Try to load the profile named "client",
+  // if it does not exist it tryes with the request topic name
   // It does not need to check the return code, as if any of the profile does not exist,
   // the QoS is already set correctly:
-  //  If none exist is default, if only one exists is the one chosen, if both exist topic name is chosen
+  // If none exist is default, if only one exists is the one chosen,
+  // if both exist topic name is chosen
   publisher->get_datawriter_qos_from_profile(topic_name_fallback, dataWriterQos);
   publisher->get_datawriter_qos_from_profile(pub_topic_name, dataWriterQos);
 

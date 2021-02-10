@@ -116,7 +116,8 @@ __create_participant(
 
   /////
   // Force to load XML configuration file
-  if (ReturnCode_t::RETCODE_OK != eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->load_profiles())
+  if (ReturnCode_t::RETCODE_OK !=
+    eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->load_profiles())
   {
     RMW_SET_ERROR_MSG("__create_participant failed to load FastDDS XML configuration file");
   }
@@ -124,7 +125,8 @@ __create_participant(
   /////
   // Create Participant
 
-  // Create Participant Listener mask so it only uses the domain participant listener non inheritated callbacks
+  // Create Participant Listener mask so it only uses the domain
+  // participant listener non inheritated callbacks
   // Without this mask, callback of DataReaders on_data_available is never called
   // Publisher and subscriber dont need masks as they do not have listeners
   eprosima::fastdds::dds::StatusMask participant_mask = eprosima::fastdds::dds::StatusMask::none();

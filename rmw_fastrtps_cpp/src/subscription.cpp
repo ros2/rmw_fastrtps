@@ -159,11 +159,13 @@ create_subscription(
 
   /////
   // Register the Type in the participant
-  // When a type is registered in a participant, it is converted to a shared_ptr, so it is dangerous to keep
-  // using it. Thus we use a new TypeSupport created only to register it.
+  // When a type is registered in a participant, it is converted to a shared_ptr, so it is
+  // dangerous to keep using it. Thus we use a new TypeSupport created only to register it.
   ReturnCode_t ret = domainParticipant->register_type(
-    eprosima::fastdds::dds::TypeSupport(new (std::nothrow) MessageTypeSupport_cpp(callbacks)));
-  // Register could fail if there is already a type with that name in participant, so not only OK retcode is possible
+    eprosima::fastdds::dds::TypeSupport(
+      new (std::nothrow) MessageTypeSupport_cpp(callbacks)));
+  // Register could fail if there is already a type with that name in participant,
+  // so not only OK retcode is possible
   if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
     return nullptr;
   }
@@ -221,7 +223,8 @@ create_subscription(
   eprosima::fastdds::dds::DataReaderQos dataReaderQos = subscriber->get_default_datareader_qos();
 
   // Try to load the profile with the topic name
-  // It does not need to check the return code, as if the profile does not exist, the QoS is already the default
+  // It does not need to check the return code, as if the profile does not exist,
+  // the QoS is already the default
   subscriber->get_datareader_qos_from_profile(topic_name, dataReaderQos);
 
   if (!participant_info->leave_middleware_default_qos) {

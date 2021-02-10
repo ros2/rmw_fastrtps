@@ -23,6 +23,9 @@
 #include <string>
 #include <vector>
 
+#include "fastcdr/FastBuffer.h"
+#include "fastcdr/Cdr.h"
+
 #include "rmw_fastrtps_dynamic_cpp/TypeSupport.hpp"
 #include "rmw_fastrtps_dynamic_cpp/macros.hpp"
 
