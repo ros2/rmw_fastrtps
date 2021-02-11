@@ -143,7 +143,7 @@ node_listener(rmw_context_t * context)
         nullptr,
         nullptr,
         wait_set,
-        nullptr))
+        -1))
     {
       TERMINATE_THREAD("rmw_wait failed");
     }

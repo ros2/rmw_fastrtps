@@ -99,7 +99,7 @@ __rmw_wait(
   rmw_clients_t * clients,
   rmw_events_t * events,
   rmw_wait_set_t * wait_set,
-  const rmw_time_t * wait_timeout)
+  rmw_duration_t wait_timeout)
 {
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_INVALID_ARGUMENT);
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
@@ -174,13 +174,11 @@ __rmw_wait(
 
   bool timeout = false;
   if (!hasData) {
-    if (!wait_timeout) {
+    if (wait_timeout < 0) {
       conditionVariable->wait(lock, predicate);
-    } else if (wait_timeout->sec > 0 || wait_timeout->nsec > 0) {
-      auto n = std::chrono::duration_cast<std::chrono::nanoseconds>(
-        std::chrono::seconds(wait_timeout->sec));
-      n += std::chrono::nanoseconds(wait_timeout->nsec);
-      timeout = !conditionVariable->wait_for(lock, n, predicate);
+    } else if (wait_timeout > 0) {
+      timeout = !conditionVariable->wait_for(
+        lock, std::chrono::nanoseconds(wait_timeout), predicate);
     } else {
       timeout = true;
     }

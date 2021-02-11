@@ -67,13 +67,10 @@ TEST_F(GetDataReaderQoSTest, nominal_conversion) {
   qos_profile_.history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
   qos_profile_.reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
   qos_profile_.durability = RMW_QOS_POLICY_DURABILITY_VOLATILE;
-  qos_profile_.lifespan.sec = 0u;
-  qos_profile_.lifespan.nsec = 500000000u;
-  qos_profile_.deadline.sec = 0u;
-  qos_profile_.deadline.nsec = 100000000u;
+  qos_profile_.lifespan = 500000000u;
+  qos_profile_.deadline = 100000000u;
   qos_profile_.liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
-  qos_profile_.liveliness_lease_duration.sec = 10u;
-  qos_profile_.liveliness_lease_duration.nsec = 0u;
+  qos_profile_.liveliness_lease_duration = RCUTILS_S_TO_NS(10u);
 
   EXPECT_TRUE(get_datareader_qos(qos_profile_, subscriber_attributes_));
 
@@ -165,13 +162,10 @@ TEST_F(GetDataWriterQoSTest, nominal_conversion) {
   qos_profile_.history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
   qos_profile_.reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
   qos_profile_.durability = RMW_QOS_POLICY_DURABILITY_VOLATILE;
-  qos_profile_.lifespan.sec = 0u;
-  qos_profile_.lifespan.nsec = 500000000u;
-  qos_profile_.deadline.sec = 0u;
-  qos_profile_.deadline.nsec = 100000000u;
+  qos_profile_.lifespan = 500000000u;
+  qos_profile_.deadline = 100000000u;
   qos_profile_.liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
-  qos_profile_.liveliness_lease_duration.sec = 10u;
-  qos_profile_.liveliness_lease_duration.nsec = 0u;
+  qos_profile_.liveliness_lease_duration = RCUTILS_S_TO_NS(10u);
 
   EXPECT_TRUE(get_datawriter_qos(qos_profile_, publisher_attributes_));
 

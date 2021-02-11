@@ -65,23 +65,23 @@ TEST_F(DDSAttributesToRMWQosTest, test_publisher_liveliness_conversion) {
 
 TEST_F(DDSAttributesToRMWQosTest, test_publisher_liveliness_lease_duration_conversion) {
   publisher_attributes_.qos.m_liveliness.lease_duration = {8, 78901234};
+  rmw_duration_t expected = RCUTILS_S_TO_NS(8) + 78901234;
   dds_attributes_to_rmw_qos(publisher_attributes_, &qos_profile_);
-  EXPECT_EQ(qos_profile_.liveliness_lease_duration.sec, 8u);
-  EXPECT_EQ(qos_profile_.liveliness_lease_duration.nsec, 78901234u);
+  EXPECT_EQ(qos_profile_.liveliness_lease_duration, expected);
 }
 
 TEST_F(DDSAttributesToRMWQosTest, test_publisher_deadline_conversion) {
   publisher_attributes_.qos.m_deadline.period = {12, 1234};
+  rmw_duration_t expected = RCUTILS_S_TO_NS(12) + 1234;
   dds_attributes_to_rmw_qos(publisher_attributes_, &qos_profile_);
-  EXPECT_EQ(qos_profile_.deadline.sec, 12u);
-  EXPECT_EQ(qos_profile_.deadline.nsec, 1234u);
+  EXPECT_EQ(qos_profile_.deadline, expected);
 }
 
 TEST_F(DDSAttributesToRMWQosTest, test_publisher_lifespan_conversion) {
   publisher_attributes_.qos.m_lifespan.duration = {19, 5432};
+  rmw_duration_t expected = RCUTILS_S_TO_NS(19) + 5432;
   dds_attributes_to_rmw_qos(publisher_attributes_, &qos_profile_);
-  EXPECT_EQ(qos_profile_.lifespan.sec, 19u);
-  EXPECT_EQ(qos_profile_.lifespan.nsec, 5432u);
+  EXPECT_EQ(qos_profile_.lifespan, expected);
 }
 
 
@@ -118,21 +118,21 @@ TEST_F(DDSAttributesToRMWQosTest, test_subscriber_liveliness_conversion) {
 
 TEST_F(DDSAttributesToRMWQosTest, test_subscriber_liveliness_lease_duration_conversion) {
   subscriber_attributes_.qos.m_liveliness.lease_duration = {80, 34567};
+  rmw_duration_t expected = RCUTILS_S_TO_NS(80) + 34567;
   dds_attributes_to_rmw_qos(subscriber_attributes_, &qos_profile_);
-  EXPECT_EQ(qos_profile_.liveliness_lease_duration.sec, 80u);
-  EXPECT_EQ(qos_profile_.liveliness_lease_duration.nsec, 34567u);
+  EXPECT_EQ(qos_profile_.liveliness_lease_duration, expected);
 }
 
 TEST_F(DDSAttributesToRMWQosTest, test_subscriber_deadline_conversion) {
   subscriber_attributes_.qos.m_deadline.period = {1, 3324};
+  rmw_duration_t expected = RCUTILS_S_TO_NS(1) + 3324;
   dds_attributes_to_rmw_qos(subscriber_attributes_, &qos_profile_);
-  EXPECT_EQ(qos_profile_.deadline.sec, 1u);
-  EXPECT_EQ(qos_profile_.deadline.nsec, 3324u);
+  EXPECT_EQ(qos_profile_.deadline, expected);
 }
 
 TEST_F(DDSAttributesToRMWQosTest, test_subscriber_lifespan_conversion) {
   subscriber_attributes_.qos.m_lifespan.duration = {9, 432};
+  rmw_duration_t expected = RCUTILS_S_TO_NS(9) + 432;
   dds_attributes_to_rmw_qos(subscriber_attributes_, &qos_profile_);
-  EXPECT_EQ(qos_profile_.lifespan.sec, 9u);
-  EXPECT_EQ(qos_profile_.lifespan.nsec, 432u);
+  EXPECT_EQ(qos_profile_.lifespan, expected);
 }

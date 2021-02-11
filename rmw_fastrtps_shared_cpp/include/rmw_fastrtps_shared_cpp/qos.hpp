@@ -89,11 +89,10 @@ dds_qos_to_rmw_qos(
       break;
   }
 
-  qos->deadline.sec = dds_qos.m_deadline.period.seconds;
-  qos->deadline.nsec = dds_qos.m_deadline.period.nanosec;
-
-  qos->lifespan.sec = dds_qos.m_lifespan.duration.seconds;
-  qos->lifespan.nsec = dds_qos.m_lifespan.duration.nanosec;
+  qos->deadline = RCUTILS_S_TO_NS(dds_qos.m_deadline.period.seconds) +
+    dds_qos.m_deadline.period.nanosec;
+  qos->lifespan = RCUTILS_S_TO_NS(dds_qos.m_lifespan.duration.seconds) +
+    dds_qos.m_lifespan.duration.nanosec;
 
   switch (dds_qos.m_liveliness.kind) {
     case eprosima::fastrtps::AUTOMATIC_LIVELINESS_QOS:
@@ -106,8 +105,8 @@ dds_qos_to_rmw_qos(
       qos->liveliness = RMW_QOS_POLICY_LIVELINESS_UNKNOWN;
       break;
   }
-  qos->liveliness_lease_duration.sec = dds_qos.m_liveliness.lease_duration.seconds;
-  qos->liveliness_lease_duration.nsec = dds_qos.m_liveliness.lease_duration.nanosec;
+  qos->liveliness_lease_duration = RCUTILS_S_TO_NS(dds_qos.m_liveliness.lease_duration.seconds) +
+    dds_qos.m_liveliness.lease_duration.nanosec;
 }
 
 template<typename AttributeT>

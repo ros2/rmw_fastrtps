@@ -20,23 +20,21 @@
 #include "fastrtps/attributes/SubscriberAttributes.h"
 
 #include "rmw/error_handling.h"
-#include "rmw_dds_common/time_utils.hpp"
 
 static
 eprosima::fastrtps::Duration_t
-rmw_time_to_fastrtps(const rmw_time_t & time)
+rmw_duration_to_fastrtps(const rmw_duration_t time)
 {
-  rmw_time_t clamped_time = rmw_dds_common::clamp_rmw_time_to_dds_time(time);
   return eprosima::fastrtps::Duration_t(
-    static_cast<int32_t>(clamped_time.sec),
-    static_cast<uint32_t>(clamped_time.nsec));
+    static_cast<int32_t>(RCUTILS_NS_TO_S(time)),
+    static_cast<uint32_t>(time % RCUTILS_S_TO_NS(1)));
 }
 
 static
 bool
-is_time_default(const rmw_time_t & time)
+is_time_default(const rmw_duration_t & time)
 {
-  return time.sec == 0 && time.nsec == 0;
+  return time == 0;
 }
 
 template<typename DDSEntityQos>
@@ -102,11 +100,11 @@ bool fill_entity_qos_from_profile(
   }
 
   if (!is_time_default(qos_policies.lifespan)) {
-    entity_qos.m_lifespan.duration = rmw_time_to_fastrtps(qos_policies.lifespan);
+    entity_qos.m_lifespan.duration = rmw_duration_to_fastrtps(qos_policies.lifespan);
   }
 
   if (!is_time_default(qos_policies.deadline)) {
-    entity_qos.m_deadline.period = rmw_time_to_fastrtps(qos_policies.deadline);
+    entity_qos.m_deadline.period = rmw_duration_to_fastrtps(qos_policies.deadline);
   }
 
   switch (qos_policies.liveliness) {
@@ -124,7 +122,7 @@ bool fill_entity_qos_from_profile(
   }
   if (!is_time_default(qos_policies.liveliness_lease_duration)) {
     entity_qos.m_liveliness.lease_duration =
-      rmw_time_to_fastrtps(qos_policies.liveliness_lease_duration);
+      rmw_duration_to_fastrtps(qos_policies.liveliness_lease_duration);
 
     // Docs suggest setting no higher than 0.7 * lease_duration, choosing 2/3 to give safe buffer.
     // See doc at https://github.com/eProsima/Fast-RTPS/blob/
