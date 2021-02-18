@@ -23,18 +23,18 @@
 
 static
 eprosima::fastrtps::Duration_t
-rmw_duration_to_fastrtps(const rmw_duration_t time)
+rmw_duration_to_fastrtps(const rmw_duration_t duration)
 {
   return eprosima::fastrtps::Duration_t(
-    static_cast<int32_t>(RCUTILS_NS_TO_S(time)),
-    static_cast<uint32_t>(time % RCUTILS_S_TO_NS(1)));
+    static_cast<int32_t>(RCUTILS_NS_TO_S(duration)),
+    static_cast<uint32_t>(duration % RCUTILS_S_TO_NS(1)));
 }
 
 static
 bool
 is_time_default(const rmw_duration_t & time)
 {
-  return time == 0;
+  return time == RMW_DURATION_INFINITE;
 }
 
 template<typename DDSEntityQos>
@@ -154,6 +154,16 @@ bool
 is_valid_qos(const rmw_qos_profile_t & /* qos_policies */)
 {
   return true;
+}
+
+rmw_duration_t
+fastrtps_duration_to_rmw(const eprosima::fastrtps::Duration_t & duration)
+{
+  if (duration == eprosima::fastrtps::rtps::c_RTPSTimeInfinite) {
+    return RMW_DURATION_INFINITE;
+  } else {
+    return RCUTILS_S_TO_NS(duration.seconds) + duration.nanosec;
+  }
 }
 
 template<typename AttributeT>
