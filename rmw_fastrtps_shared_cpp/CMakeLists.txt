@@ -71,6 +71,7 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_node_names.cpp
   src/rmw_publish.cpp
   src/rmw_publisher.cpp
+  src/rmw_qos.cpp
   src/rmw_request.cpp
   src/rmw_response.cpp
   src/rmw_security_logging.cpp
