@@ -81,6 +81,11 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(publisher_options, nullptr);
 
+  if (RMW_UNIQUE_NETWORK_FLOW_STRICTLY_REQUIRED == publisher_options->require_unique_network_flow) {
+    RMW_SET_ERROR_MSG("Unique network flows not supported on publishers");
+    return nullptr;
+  }
+
   Participant * participant = participant_info->participant;
   RMW_CHECK_ARGUMENT_FOR_NULL(participant, nullptr);
 
@@ -193,14 +198,10 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
     return nullptr;
   }
 
-  bool request_unique_flows =
-    publisher_options->require_unique_network_flow != RMW_UNIQUE_NETWORK_FLOW_NOT_REQUIRED;
-
   info->publisher_ = Domain::createPublisher(
           participant,
           publisherParam,
-          info->listener_,
-          request_unique_flows);
+          info->listener_);
   if (!info->publisher_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create publisher");
     return nullptr;
