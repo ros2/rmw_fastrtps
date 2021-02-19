@@ -46,6 +46,7 @@
 using Domain = eprosima::fastrtps::Domain;
 using Participant = eprosima::fastrtps::Participant;
 using TopicDataType = eprosima::fastrtps::TopicDataType;
+using PropertyPolicyHelper = eprosima::fastrtps::rtps::PropertyPolicyHelper;
 using XMLProfileManager = eprosima::fastrtps::xmlparser::XMLProfileManager;
 
 namespace rmw_fastrtps_cpp
@@ -169,14 +170,35 @@ create_subscription(
     }
   }
 
-  bool request_unique_flows =
-    subscription_options->require_unique_network_flow != RMW_UNIQUE_NETWORK_FLOW_NOT_REQUIRED;
+  eprosima::fastrtps::SubscriberAttributes originalParam = subscriberParam;
+  switch (subscription_options->require_unique_network_flow)
+  {
+    default:
+    case RMW_UNIQUE_NETWORK_FLOW_SYSTEM_DEFAULT:
+    case RMW_UNIQUE_NETWORK_FLOW_NOT_REQUIRED:
+      // Unique network flow not required. We leave the decission to the XML profile.
+      break;
+
+    case RMW_UNIQUE_NETWORK_FLOW_OPTIONALLY_REQUIRED:
+    case RMW_UNIQUE_NETWORK_FLOW_STRICTLY_REQUIRED:
+      // Ensure we request a unique network flow
+      if (nullptr == PropertyPolicyHelper::find_property(subscriberParam.properties, "fastdds.unique_network_flows")) {
+        subscriberParam.properties.properties().emplace_back("fastdds.unique_network_flows", "");
+      }
+      break;
+  }
 
   info->subscriber_ = Domain::createSubscriber(
           participant,
           subscriberParam,
-          info->listener_,
-          request_unique_flows);
+          info->listener_);
+  if (!info->subscriber_ &&
+      (RMW_UNIQUE_NETWORK_FLOW_OPTIONALLY_REQUIRED == subscription_options->require_unique_network_flow)) {
+    info->subscriber_ = Domain::createSubscriber(
+            participant,
+            originalParam,
+            info->listener_);
+  }
   if (!info->subscriber_) {
     RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber");
     return nullptr;
