@@ -32,9 +32,9 @@ rmw_duration_to_fastrtps(const rmw_duration_t duration)
 
 static
 bool
-is_time_default(const rmw_duration_t & time)
+is_duration_default(const rmw_duration_t & duration)
 {
-  return time == RMW_DURATION_INFINITE;
+  return duration == 0 || duration == RMW_DURATION_INFINITE;
 }
 
 template<typename DDSEntityQos>
@@ -99,11 +99,11 @@ bool fill_entity_qos_from_profile(
     history_qos.depth = static_cast<int32_t>(qos_policies.depth);
   }
 
-  if (!is_time_default(qos_policies.lifespan)) {
+  if (!is_duration_default(qos_policies.lifespan)) {
     entity_qos.m_lifespan.duration = rmw_duration_to_fastrtps(qos_policies.lifespan);
   }
 
-  if (!is_time_default(qos_policies.deadline)) {
+  if (!is_duration_default(qos_policies.deadline)) {
     entity_qos.m_deadline.period = rmw_duration_to_fastrtps(qos_policies.deadline);
   }
 
@@ -120,7 +120,7 @@ bool fill_entity_qos_from_profile(
       RMW_SET_ERROR_MSG("Unknown QoS Liveliness policy");
       return false;
   }
-  if (!is_time_default(qos_policies.liveliness_lease_duration)) {
+  if (!is_duration_default(qos_policies.liveliness_lease_duration)) {
     entity_qos.m_liveliness.lease_duration =
       rmw_duration_to_fastrtps(qos_policies.liveliness_lease_duration);
 
