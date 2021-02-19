@@ -23,6 +23,7 @@ namespace rmw_fastrtps_shared_cpp
 {
 
 using Locator_t = eprosima::fastrtps::rtps::Locator_t;
+using LocatorList_t = eprosima::fastrtps::rtps::LocatorList_t;
 using IPLocator = eprosima::fastrtps::rtps::IPLocator;
 
 rmw_ret_t fill_network_flow(rmw_network_flow_t*, const Locator_t &);
@@ -38,7 +39,8 @@ __rmw_publisher_get_network_flow(
     // Retrieve the sender locators
     CustomPublisherInfo * data =
         static_cast<CustomPublisherInfo *>(publisher->data);
-    auto locators = data->publisher_->get_locators();
+    LocatorList_t locators;
+    data->publisher_->get_sending_locators(locators);
 
     if (locators.empty())
     {
@@ -100,7 +102,8 @@ __rmw_subscription_get_network_flow(
     // Retrieve the listener locators
     CustomSubscriberInfo * data =
         static_cast<CustomSubscriberInfo*>(subscription->data);
-    auto locators = data->subscriber_->get_locators();
+    LocatorList_t locators;
+    data->subscriber_->get_listening_locators(locators);
 
     if (locators.empty())
     {
