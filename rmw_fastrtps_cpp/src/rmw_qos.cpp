@@ -16,7 +16,6 @@
 
 extern "C"
 {
-
 rmw_ret_t
 rmw_qos_profile_check_compatible(
   const rmw_qos_profile_t publisher_profile,
@@ -28,5 +27,4 @@ rmw_qos_profile_check_compatible(
   return rmw_fastrtps_shared_cpp::__rmw_qos_profile_check_compatible(
     publisher_profile, subscription_profile, compatibility, reason, reason_size);
 }
-
 }  // extern "C"
