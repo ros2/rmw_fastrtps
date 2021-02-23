@@ -35,6 +35,12 @@ if(TARGET test_names)
   target_link_libraries(test_names ${PROJECT_NAME})
 endif()
 
+ament_add_gtest(test_qos_profile_check_compatible test_qos_profile_check_compatible.cpp)
+if(TARGET test_qos_profile_check_compatible)
+  ament_target_dependencies(test_qos_profile_check_compatible rmw)
+  target_link_libraries(test_qos_profile_check_compatible ${PROJECT_NAME})
+endif()
+
 ament_add_gtest(test_logging test_logging.cpp)
 if(TARGET test_logging)
   ament_target_dependencies(test_logging
