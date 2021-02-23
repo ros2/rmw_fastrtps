@@ -16,6 +16,8 @@
 
 #include "rmw_dds_common/qos.hpp"
 
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+
 namespace rmw_fastrtps_shared_cpp
 {
 
