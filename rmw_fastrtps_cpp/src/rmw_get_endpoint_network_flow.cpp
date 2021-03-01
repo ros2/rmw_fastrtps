@@ -15,34 +15,34 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/types.h"
-#include "rmw/get_network_flow.h"
+#include "rmw/get_network_flow_endpoints.h"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
 extern "C"
 {
 
 rmw_ret_t
-rmw_publisher_get_network_flow(
+rmw_publisher_get_network_flow_endpoints(
   const rmw_publisher_t * publisher,
   rcutils_allocator_t * allocator,
-  rmw_network_flow_array_t * network_flow_array)
+  rmw_network_flow_endpoint_array_t * network_flow_endpoint_array)
 {
-    return rmw_fastrtps_shared_cpp::__rmw_publisher_get_network_flow(
+    return rmw_fastrtps_shared_cpp::__rmw_publisher_get_network_flow_endpoints(
             publisher,
             allocator,
-            network_flow_array);
+            network_flow_endpoint_array);
 }
 
 rmw_ret_t
-rmw_subscription_get_network_flow(
+rmw_subscription_get_network_flow_endpoints(
   const rmw_subscription_t * subscription,
   rcutils_allocator_t * allocator,
-  rmw_network_flow_array_t * network_flow_array)
+  rmw_network_flow_endpoint_array_t * network_flow_endpoint_array)
 {
-    return rmw_fastrtps_shared_cpp::__rmw_subscription_get_network_flow(
+    return rmw_fastrtps_shared_cpp::__rmw_subscription_get_network_flow_endpoints(
             subscription,
             allocator,
-            network_flow_array);
+            network_flow_endpoint_array);
 }
 
 }  // extern "C"

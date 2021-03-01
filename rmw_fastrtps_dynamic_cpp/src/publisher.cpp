@@ -81,8 +81,8 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(publisher_options, nullptr);
 
-  if (RMW_UNIQUE_NETWORK_FLOW_STRICTLY_REQUIRED == publisher_options->require_unique_network_flow) {
-    RMW_SET_ERROR_MSG("Unique network flows not supported on publishers");
+  if (RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED == publisher_options->require_unique_network_flow_endpoints) {
+    RMW_SET_ERROR_MSG("Unique network flow endpoints not supported on publishers");
     return nullptr;
   }
 

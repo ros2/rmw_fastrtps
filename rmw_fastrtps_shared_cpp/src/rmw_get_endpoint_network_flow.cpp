@@ -17,7 +17,7 @@
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
-#include "rmw/get_network_flow.h"
+#include "rmw/get_network_flow_endpoints.h"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -26,13 +26,13 @@ using Locator_t = eprosima::fastrtps::rtps::Locator_t;
 using LocatorList_t = eprosima::fastrtps::rtps::LocatorList_t;
 using IPLocator = eprosima::fastrtps::rtps::IPLocator;
 
-rmw_ret_t fill_network_flow(rmw_network_flow_t*, const Locator_t &);
+rmw_ret_t fill_network_flow_endpoint(rmw_network_flow_endpoint_t*, const Locator_t &);
 
 rmw_ret_t
-__rmw_publisher_get_network_flow(
+__rmw_publisher_get_network_flow_endpoints(
   const rmw_publisher_t * publisher,
   rcutils_allocator_t * allocator,
-  rmw_network_flow_array_t * network_flow_array)
+  rmw_network_flow_endpoint_array_t * network_flow_endpoint_array)
 {
     rmw_ret_t res = RMW_RET_OK;
 
@@ -49,15 +49,15 @@ __rmw_publisher_get_network_flow(
 
     // It must be a non-initialized array
     if( RMW_RET_OK !=
-        (res = rmw_network_flow_array_check_zero(network_flow_array)))
+        (res = rmw_network_flow_endpoint_array_check_zero(network_flow_endpoint_array)))
     {
        return res;
     }
 
     // Allocate
     if( RMW_RET_OK !=
-        (res = rmw_network_flow_array_init(
-                network_flow_array,
+        (res = rmw_network_flow_endpoint_array_init(
+                network_flow_endpoint_array,
                 locators.size(),
                 allocator)))
     {
@@ -67,11 +67,11 @@ __rmw_publisher_get_network_flow(
     // Translate the locators, on error reset the array
     try
     {
-        auto rmw_nf = network_flow_array->network_flow;
+        auto rmw_nf = network_flow_endpoint_array->network_flow_endpoint;
         for ( const Locator_t& loc : locators )
         {
             if( RMW_RET_OK !=
-                (res = fill_network_flow(rmw_nf++, loc)))
+                (res = fill_network_flow_endpoint(rmw_nf++, loc)))
             {
                 throw res;
             }
@@ -80,22 +80,22 @@ __rmw_publisher_get_network_flow(
     catch ( rmw_ret_t error )
     {
         // clear the array
-        rmw_network_flow_array_fini(
-            network_flow_array,
+        rmw_network_flow_endpoint_array_fini(
+            network_flow_endpoint_array,
             allocator);
 
         // set error message
-        RMW_SET_ERROR_MSG("Failed to compose network_flow_array");
+        RMW_SET_ERROR_MSG("Failed to compose network_flow_endpoint_array");
     }
 
     return res;
 }
 
 rmw_ret_t
-__rmw_subscription_get_network_flow(
+__rmw_subscription_get_network_flow_endpoints(
   const rmw_subscription_t * subscription,
   rcutils_allocator_t * allocator,
-  rmw_network_flow_array_t * network_flow_array)
+  rmw_network_flow_endpoint_array_t * network_flow_endpoint_array)
 {
     rmw_ret_t res = RMW_RET_OK;
 
@@ -112,15 +112,15 @@ __rmw_subscription_get_network_flow(
 
     // It must be a non-initialized array
     if( RMW_RET_OK !=
-        (res = rmw_network_flow_array_check_zero(network_flow_array)))
+        (res = rmw_network_flow_endpoint_array_check_zero(network_flow_endpoint_array)))
     {
        return res;
     }
 
     // Allocate
     if( RMW_RET_OK !=
-        (res = rmw_network_flow_array_init(
-                network_flow_array,
+        (res = rmw_network_flow_endpoint_array_init(
+                network_flow_endpoint_array,
                 locators.size(),
                 allocator)))
     {
@@ -130,11 +130,11 @@ __rmw_subscription_get_network_flow(
     // Translate the locators, on error reset the array
     try
     {
-        auto rmw_nf = network_flow_array->network_flow;
+        auto rmw_nf = network_flow_endpoint_array->network_flow_endpoint;
         for ( const Locator_t& loc : locators )
         {
             if( RMW_RET_OK !=
-                (res = fill_network_flow(rmw_nf++, loc)))
+                (res = fill_network_flow_endpoint(rmw_nf++, loc)))
             {
                 throw res;
             }
@@ -143,12 +143,12 @@ __rmw_subscription_get_network_flow(
     catch ( rmw_ret_t error )
     {
         // clear the array
-        rmw_network_flow_array_fini(
-            network_flow_array,
+        rmw_network_flow_endpoint_array_fini(
+            network_flow_endpoint_array,
             allocator);
 
         // set error message
-        RMW_SET_ERROR_MSG("Failed to compose network_flow_array");
+        RMW_SET_ERROR_MSG("Failed to compose network_flow_endpoint_array");
     }
 
     return res;
@@ -186,16 +186,16 @@ get_internet_protocol(const Locator_t& loc)
 }
 
 rmw_ret_t
-fill_network_flow(
-        rmw_network_flow_t * network_flow,
+fill_network_flow_endpoint(
+        rmw_network_flow_endpoint_t * network_flow_endpoint,
         const Locator_t & locator)
 {
     rmw_ret_t res = RMW_RET_OK;
 
     // Translate transport protocol
     if( RMW_RET_OK !=
-        (res = rmw_network_flow_set_transport_protocol(
-            network_flow,
+        (res = rmw_network_flow_endpoint_set_transport_protocol(
+            network_flow_endpoint,
             get_transport_protocol(locator))))
     {
         return res;
@@ -203,8 +203,8 @@ fill_network_flow(
 
     // Translate internet protocol
     if( RMW_RET_OK !=
-        (res = rmw_network_flow_set_internet_protocol(
-            network_flow,
+        (res = rmw_network_flow_endpoint_set_internet_protocol(
+            network_flow_endpoint,
             get_internet_protocol(locator))))
     {
         return res;
@@ -212,8 +212,8 @@ fill_network_flow(
 
     // Set the port
     if( RMW_RET_OK !=
-        (res = rmw_network_flow_set_transport_port(
-             network_flow,
+        (res = rmw_network_flow_endpoint_set_transport_port(
+             network_flow_endpoint,
              IPLocator::getPhysicalPort(locator))) )
     {
         return res;
@@ -223,8 +223,8 @@ fill_network_flow(
     std::string address = IPLocator::ip_to_string(locator);
 
     if( RMW_RET_OK !=
-        (res = rmw_network_flow_set_internet_address(
-                network_flow,
+        (res = rmw_network_flow_endpoint_set_internet_address(
+                network_flow_endpoint,
                 address.c_str(),
                 address.length())))
     {
