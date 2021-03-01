@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.4.0 (2021-03-01)
+------------------
+* Add RMW function to check QoS compatibility (`#511 <https://github.com/ros2/rmw_fastrtps/issues/511>`_)
+* Capture cdr exceptions (`#505 <https://github.com/ros2/rmw_fastrtps/issues/505>`_)
+* Load profiles based on topic names in rmw_fastrtps_dynamic_cpp (`#497 <https://github.com/ros2/rmw_fastrtps/issues/497>`_)
+* Contributors: Eduardo Ponz Segrelles, Jacob Perron, Miguel Company
+
 4.3.0 (2021-01-25)
 ------------------
 * Set rmw_dds_common::GraphCache callback after init succeeds. (`#496 <https://github.com/ros2/rmw_fastrtps/issues/496>`_)
