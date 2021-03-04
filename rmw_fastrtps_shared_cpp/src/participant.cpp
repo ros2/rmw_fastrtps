@@ -315,7 +315,7 @@ rmw_fastrtps_shared_cpp::create_participant(
         return nullptr;
       }
 
-      participantAttrs.rtps.properties = property_policy;
+      domainParticipantQos.properties(property_policy);
     } else if (security_options->enforce_security) {
       RMW_SET_ERROR_MSG("couldn't find all security files!");
       return nullptr;
