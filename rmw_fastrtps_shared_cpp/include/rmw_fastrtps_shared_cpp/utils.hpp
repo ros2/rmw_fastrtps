@@ -33,9 +33,13 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
-rmw_ret_t cast_error_dds_to_rmw(eprosima::fastrtps::types::ReturnCode_t);
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+cast_error_dds_to_rmw(eprosima::fastrtps::types::ReturnCode_t);
 
-eprosima::fastdds::dds::TopicDescription * create_topic_rmw(
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+eprosima::fastdds::dds::TopicDescription *
+create_topic_rmw(
   const CustomParticipantInfo * participant_info,
   const std::string & topic_name,
   const std::string & type_name,
