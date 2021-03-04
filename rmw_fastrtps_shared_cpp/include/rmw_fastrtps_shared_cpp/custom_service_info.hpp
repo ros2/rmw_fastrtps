@@ -206,7 +206,7 @@ public:
     data.data = request.buffer_;
     data.impl = nullptr;    // not used when is_cdr_buffer is true
     if (reader->take_next_sample(&data, &request.sample_info_) == ReturnCode_t::RETCODE_OK) {
-      if (eprosima::fastdds::dds::ALIVE_INSTANCE_STATE == request.sample_info_.instance_state) {
+      if (request.sample_info_.valid_data) {
         request.sample_identity_ = request.sample_info_.sample_identity;
         // Use response subscriber guid (on related_sample_identity) when present.
         const eprosima::fastrtps::rtps::GUID_t & reader_guid =

@@ -100,7 +100,7 @@ _take(
     // Update hasData from listener
     info->listener_->update_unread_count(info->subscriber_);
 
-    if (eprosima::fastdds::dds::ALIVE_INSTANCE_STATE == sinfo.instance_state) {
+    if (sinfo.valid_data) {
       if (message_info) {
         _assign_message_info(identifier, message_info, &sinfo);
       }
@@ -166,12 +166,10 @@ _take_sequence(
 
   for (size_t ii = 0; ii < static_cast<size_t>(info_seq.length()); ++ii) {
     if (info_seq[ii].valid_data) {
-      if (eprosima::fastdds::dds::ALIVE_INSTANCE_STATE == info_seq[ii].instance_state) {
-        if (message_info_sequence->data + *taken) {
-          _assign_message_info(identifier, message_info_sequence->data + *taken, &info_seq[ii]);
-        }
-        (*taken)++;
+      if (message_info_sequence->data + *taken) {
+        _assign_message_info(identifier, message_info_sequence->data + *taken, &info_seq[ii]);
       }
+      (*taken)++;
     }
   }
 
@@ -327,7 +325,7 @@ _take_serialized_message(
     // Update hasData from listener
     info->listener_->update_unread_count(info->subscriber_);
 
-    if (eprosima::fastdds::dds::ALIVE_INSTANCE_STATE == sinfo.instance_state) {
+    if (sinfo.valid_data) {
       auto buffer_size = static_cast<size_t>(buffer.getBufferSize());
       if (serialized_message->buffer_capacity < buffer_size) {
         auto ret = rmw_serialized_message_resize(serialized_message, buffer_size);
