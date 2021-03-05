@@ -53,9 +53,11 @@ rmw_fastrtps_cpp::create_publisher(
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
   const rmw_publisher_options_t * publisher_options,
-  bool /* keyed */,
+  bool keyed,
   bool create_publisher_listener)
 {
+  (void)keyed;
+
   /////
   // Check input parameters
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(nullptr);
@@ -83,7 +85,7 @@ rmw_fastrtps_cpp::create_publisher(
   RMW_CHECK_ARGUMENT_FOR_NULL(publisher_options, nullptr);
 
   /////
-  // Check ROS QoS
+  // Check RMW QoS
   if (!is_valid_qos(*qos_policies)) {
     RMW_SET_ERROR_MSG("Invalid QoS");
     return nullptr;
@@ -92,10 +94,10 @@ rmw_fastrtps_cpp::create_publisher(
   /////
   // Get Participant and Publisher
   eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
-  RMW_CHECK_ARGUMENT_FOR_NULL(domainParticipant, nullptr);
+  RMW_CHECK_FOR_NULL_WITH_MSG(domainParticipant, "participant handle is null", return nullptr);
 
   eprosima::fastdds::dds::Publisher * publisher = participant_info->publisher_;
-  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, nullptr);
+  RMW_CHECK_FOR_NULL_WITH_MSG(publisher, "publisher handle is null", return nullptr);
 
   /////
   // Get RMW Type Support
@@ -119,6 +121,31 @@ rmw_fastrtps_cpp::create_publisher(
     }
   }
 
+  std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
+
+  /////
+  // Find and check existing topic and type
+
+  // Create Topic and Type names
+  auto callbacks = static_cast<const message_type_support_callbacks_t *>(type_support->data);
+  std::string type_name = _create_type_name(callbacks);
+  auto topic_name_mangled =
+    _create_topic_name(qos_policies, ros_topic_prefix, topic_name).to_string();
+
+  eprosima::fastdds::dds::TypeSupport fastdds_type;
+  eprosima::fastdds::dds::TopicDescription * des_topic;
+  if (!rmw_fastrtps_shared_cpp::find_and_check_topic_and_type(
+      participant_info,
+      topic_name_mangled,
+      type_name,
+      des_topic,
+      fastdds_type)) {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "create_publisher() called for existing topic name %s with incompatible type %s",
+      topic_name_mangled.c_str(), type_name.c_str());
+    return nullptr;
+  }
+
   /////
   // Create the RMW Publisher struct (info)
   CustomPublisherInfo * info = nullptr;
@@ -135,46 +162,41 @@ rmw_fastrtps_cpp::create_publisher(
     });
 
   info->typesupport_identifier_ = type_support->typesupport_identifier;
-  info->type_support_impl_ = type_support->data;
+  info->type_support_impl_ = callbacks;
 
   /////
   // Create the Type Support struct
-  auto callbacks = static_cast<const message_type_support_callbacks_t *>(type_support->data);
-  std::string type_name = _create_type_name(callbacks);
+  if (!fastdds_type) {
+    auto tsupport = new (std::nothrow) MessageTypeSupport_cpp(callbacks);
+    if (!tsupport) {
+      RMW_SET_ERROR_MSG("create_publisher() failed to allocate MessageTypeSupport");
+      return nullptr;
+    }
 
-  info->type_support_ = new (std::nothrow) MessageTypeSupport_cpp(callbacks);
-  if (!info->type_support_) {
-    RMW_SET_ERROR_MSG("create_publisher() failed to allocate MessageTypeSupport");
+    // Transfer ownership to fastdds_type
+    fastdds_type.reset(tsupport);
+  }
+
+  if (ReturnCode_t::RETCODE_OK != fastdds_type.register_type(domainParticipant)) {
+    RMW_SET_ERROR_MSG("create_publisher() failed to register type");
     return nullptr;
   }
+  info->type_support_ = fastdds_type;
   auto cleanup_type_support = rcpputils::make_scope_exit(
-    [info]() {
-      delete info->type_support_;
+    [info, domainParticipant]() {
+      domainParticipant->unregister_type(info->type_support_.get_type_name());
     });
-
-  /////
-  // Register the Type in the participant
-  // When a type is registered in a participant, it is converted to a shared_ptr, so it is
-  // dangerous to keep using it. Thus we use a new TypeSupport created only to register it.
-  ReturnCode_t ret = domainParticipant->register_type(
-    eprosima::fastdds::dds::TypeSupport(new (std::nothrow) MessageTypeSupport_cpp(callbacks)));
-  // Register could fail if there is already a type with that name in participant,
-  // so not only OK retcode is possible
-  if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
-    RMW_SET_ERROR_MSG("Error registering type in publisher");
-    return nullptr;
-  }
 
   /////
   // Create Listener
   info->listener_ = nullptr;
   if (create_publisher_listener) {
     info->listener_ = new (std::nothrow) PubListener(info);
-  }
 
-  if (!info->listener_) {
-    RMW_SET_ERROR_MSG("create_publisher() could not create publisher listener");
-    return nullptr;
+    if (!info->listener_) {
+      RMW_SET_ERROR_MSG("create_publisher() could not create publisher listener");
+      return nullptr;
+    }
   }
 
   auto cleanup_listener = rcpputils::make_scope_exit(
@@ -184,34 +206,28 @@ rmw_fastrtps_cpp::create_publisher(
 
   /////
   // Create and register Topic
+  if (!des_topic) {
+    // Use Topic Qos Default
+    eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
 
-  // Create Topic name
-  auto topic_name_mangled =
-    _create_topic_name(qos_policies, ros_topic_prefix, topic_name).to_string();
+    if (!get_topic_qos(*qos_policies, topicQos)) {
+      RMW_SET_ERROR_MSG("Error setting topic QoS for publisher");
+      return nullptr;
+    }
 
-  // Use Topic Qos Default
-  eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
+    des_topic = domainParticipant->create_topic(
+      topic_name_mangled,
+      type_name,
+      topicQos);
 
-  if (!get_topic_qos(*qos_policies, topicQos)) {
-    RMW_SET_ERROR_MSG("Error setting topic QoS for publisher");
-    return nullptr;
-  }
-
-  // General function to create or get an already existing topic
-  eprosima::fastdds::dds::TopicDescription * des_topic =
-    rmw_fastrtps_shared_cpp::create_topic_rmw(
-    participant_info,
-    topic_name_mangled,
-    type_name,
-    topicQos);
-
-  if (des_topic == nullptr) {
-    RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
-    return nullptr;
+    if (!des_topic) {
+      RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
+      return nullptr;
+    }
   }
 
   eprosima::fastdds::dds::Topic * topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(des_topic);
-  if (des_topic == nullptr) {
+  if (!topic) {
     RMW_SET_ERROR_MSG("create_publisher() failed, publisher topic can only be of class Topic");
     return nullptr;
   }
@@ -247,12 +263,12 @@ rmw_fastrtps_cpp::create_publisher(
   }
 
   // Creates DataWriter (with publisher name to not change name policy)
-  info->publisher_ = publisher->create_datawriter(
+  info->data_writer_ = publisher->create_datawriter(
     topic,
     dataWriterQos,
     info->listener_);
 
-  if (!info->publisher_) {
+  if (!info->data_writer_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create data writer");
     return nullptr;
   }
@@ -260,13 +276,13 @@ rmw_fastrtps_cpp::create_publisher(
   // lambda to delete datawriter
   auto cleanup_datawriter = rcpputils::make_scope_exit(
     [publisher, info]() {
-      publisher->delete_datawriter(info->publisher_);
+      publisher->delete_datawriter(info->data_writer_);
     });
 
   /////
   // Create RMW GID
   info->publisher_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
-    eprosima_fastrtps_identifier, info->publisher_->guid());
+    eprosima_fastrtps_identifier, info->data_writer_->guid());
 
   /////
   // Allocate publisher

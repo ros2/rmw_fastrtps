@@ -115,7 +115,7 @@ __rmw_publisher_assert_liveliness(
     return RMW_RET_ERROR;
   }
 
-  info->publisher_->assert_liveliness();
+  info->data_writer_->assert_liveliness();
   return RMW_RET_OK;
 }
 
@@ -125,7 +125,7 @@ __rmw_publisher_get_actual_qos(
   rmw_qos_profile_t * qos)
 {
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  eprosima::fastdds::dds::DataWriter * fastrtps_pub = info->publisher_;
+  eprosima::fastdds::dds::DataWriter * fastrtps_pub = info->data_writer_;
   const eprosima::fastdds::dds::DataWriterQos & dds_qos =
     fastrtps_pub->get_qos();
 

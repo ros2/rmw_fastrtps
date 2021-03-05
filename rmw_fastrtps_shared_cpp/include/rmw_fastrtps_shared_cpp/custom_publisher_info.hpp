@@ -24,6 +24,7 @@
 #include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
 #include "fastdds/dds/topic/Topic.hpp"
+#include "fastdds/dds/topic/TypeSupport.hpp"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rmw/rmw.h"
@@ -38,9 +39,9 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
 {
   virtual ~CustomPublisherInfo() = default;
 
-  eprosima::fastdds::dds::DataWriter * publisher_{nullptr};
+  eprosima::fastdds::dds::DataWriter * data_writer_{nullptr};
   PubListener * listener_{nullptr};
-  rmw_fastrtps_shared_cpp::TypeSupport * type_support_{nullptr};
+  eprosima::fastdds::dds::TypeSupport type_support_;
   const void * type_support_impl_{nullptr};
   rmw_gid_t publisher_gid{};
   const char * typesupport_identifier_{nullptr};

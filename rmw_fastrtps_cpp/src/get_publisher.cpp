@@ -30,7 +30,7 @@ get_publisher(rmw_publisher_t * publisher)
     return nullptr;
   }
   auto impl = static_cast<CustomPublisherInfo *>(publisher->data);
-  return impl->publisher_;
+  return impl->data_writer_;
 }
 
 }  // namespace rmw_fastrtps_cpp
