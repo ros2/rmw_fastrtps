@@ -46,6 +46,51 @@ rmw_ret_t cast_error_dds_to_rmw(ReturnCode_t code)
   }
 }
 
+bool
+find_and_check_topic_and_type(
+  const CustomParticipantInfo * participant_info,
+  const std::string & topic_name,
+  const std::string & type_name,
+  eprosima::fastdds::dds::TopicDescription * & returned_topic,
+  eprosima::fastdds::dds::TypeSupport & returned_type)
+{
+  // Avoid races against remove_topic_and_type
+  std::lock_guard<std::mutex> lck(participant_info->topic_creation_mutex_);
+
+  // Searchs for an already existing topic
+  returned_topic = participant_info->participant_->lookup_topicdescription(topic_name);
+  if (nullptr != returned_topic) {
+    if (returned_topic->get_type_name() != type_name) {
+      return false;
+    }
+  }
+
+  returned_type = participant_info->participant_->find_type(type_name);
+  return true;
+}
+
+void
+remove_topic_and_type(
+  const CustomParticipantInfo * participant_info,
+  const eprosima::fastdds::dds::TopicDescription * topic_desc,
+  const eprosima::fastdds::dds::TypeSupport & type)
+{
+  // Avoid races against find_and_check_topic_and_type
+  std::lock_guard<std::mutex> lck(participant_info->topic_creation_mutex_);
+
+  // TODO (Miguel C): We only create Topic instances at the moment, but this may
+  // change in the future if we start supporting other kinds of TopicDescription
+  // (like ContentFilteredTopic)
+  auto topic = dynamic_cast<const eprosima::fastdds::dds::Topic *>(topic_desc);
+  if (nullptr != topic) {
+    participant_info->participant_->delete_topic(topic);
+  }
+
+  if (type) {
+    participant_info->participant_->unregister_type(type.get_type_name());
+  }
+}
+
 eprosima::fastdds::dds::TopicDescription * create_topic_rmw(
   const CustomParticipantInfo * participant_info,
   const std::string & topic_name,

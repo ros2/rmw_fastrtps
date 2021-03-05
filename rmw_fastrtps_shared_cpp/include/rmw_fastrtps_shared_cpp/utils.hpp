@@ -38,6 +38,22 @@ rmw_ret_t
 cast_error_dds_to_rmw(eprosima::fastrtps::types::ReturnCode_t);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
+bool
+find_and_check_topic_and_type(
+  const CustomParticipantInfo * participant_info,
+  const std::string & topic_name,
+  const std::string & type_name,
+  eprosima::fastdds::dds::TopicDescription * & returned_topic,
+  eprosima::fastdds::dds::TypeSupport & returned_type);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+void
+remove_topic_and_type(
+  const CustomParticipantInfo * participant_info,
+  const eprosima::fastdds::dds::TopicDescription * topic,
+  const eprosima::fastdds::dds::TypeSupport & type);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 eprosima::fastdds::dds::TopicDescription *
 create_topic_rmw(
   const CustomParticipantInfo * participant_info,
