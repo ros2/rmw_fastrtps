@@ -13,7 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <limits.h>
 #include <string>
 #include <memory>
 
@@ -133,7 +132,7 @@ __create_participant(
 
   participant_info->participant_ =
     eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(
-    domain_id, domainParticipantQos, participant_info->listener_, participant_mask);
+    static_cast<uint32_t>(domain_id), domainParticipantQos, participant_info->listener_, participant_mask);
 
   if (!participant_info->participant_) {
     RMW_SET_ERROR_MSG("__create_participant failed to create participant");
