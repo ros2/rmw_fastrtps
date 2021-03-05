@@ -51,6 +51,10 @@ get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
   eprosima::fastrtps::PublisherAttributes & pattr);
 
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_time_t
+dds_duration_to_rmw(const eprosima::fastrtps::Duration_t & duration);
+
 /*
  * Converts the low-level QOS Policy; of type WriterQos or ReaderQos into rmw_qos_profile_t.
  * Since WriterQos or ReaderQos does not have information about history and depth, these values are not set
@@ -89,11 +93,8 @@ dds_qos_to_rmw_qos(
       break;
   }
 
-  qos->deadline.sec = dds_qos.m_deadline.period.seconds;
-  qos->deadline.nsec = dds_qos.m_deadline.period.nanosec;
-
-  qos->lifespan.sec = dds_qos.m_lifespan.duration.seconds;
-  qos->lifespan.nsec = dds_qos.m_lifespan.duration.nanosec;
+  qos->deadline = dds_duration_to_rmw(dds_qos.m_deadline.period);
+  qos->lifespan = dds_duration_to_rmw(dds_qos.m_lifespan.duration);
 
   switch (dds_qos.m_liveliness.kind) {
     case eprosima::fastrtps::AUTOMATIC_LIVELINESS_QOS:
@@ -106,8 +107,7 @@ dds_qos_to_rmw_qos(
       qos->liveliness = RMW_QOS_POLICY_LIVELINESS_UNKNOWN;
       break;
   }
-  qos->liveliness_lease_duration.sec = dds_qos.m_liveliness.lease_duration.seconds;
-  qos->liveliness_lease_duration.nsec = dds_qos.m_liveliness.lease_duration.nanosec;
+  qos->liveliness_lease_duration = dds_duration_to_rmw(dds_qos.m_liveliness.lease_duration);
 }
 
 template<typename AttributeT>

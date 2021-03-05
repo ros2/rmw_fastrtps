@@ -26,6 +26,8 @@
 
 
 using eprosima::fastrtps::SubscriberAttributes;
+static const eprosima::fastrtps::Duration_t InfiniteDuration =
+  eprosima::fastrtps::rtps::c_RTPSTimeInfinite.to_duration_t();
 
 class GetDataReaderQoSTest : public ::testing::Test
 {
@@ -219,4 +221,26 @@ TEST_F(GetDataWriterQoSTest, large_depth_conversion) {
     qos_profile_.depth = max_depth + 1;
     EXPECT_FALSE(get_datawriter_qos(qos_profile_, publisher_attributes_));
   }
+}
+
+TEST_F(GetDataReaderQoSTest, infinite_duration_conversions)
+{
+  qos_profile_.lifespan = RMW_DURATION_INFINITE;
+  qos_profile_.deadline = RMW_DURATION_INFINITE;
+  qos_profile_.liveliness_lease_duration = RMW_DURATION_INFINITE;
+  EXPECT_TRUE(get_datareader_qos(qos_profile_, subscriber_attributes_));
+  EXPECT_EQ(subscriber_attributes_.qos.m_lifespan.duration, InfiniteDuration);
+  EXPECT_EQ(subscriber_attributes_.qos.m_deadline.period, InfiniteDuration);
+  EXPECT_EQ(subscriber_attributes_.qos.m_liveliness.lease_duration, InfiniteDuration);
+}
+
+TEST_F(GetDataWriterQoSTest, infinite_duration_conversions)
+{
+  qos_profile_.lifespan = RMW_DURATION_INFINITE;
+  qos_profile_.deadline = RMW_DURATION_INFINITE;
+  qos_profile_.liveliness_lease_duration = RMW_DURATION_INFINITE;
+  EXPECT_TRUE(get_datawriter_qos(qos_profile_, publisher_attributes_));
+  EXPECT_EQ(publisher_attributes_.qos.m_lifespan.duration, InfiniteDuration);
+  EXPECT_EQ(publisher_attributes_.qos.m_deadline.period, InfiniteDuration);
+  EXPECT_EQ(publisher_attributes_.qos.m_liveliness.lease_duration, InfiniteDuration);
 }
