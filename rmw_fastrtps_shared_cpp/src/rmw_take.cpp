@@ -33,25 +33,6 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
-class ConstructibleLoanableSequence
-  : public eprosima::fastdds::dds::LoanableSequence<rmw_fastrtps_shared_cpp::SerializedData>
-{
-public:
-  ConstructibleLoanableSequence(
-    size_type count,
-    rmw_fastrtps_shared_cpp::SerializedData ** serialize_data)
-  {
-    maximum_ = count;
-    elements_ = reinterpret_cast<element_type *>(serialize_data);
-  }
-
-  ~ConstructibleLoanableSequence()
-  {
-    maximum_ = 0;
-    elements_ = nullptr;
-  }
-};
-
 void
 _assign_message_info(
   const char * identifier,
@@ -121,8 +102,8 @@ _take_sequence(
   size_t * taken,
   rmw_subscription_allocation_t * allocation)
 {
-  (void) allocation;
   *taken = 0;
+  bool taken_flag = false;
   rmw_ret_t ret = RMW_RET_OK;
 
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -133,42 +114,25 @@ _take_sequence(
   CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
-  // Take every message available (Maximum number of messages<count>)
-  eprosima::fastdds::dds::LoanableSequence<eprosima::fastdds::dds::SampleInfo> info_seq(count);
-
-  // Datas must be initialized before calling take
-  // Two vectors are required because we want to avoid using new
-  // and [<variable>] type are not recomendded
-  std::vector<rmw_fastrtps_shared_cpp::SerializedData> serialized_data(count);
-  std::vector<rmw_fastrtps_shared_cpp::SerializedData *> serialized_data_p(count);
-  for (size_t i = 0; i < count; ++i) {
-    serialized_data[i].is_cdr_buffer = false;
-    serialized_data[i].data = message_sequence->data[i];
-    serialized_data[i].impl = info->type_support_impl_;
-    serialized_data_p[i] = &serialized_data[i];
+  // Limit the upper bound of reads to the number unread at the beginning.
+  // This prevents any samples that are added after the beginning of the
+  // _take_sequence call from being read.
+  auto unread_count = info->subscriber_->get_unread_count();
+  if (unread_count < count) {
+    count = unread_count;
   }
 
-  // Creates specific Lonable collection to avoid heap allocs
-  rmw_fastrtps_shared_cpp::ConstructibleLoanableSequence data_seq(
-    count,
-    serialized_data_p.data());
+  for (size_t ii = 0; ii < count; ++ii) {
+    taken_flag = false;
+    ret = _take(
+      identifier, subscription, message_sequence->data[*taken],
+      &taken_flag, &message_info_sequence->data[*taken], allocation);
 
-  rmw_fastrtps_shared_cpp::SerializedData * sd =
-    reinterpret_cast<rmw_fastrtps_shared_cpp::SerializedData *>(data_seq.buffer()[0]);
+    if (ret != RMW_RET_OK) {
+      break;
+    }
 
-  ReturnCode_t take_ret = info->subscriber_->take(data_seq, info_seq, count);
-  if (take_ret != ReturnCode_t::RETCODE_OK) {
-    return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(take_ret);
-  }
-
-  // Update hasData from listener
-  info->listener_->update_unread_count(info->subscriber_);
-
-  for (size_t ii = 0; ii < static_cast<size_t>(info_seq.length()); ++ii) {
-    if (info_seq[ii].valid_data) {
-      if (message_info_sequence->data + *taken) {
-        _assign_message_info(identifier, message_info_sequence->data + *taken, &info_seq[ii]);
-      }
+    if (taken_flag) {
       (*taken)++;
     }
   }
