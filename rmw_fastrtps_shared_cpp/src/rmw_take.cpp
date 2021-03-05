@@ -77,9 +77,9 @@ _take(
   data.is_cdr_buffer = false;
   data.data = ros_message;
   data.impl = info->type_support_impl_;
-  if (info->subscriber_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
+  if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
     // Update hasData from listener
-    info->listener_->update_unread_count(info->subscriber_);
+    info->listener_->update_unread_count(info->data_reader_);
 
     if (sinfo.valid_data) {
       if (message_info) {
@@ -117,7 +117,7 @@ _take_sequence(
   // Limit the upper bound of reads to the number unread at the beginning.
   // This prevents any samples that are added after the beginning of the
   // _take_sequence call from being read.
-  auto unread_count = info->subscriber_->get_unread_count();
+  auto unread_count = info->data_reader_->get_unread_count();
   if (unread_count < count) {
     count = unread_count;
   }
@@ -285,9 +285,9 @@ _take_serialized_message(
   data.data = &buffer;
   data.impl = nullptr;    // not used when is_cdr_buffer is true
 
-  if (info->subscriber_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
+  if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
     // Update hasData from listener
-    info->listener_->update_unread_count(info->subscriber_);
+    info->listener_->update_unread_count(info->data_reader_);
 
     if (sinfo.valid_data) {
       auto buffer_size = static_cast<size_t>(buffer.getBufferSize());

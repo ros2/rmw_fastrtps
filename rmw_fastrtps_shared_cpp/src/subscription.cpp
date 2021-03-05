@@ -43,10 +43,14 @@ destroy_subscription(
   rmw_ret_t ret = RMW_RET_OK;
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
 
-  // NOTE: Topic deletion and unregister type is done in the participant
   if (nullptr != info) {
+    std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
+
+    // Keep pointer to topic, so we can remove it later
+    auto topic = info->data_reader_->get_topicdescription();
+
     // Delete DataReader
-    ReturnCode_t ret = participant_info->subscriber_->delete_datareader(info->subscriber_);
+    ReturnCode_t ret = participant_info->subscriber_->delete_datareader(info->data_reader_);
     if (ret != ReturnCode_t::RETCODE_OK) {
       RMW_SET_ERROR_MSG("Fail in delete datareader");
       return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
@@ -57,10 +61,8 @@ destroy_subscription(
       delete info->listener_;
     }
 
-    // Delete type support inside subscription
-    if (info->type_support_ != nullptr) {
-      delete info->type_support_;
-    }
+    // Delete topic and unregister type
+    remove_topic_and_type(participant_info, topic, info->type_support_);
 
     // Delete SubscriberInfo structure
     delete info;

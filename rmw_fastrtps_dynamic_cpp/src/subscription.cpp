@@ -90,8 +90,9 @@ create_subscription(
   (void)create_subscription_listener;
 
   /////
-  // Check ROS QoS
+  // Check RMW QoS
   if (!is_valid_qos(*qos_policies)) {
+    RMW_SET_ERROR_MSG("Invalid QoS");
     return nullptr;
   }
 
@@ -101,7 +102,7 @@ create_subscription(
   RMW_CHECK_FOR_NULL_WITH_MSG(domainParticipant, "participant handle is null", return nullptr);
 
   eprosima::fastdds::dds::Subscriber * subscriber = participant_info->subscriber_;
-  RMW_CHECK_ARGUMENT_FOR_NULL(subscriber, nullptr);
+  RMW_CHECK_FOR_NULL_WITH_MSG(subscriber, "subscriber handle is null", return nullptr);
 
   /////
   // Get RMW Type Support
@@ -123,6 +124,31 @@ create_subscription(
         prev_error_string.str, error_string.str);
       return nullptr;
     }
+  }
+
+  std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
+
+  /////
+  // Find and check existing topic and type
+
+  // Create Topic and Type names
+  std::string type_name = _create_type_name(
+    type_support->data, type_support->typesupport_identifier);
+  auto topic_name_mangled =
+    _create_topic_name(qos_policies, ros_topic_prefix, topic_name).to_string();
+
+  eprosima::fastdds::dds::TypeSupport fastdds_type;
+  eprosima::fastdds::dds::TopicDescription * des_topic;
+  if (!rmw_fastrtps_shared_cpp::find_and_check_topic_and_type(
+      participant_info,
+      topic_name_mangled,
+      type_name,
+      des_topic,
+      fastdds_type)) {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "create_publisher() called with existing topic name %s with incompatible type %s",
+      topic_name_mangled.c_str(), type_name.c_str());
+    return nullptr;
   }
 
   /////
@@ -156,30 +182,27 @@ create_subscription(
   info->typesupport_identifier_ = type_support->typesupport_identifier;
   info->type_support_impl_ = type_support_impl;
 
-  info->type_support_ = new (std::nothrow) TypeSupportProxy(type_support_impl);
-  if (!info->type_support_) {
-    RMW_SET_ERROR_MSG("create_subscription() failed to allocate MessageTypeSupport");
+  if (!fastdds_type) {
+    auto tsupport = new (std::nothrow) TypeSupportProxy(type_support_impl);
+    if (!tsupport) {
+      RMW_SET_ERROR_MSG("create_subscription() failed to allocate TypeSupportProxy");
+      return nullptr;
+    }
+
+    // Transfer ownership to fastdds_type
+    fastdds_type.reset(tsupport);
+  }
+
+  if (ReturnCode_t::RETCODE_OK != fastdds_type.register_type(domainParticipant)) {
+    RMW_SET_ERROR_MSG("create_subscription() failed to register type");
     return nullptr;
   }
+
+  info->type_support_ = fastdds_type;
   auto cleanup_type_support = rcpputils::make_scope_exit(
-    [info]() {
-      delete info->type_support_;
+    [info, domainParticipant]() {
+      domainParticipant->unregister_type(info->type_support_.get_type_name());
     });
-
-  std::string type_name = _create_type_name(
-    type_support->data, info->typesupport_identifier_);
-
-  /////
-  // Register the Type in the participant
-  // When a type is registered in a participant, it is converted to a shared_ptr, so it is
-  // dangerous to keep using it. Thus we use a new TypeSupport created only to register it.
-  ReturnCode_t ret = domainParticipant->register_type(
-    eprosima::fastdds::dds::TypeSupport(new (std::nothrow) TypeSupportProxy(type_support_impl)));
-  // Register could fail if there is already a type with that name in participant,
-  // so not only OK retcode is possible
-  if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
-    return nullptr;
-  }
 
   /////
   // Create Listener
@@ -199,30 +222,24 @@ create_subscription(
     });
 
   /////
-  // Create Topic
+  // Create and register Topic
+  if (!des_topic) {
+    // Use Topic Qos Default
+    eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
 
-  // Create Topic name
-  auto topic_name_mangled =
-    _create_topic_name(qos_policies, ros_topic_prefix, topic_name).to_string();
+    if (!get_topic_qos(*qos_policies, topicQos)) {
+      return nullptr;
+    }
 
-  // Use Topic Qos Default
-  eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
+    des_topic = domainParticipant->create_topic(
+      topic_name_mangled,
+      type_name,
+      topicQos);
 
-  if (!get_topic_qos(*qos_policies, topicQos)) {
-    return nullptr;
-  }
-
-  // General function to create or get an already existing topic
-  eprosima::fastdds::dds::TopicDescription * des_topic =
-    rmw_fastrtps_shared_cpp::create_topic_rmw(
-    participant_info,
-    topic_name_mangled,
-    type_name,
-    topicQos);
-
-  if (des_topic == nullptr) {
-    RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
-    return nullptr;
+    if (!des_topic) {
+      RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
+      return nullptr;
+    }
   }
 
   /////
@@ -248,12 +265,12 @@ create_subscription(
   }
 
   // Creates DataReader (with subscriber name to not change name policy)
-  info->subscriber_ = subscriber->create_datareader(
+  info->data_reader_ = subscriber->create_datareader(
     des_topic,
     dataReaderQos,
     info->listener_);
 
-  if (!info->subscriber_) {
+  if (!info->data_reader_) {
     RMW_SET_ERROR_MSG("create_subscriber() could not create data reader");
     return nullptr;
   }
@@ -261,13 +278,13 @@ create_subscription(
   // lambda to delete datareader
   auto cleanup_datareader = rcpputils::make_scope_exit(
     [subscriber, info]() {
-      subscriber->delete_datareader(info->subscriber_);
+      subscriber->delete_datareader(info->data_reader_);
     });
 
   /////
   // Create RMW GID
   info->subscription_gid_ = rmw_fastrtps_shared_cpp::create_rmw_gid(
-    eprosima_fastrtps_identifier, info->subscriber_->guid());
+    eprosima_fastrtps_identifier, info->data_reader_->guid());
 
   rmw_subscription_t * rmw_subscription = rmw_subscription_allocate();
   if (!rmw_subscription) {
