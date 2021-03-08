@@ -61,7 +61,7 @@ typedef struct CustomParticipantInfo
   // Struct to store every topic created in the local domain
   // These variables needs to be
   mutable std::vector<eprosima::fastdds::dds::Topic *> topics_list_;
-  mutable std::mutex topic_creation_mutex_;
+  mutable std::mutex entity_creation_mutex_;
 
   // Flag to establish if the QoS of the participant,
   // its publishers and its subscribers are going

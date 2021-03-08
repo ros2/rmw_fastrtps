@@ -54,9 +54,6 @@ find_and_check_topic_and_type(
   eprosima::fastdds::dds::TopicDescription * & returned_topic,
   eprosima::fastdds::dds::TypeSupport & returned_type)
 {
-  // Avoid races against remove_topic_and_type
-  std::lock_guard<std::mutex> lck(participant_info->topic_creation_mutex_);
-
   // Searchs for an already existing topic
   returned_topic = participant_info->participant_->lookup_topicdescription(topic_name);
   if (nullptr != returned_topic) {
@@ -75,9 +72,6 @@ remove_topic_and_type(
   const eprosima::fastdds::dds::TopicDescription * topic_desc,
   const eprosima::fastdds::dds::TypeSupport & type)
 {
-  // Avoid races against find_and_check_topic_and_type
-  std::lock_guard<std::mutex> lck(participant_info->topic_creation_mutex_);
-
   // TODO (Miguel C): We only create Topic instances at the moment, but this may
   // change in the future if we start supporting other kinds of TopicDescription
   // (like ContentFilteredTopic)
@@ -97,9 +91,6 @@ eprosima::fastdds::dds::TopicDescription * create_topic_rmw(
   const std::string & type_name,
   const eprosima::fastdds::dds::TopicQos & qos)
 {
-  // This block will lock the topic creations in this participant
-  std::lock_guard<std::mutex> lck(participant_info->topic_creation_mutex_);
-
   // Searchs for an already existing topic
   eprosima::fastdds::dds::TopicDescription * des_topic =
     participant_info->participant_->lookup_topicdescription(topic_name);
