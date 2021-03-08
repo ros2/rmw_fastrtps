@@ -30,7 +30,7 @@ get_request_subscriber(rmw_service_t * service)
     return nullptr;
   }
   auto impl = static_cast<CustomServiceInfo *>(service->data);
-  return impl->request_subscriber_;
+  return impl->request_reader_;
 }
 
 eprosima::fastdds::dds::DataWriter *
@@ -43,7 +43,7 @@ get_response_publisher(rmw_service_t * service)
     return nullptr;
   }
   auto impl = static_cast<CustomServiceInfo *>(service->data);
-  return impl->response_publisher_;
+  return impl->response_writer_;
 }
 
 }  // namespace rmw_fastrtps_dynamic_cpp

@@ -94,8 +94,9 @@ rmw_create_service(
   }
 
   /////
-  // Check ROS QoS
+  // Check RMW QoS
   if (!is_valid_qos(*qos_policies)) {
+    RMW_SET_ERROR_MSG("Invalid QoS");
     return nullptr;
   }
 
@@ -106,22 +107,13 @@ rmw_create_service(
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
 
   eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
-  if (!domainParticipant) {
-    RMW_SET_ERROR_MSG("participant handle is null");
-    return nullptr;
-  }
+  RMW_CHECK_FOR_NULL_WITH_MSG(domainParticipant, "participant handle is null", return nullptr);
 
   eprosima::fastdds::dds::Publisher * publisher = participant_info->publisher_;
-  if (!publisher) {
-    RMW_SET_ERROR_MSG("publisher handle is null");
-    return nullptr;
-  }
+  RMW_CHECK_FOR_NULL_WITH_MSG(publisher, "publisher handle is null", return nullptr);
 
   eprosima::fastdds::dds::Subscriber * subscriber = participant_info->subscriber_;
-  if (!subscriber) {
-    RMW_SET_ERROR_MSG("subscriber handle is null");
-    return nullptr;
-  }
+  RMW_CHECK_FOR_NULL_WITH_MSG(subscriber, "subscriber handle is null", return nullptr);
 
   /////
   // Get RMW Type Support
@@ -145,6 +137,60 @@ rmw_create_service(
     }
   }
 
+  std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
+
+  /////
+  // Find and check existing topics and types
+
+  // Create Topic and Type names
+  const service_type_support_callbacks_t * service_members;
+  const message_type_support_callbacks_t * request_members;
+  const message_type_support_callbacks_t * response_members;
+
+  service_members = static_cast<const service_type_support_callbacks_t *>(type_support->data);
+  request_members = static_cast<const message_type_support_callbacks_t *>(
+    service_members->request_members_->data);
+  response_members = static_cast<const message_type_support_callbacks_t *>(
+    service_members->response_members_->data);
+
+  std::string request_type_name = _create_type_name(request_members);
+  std::string response_type_name = _create_type_name(response_members);
+
+  std::string request_topic_name = _create_topic_name(
+    qos_policies, ros_service_requester_prefix, service_name, "Request").to_string();
+  std::string response_topic_name = _create_topic_name(
+    qos_policies, ros_service_response_prefix, service_name, "Reply").to_string();
+
+  // Get request topic and type
+  eprosima::fastdds::dds::TypeSupport request_fastdds_type;
+  eprosima::fastdds::dds::TopicDescription * request_topic = nullptr;
+  if (!rmw_fastrtps_shared_cpp::find_and_check_topic_and_type(
+      participant_info,
+      request_topic_name,
+      request_type_name,
+      request_topic,
+      request_fastdds_type)) {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "create_service() called for existing request topic name %s with incompatible type %s",
+      request_topic_name.c_str(), request_type_name.c_str());
+    return nullptr;
+  }
+
+  // Get response topic and type
+  eprosima::fastdds::dds::TypeSupport response_fastdds_type;
+  eprosima::fastdds::dds::TopicDescription * response_topic = nullptr;
+  if (!rmw_fastrtps_shared_cpp::find_and_check_topic_and_type(
+      participant_info,
+      response_topic_name,
+      response_type_name,
+      response_topic,
+      response_fastdds_type)) {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "create_service() called for existing response topic name %s with incompatible type %s",
+      response_topic_name.c_str(), response_type_name.c_str());
+    return nullptr;
+  }
+
   /////
   // Create the RMW Service struct (info)
   CustomServiceInfo * info = new (std::nothrow) CustomServiceInfo();
@@ -160,71 +206,54 @@ rmw_create_service(
   info->typesupport_identifier_ = type_support->typesupport_identifier;
 
   /////
-  // Create the Type Support struct
-  const service_type_support_callbacks_t * service_members;
-  const message_type_support_callbacks_t * request_members;
-  const message_type_support_callbacks_t * response_members;
-
-  service_members = static_cast<const service_type_support_callbacks_t *>(type_support->data);
-  request_members = static_cast<const message_type_support_callbacks_t *>(
-    service_members->request_members_->data);
-  response_members = static_cast<const message_type_support_callbacks_t *>(
-    service_members->response_members_->data);
-
+  // Create the Type Support structs
   info->request_type_support_impl_ = request_members;
   info->response_type_support_impl_ = response_members;
 
-  std::string request_type_name = _create_type_name(request_members);
-  std::string response_type_name = _create_type_name(response_members);
+  if (!request_fastdds_type) {
+    auto tsupport = new (std::nothrow) RequestTypeSupport_cpp(service_members);
+    if (!tsupport) {
+      RMW_SET_ERROR_MSG("failed to allocate request typesupport");
+      return nullptr;
+    }
 
-  // These structs are not used in the future, as there is no need to unregister the types
-  info->request_type_support_ = new (std::nothrow) RequestTypeSupport_cpp(service_members);
-  if (!info->request_type_support_) {
-    RMW_SET_ERROR_MSG("failed to allocate request typesupport");
+    request_fastdds_type.reset(tsupport);
+  }
+  if (!response_fastdds_type) {
+    auto tsupport = new (std::nothrow) ResponseTypeSupport_cpp(service_members);
+    if (!tsupport) {
+      RMW_SET_ERROR_MSG("failed to allocate response typesupport");
+      return nullptr;
+    }
+
+    response_fastdds_type.reset(tsupport);
+  }
+
+  if (ReturnCode_t::RETCODE_OK != request_fastdds_type.register_type(domainParticipant)) {
+    RMW_SET_ERROR_MSG("create_service() failed to register request type");
     return nullptr;
   }
+  info->request_type_support_ = request_fastdds_type;
   auto cleanup_type_support_request = rcpputils::make_scope_exit(
-    [info]() {
-      delete info->request_type_support_;
+    [info, domainParticipant]() {
+      domainParticipant->unregister_type(info->request_type_support_.get_type_name());
     });
 
-  info->response_type_support_ = new (std::nothrow) ResponseTypeSupport_cpp(service_members);
-  if (!info->response_type_support_) {
-    RMW_SET_ERROR_MSG("failed to allocate response typesupport");
+  if (ReturnCode_t::RETCODE_OK != response_fastdds_type.register_type(domainParticipant)) {
+    RMW_SET_ERROR_MSG("create_service() failed to register request type");
     return nullptr;
   }
+  info->response_type_support_ = response_fastdds_type;
   auto cleanup_type_support_response = rcpputils::make_scope_exit(
-    [info]() {
-      delete info->response_type_support_;
+    [info, domainParticipant]() {
+      domainParticipant->unregister_type(info->response_type_support_.get_type_name());
     });
-
-  /////
-  // Register the Type in the participant
-  // When a type is registered in a participant, it is converted to a shared_ptr, so it is
-  // dangerous to keep using it. Thus we use a new TypeSupport created only to register it.
-  ReturnCode_t ret = domainParticipant->register_type(
-    eprosima::fastdds::dds::TypeSupport(
-      new (std::nothrow) RequestTypeSupport_cpp(service_members)));
-  // Register could fail if there is already a type with that name in participant,
-  // so not only OK retcode is possible
-  if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
-    return nullptr;
-  }
-
-  ret = domainParticipant->register_type(
-    eprosima::fastdds::dds::TypeSupport(
-      new (std::nothrow) ResponseTypeSupport_cpp(service_members)));
-  // Register could fail if there is already a type with that name in participant,
-  // so not only OK retcode is possible
-  if (ret != ReturnCode_t::RETCODE_OK && ret != ReturnCode_t::RETCODE_PRECONDITION_NOT_MET) {
-    return nullptr;
-  }
 
   /////
   // Create Listeners
   info->listener_ = new (std::nothrow) ServiceListener(info);
   if (!info->listener_) {
-    RMW_SET_ERROR_MSG("failed to create client response subscriber listener");
+    RMW_SET_ERROR_MSG("failed to create service response subscriber listener");
     return nullptr;
   }
 
@@ -235,7 +264,7 @@ rmw_create_service(
 
   info->pub_listener_ = new (std::nothrow) ServicePubListener(info);
   if (!info->pub_listener_) {
-    RMW_SET_ERROR_MSG("failed to create client request publisher listener");
+    RMW_SET_ERROR_MSG("failed to create service request publisher listener");
     return nullptr;
   }
 
@@ -254,47 +283,39 @@ rmw_create_service(
   }
 
   // Create request topic
-  std::string sub_topic_name = _create_topic_name(
-    qos_policies, ros_service_requester_prefix, service_name, "Request").to_string();
+  if (!request_topic) {
+    request_topic = domainParticipant->create_topic(
+      request_topic_name,
+      request_type_name,
+      topicQos);
 
-  // General function to create or get an already existing topic
-  eprosima::fastdds::dds::TopicDescription * des_sub_topic =
-    rmw_fastrtps_shared_cpp::create_topic_rmw(
-    participant_info,
-    sub_topic_name,
-    request_type_name,
-    topicQos);
-
-  if (des_sub_topic == nullptr) {
-    RMW_SET_ERROR_MSG("failed to create request topic");
-    return nullptr;
+    if (!request_topic) {
+      RMW_SET_ERROR_MSG("failed to create service request topic");
+      return nullptr;
+    }
   }
 
   // Create response topic
-  std::string pub_topic_name = _create_topic_name(
-    qos_policies, ros_service_response_prefix, service_name, "Reply").to_string();
+  if (!response_topic) {
+    response_topic = domainParticipant->create_topic(
+      response_topic_name,
+      response_type_name,
+      topicQos);
 
-  // General function to create or get an already existing topic
-  eprosima::fastdds::dds::TopicDescription * des_pub_topic =
-    rmw_fastrtps_shared_cpp::create_topic_rmw(
-    participant_info,
-    pub_topic_name,
-    response_type_name,
-    topicQos);
-
-  if (des_pub_topic == nullptr) {
-    RMW_SET_ERROR_MSG("failed to create response topic");
-    return nullptr;
+    if (!response_topic) {
+      RMW_SET_ERROR_MSG("failed to create service response topic");
+      return nullptr;
+    }
   }
 
   eprosima::fastdds::dds::Topic * pub_topic =
-    dynamic_cast<eprosima::fastdds::dds::Topic *>(des_pub_topic);
+    dynamic_cast<eprosima::fastdds::dds::Topic *>(response_topic);
   if (pub_topic == nullptr) {
-    RMW_SET_ERROR_MSG("failed, publisher topic can only be of class Topic");
+    RMW_SET_ERROR_MSG("failed, service response topic can only be of class Topic");
     return nullptr;
   }
 
-  // Key word to find DataWrtier and DataReader QoS
+  // Keyword to find DataWrtier and DataReader QoS
   std::string topic_name_fallback = "service";
 
   /////
@@ -302,17 +323,17 @@ rmw_create_service(
 
   // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill subscriber attributes with a subscriber profile
   // located based of topic name defined by _create_topic_name(). If no profile is found, a search
-  // with profile_name "client" is attempted. Else, use the default attributes.
+  // with profile_name "service" is attempted. Else, use the default attributes.
   eprosima::fastdds::dds::DataReaderQos dataReaderQos = subscriber->get_default_datareader_qos();
 
-  // Try to load the profile named "client",
+  // Try to load the profile named "service",
   // if it does not exist it tryes with the request topic name
   // It does not need to check the return code, as if any of the profile does not exist,
   // the QoS is already set correctly:
   // If none exist is default, if only one exists is the one chosen,
   // if both exist topic name is chosen
   subscriber->get_datareader_qos_from_profile(topic_name_fallback, dataReaderQos);
-  subscriber->get_datareader_qos_from_profile(sub_topic_name, dataReaderQos);
+  subscriber->get_datareader_qos_from_profile(request_topic_name, dataReaderQos);
 
   if (!participant_info->leave_middleware_default_qos) {
     dataReaderQos.endpoint().history_memory_policy =
@@ -324,20 +345,20 @@ rmw_create_service(
   }
 
   // Creates DataReader (with subscriber name to not change name policy)
-  info->request_subscriber_ = subscriber->create_datareader(
-    des_sub_topic,
+  info->request_reader_ = subscriber->create_datareader(
+    request_topic,
     dataReaderQos,
     info->listener_);
 
-  if (!info->request_subscriber_) {
-    RMW_SET_ERROR_MSG("failed to create client request data reader");
+  if (!info->request_reader_) {
+    RMW_SET_ERROR_MSG("failed to create service request data reader");
     return nullptr;
   }
 
   // lambda to delete datareader
   auto cleanup_datareader = rcpputils::make_scope_exit(
     [subscriber, info]() {
-      subscriber->delete_datareader(info->request_subscriber_);
+      subscriber->delete_datareader(info->request_reader_);
     });
 
 
@@ -346,17 +367,17 @@ rmw_create_service(
 
   // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill publisher attributes with a publisher profile
   // located based of topic name defined by _create_topic_name(). If no profile is found, a search
-  // with profile_name "client" is attempted. Else, use the default attributes.
+  // with profile_name "service" is attempted. Else, use the default attributes.
   eprosima::fastdds::dds::DataWriterQos dataWriterQos = publisher->get_default_datawriter_qos();
 
-  // Try to load the profile named "client",
+  // Try to load the profile named "service",
   // if it does not exist it tryes with the request topic name
   // It does not need to check the return code, as if any of the profile does not exist,
   // the QoS is already set correctly:
   // If none exist is default, if only one exists is the one chosen,
   // if both exist topic name is chosen
   publisher->get_datawriter_qos_from_profile(topic_name_fallback, dataWriterQos);
-  publisher->get_datawriter_qos_from_profile(pub_topic_name, dataWriterQos);
+  publisher->get_datawriter_qos_from_profile(response_topic_name, dataWriterQos);
 
   // Modify specific DataWriter Qos
   if (!participant_info->leave_middleware_default_qos) {
@@ -375,20 +396,20 @@ rmw_create_service(
   }
 
   // Creates DataWriter (with publisher name to not change name policy)
-  info->response_publisher_ = publisher->create_datawriter(
+  info->response_writer_ = publisher->create_datawriter(
     pub_topic,
     dataWriterQos,
     info->pub_listener_);
 
-  if (!info->response_publisher_) {
-    RMW_SET_ERROR_MSG("failed to create client request data writer");
+  if (!info->response_writer_) {
+    RMW_SET_ERROR_MSG("failed to create service request data writer");
     return nullptr;
   }
 
   // lambda to delete datawriter
   auto cleanup_datawriter = rcpputils::make_scope_exit(
     [publisher, info]() {
-      publisher->delete_datawriter(info->response_publisher_);
+      publisher->delete_datawriter(info->response_writer_);
     });
 
   /////
@@ -400,10 +421,10 @@ rmw_create_service(
     "************ Service Details *********");
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
-    "Sub Topic %s", sub_topic_name.c_str());
+    "Sub Topic %s", request_topic_name.c_str());
   RCUTILS_LOG_DEBUG_NAMED(
     "rmw_fastrtps_cpp",
-    "Pub Topic %s", pub_topic_name.c_str());
+    "Pub Topic %s", response_topic_name.c_str());
   RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_cpp", "***********");
 
   rmw_service_t * rmw_service = rmw_service_allocate();
@@ -431,14 +452,14 @@ rmw_create_service(
     // Update graph
     std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
     rmw_gid_t request_subscriber_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
-      eprosima_fastrtps_identifier, info->request_subscriber_->guid());
+      eprosima_fastrtps_identifier, info->request_reader_->guid());
     common_context->graph_cache.associate_reader(
       request_subscriber_gid,
       common_context->gid,
       node->name,
       node->namespace_);
     rmw_gid_t response_publisher_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
-      eprosima_fastrtps_identifier, info->response_publisher_->guid());
+      eprosima_fastrtps_identifier, info->response_writer_->guid());
     rmw_dds_common::msg::ParticipantEntitiesInfo msg =
       common_context->graph_cache.associate_writer(
       response_publisher_gid,

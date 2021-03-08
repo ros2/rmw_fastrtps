@@ -135,7 +135,7 @@ __rmw_send_response(
   data.is_cdr_buffer = false;
   data.data = const_cast<void *>(ros_response);
   data.impl = info->response_type_support_impl_;
-  if (info->response_publisher_->write(&data, wparams)) {
+  if (info->response_writer_->write(&data, wparams)) {
     returnedValue = RMW_RET_OK;
   } else {
     RMW_SET_ERROR_MSG("cannot publish data");

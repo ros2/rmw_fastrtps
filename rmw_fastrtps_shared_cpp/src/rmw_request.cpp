@@ -92,9 +92,11 @@ __rmw_take_request(
   CustomServiceRequest request = info->listener_->getRequest();
 
   if (request.buffer_ != nullptr) {
+    auto raw_type_support = dynamic_cast<rmw_fastrtps_shared_cpp::TypeSupport *>(
+      info->response_type_support_.get());
     eprosima::fastcdr::Cdr deser(*request.buffer_, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::Cdr::DDS_CDR);
-    if (info->request_type_support_->deserializeROSmessage(
+    if (raw_type_support->deserializeROSmessage(
         deser, ros_request, info->request_type_support_impl_))
     {
       // Get header

@@ -30,6 +30,7 @@
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/DataReaderListener.hpp"
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
+#include "fastdds/dds/topic/TypeSupport.hpp"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
@@ -49,12 +50,12 @@ enum class client_present_t
 
 typedef struct CustomServiceInfo
 {
-  rmw_fastrtps_shared_cpp::TypeSupport * request_type_support_{nullptr};
+  eprosima::fastdds::dds::TypeSupport request_type_support_{nullptr};
   const void * request_type_support_impl_{nullptr};
-  rmw_fastrtps_shared_cpp::TypeSupport * response_type_support_{nullptr};
+  eprosima::fastdds::dds::TypeSupport response_type_support_{nullptr};
   const void * response_type_support_impl_{nullptr};
-  eprosima::fastdds::dds::DataReader * request_subscriber_{nullptr};
-  eprosima::fastdds::dds::DataWriter * response_publisher_{nullptr};
+  eprosima::fastdds::dds::DataReader * request_reader_{nullptr};
+  eprosima::fastdds::dds::DataWriter * response_writer_{nullptr};
 
   ServiceListener * listener_{nullptr};
   ServicePubListener * pub_listener_{nullptr};
