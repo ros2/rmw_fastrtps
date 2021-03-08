@@ -56,7 +56,7 @@ __rmw_send_request(
   data.data = const_cast<void *>(ros_request);
   data.impl = info->request_type_support_impl_;
   wparams.related_sample_identity().writer_guid() = info->reader_guid_;
-  if (info->request_publisher_->write(&data, wparams)) {
+  if (info->request_writer_->write(&data, wparams)) {
     returnedValue = RMW_RET_OK;
     *sequence_id = ((int64_t)wparams.sample_identity().sequence_number().high) << 32 |
       wparams.sample_identity().sequence_number().low;

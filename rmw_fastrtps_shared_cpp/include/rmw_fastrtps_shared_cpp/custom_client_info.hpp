@@ -32,6 +32,7 @@
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/DataReaderListener.hpp"
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
+#include "fastdds/dds/topic/TypeSupport.hpp"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
@@ -42,12 +43,12 @@ class ClientPubListener;
 
 typedef struct CustomClientInfo
 {
-  rmw_fastrtps_shared_cpp::TypeSupport * request_type_support_{nullptr};
+  eprosima::fastdds::dds::TypeSupport request_type_support_{nullptr};
   const void * request_type_support_impl_{nullptr};
-  rmw_fastrtps_shared_cpp::TypeSupport * response_type_support_{nullptr};
+  eprosima::fastdds::dds::TypeSupport response_type_support_{nullptr};
   const void * response_type_support_impl_{nullptr};
-  eprosima::fastdds::dds::DataReader * response_subscriber_{nullptr};
-  eprosima::fastdds::dds::DataWriter * request_publisher_{nullptr};
+  eprosima::fastdds::dds::DataReader * response_reader_{nullptr};
+  eprosima::fastdds::dds::DataWriter * request_writer_{nullptr};
 
   std::string request_topic_;
   std::string response_topic_;

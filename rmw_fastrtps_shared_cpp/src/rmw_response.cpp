@@ -55,11 +55,13 @@ __rmw_take_response(
   CustomClientResponse response;
 
   if (info->listener_->getResponse(response)) {
+    auto raw_type_support = dynamic_cast<rmw_fastrtps_shared_cpp::TypeSupport *>(
+      info->response_type_support_.get());
     eprosima::fastcdr::Cdr deser(
       *response.buffer_,
       eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::Cdr::DDS_CDR);
-    if (info->response_type_support_->deserializeROSmessage(
+    if (raw_type_support->deserializeROSmessage(
         deser, ros_response, info->response_type_support_impl_))
     {
       request_header->source_timestamp = response.sample_info_.source_timestamp.to_ns();
