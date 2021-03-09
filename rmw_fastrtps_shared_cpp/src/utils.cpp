@@ -85,28 +85,4 @@ remove_topic_and_type(
   }
 }
 
-eprosima::fastdds::dds::TopicDescription * create_topic_rmw(
-  const CustomParticipantInfo * participant_info,
-  const std::string & topic_name,
-  const std::string & type_name,
-  const eprosima::fastdds::dds::TopicQos & qos)
-{
-  // Searchs for an already existing topic
-  eprosima::fastdds::dds::TopicDescription * des_topic =
-    participant_info->participant_->lookup_topicdescription(topic_name);
-  if (nullptr != des_topic) {
-    // If this is not an instantiated object of type Topic, it cannot be used to
-    // create a new DataWriter and though the publisher creation will fail
-    return des_topic;
-  }
-
-  // Creates topic
-  eprosima::fastdds::dds::Topic * topic = participant_info->participant_->create_topic(
-    topic_name,
-    type_name,
-    qos);
-  participant_info->topics_list_.push_back(topic);
-  return topic;
-}
-
 }  // namespace rmw_fastrtps_shared_cpp

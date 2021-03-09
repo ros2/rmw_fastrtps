@@ -53,14 +53,6 @@ remove_topic_and_type(
   const eprosima::fastdds::dds::TopicDescription * topic,
   const eprosima::fastdds::dds::TypeSupport & type);
 
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
-eprosima::fastdds::dds::TopicDescription *
-create_topic_rmw(
-  const CustomParticipantInfo * participant_info,
-  const std::string & topic_name,
-  const std::string & type_name,
-  const eprosima::fastdds::dds::TopicQos & qos);
-
 }  // namespace rmw_fastrtps_shared_cpp
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__UTILS_HPP_
