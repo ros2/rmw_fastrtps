@@ -69,7 +69,7 @@ __rmw_take_response(
       request_header->request_id.sequence_number =
         ((int64_t)response.sample_identity_.sequence_number().high) <<
         32 | response.sample_identity_.sequence_number().low;
-  
+
       *taken = true;
     }
   }

@@ -144,7 +144,8 @@ create_subscription(
       topic_name_mangled,
       type_name,
       des_topic,
-      fastdds_type)) {
+      fastdds_type))
+  {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "create_publisher() called with existing topic name %s with incompatible type %s",
       topic_name_mangled.c_str(), type_name.c_str());

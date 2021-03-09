@@ -140,8 +140,10 @@ rmw_create_client(
   const void * untyped_request_members;
   const void * untyped_response_members;
 
-  untyped_request_members = get_request_ptr(type_support->data, type_support->typesupport_identifier);
-  untyped_response_members = get_response_ptr(type_support->data, type_support->typesupport_identifier);
+  untyped_request_members = get_request_ptr(
+    type_support->data, type_support->typesupport_identifier);
+  untyped_response_members = get_response_ptr(
+    type_support->data, type_support->typesupport_identifier);
 
   std::string request_type_name = _create_type_name(
     untyped_request_members, type_support->typesupport_identifier);
@@ -161,7 +163,8 @@ rmw_create_client(
       request_topic_name,
       request_type_name,
       request_topic,
-      request_fastdds_type)) {
+      request_fastdds_type))
+  {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "create_client() called for existing request topic name %s with incompatible type %s",
       request_topic_name.c_str(), request_type_name.c_str());
@@ -176,7 +179,8 @@ rmw_create_client(
       response_topic_name,
       response_type_name,
       response_topic,
-      response_fastdds_type)) {
+      response_fastdds_type))
+  {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "create_client() called for existing response topic name %s with incompatible type %s",
       response_topic_name.c_str(), response_type_name.c_str());

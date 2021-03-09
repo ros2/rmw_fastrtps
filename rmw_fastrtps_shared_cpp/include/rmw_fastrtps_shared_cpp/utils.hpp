@@ -35,7 +35,7 @@ namespace rmw_fastrtps_shared_cpp
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
-cast_error_dds_to_rmw(eprosima::fastrtps::types::ReturnCode_t);
+  cast_error_dds_to_rmw(eprosima::fastrtps::types::ReturnCode_t);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool

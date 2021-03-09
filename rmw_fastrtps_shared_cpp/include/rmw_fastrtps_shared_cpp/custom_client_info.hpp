@@ -92,8 +92,7 @@ public:
     data.data = response.buffer_.get();
     data.impl = nullptr;    // not used when is_cdr_buffer is true
     if (reader->take_next_sample(&data, &response.sample_info_) == ReturnCode_t::RETCODE_OK) {
-      if (response.sample_info_.valid_data)
-      {
+      if (response.sample_info_.valid_data) {
         response.sample_identity_ = response.sample_info_.related_sample_identity;
 
         if (response.sample_identity_.writer_guid() == info_->reader_guid_ ||

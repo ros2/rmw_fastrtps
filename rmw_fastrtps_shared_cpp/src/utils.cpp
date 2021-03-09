@@ -72,7 +72,7 @@ remove_topic_and_type(
   const eprosima::fastdds::dds::TopicDescription * topic_desc,
   const eprosima::fastdds::dds::TypeSupport & type)
 {
-  // TODO (Miguel C): We only create Topic instances at the moment, but this may
+  // TODO(MiguelCompany): We only create Topic instances at the moment, but this may
   // change in the future if we start supporting other kinds of TopicDescription
   // (like ContentFilteredTopic)
   auto topic = dynamic_cast<const eprosima::fastdds::dds::Topic *>(topic_desc);
