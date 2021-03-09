@@ -343,15 +343,6 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
     return RMW_RET_ERROR;
   }
 
-  // Topics must be deleted before delete the participant
-  for (auto topic : participant_info->topics_list_) {
-    ReturnCode_t ret = participant_info->participant_->delete_topic(topic);
-    if (ret != ReturnCode_t::RETCODE_OK) {
-      RMW_SET_ERROR_MSG("Fail in delete participant");
-      return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
-    }
-  }
-
   // Remove publisher and subcriber from participant
   ReturnCode_t ret = participant_info->participant_->delete_publisher(participant_info->publisher_);
   if (ret != ReturnCode_t::RETCODE_OK) {
