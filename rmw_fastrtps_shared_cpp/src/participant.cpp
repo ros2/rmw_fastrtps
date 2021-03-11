@@ -16,10 +16,13 @@
 #include <string>
 #include <memory>
 
+#include "fastdds/dds/core/status/StatusMask.hpp"
 #include "fastdds/dds/domain/DomainParticipantFactory.hpp"
 #include "fastdds/dds/domain/qos/DomainParticipantQos.hpp"
 #include "fastdds/dds/publisher/qos/PublisherQos.hpp"
 #include "fastdds/dds/subscriber/qos/SubscriberQos.hpp"
+#include "fastdds/rtps/attributes/PropertyPolicy.h"
+#include "fastdds/rtps/common/Property.h"
 #include "fastdds/rtps/transport/UDPv4TransportDescriptor.h"
 #include "fastdds/rtps/transport/shared_mem/SharedMemTransportDescriptor.h"
 
@@ -73,17 +76,15 @@ get_security_file_paths(
 #endif
 
 // Private function to create Participant with QoS
-CustomParticipantInfo *
+static CustomParticipantInfo *
 __create_participant(
   const char * identifier,
-  eprosima::fastdds::dds::DomainParticipantQos domainParticipantQos,
+  const eprosima::fastdds::dds::DomainParticipantQos & domainParticipantQos,
   bool leave_middleware_default_qos,
   publishing_mode_t publishing_mode,
   rmw_dds_common::Context * common_context,
   size_t domain_id)
 {
-  /////
-  // Declare everything before beginning to create things.
   CustomParticipantInfo * participant_info = nullptr;
 
   /////
@@ -92,6 +93,7 @@ __create_participant(
     participant_info = new CustomParticipantInfo();
   } catch (std::bad_alloc &) {
     RMW_SET_ERROR_MSG("__create_participant failed to allocate CustomParticipantInfo struct");
+    return nullptr;
   }
   // lambda to delete participant info
   auto cleanup_participant_info = rcpputils::make_scope_exit(
@@ -106,6 +108,7 @@ __create_participant(
       identifier, common_context);
   } catch (std::bad_alloc &) {
     RMW_SET_ERROR_MSG("__create_participant failed to allocate participant listener");
+    return nullptr;
   }
   // lambda to delete listener
   auto cleanup_listener = rcpputils::make_scope_exit(
@@ -114,20 +117,11 @@ __create_participant(
     });
 
   /////
-  // Force to load XML configuration file
-  if (ReturnCode_t::RETCODE_OK !=
-    eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->load_profiles())
-  {
-    RMW_SET_ERROR_MSG("__create_participant failed to load FastDDS XML configuration file");
-  }
-
-  /////
   // Create Participant
 
-  // Create Participant Listener mask so it only uses the domain
-  // participant listener non inheritated callbacks
-  // Without this mask, callback of DataReaders on_data_available is never called
-  // Publisher and subscriber dont need masks as they do not have listeners
+  // As the participant listener is only used for discovery related callbacks, which are
+  // Fast DDS extensions to the DDS standard DomainParticipantListener interface, an empty
+  // mask should be used to let child entities handle standard DDS events.  
   eprosima::fastdds::dds::StatusMask participant_mask = eprosima::fastdds::dds::StatusMask::none();
 
   participant_info->participant_ =
@@ -222,7 +216,7 @@ rmw_fastrtps_shared_cpp::create_participant(
 
     // Add SHM transport if available
     auto shm_transport = std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
-    domainParticipantQos.transport().user_transports.push_back(udp_transport);
+    domainParticipantQos.transport().user_transports.push_back(shm_transport);
   }
 
   size_t length = snprintf(nullptr, 0, "enclave=%s;", enclave) + 1;

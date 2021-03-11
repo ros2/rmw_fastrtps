@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
+#include "fastdds/dds/core/status/BaseStatus.hpp"
+#include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
 #include "types/event_types.hpp"
 
 EventListenerInterface *
@@ -42,7 +44,7 @@ PubListener::on_offered_deadline_missed(
 
 void PubListener::on_liveliness_lost(
   eprosima::fastdds::dds::DataWriter * /* writer */,
-  const eprosima::fastrtps::LivelinessLostStatus & status)
+  const eprosima::fastdds::dds::LivelinessLostStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
 

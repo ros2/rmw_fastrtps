@@ -16,8 +16,13 @@
 
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
 
-#include "rmw/rmw.h"
+#include "fastdds/dds/topic/Topic.hpp"
+#include "fastdds/dds/topic/TopicDescription.hpp"
+#include "fastdds/dds/topic/TypeSupport.hpp"
+
 #include "fastrtps/types/TypesBase.h"
+
+#include "rmw/rmw.h"
 
 using ReturnCode_t = eprosima::fastrtps::types::ReturnCode_t;
 
@@ -30,7 +35,7 @@ rmw_ret_t cast_error_dds_to_rmw(ReturnCode_t code)
   if (code == ReturnCode_t::RETCODE_OK) {
     return RMW_RET_OK;
   } else if (code == ReturnCode_t::RETCODE_ERROR) {
-    // repeats the error to avoid too much if comparations
+    // repeats the error to avoid too many 'if' comparisons
     return RMW_RET_ERROR;
   } else if (code == ReturnCode_t::RETCODE_TIMEOUT) {
     return RMW_RET_TIMEOUT;

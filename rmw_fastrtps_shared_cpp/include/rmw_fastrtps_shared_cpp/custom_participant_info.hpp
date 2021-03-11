@@ -24,7 +24,10 @@
 #include "fastdds/dds/domain/DomainParticipantListener.hpp"
 #include "fastdds/dds/publisher/Publisher.hpp"
 #include "fastdds/dds/subscriber/Subscriber.hpp"
-#include "fastdds/rtps/common/Types.h"
+
+#include "fastdds/rtps/participant/ParticipantDiscoveryInfo.h"
+#include "fastdds/rtps/reader/ReaderDiscoveryInfo.h"
+#include "fastdds/rtps/writer/WriterDiscoveryInfo.h"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rcutils/logging_macros.h"
@@ -61,8 +64,8 @@ typedef struct CustomParticipantInfo
   // Protects creation and destruction of topics, readers and writers
   mutable std::mutex entity_creation_mutex_;
 
-  // Flag to establish if the QoS of the participant,
-  // its publishers and its subscribers are going
+  // Flag to establish if the QoS of the DomainParticipant,
+  // its DataWriters, and its DataReaders are going
   // to be configured only from an XML file or if
   // their settings are going to be overwritten by code
   // with the default configuration.

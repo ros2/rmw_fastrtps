@@ -79,7 +79,7 @@ _take(
   data.impl = info->type_support_impl_;
   if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
     // Update hasData from listener
-    info->listener_->update_unread_count(info->data_reader_);
+    info->listener_->update_has_data(info->data_reader_);
 
     if (sinfo.valid_data) {
       if (message_info) {
@@ -287,7 +287,7 @@ _take_serialized_message(
 
   if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
     // Update hasData from listener
-    info->listener_->update_unread_count(info->data_reader_);
+    info->listener_->update_has_data(info->data_reader_);
 
     if (sinfo.valid_data) {
       auto buffer_size = static_cast<size_t>(buffer.getBufferSize());

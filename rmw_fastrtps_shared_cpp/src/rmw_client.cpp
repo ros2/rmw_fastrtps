@@ -90,7 +90,7 @@ __rmw_destroy_client(
     // Delete DataWriter
     ret = participant_info->publisher_->delete_datawriter(info->request_writer_);
     if (ret != ReturnCode_t::RETCODE_OK) {
-      RMW_SET_ERROR_MSG("Fail in delete datareader");
+      RMW_SET_ERROR_MSG("Fail in delete datawriter");
       return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
     }
 
@@ -103,7 +103,7 @@ __rmw_destroy_client(
     remove_topic_and_type(participant_info, request_topic, info->request_type_support_);
     remove_topic_and_type(participant_info, response_topic, info->response_type_support_);
 
-    // Delete ClientInfo structure
+    // Delete CustomClientInfo structure
     delete info;
   } else {
     final_ret = RMW_RET_INVALID_ARGUMENT;

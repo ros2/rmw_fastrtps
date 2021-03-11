@@ -20,8 +20,10 @@
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 #include "fastdds/dds/topic/Topic.hpp"
-#include "fastdds/dds/topic/TopicDataType.hpp"
+#include "fastdds/dds/topic/TopicDescription.hpp"
 #include "fastdds/dds/topic/qos/TopicQos.hpp"
+
+#include "fastdds/rtps/resources/ResourceManagement.h"
 
 #include "rcutils/allocator.h"
 #include "rcutils/error_handling.h"
@@ -61,8 +63,6 @@ create_subscription(
   bool keyed,
   bool create_subscription_listener)
 {
-  (void)keyed;
-
   /////
   // Check input parameters
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(nullptr);
@@ -71,7 +71,7 @@ create_subscription(
   RMW_CHECK_ARGUMENT_FOR_NULL(type_supports, nullptr);
   RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, nullptr);
   if (0 == strlen(topic_name)) {
-    RMW_SET_ERROR_MSG("topic_name argument is an empty string");
+    RMW_SET_ERROR_MSG("create_subscription() called with an empty topic_name argument");
     return nullptr;
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(qos_policies, nullptr);
@@ -83,7 +83,8 @@ create_subscription(
     }
     if (RMW_TOPIC_VALID != validation_result) {
       const char * reason = rmw_full_topic_name_validation_result_string(validation_result);
-      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("invalid topic_name argument: %s", reason);
+      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+        "create_subscription() called with invalid topic name: %s", reason);
       return nullptr;
     }
   }
@@ -92,7 +93,7 @@ create_subscription(
   /////
   // Check RMW QoS
   if (!is_valid_qos(*qos_policies)) {
-    RMW_SET_ERROR_MSG("Invalid QoS");
+    RMW_SET_ERROR_MSG("create_subscription() called with invalid QoS");
     return nullptr;
   }
 
@@ -158,7 +159,7 @@ create_subscription(
 
   info = new (std::nothrow) CustomSubscriberInfo();
   if (!info) {
-    RMW_SET_ERROR_MSG("failed to allocate CustomSubscriberInfo");
+    RMW_SET_ERROR_MSG("create_subscription() failed to allocate CustomSubscriberInfo");
     return nullptr;
   }
 
@@ -181,6 +182,11 @@ create_subscription(
 
     // Transfer ownership to fastdds_type
     fastdds_type.reset(tsupport);
+  }
+
+  if (keyed && !fastdds_type->m_isGetKeyDefined) {
+    RMW_SET_ERROR_MSG("create_subscription() requested a keyed topic with a non-keyed type");
+    return nullptr;
   }
 
   if (ReturnCode_t::RETCODE_OK != fastdds_type.register_type(domainParticipant)) {
@@ -212,31 +218,42 @@ create_subscription(
 
   /////
   // Create and register Topic
+  eprosima::fastdds::dds::Topic * topic = nullptr;
   if (!des_topic) {
     // Use Topic Qos Default
     eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
 
     if (!get_topic_qos(*qos_policies, topicQos)) {
+      RMW_SET_ERROR_MSG("create_subscription() failed setting topic QoS");
       return nullptr;
     }
 
-    des_topic = domainParticipant->create_topic(
+    topic = domainParticipant->create_topic(
       topic_name_mangled,
       type_name,
       topicQos);
 
-    if (!des_topic) {
+    if (!topic) {
       RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
       return nullptr;
     }
+    
+    des_topic = topic;
   }
+
+  auto cleanup_topic = rcpputils::make_scope_exit(
+    [domainParticipant, topic]() {
+      if (topic) {
+        domainParticipant->delete_topic(topic);
+      }
+    });
 
   /////
   // Create DataReader
 
   // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
   // datareader which profile name matches with topic_name. If such profile does not exist,
-  // then use the default QoS.
+  // then use the default Fast DDS QoS.
   eprosima::fastdds::dds::DataReaderQos dataReaderQos = subscriber->get_default_datareader_qos();
 
   // Try to load the profile with the topic name
@@ -250,6 +267,7 @@ create_subscription(
   }
 
   if (!get_datareader_qos(*qos_policies, dataReaderQos)) {
+    RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
     return nullptr;
   }
 
@@ -260,7 +278,7 @@ create_subscription(
     info->listener_);
 
   if (!info->data_reader_) {
-    RMW_SET_ERROR_MSG("create_subscriber() could not create data reader");
+    RMW_SET_ERROR_MSG("create_subscription() could not create data reader");
     return nullptr;
   }
 
@@ -279,7 +297,7 @@ create_subscription(
   // Allocate subscription
   rmw_subscription_t * rmw_subscription = rmw_subscription_allocate();
   if (!rmw_subscription) {
-    RMW_SET_ERROR_MSG("failed to allocate subscription");
+    RMW_SET_ERROR_MSG("create_subscription() failed to allocate subscription");
     return nullptr;
   }
   auto cleanup_rmw_subscription = rcpputils::make_scope_exit(
@@ -293,7 +311,8 @@ create_subscription(
 
   rmw_subscription->topic_name = rcutils_strdup(topic_name, rcutils_get_default_allocator());
   if (!rmw_subscription->topic_name) {
-    RMW_SET_ERROR_MSG("failed to allocate memory for subscription topic name");
+    RMW_SET_ERROR_MSG(
+      "create_subscription() failed to allocate memory for subscription topic name");
     return nullptr;
   }
   rmw_subscription->options = *subscription_options;
@@ -301,6 +320,7 @@ create_subscription(
 
   cleanup_rmw_subscription.cancel();
   cleanup_datareader.cancel();
+  cleanup_topic.cancel();
   cleanup_listener.cancel();
   cleanup_type_support.cancel();
   cleanup_info.cancel();

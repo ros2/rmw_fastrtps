@@ -21,9 +21,15 @@
 #include <set>
 #include <utility>
 
+#include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
+#include "fastdds/dds/core/status/LivelinessChangedStatus.hpp"
+#include "fastdds/dds/core/status/SubscriptionMatchedStatus.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/DataReaderListener.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
+
+#include "fastdds/rtps/common/Guid.h"
+#include "fastdds/rtps/common/InstanceHandle.h"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
@@ -65,7 +71,7 @@ public:
     (void)info;
   }
 
-  // SubscriberListener implementation
+  // DataReaderListener implementation
   void
   on_subscription_matched(
     eprosima::fastdds::dds::DataReader * reader,
@@ -79,13 +85,13 @@ public:
         publishers_.erase(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
       }
     }
-    update_unread_count(reader);
+    update_has_data(reader);
   }
 
   void
   on_data_available(eprosima::fastdds::dds::DataReader * reader) final
   {
-    update_unread_count(reader);
+    update_has_data(reader);
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -133,18 +139,12 @@ public:
   }
 
   void
-  update_unread_count(eprosima::fastdds::dds::DataReader * reader)
+  update_has_data(eprosima::fastdds::dds::DataReader * reader)
   {
-    // Make sure to call into Fast-RTPS before taking the lock to avoid an
-    // ABBA deadlock between internalMutex_ and mutexes inside of Fast-RTPS.
-    eprosima::fastdds::dds::SampleInfo info;
-    ReturnCode_t has_data_ret = reader->get_first_untaken_info(&info);
-
-    // In case there is data, get_first_untaken_info return OK. Else it returs NO_DATA
-    bool has_data = false;
-    if (has_data_ret == ReturnCode_t::RETCODE_OK) {
-      has_data = true;
-    }
+    // Make sure to call into Fast DDS before taking the lock to avoid an
+    // ABBA deadlock between internalMutex_ and mutexes inside of Fast DDS.
+    auto unread_count = reader->get_unread_count();
+    bool has_data = unread_count > 0;
 
     std::lock_guard<std::mutex> lock(internalMutex_);
     ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
@@ -163,11 +163,11 @@ private:
   std::atomic_bool data_;
 
   std::atomic_bool deadline_changes_;
-  eprosima::fastrtps::RequestedDeadlineMissedStatus requested_deadline_missed_status_
+  eprosima::fastdds::dds::RequestedDeadlineMissedStatus requested_deadline_missed_status_
   RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::atomic_bool liveliness_changes_;
-  eprosima::fastrtps::LivelinessChangedStatus liveliness_changed_status_
+  eprosima::fastdds::dds::LivelinessChangedStatus liveliness_changed_status_
   RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);

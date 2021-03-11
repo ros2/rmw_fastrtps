@@ -15,12 +15,15 @@
 
 #include <string>
 
+#include "fastdds/dds/core/policy/QosPolicies.hpp"
 #include "fastdds/dds/domain/DomainParticipant.hpp"
 #include "fastdds/dds/publisher/Publisher.hpp"
 #include "fastdds/dds/publisher/qos/DataWriterQos.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 #include "fastdds/dds/topic/Topic.hpp"
+#include "fastdds/dds/topic/TopicDescription.hpp"
 #include "fastdds/dds/topic/qos/TopicQos.hpp"
+#include "fastdds/rtps/resources/ResourceManagement.h"
 
 #include "rcutils/error_handling.h"
 #include "rcutils/macros.h"
@@ -56,8 +59,6 @@ rmw_fastrtps_cpp::create_publisher(
   bool keyed,
   bool create_publisher_listener)
 {
-  (void)keyed;
-
   /////
   // Check input parameters
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(nullptr);
@@ -66,7 +67,7 @@ rmw_fastrtps_cpp::create_publisher(
   RMW_CHECK_ARGUMENT_FOR_NULL(type_supports, nullptr);
   RMW_CHECK_ARGUMENT_FOR_NULL(topic_name, nullptr);
   if (0 == strlen(topic_name)) {
-    RMW_SET_ERROR_MSG("topic_name argument is an empty string");
+    RMW_SET_ERROR_MSG("create_publisher() called with an empty topic_name argument");
     return nullptr;
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(qos_policies, nullptr);
@@ -78,7 +79,8 @@ rmw_fastrtps_cpp::create_publisher(
     }
     if (RMW_TOPIC_VALID != validation_result) {
       const char * reason = rmw_full_topic_name_validation_result_string(validation_result);
-      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING("invalid topic name: %s", reason);
+      RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+        "create_publisher() called with invalid topic name: %s", reason);
       return nullptr;
     }
   }
@@ -87,7 +89,7 @@ rmw_fastrtps_cpp::create_publisher(
   /////
   // Check RMW QoS
   if (!is_valid_qos(*qos_policies)) {
-    RMW_SET_ERROR_MSG("Invalid QoS");
+    RMW_SET_ERROR_MSG("create_publisher() called with invalid QoS");
     return nullptr;
   }
 
@@ -146,9 +148,9 @@ rmw_fastrtps_cpp::create_publisher(
       topic_name_mangled.c_str(), type_name.c_str());
     return nullptr;
   }
-
+  
   /////
-  // Create the RMW Publisher struct (info)
+  // Create the custom Publisher struct (info)
   CustomPublisherInfo * info = nullptr;
 
   info = new (std::nothrow) CustomPublisherInfo();
@@ -176,6 +178,11 @@ rmw_fastrtps_cpp::create_publisher(
 
     // Transfer ownership to fastdds_type
     fastdds_type.reset(tsupport);
+  }
+  
+  if (keyed && !fastdds_type->m_isGetKeyDefined) {
+    RMW_SET_ERROR_MSG("create_publisher() requested a keyed topic with a non-keyed type");
+    return nullptr;
   }
 
   if (ReturnCode_t::RETCODE_OK != fastdds_type.register_type(domainParticipant)) {
@@ -207,38 +214,50 @@ rmw_fastrtps_cpp::create_publisher(
 
   /////
   // Create and register Topic
+  bool topic_created = false;
+  eprosima::fastdds::dds::Topic * topic = nullptr;
   if (!des_topic) {
     // Use Topic Qos Default
     eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
 
     if (!get_topic_qos(*qos_policies, topicQos)) {
-      RMW_SET_ERROR_MSG("Error setting topic QoS for publisher");
+      RMW_SET_ERROR_MSG("create_publisher() failed setting topic QoS for publisher");
       return nullptr;
     }
 
-    des_topic = domainParticipant->create_topic(
+    topic = domainParticipant->create_topic(
       topic_name_mangled,
       type_name,
       topicQos);
 
-    if (!des_topic) {
+    if (!topic) {
       RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
       return nullptr;
     }
+    
+    topic_created = true;
+  }
+  else {
+    topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(des_topic);
+    if (!topic) {
+      RMW_SET_ERROR_MSG("create_publisher() failed, publisher topic can only be of class Topic");
+      return nullptr;
+    }      
   }
 
-  eprosima::fastdds::dds::Topic * topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(des_topic);
-  if (!topic) {
-    RMW_SET_ERROR_MSG("create_publisher() failed, publisher topic can only be of class Topic");
-    return nullptr;
-  }
+  auto cleanup_topic = rcpputils::make_scope_exit(
+    [domainParticipant, topic, topic_created]() {
+      if (topic_created) {
+        domainParticipant->delete_topic(topic);
+      }
+    });
 
   /////
   // Create DataWriter
 
   // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
   // datawriter which profile name matches with topic_name. If such profile does not exist,
-  // then use the default QoS.
+  // then use the default Fast DDS QoS.
   eprosima::fastdds::dds::DataWriterQos dataWriterQos = publisher->get_default_datawriter_qos();
 
   // Try to load the profile with the topic name
@@ -258,12 +277,13 @@ rmw_fastrtps_cpp::create_publisher(
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
 
-  // Get QoS from ROS
+  // Get QoS from RMW
   if (!get_datawriter_qos(*qos_policies, dataWriterQos)) {
+    RMW_SET_ERROR_MSG("create_publisher() failed setting data writer QoS");
     return nullptr;
   }
 
-  // Creates DataWriter (with publisher name to not change name policy)
+  // Creates DataWriter
   info->data_writer_ = publisher->create_datawriter(
     topic,
     dataWriterQos,
@@ -287,11 +307,9 @@ rmw_fastrtps_cpp::create_publisher(
 
   /////
   // Allocate publisher
-  rmw_publisher_t * rmw_publisher = nullptr;
-
-  rmw_publisher = rmw_publisher_allocate();
+  rmw_publisher_t * rmw_publisher = rmw_publisher_allocate();
   if (!rmw_publisher) {
-    RMW_SET_ERROR_MSG("failed to allocate publisher");
+    RMW_SET_ERROR_MSG("create_publisher() failed to allocate rmw_publisher");
     return nullptr;
   }
   auto cleanup_rmw_publisher = rcpputils::make_scope_exit(
@@ -300,12 +318,13 @@ rmw_fastrtps_cpp::create_publisher(
       rmw_publisher_free(rmw_publisher);
     });
 
+  rmw_publisher->can_loan_messages = false;
   rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_publisher->data = info;
 
   rmw_publisher->topic_name = static_cast<char *>(rmw_allocate(strlen(topic_name) + 1));
   if (!rmw_publisher->topic_name) {
-    RMW_SET_ERROR_MSG("failed to allocate memory for publisher topic name");
+    RMW_SET_ERROR_MSG("create_publisher() failed to allocate memory for rmw_publisher topic name");
     return nullptr;
   }
   memcpy(const_cast<char *>(rmw_publisher->topic_name), topic_name, strlen(topic_name) + 1);
@@ -314,6 +333,7 @@ rmw_fastrtps_cpp::create_publisher(
 
   cleanup_rmw_publisher.cancel();
   cleanup_datawriter.cancel();
+  cleanup_topic.cancel();
   cleanup_listener.cancel();
   cleanup_type_support.cancel();
   cleanup_info.cancel();

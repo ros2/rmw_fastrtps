@@ -18,9 +18,6 @@
 #include <sstream>
 #include <string>
 
-#include "fastdds/dds/domain/DomainParticipant.hpp"
-#include "fastdds/dds/topic/TopicDataType.hpp"
-
 #include "rmw/error_handling.h"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"

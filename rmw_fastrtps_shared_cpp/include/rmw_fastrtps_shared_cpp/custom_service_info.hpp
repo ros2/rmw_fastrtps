@@ -24,13 +24,19 @@
 
 #include "fastcdr/FastBuffer.h"
 
-#include "fastdds/dds/domain/DomainParticipant.hpp"
+#include "fastdds/dds/core/status/PublicationMatchedStatus.hpp"
+#include "fastdds/dds/core/status/SubscriptionMatchedStatus.hpp"
 #include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/DataReaderListener.hpp"
+#include "fastdds/dds/subscriber/InstanceState.hpp"
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
+
+#include "fastdds/rtps/common/Guid.h"
+#include "fastdds/rtps/common/InstanceHandle.h"
+#include "fastdds/rtps/common/SampleIdentity.h"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
@@ -179,15 +185,13 @@ public:
   : info_(info), list_has_data_(false),
     conditionMutex_(nullptr), conditionVariable_(nullptr)
   {
-    (void)info_;
   }
 
   void
   on_subscription_matched(
-    eprosima::fastdds::dds::DataReader * reader,
+    eprosima::fastdds::dds::DataReader * /* reader */,
     const eprosima::fastdds::dds::SubscriptionMatchedStatus & info) final
   {
-    (void) reader;
     if (info.current_count_change == -1) {
       info_->pub_listener_->endpoint_erase_if_exists(
         eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));

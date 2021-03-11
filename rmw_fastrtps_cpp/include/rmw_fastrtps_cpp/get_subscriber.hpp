@@ -22,12 +22,12 @@
 namespace rmw_fastrtps_cpp
 {
 
-/// Return a native Fast DDS subscriber handle.
+/// Return a native Fast DDS DataReader handle.
 /**
  * The function returns `NULL` when either the subscription handle is `NULL` or
  * when the subscription handle is from a different rmw implementation.
  *
- * \return native Fast DDS subscriber handle if successful, otherwise `NULL`
+ * \return native Fast DDS DataReader handle if successful, otherwise `NULL`
  */
 RMW_FASTRTPS_CPP_PUBLIC
 eprosima::fastdds::dds::DataReader *

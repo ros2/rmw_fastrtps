@@ -12,19 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rmw_fastrtps_shared_cpp/rmw_security_logging.hpp"
+
 #include <map>
 #include <string>
 #include <sstream>
 #include <utility>
 
+#include "fastdds/rtps/common/Property.h"
+#include "fastdds/rtps/attributes/PropertyPolicy.h"
+
 #include "fastrtps/config.h"
+
 #include "rcutils/filesystem.h"
 #include "rcutils/get_env.h"
+
 #include "rmw/error_handling.h"
 #include "rmw/qos_profiles.h"
 #include "rmw/types.h"
-
-#include "rmw_fastrtps_shared_cpp/rmw_security_logging.hpp"
 
 #if HAVE_SECURITY
 
@@ -44,7 +49,7 @@ const char verbosity_property_name[] = "dds.sec.log.builtin.DDS_LogTopic.logging
 const char distribute_enable_property_name[] =
   "dds.sec.log.builtin.DDS_LogTopic.distribute";
 
-// Fast RTPS supports the following verbosities:
+// Fast DDS supports the following verbosities:
 //   - EMERGENCY_LEVEL
 //   - ALERT_LEVEL
 //   - CRITICAL_LEVEL
@@ -211,8 +216,8 @@ bool apply_security_logging_configuration(eprosima::fastrtps::rtps::PropertyPoli
 #else
   (void)policy;
   RMW_SET_ERROR_MSG(
-    "This Fast-RTPS version doesn't have the security libraries\n"
-    "Please compile Fast-RTPS using the -DSECURITY=ON CMake option");
+    "This Fast DDS version doesn't have the security libraries\n"
+    "Please compile Fast DDS using the -DSECURITY=ON CMake option");
   return false;
 #endif
 }

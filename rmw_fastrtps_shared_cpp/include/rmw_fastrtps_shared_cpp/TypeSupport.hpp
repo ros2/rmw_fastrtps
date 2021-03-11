@@ -18,7 +18,6 @@
 #include <cassert>
 #include <string>
 
-#include "fastdds/dds/domain/DomainParticipant.hpp"
 #include "fastdds/dds/topic/TopicDataType.hpp"
 
 #include "fastcdr/FastBuffer.h"

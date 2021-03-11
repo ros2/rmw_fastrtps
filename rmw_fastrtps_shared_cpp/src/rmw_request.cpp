@@ -17,6 +17,8 @@
 #include "fastcdr/Cdr.h"
 #include "fastcdr/FastBuffer.h"
 
+#include "fastdds/rtps/common/WriteParams.h"
+
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/impl/cpp/macros.hpp"

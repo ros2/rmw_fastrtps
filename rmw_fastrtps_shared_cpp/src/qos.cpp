@@ -16,10 +16,9 @@
 
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 
-#include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/publisher/qos/DataWriterQos.hpp"
-#include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
+#include "fastdds/dds/topic/qos/TopicQos.hpp"
 #include "fastdds/rtps/common/Time_t.h"
 
 #include "rmw/error_handling.h"
@@ -56,7 +55,8 @@ dds_duration_to_rmw(const eprosima::fastrtps::Duration_t & duration)
   return result;
 }
 
-// Private function to encapsulate DataReader and DataWriter together with TopicQos fill entities
+// Private function to encapsulate DataReader and DataWriter, together with Topic, filling 
+// entities DDS QoS from the RMW QoS profile.
 template<typename DDSEntityQos>
 bool fill_entity_qos_from_profile(
   const rmw_qos_profile_t & qos_policies,
@@ -64,10 +64,10 @@ bool fill_entity_qos_from_profile(
 {
   switch (qos_policies.history) {
     case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
-      entity_qos.history().kind = eprosima::fastrtps::KEEP_LAST_HISTORY_QOS;
+      entity_qos.history().kind = eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
-      entity_qos.history().kind = eprosima::fastrtps::KEEP_ALL_HISTORY_QOS;
+      entity_qos.history().kind = eprosima::fastdds::dds::KEEP_ALL_HISTORY_QOS;
       break;
     case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
       break;
@@ -78,10 +78,10 @@ bool fill_entity_qos_from_profile(
 
   switch (qos_policies.durability) {
     case RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL:
-      entity_qos.durability().kind = eprosima::fastrtps::TRANSIENT_LOCAL_DURABILITY_QOS;
+      entity_qos.durability().kind = eprosima::fastdds::dds::TRANSIENT_LOCAL_DURABILITY_QOS;
       break;
     case RMW_QOS_POLICY_DURABILITY_VOLATILE:
-      entity_qos.durability().kind = eprosima::fastrtps::VOLATILE_DURABILITY_QOS;
+      entity_qos.durability().kind = eprosima::fastdds::dds::VOLATILE_DURABILITY_QOS;
       break;
     case RMW_QOS_POLICY_DURABILITY_SYSTEM_DEFAULT:
       break;
@@ -92,10 +92,10 @@ bool fill_entity_qos_from_profile(
 
   switch (qos_policies.reliability) {
     case RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT:
-      entity_qos.reliability().kind = eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS;
+      entity_qos.reliability().kind = eprosima::fastdds::dds::BEST_EFFORT_RELIABILITY_QOS;
       break;
     case RMW_QOS_POLICY_RELIABILITY_RELIABLE:
-      entity_qos.reliability().kind = eprosima::fastrtps::RELIABLE_RELIABILITY_QOS;
+      entity_qos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
       break;
     case RMW_QOS_POLICY_RELIABILITY_SYSTEM_DEFAULT:
       break;
@@ -105,7 +105,7 @@ bool fill_entity_qos_from_profile(
   }
 
   // ensure the history depth is at least the requested queue size
-  assert(entity_qos.history().depth >= 0);  // TODO(eprosima) should not be after initialization?
+  assert(entity_qos.history().depth >= 0);
   if (
     qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT &&
     static_cast<size_t>(entity_qos.history().depth) < qos_policies.depth)
@@ -128,10 +128,10 @@ bool fill_entity_qos_from_profile(
 
   switch (qos_policies.liveliness) {
     case RMW_QOS_POLICY_LIVELINESS_AUTOMATIC:
-      entity_qos.liveliness().kind = eprosima::fastrtps::AUTOMATIC_LIVELINESS_QOS;
+      entity_qos.liveliness().kind = eprosima::fastdds::dds::AUTOMATIC_LIVELINESS_QOS;
       break;
     case RMW_QOS_POLICY_LIVELINESS_MANUAL_BY_TOPIC:
-      entity_qos.liveliness().kind = eprosima::fastrtps::MANUAL_BY_TOPIC_LIVELINESS_QOS;
+      entity_qos.liveliness().kind = eprosima::fastdds::dds::MANUAL_BY_TOPIC_LIVELINESS_QOS;
       break;
     case RMW_QOS_POLICY_LIVELINESS_SYSTEM_DEFAULT:
       break;
@@ -175,35 +175,7 @@ get_topic_qos(
   const rmw_qos_profile_t & qos_policies,
   eprosima::fastdds::dds::TopicQos & topic_qos)
 {
-  switch (qos_policies.history) {
-    case RMW_QOS_POLICY_HISTORY_KEEP_LAST:
-      topic_qos.history().kind = eprosima::fastrtps::KEEP_LAST_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_HISTORY_KEEP_ALL:
-      topic_qos.history().kind = eprosima::fastrtps::KEEP_ALL_HISTORY_QOS;
-      break;
-    case RMW_QOS_POLICY_HISTORY_SYSTEM_DEFAULT:
-      break;
-    default:
-      RMW_SET_ERROR_MSG("Unknown QoS history policy");
-      return false;
-  }
-
-  // ensure the history depth is at least the requested queue size
-  assert(topic_qos.history().depth >= 0);  // TODO(eprosima) should not be after initialization?
-  if (
-    qos_policies.depth != RMW_QOS_POLICY_DEPTH_SYSTEM_DEFAULT &&
-    static_cast<size_t>(topic_qos.history().depth) < qos_policies.depth)
-  {
-    if (qos_policies.depth > static_cast<size_t>((std::numeric_limits<int32_t>::max)())) {
-      RMW_SET_ERROR_MSG(
-        "failed to set history depth since the requested queue size exceeds the DDS type");
-      return false;
-    }
-    topic_qos.history().depth = static_cast<int32_t>(qos_policies.depth);
-  }
-
-  return true;
+  return fill_entity_qos_from_profile(qos_policies, topic_qos);;
 }
 
 bool

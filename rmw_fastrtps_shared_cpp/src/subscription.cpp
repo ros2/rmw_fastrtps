@@ -64,7 +64,7 @@ destroy_subscription(
     // Delete topic and unregister type
     remove_topic_and_type(participant_info, topic, info->type_support_);
 
-    // Delete SubscriberInfo structure
+    // Delete CustomSubscriberInfo structure
     delete info;
   } else {
     ret = RMW_RET_INVALID_ARGUMENT;

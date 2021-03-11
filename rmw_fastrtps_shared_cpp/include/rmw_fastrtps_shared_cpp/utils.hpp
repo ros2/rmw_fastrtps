@@ -1,4 +1,4 @@
-// Copyright 2021 Open Source Robotics Foundation, Inc.
+// Copyright 2021 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -18,9 +18,8 @@
 #include <mutex>
 #include <string>
 
-#include "fastdds/dds/domain/DomainParticipant.hpp"
 #include "fastdds/dds/topic/TopicDescription.hpp"
-#include "fastdds/dds/topic/qos/TopicQos.hpp"
+#include "fastdds/dds/topic/TypeSupport.hpp"
 
 #include "fastrtps/types/TypesBase.h"
 

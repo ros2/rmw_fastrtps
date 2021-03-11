@@ -20,11 +20,16 @@
 #include <mutex>
 #include <set>
 
+#include "fastdds/dds/core/status/BaseStatus.hpp"
 #include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
+#include "fastdds/dds/core/status/PublicationMatchedStatus.hpp"
 #include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
 #include "fastdds/dds/topic/Topic.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
+
+#include "fastdds/rtps/common/Guid.h"
+#include "fastdds/rtps/common/InstanceHandle.h"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rmw/rmw.h"
@@ -63,7 +68,7 @@ public:
     (void) info;
   }
 
-  // PublisherListener implementation
+  // DataWriterListener implementation
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void
   on_publication_matched(

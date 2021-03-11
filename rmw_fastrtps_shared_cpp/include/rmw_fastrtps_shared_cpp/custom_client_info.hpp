@@ -26,13 +26,18 @@
 
 #include "fastcdr/FastBuffer.h"
 
-#include "fastdds/dds/domain/DomainParticipant.hpp"
+#include "fastdds/dds/core/status/PublicationMatchedStatus.hpp"
+#include "fastdds/dds/core/status/SubscriptionMatchedStatus.hpp"
 #include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/DataReaderListener.hpp"
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
+
+#include "fastdds/rtps/common/Guid.h"
+#include "fastdds/rtps/common/InstanceHandle.h"
+#include "fastdds/rtps/common/SampleIdentity.h"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 

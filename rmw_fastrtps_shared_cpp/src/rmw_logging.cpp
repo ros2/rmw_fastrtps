@@ -23,11 +23,12 @@
 
 namespace rmw_fastrtps_shared_cpp
 {
-using eprosima::fastdds::dds::Log;
 
 rmw_ret_t
 __rmw_set_log_severity(rmw_log_severity_t severity)
 {
+  using eprosima::fastdds::dds::Log;
+
   Log::Kind log_kind;
 
   switch (severity) {
@@ -49,7 +50,7 @@ __rmw_set_log_severity(rmw_log_severity_t severity)
       return RMW_RET_ERROR;
   }
 
-  eprosima::fastdds::dds::Log::SetVerbosity(log_kind);
+  Log::SetVerbosity(log_kind);
 
   return RMW_RET_OK;
 }

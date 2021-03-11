@@ -86,7 +86,6 @@ rmw_create_publisher(
     true);
 
   if (!publisher) {
-    RMW_SET_ERROR_MSG("Publisher creation failed");
     return nullptr;
   }
 

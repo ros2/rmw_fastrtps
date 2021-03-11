@@ -16,9 +16,7 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
 
-#include <fastdds/dds/publisher/DataWriter.hpp>
 #include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
-#include <fastdds/dds/subscriber/DataReader.hpp>
 #include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
 #include <fastdds/dds/core/policy/QosPolicies.hpp>
 
@@ -53,12 +51,10 @@ rmw_time_t
 dds_duration_to_rmw(const eprosima::fastrtps::Duration_t & duration);
 
 /*
- * Converts the low-level QOS Policy; of type DataWriterQos or DataReaderQos into rmw_qos_profile_t.
- * Since DataWriterQos or DataReaderQos does not have information about history and depth, these values are not set
- * by this function.
+ * Converts the DDS QOS Policy; of type DataWriterQos or DataReaderQos into rmw_qos_profile_t.
  *
  * \param[in] dds_qos of type DataWriterQos or DataReaderQos
- * \param[out] qos the equivalent of the data in DataWriterQos or DataReaderQos in rmw_qos_profile_t
+ * \param[out] qos the equivalent of the data in dds_qos as a rmw_qos_profile_t
  */
 template<typename DDSQoSPolicyT>
 void
@@ -67,10 +63,10 @@ dds_qos_to_rmw_qos(
   rmw_qos_profile_t * qos)
 {
   switch (dds_qos.reliability().kind) {
-    case eprosima::fastdds::dds::ReliabilityQosPolicyKind::BEST_EFFORT_RELIABILITY_QOS:
+    case eprosima::fastdds::dds::BEST_EFFORT_RELIABILITY_QOS:
       qos->reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
       break;
-    case eprosima::fastdds::dds::ReliabilityQosPolicyKind::RELIABLE_RELIABILITY_QOS:
+    case eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS:
       qos->reliability = RMW_QOS_POLICY_RELIABILITY_RELIABLE;
       break;
     default:
@@ -121,13 +117,21 @@ dds_qos_to_rmw_qos(
   qos->depth = static_cast<size_t>(dds_qos.history().depth);
 }
 
-template<typename DDSQoSPolicyT>
+/*
+ * Converts the RTPS QOS Policy; of type WriterQos or ReaderQos into rmw_qos_profile_t.
+ * Since WriterQos or ReaderQos do not have information about history and depth,
+ * these values are not set by this function.
+ *
+ * \param[in] rtps_qos of type WriterQos or ReaderQos
+ * \param[out] qos the equivalent of the data in rtps_qos as a rmw_qos_profile_t
+ */
+template<typename RTPSQoSPolicyT>
 void
 rtps_qos_to_rmw_qos(
-  const DDSQoSPolicyT & dds_qos,
+  const RTPSQoSPolicyT & rtps_qos,
   rmw_qos_profile_t * qos)
 {
-  switch (dds_qos.m_reliability.kind) {
+  switch (rtps_qos.m_reliability.kind) {
     case eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS:
       qos->reliability = RMW_QOS_POLICY_RELIABILITY_BEST_EFFORT;
       break;
@@ -139,7 +143,7 @@ rtps_qos_to_rmw_qos(
       break;
   }
 
-  switch (dds_qos.m_durability.kind) {
+  switch (rtps_qos.m_durability.kind) {
     case eprosima::fastrtps::TRANSIENT_LOCAL_DURABILITY_QOS:
       qos->durability = RMW_QOS_POLICY_DURABILITY_TRANSIENT_LOCAL;
       break;
@@ -151,13 +155,13 @@ rtps_qos_to_rmw_qos(
       break;
   }
 
-  qos->deadline.sec = dds_qos.m_deadline.period.seconds;
-  qos->deadline.nsec = dds_qos.m_deadline.period.nanosec;
+  qos->deadline.sec = rtps_qos.m_deadline.period.seconds;
+  qos->deadline.nsec = rtps_qos.m_deadline.period.nanosec;
 
-  qos->lifespan.sec = dds_qos.m_lifespan.duration.seconds;
-  qos->lifespan.nsec = dds_qos.m_lifespan.duration.nanosec;
+  qos->lifespan.sec = rtps_qos.m_lifespan.duration.seconds;
+  qos->lifespan.nsec = rtps_qos.m_lifespan.duration.nanosec;
 
-  switch (dds_qos.m_liveliness.kind) {
+  switch (rtps_qos.m_liveliness.kind) {
     case eprosima::fastrtps::AUTOMATIC_LIVELINESS_QOS:
       qos->liveliness = RMW_QOS_POLICY_LIVELINESS_AUTOMATIC;
       break;
@@ -168,7 +172,7 @@ rtps_qos_to_rmw_qos(
       qos->liveliness = RMW_QOS_POLICY_LIVELINESS_UNKNOWN;
       break;
   }
-  qos->liveliness_lease_duration = dds_duration_to_rmw(dds_qos.m_liveliness.lease_duration);
+  qos->liveliness_lease_duration = dds_duration_to_rmw(rtps_qos.m_liveliness.lease_duration);
 }
 
 extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC

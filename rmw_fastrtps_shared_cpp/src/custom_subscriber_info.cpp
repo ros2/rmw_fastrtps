@@ -13,6 +13,10 @@
 // limitations under the License.
 
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
+
+#include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
+#include "fastdds/dds/core/status/LivelinessChangedStatus.hpp"
+
 #include "types/event_types.hpp"
 
 EventListenerInterface *
@@ -24,7 +28,7 @@ CustomSubscriberInfo::getListener() const
 void
 SubListener::on_requested_deadline_missed(
   eprosima::fastdds::dds::DataReader * /* reader */,
-  const eprosima::fastrtps::RequestedDeadlineMissedStatus & status)
+  const eprosima::fastdds::dds::RequestedDeadlineMissedStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
 
@@ -42,7 +46,7 @@ SubListener::on_requested_deadline_missed(
 
 void SubListener::on_liveliness_changed(
   eprosima::fastdds::dds::DataReader * /* reader */,
-  const eprosima::fastrtps::LivelinessChangedStatus & status)
+  const eprosima::fastdds::dds::LivelinessChangedStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
 

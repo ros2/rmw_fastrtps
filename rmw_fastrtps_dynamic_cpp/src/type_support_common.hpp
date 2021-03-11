@@ -109,9 +109,4 @@ _create_type_name(
   return "";
 }
 
-// void
-// _register_type(
-//   eprosima::fastrtps::Participant * participant,
-//   rmw_fastrtps_shared_cpp::TypeSupport * typed_typesupport);
-
 #endif  // TYPE_SUPPORT_COMMON_HPP_

@@ -21,7 +21,7 @@
 #include "rmw/rmw.h"
 
 #include "fastdds/dds/publisher/DataWriter.hpp"
-#include "fastdds/dds/publisher/Publisher.hpp"
+#include "fastdds/dds/publisher/qos/DataWriterQos.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
@@ -125,9 +125,8 @@ __rmw_publisher_get_actual_qos(
   rmw_qos_profile_t * qos)
 {
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  eprosima::fastdds::dds::DataWriter * fastrtps_pub = info->data_writer_;
-  const eprosima::fastdds::dds::DataWriterQos & dds_qos =
-    fastrtps_pub->get_qos();
+  eprosima::fastdds::dds::DataWriter * fastdds_dw = info->data_writer_;
+  const eprosima::fastdds::dds::DataWriterQos & dds_qos = fastdds_dw->get_qos();
 
   dds_qos_to_rmw_qos(dds_qos, qos);
 

@@ -14,7 +14,9 @@
 
 #include "gtest/gtest.h"
 
-#include "fastrtps/rtps/common/Guid.h"
+#include "fastdds/rtps/common/EntityId_t.hpp"
+#include "fastdds/rtps/common/Guid.h"
+#include "fastdds/rtps/common/GuidPrefix_t.hpp"
 
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 

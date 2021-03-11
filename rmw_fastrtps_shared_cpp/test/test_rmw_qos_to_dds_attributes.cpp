@@ -17,8 +17,9 @@
 
 #include "gtest/gtest.h"
 
-#include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
+#include "fastdds/dds/core/policy/QosPolicies.hpp"
 #include "fastdds/dds/publisher/qos/DataWriterQos.hpp"
+#include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
 
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 
@@ -80,13 +81,13 @@ TEST_F(GetDataReaderQoSTest, nominal_conversion) {
   EXPECT_TRUE(get_datareader_qos(qos_profile_, subscriber_qos_));
 
   EXPECT_EQ(
-    eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS,
+    eprosima::fastdds::dds::BEST_EFFORT_RELIABILITY_QOS,
     subscriber_qos_.reliability().kind);
   EXPECT_EQ(
-    eprosima::fastrtps::VOLATILE_DURABILITY_QOS,
+    eprosima::fastdds::dds::VOLATILE_DURABILITY_QOS,
     subscriber_qos_.durability().kind);
   EXPECT_EQ(
-    eprosima::fastrtps::AUTOMATIC_LIVELINESS_QOS,
+    eprosima::fastdds::dds::AUTOMATIC_LIVELINESS_QOS,
     subscriber_qos_.liveliness().kind);
   EXPECT_EQ(0, subscriber_qos_.lifespan().duration.seconds);
   EXPECT_EQ(500000000u, subscriber_qos_.lifespan().duration.nanosec);
@@ -95,7 +96,7 @@ TEST_F(GetDataReaderQoSTest, nominal_conversion) {
   EXPECT_EQ(10, subscriber_qos_.liveliness().lease_duration.seconds);
   EXPECT_EQ(0u, subscriber_qos_.liveliness().lease_duration.nanosec);
   EXPECT_EQ(
-    eprosima::fastrtps::KEEP_LAST_HISTORY_QOS,
+    eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS,
     subscriber_qos_.history().kind);
   EXPECT_GE(10, subscriber_qos_.history().depth);
 }
@@ -178,13 +179,13 @@ TEST_F(GetDataWriterQoSTest, nominal_conversion) {
   EXPECT_TRUE(get_datawriter_qos(qos_profile_, publisher_qos_));
 
   EXPECT_EQ(
-    eprosima::fastrtps::BEST_EFFORT_RELIABILITY_QOS,
+    eprosima::fastdds::dds::BEST_EFFORT_RELIABILITY_QOS,
     publisher_qos_.reliability().kind);
   EXPECT_EQ(
-    eprosima::fastrtps::VOLATILE_DURABILITY_QOS,
+    eprosima::fastdds::dds::VOLATILE_DURABILITY_QOS,
     publisher_qos_.durability().kind);
   EXPECT_EQ(
-    eprosima::fastrtps::AUTOMATIC_LIVELINESS_QOS,
+    eprosima::fastdds::dds::AUTOMATIC_LIVELINESS_QOS,
     publisher_qos_.liveliness().kind);
   EXPECT_EQ(0, publisher_qos_.lifespan().duration.seconds);
   EXPECT_EQ(500000000u, publisher_qos_.lifespan().duration.nanosec);
@@ -193,7 +194,7 @@ TEST_F(GetDataWriterQoSTest, nominal_conversion) {
   EXPECT_EQ(10, publisher_qos_.liveliness().lease_duration.seconds);
   EXPECT_EQ(0u, publisher_qos_.liveliness().lease_duration.nanosec);
   EXPECT_EQ(
-    eprosima::fastrtps::KEEP_LAST_HISTORY_QOS,
+    eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS,
     publisher_qos_.history().kind);
   EXPECT_GE(10, publisher_qos_.history().depth);
 }
@@ -206,7 +207,7 @@ TEST_F(GetDataWriterQoSTest, large_depth_conversion) {
   EXPECT_TRUE(get_datawriter_qos(qos_profile_, publisher_qos_));
 
   EXPECT_EQ(
-    eprosima::fastrtps::KEEP_LAST_HISTORY_QOS,
+    eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS,
     publisher_qos_.history().kind);
   EXPECT_LE(depth, static_cast<size_t>(publisher_qos_.history().depth));
 

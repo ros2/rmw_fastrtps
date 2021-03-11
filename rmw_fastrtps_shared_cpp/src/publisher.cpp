@@ -12,9 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "fastrtps/Domain.h"
-#include "fastrtps/participant/Participant.h"
-
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -24,9 +21,6 @@
 #include "rmw_fastrtps_shared_cpp/publisher.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
-
-using Domain = eprosima::fastrtps::Domain;
-using Participant = eprosima::fastrtps::Participant;
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -52,7 +46,7 @@ destroy_publisher(
     // Delete DataWriter
     ReturnCode_t ret = participant_info->publisher_->delete_datawriter(info->data_writer_);
     if (ret != ReturnCode_t::RETCODE_OK) {
-      RMW_SET_ERROR_MSG("Fail in delete datareader");
+      RMW_SET_ERROR_MSG("Fail in delete datawriter");
       return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
     }
 
@@ -64,7 +58,7 @@ destroy_publisher(
     // Delete topic and unregister type
     remove_topic_and_type(participant_info, topic, info->type_support_);
 
-    // Delete PublisherInfo structure
+    // Delete CustomPublisherInfo structure
     delete info;
   } else {
     ret = RMW_RET_INVALID_ARGUMENT;
