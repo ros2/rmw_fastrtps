@@ -327,6 +327,7 @@ create_subscription(
   }
   rmw_subscription->options = *subscription_options;
   rmw_fastrtps_shared_cpp::__init_subscription_for_loans(rmw_subscription);
+  rmw_subscription->is_cft_supported = false;
 
   topic.should_be_deleted = false;
   cleanup_rmw_subscription.cancel();
