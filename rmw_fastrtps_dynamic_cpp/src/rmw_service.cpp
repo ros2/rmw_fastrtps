@@ -102,7 +102,7 @@ rmw_create_service(
   /////
   // Check RMW QoS
   if (!is_valid_qos(*qos_policies)) {
-    RMW_SET_ERROR_MSG("Invalid QoS");
+    RMW_SET_ERROR_MSG("create_service() called with invalid QoS");
     return nullptr;
   }
 
@@ -169,12 +169,12 @@ rmw_create_service(
 
   // Get request topic and type
   eprosima::fastdds::dds::TypeSupport request_fastdds_type;
-  eprosima::fastdds::dds::TopicDescription * request_topic = nullptr;
+  eprosima::fastdds::dds::TopicDescription * request_topic_desc = nullptr;
   if (!rmw_fastrtps_shared_cpp::find_and_check_topic_and_type(
       participant_info,
       request_topic_name,
       request_type_name,
-      request_topic,
+      request_topic_desc,
       request_fastdds_type))
   {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
@@ -185,12 +185,12 @@ rmw_create_service(
 
   // Get response topic and type
   eprosima::fastdds::dds::TypeSupport response_fastdds_type;
-  eprosima::fastdds::dds::TopicDescription * response_topic = nullptr;
+  eprosima::fastdds::dds::TopicDescription * response_topic_desc = nullptr;
   if (!rmw_fastrtps_shared_cpp::find_and_check_topic_and_type(
       participant_info,
       response_topic_name,
       response_type_name,
-      response_topic,
+      response_topic_desc,
       response_fastdds_type))
   {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
@@ -203,7 +203,7 @@ rmw_create_service(
   // Create the RMW Service struct (info)
   CustomServiceInfo * info = new (std::nothrow) CustomServiceInfo();
   if (!info) {
-    RMW_SET_ERROR_MSG("failed to allocate service info");
+    RMW_SET_ERROR_MSG("create_service() failed to allocate custom info");
     return nullptr;
   }
   auto cleanup_info = rcpputils::make_scope_exit(
@@ -218,8 +218,7 @@ rmw_create_service(
   TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
   auto request_type_impl = type_registry.get_request_type_support(type_support);
   if (!request_type_impl) {
-    delete info;
-    RMW_SET_ERROR_MSG("failed to allocate request type support");
+    RMW_SET_ERROR_MSG("create_service() failed to get request_type_support");
     return nullptr;
   }
   auto return_request_type_support = rcpputils::make_scope_exit(
@@ -229,7 +228,7 @@ rmw_create_service(
 
   auto response_type_impl = type_registry.get_response_type_support(type_support);
   if (!response_type_impl) {
-    RMW_SET_ERROR_MSG("failed to allocate response type support");
+    RMW_SET_ERROR_MSG("create_service() failed to get response_type_support");
     return nullptr;
   }
   auto return_response_type_support = rcpputils::make_scope_exit(
@@ -244,7 +243,7 @@ rmw_create_service(
     auto tsupport =
       new (std::nothrow) rmw_fastrtps_dynamic_cpp::TypeSupportProxy(request_type_impl);
     if (!tsupport) {
-      RMW_SET_ERROR_MSG("failed to allocate request typesupport");
+      RMW_SET_ERROR_MSG("create_service() failed to allocate request TypeSupportProxy");
       return nullptr;
     }
 
@@ -255,7 +254,7 @@ rmw_create_service(
     auto tsupport =
       new (std::nothrow) rmw_fastrtps_dynamic_cpp::TypeSupportProxy(response_type_impl);
     if (!tsupport) {
-      RMW_SET_ERROR_MSG("failed to allocate response typesupport");
+      RMW_SET_ERROR_MSG("create_service() failed to allocate response TypeSupportProxy");
       return nullptr;
     }
 
@@ -273,7 +272,7 @@ rmw_create_service(
     });
 
   if (ReturnCode_t::RETCODE_OK != response_fastdds_type.register_type(domainParticipant)) {
-    RMW_SET_ERROR_MSG("create_service() failed to register request type");
+    RMW_SET_ERROR_MSG("create_service() failed to register response type");
     return nullptr;
   }
   info->response_type_support_ = response_fastdds_type;
@@ -286,22 +285,22 @@ rmw_create_service(
   // Create Listeners
   info->listener_ = new (std::nothrow) ServiceListener(info);
   if (!info->listener_) {
-    RMW_SET_ERROR_MSG("failed to create service response subscriber listener");
+    RMW_SET_ERROR_MSG("create_service() failed to create request subscriber listener");
     return nullptr;
   }
 
-  auto cleanup_type_support_listener = rcpputils::make_scope_exit(
+  auto cleanup_listener = rcpputils::make_scope_exit(
     [info]() {
       delete info->listener_;
     });
 
   info->pub_listener_ = new (std::nothrow) ServicePubListener(info);
   if (!info->pub_listener_) {
-    RMW_SET_ERROR_MSG("failed to create service request publisher listener");
+    RMW_SET_ERROR_MSG("create_service() failed to create response publisher listener");
     return nullptr;
   }
 
-  auto cleanup_type_support_pub_listener = rcpputils::make_scope_exit(
+  auto cleanup_pub_listener = rcpputils::make_scope_exit(
     [info]() {
       delete info->pub_listener_;
     });
@@ -310,43 +309,64 @@ rmw_create_service(
   // Create and register Topics
   // Same default topic QoS for both topics
   eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
-
   if (!get_topic_qos(*qos_policies, topicQos)) {
+    RMW_SET_ERROR_MSG("create_service() failed setting topic QoS");
     return nullptr;
   }
 
   // Create request topic
-  if (!request_topic) {
+  eprosima::fastdds::dds::Topic * request_topic = nullptr;
+  if (!request_topic_desc) {
     request_topic = domainParticipant->create_topic(
       request_topic_name,
       request_type_name,
       topicQos);
 
     if (!request_topic) {
-      RMW_SET_ERROR_MSG("failed to create service request topic");
+      RMW_SET_ERROR_MSG("create_service() failed to create request topic");
       return nullptr;
     }
+    
+    request_topic_desc = request_topic;
   }
 
+  auto cleanup_request_topic = rcpputils::make_scope_exit(
+    [domainParticipant, request_topic]() {
+      if (request_topic) {
+        domainParticipant->delete_topic(request_topic);
+      }
+    });
+
   // Create response topic
-  if (!response_topic) {
+  eprosima::fastdds::dds::Topic * response_topic = nullptr;
+  bool response_topic_created = false;
+  if (!response_topic_desc) {
     response_topic = domainParticipant->create_topic(
       response_topic_name,
       response_type_name,
       topicQos);
 
     if (!response_topic) {
-      RMW_SET_ERROR_MSG("failed to create service response topic");
+      RMW_SET_ERROR_MSG("create_service() failed to create response topic");
+      return nullptr;
+    }
+    
+    response_topic_desc = response_topic;
+    response_topic_created = true;
+  } else {
+    response_topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(response_topic_desc);
+    if (!response_topic) {
+      RMW_SET_ERROR_MSG("create_service() called with response topic not of class Topic");
       return nullptr;
     }
   }
 
-  eprosima::fastdds::dds::Topic * pub_topic =
-    dynamic_cast<eprosima::fastdds::dds::Topic *>(response_topic);
-  if (pub_topic == nullptr) {
-    RMW_SET_ERROR_MSG("failed, service response topic can only be of class Topic");
-    return nullptr;
-  }
+  auto cleanup_response_topic = rcpputils::make_scope_exit(
+    [domainParticipant, response_topic, response_topic_created]() {
+      if (response_topic_created) {
+        domainParticipant->delete_topic(response_topic);
+      }
+    });
 
   // Keyword to find DataWrtier and DataReader QoS
   std::string topic_name_fallback = "service";
@@ -354,9 +374,9 @@ rmw_create_service(
   /////
   // Create request DataReader
 
-  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill subscriber attributes with a subscriber profile
-  // located based of topic name defined by _create_topic_name(). If no profile is found, a search
-  // with profile_name "service" is attempted. Else, use the default attributes.
+  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill DataReader QoS with a subscriber profile
+  // located based on topic name defined by _create_topic_name(). If no profile is found, a search
+  // with profile_name "service" is attempted. Else, use the default Fast DDS QoS.
   eprosima::fastdds::dds::DataReaderQos dataReaderQos = subscriber->get_default_datareader_qos();
 
   // Try to load the profile named "service",
@@ -374,17 +394,18 @@ rmw_create_service(
   }
 
   if (!get_datareader_qos(*qos_policies, dataReaderQos)) {
+    RMW_SET_ERROR_MSG("create_service() failed setting request DataReader QoS");
     return nullptr;
   }
 
-  // Creates DataReader (with subscriber name to not change name policy)
+  // Creates DataReader
   info->request_reader_ = subscriber->create_datareader(
-    request_topic,
+    request_topic_desc,
     dataReaderQos,
     info->listener_);
 
   if (!info->request_reader_) {
-    RMW_SET_ERROR_MSG("failed to create service request data reader");
+    RMW_SET_ERROR_MSG("create_service() failed to create request DataReader");
     return nullptr;
   }
 
@@ -398,9 +419,9 @@ rmw_create_service(
   /////
   // Create response DataWriter
 
-  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill publisher attributes with a publisher profile
-  // located based of topic name defined by _create_topic_name(). If no profile is found, a search
-  // with profile_name "service" is attempted. Else, use the default attributes.
+  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill DataWriter QoS with a publisher profile
+  // located based on topic name defined by _create_topic_name(). If no profile is found, a search
+  // with profile_name "service" is attempted. Else, use the default Fast DDS QoS.
   eprosima::fastdds::dds::DataWriterQos dataWriterQos = publisher->get_default_datawriter_qos();
 
   // Try to load the profile named "service",
@@ -425,17 +446,18 @@ rmw_create_service(
   }
 
   if (!get_datawriter_qos(*qos_policies, dataWriterQos)) {
+    RMW_SET_ERROR_MSG("create_service() failed setting response DataWriter QoS");
     return nullptr;
   }
 
-  // Creates DataWriter (with publisher name to not change name policy)
+  // Creates DataWriter
   info->response_writer_ = publisher->create_datawriter(
-    pub_topic,
+    response_topic,
     dataWriterQos,
     info->pub_listener_);
 
   if (!info->response_writer_) {
-    RMW_SET_ERROR_MSG("failed to create service request data writer");
+    RMW_SET_ERROR_MSG("create_service() failed to create response DataWriter");
     return nullptr;
   }
 
@@ -461,7 +483,7 @@ rmw_create_service(
 
   rmw_service_t * rmw_service = rmw_service_allocate();
   if (!rmw_service) {
-    RMW_SET_ERROR_MSG("failed to allocate memory for service");
+    RMW_SET_ERROR_MSG("create_service() failed to allocate memory for rmw_service");
     return nullptr;
   }
   auto cleanup_rmw_service = rcpputils::make_scope_exit(
@@ -475,7 +497,7 @@ rmw_create_service(
   rmw_service->service_name = reinterpret_cast<const char *>(
     rmw_allocate(strlen(service_name) + 1));
   if (!rmw_service->service_name) {
-    RMW_SET_ERROR_MSG("failed to allocate memory for service name");
+    RMW_SET_ERROR_MSG("create_service() failed to allocate memory for service name");
     return nullptr;
   }
   memcpy(const_cast<char *>(rmw_service->service_name), service_name, strlen(service_name) + 1);
@@ -483,19 +505,19 @@ rmw_create_service(
   {
     // Update graph
     std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
-    rmw_gid_t gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
+    rmw_gid_t request_subscriber_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
       eprosima_fastrtps_identifier, info->request_reader_->guid());
     common_context->graph_cache.associate_reader(
-      gid,
+      request_subscriber_gid,
       common_context->gid,
       node->name,
       node->namespace_);
 
-    rmw_gid_t gid_response = rmw_fastrtps_shared_cpp::create_rmw_gid(
+    rmw_gid_t response_publisher_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
       eprosima_fastrtps_identifier, info->response_writer_->guid());
     rmw_dds_common::msg::ParticipantEntitiesInfo msg =
       common_context->graph_cache.associate_writer(
-      gid, common_context->gid, node->name, node->namespace_);
+      response_publisher_gid, common_context->gid, node->name, node->namespace_);
     rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
       eprosima_fastrtps_identifier,
       common_context->pub,
@@ -503,12 +525,12 @@ rmw_create_service(
       nullptr);
     if (RMW_RET_OK != rmw_ret) {
       common_context->graph_cache.dissociate_writer(
-        gid_response,
+        response_publisher_gid,
         common_context->gid,
         node->name,
         node->namespace_);
       common_context->graph_cache.dissociate_reader(
-        gid,
+        request_subscriber_gid,
         common_context->gid,
         node->name,
         node->namespace_);
@@ -519,8 +541,10 @@ rmw_create_service(
   cleanup_rmw_service.cancel();
   cleanup_datawriter.cancel();
   cleanup_datareader.cancel();
-  cleanup_type_support_pub_listener.cancel();
-  cleanup_type_support_listener.cancel();
+  cleanup_response_topic.cancel();
+  cleanup_request_topic.cancel();
+  cleanup_pub_listener.cancel();
+  cleanup_listener.cancel();
   cleanup_type_support_response.cancel();
   cleanup_type_support_request.cancel();
   return_response_type_support.cancel();
