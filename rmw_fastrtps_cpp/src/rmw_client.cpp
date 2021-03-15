@@ -318,11 +318,10 @@ rmw_create_client(
       RMW_SET_ERROR_MSG("create_client() failed to create request topic");
       return nullptr;
     }
-    
+
     request_topic_desc = request_topic;
     request_topic_created = true;
-  }
-  else {
+  } else {
     request_topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(request_topic_desc);
     if (!request_topic) {
       RMW_SET_ERROR_MSG("create_client() called with request topic not of class Topic");

@@ -237,7 +237,7 @@ create_subscription(
       RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
       return nullptr;
     }
-    
+
     des_topic = topic;
   }
 

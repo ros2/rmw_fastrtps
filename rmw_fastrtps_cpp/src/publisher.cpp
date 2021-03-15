@@ -148,7 +148,7 @@ rmw_fastrtps_cpp::create_publisher(
       topic_name_mangled.c_str(), type_name.c_str());
     return nullptr;
   }
-  
+
   /////
   // Create the custom Publisher struct (info)
   CustomPublisherInfo * info = nullptr;
@@ -179,7 +179,7 @@ rmw_fastrtps_cpp::create_publisher(
     // Transfer ownership to fastdds_type
     fastdds_type.reset(tsupport);
   }
-  
+
   if (keyed && !fastdds_type->m_isGetKeyDefined) {
     RMW_SET_ERROR_MSG("create_publisher() requested a keyed topic with a non-keyed type");
     return nullptr;
@@ -234,15 +234,14 @@ rmw_fastrtps_cpp::create_publisher(
       RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
       return nullptr;
     }
-    
+
     topic_created = true;
-  }
-  else {
+  } else {
     topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(des_topic);
     if (!topic) {
       RMW_SET_ERROR_MSG("create_publisher() failed, publisher topic can only be of class Topic");
       return nullptr;
-    }      
+    }
   }
 
   auto cleanup_topic = rcpputils::make_scope_exit(

@@ -121,7 +121,7 @@ __create_participant(
 
   // As the participant listener is only used for discovery related callbacks, which are
   // Fast DDS extensions to the DDS standard DomainParticipantListener interface, an empty
-  // mask should be used to let child entities handle standard DDS events.  
+  // mask should be used to let child entities handle standard DDS events.
   eprosima::fastdds::dds::StatusMask participant_mask = eprosima::fastdds::dds::StatusMask::none();
 
   participant_info->participant_ =

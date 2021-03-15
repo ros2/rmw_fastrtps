@@ -55,7 +55,7 @@ dds_duration_to_rmw(const eprosima::fastrtps::Duration_t & duration)
   return result;
 }
 
-// Private function to encapsulate DataReader and DataWriter, together with Topic, filling 
+// Private function to encapsulate DataReader and DataWriter, together with Topic, filling
 // entities DDS QoS from the RMW QoS profile.
 template<typename DDSEntityQos>
 bool fill_entity_qos_from_profile(
@@ -175,7 +175,7 @@ get_topic_qos(
   const rmw_qos_profile_t & qos_policies,
   eprosima::fastdds::dds::TopicQos & topic_qos)
 {
-  return fill_entity_qos_from_profile(qos_policies, topic_qos);;
+  return fill_entity_qos_from_profile(qos_policies, topic_qos);
 }
 
 bool
