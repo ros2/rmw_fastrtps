@@ -221,7 +221,7 @@ rmw_fastrtps_cpp::create_publisher(
     eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
 
     if (!get_topic_qos(*qos_policies, topicQos)) {
-      RMW_SET_ERROR_MSG("create_publisher() failed setting topic QoS for publisher");
+      RMW_SET_ERROR_MSG("create_publisher() failed setting topic QoS");
       return nullptr;
     }
 

@@ -16,9 +16,12 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
 
+#include <fastdds/dds/core/policy/QosPolicies.hpp>
 #include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
 #include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
-#include <fastdds/dds/core/policy/QosPolicies.hpp>
+#include <fastdds/dds/topic/qos/TopicQos.hpp>
+
+#include <fastrtps/qos/QosPolicies.h>
 
 #include "rmw/rmw.h"
 

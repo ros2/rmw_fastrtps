@@ -16,6 +16,8 @@
 #include <string>
 #include <vector>
 
+#include "fastdds/rtps/common/SerializedPayload.h"
+
 #include "fastcdr/FastBuffer.h"
 #include "fastcdr/Cdr.h"
 

@@ -30,7 +30,6 @@
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/DataReaderListener.hpp"
-#include "fastdds/dds/subscriber/InstanceState.hpp"
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 
@@ -41,6 +40,7 @@
 #include "rcpputils/thread_safety_annotations.hpp"
 
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 class ServiceListener;
 class ServicePubListener;

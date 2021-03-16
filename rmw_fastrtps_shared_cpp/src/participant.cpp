@@ -316,8 +316,8 @@ rmw_fastrtps_shared_cpp::create_participant(
     }
 #else
     RMW_SET_ERROR_MSG(
-      "This Fast-RTPS version doesn't have the security libraries\n"
-      "Please compile Fast-RTPS using the -DSECURITY=ON CMake option");
+      "This Fast DDS version doesn't have the security libraries\n"
+      "Please compile Fast DDS using the -DSECURITY=ON CMake option");
     return nullptr;
 #endif
   }

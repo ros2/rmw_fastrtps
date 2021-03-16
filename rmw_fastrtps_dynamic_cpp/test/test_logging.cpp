@@ -22,7 +22,7 @@
 TEST(TestLogging, rmw_logging)
 {
   using Log = eprosima::fastdds::dds::Log;
-  
+
   rmw_ret_t ret = rmw_set_log_severity(RMW_LOG_SEVERITY_DEBUG);
   EXPECT_EQ(ret, RMW_RET_OK);
   EXPECT_EQ(Log::Kind::Info, Log::GetVerbosity());

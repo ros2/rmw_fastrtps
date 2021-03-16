@@ -91,8 +91,6 @@ create_subscription(
     }
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(subscription_options, nullptr);
-  (void)keyed;
-  (void)create_subscription_listener;
 
   /////
   // Check RMW QoS
@@ -177,7 +175,7 @@ create_subscription(
   TypeSupportRegistry & type_registry = TypeSupportRegistry::get_instance();
   auto type_support_impl = type_registry.get_message_type_support(type_support);
   if (!type_support_impl) {
-      RMW_SET_ERROR_MSG("create_subscription() failed to get message_type_support");
+    RMW_SET_ERROR_MSG("create_subscription() failed to get message_type_support");
     return nullptr;
   }
   auto return_type_support = rcpputils::make_scope_exit(
@@ -220,11 +218,11 @@ create_subscription(
   info->listener_ = nullptr;
   if (create_subscription_listener) {
     info->listener_ = new (std::nothrow) SubListener(info);
-  }
 
-  if (!info->listener_) {
-    RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
-    return nullptr;
+    if (!info->listener_) {
+      RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
+      return nullptr;
+    }
   }
 
   auto cleanup_listener = rcpputils::make_scope_exit(
@@ -253,7 +251,7 @@ create_subscription(
       RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
       return nullptr;
     }
-    
+
     des_topic = topic;
   }
 

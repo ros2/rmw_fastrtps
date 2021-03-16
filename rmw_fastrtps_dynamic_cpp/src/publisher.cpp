@@ -15,6 +15,7 @@
 
 #include <string>
 
+#include "fastdds/dds/core/policy/QosPolicies.hpp"
 #include "fastdds/dds/domain/DomainParticipant.hpp"
 #include "fastdds/dds/publisher/Publisher.hpp"
 #include "fastdds/dds/publisher/qos/DataWriterQos.hpp"
@@ -234,7 +235,7 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
     eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
 
     if (!get_topic_qos(*qos_policies, topicQos)) {
-      RMW_SET_ERROR_MSG("Error setting topic QoS for publisher");
+      RMW_SET_ERROR_MSG("create_publisher() failed setting topic QoS");
       return nullptr;
     }
 
@@ -247,13 +248,12 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
       RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
       return nullptr;
     }
-  }
-  else {
+  } else {
     topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(des_topic);
     if (!topic) {
       RMW_SET_ERROR_MSG("create_publisher() failed, publisher topic can only be of class Topic");
       return nullptr;
-    }      
+    }
   }
 
   auto cleanup_topic = rcpputils::make_scope_exit(

@@ -20,6 +20,9 @@
 
 #include "fastdds/dds/topic/TopicDataType.hpp"
 
+#include "fastdds/rtps/common/InstanceHandle.h"
+#include "fastdds/rtps/common/SerializedPayload.h"
+
 #include "fastcdr/FastBuffer.h"
 #include "fastcdr/Cdr.h"
 

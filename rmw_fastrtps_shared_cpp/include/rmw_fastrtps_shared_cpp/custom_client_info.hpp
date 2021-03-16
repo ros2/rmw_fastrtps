@@ -41,6 +41,8 @@
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+
 class ClientListener;
 class ClientPubListener;
 

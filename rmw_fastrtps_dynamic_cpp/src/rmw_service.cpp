@@ -326,7 +326,7 @@ rmw_create_service(
       RMW_SET_ERROR_MSG("create_service() failed to create request topic");
       return nullptr;
     }
-    
+
     request_topic_desc = request_topic;
   }
 
@@ -350,7 +350,7 @@ rmw_create_service(
       RMW_SET_ERROR_MSG("create_service() failed to create response topic");
       return nullptr;
     }
-    
+
     response_topic_desc = response_topic;
     response_topic_created = true;
   } else {
