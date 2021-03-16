@@ -200,7 +200,7 @@ rmw_create_service(
   }
 
   /////
-  // Create the RMW Service struct (info)
+  // Create the custom Service struct (info)
   CustomServiceInfo * info = new (std::nothrow) CustomServiceInfo();
   if (!info) {
     RMW_SET_ERROR_MSG("create_service() failed to allocate custom info");
@@ -380,7 +380,7 @@ rmw_create_service(
   eprosima::fastdds::dds::DataReaderQos dataReaderQos = subscriber->get_default_datareader_qos();
 
   // Try to load the profile named "service",
-  // if it does not exist it tryes with the request topic name
+  // if it does not exist it tries with the request topic name
   // It does not need to check the return code, as if any of the profile does not exist,
   // the QoS is already set correctly:
   // If none exist is default, if only one exists is the one chosen,
@@ -425,7 +425,7 @@ rmw_create_service(
   eprosima::fastdds::dds::DataWriterQos dataWriterQos = publisher->get_default_datawriter_qos();
 
   // Try to load the profile named "service",
-  // if it does not exist it tryes with the request topic name
+  // if it does not exist it tries with the request topic name
   // It does not need to check the return code, as if any of the profile does not exist,
   // the QoS is already set correctly:
   // If none exist is default, if only one exists is the one chosen,

@@ -266,7 +266,7 @@ rmw_create_client(
     });
 
   if (ReturnCode_t::RETCODE_OK != response_fastdds_type.register_type(domainParticipant)) {
-    RMW_SET_ERROR_MSG("create_client() failed to register request type");
+    RMW_SET_ERROR_MSG("create_client() failed to register response type");
     return nullptr;
   }
   info->response_type_support_ = response_fastdds_type;
@@ -370,7 +370,7 @@ rmw_create_client(
   std::string topic_name_fallback = "client";
 
   /////
-  // Create request DataReader
+  // Create response DataReader
 
   // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill DataReader QoS with a subscriber profile
   // located based on topic name defined by _create_topic_name(). If no profile is found, a search
@@ -378,7 +378,7 @@ rmw_create_client(
   eprosima::fastdds::dds::DataReaderQos dataReaderQos = subscriber->get_default_datareader_qos();
 
   // Try to load the profile named "client",
-  // if it does not exist it tryes with the request topic name
+  // if it does not exist it tries with the response topic name
   // It does not need to check the return code, as if any of the profile does not exist,
   // the QoS is already set correctly:
   // If none exist is default, if only one exists is the one chosen,
@@ -419,7 +419,7 @@ rmw_create_client(
   eprosima::fastdds::dds::DataWriterQos dataWriterQos = publisher->get_default_datawriter_qos();
 
   // Try to load the profile named "client",
-  // if it does not exist it tryes with the request topic name
+  // if it does not exist it tries with the request topic name
   // It does not need to check the return code, as if any of the profile does not exist,
   // the QoS is already set correctly:
   // If none exist is default, if only one exists is the one chosen,

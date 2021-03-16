@@ -34,7 +34,6 @@
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
 
 

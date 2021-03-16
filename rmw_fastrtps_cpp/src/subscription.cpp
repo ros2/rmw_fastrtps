@@ -154,7 +154,7 @@ create_subscription(
   }
 
   /////
-  // Create the RMW Subscriber struct (info)
+  // Create the custom Subscriber struct (info)
   CustomSubscriberInfo * info = nullptr;
 
   info = new (std::nothrow) CustomSubscriberInfo();
@@ -169,7 +169,7 @@ create_subscription(
     });
 
   info->typesupport_identifier_ = type_support->typesupport_identifier;
-  info->type_support_impl_ = type_support->data;
+  info->type_support_impl_ = callbacks;
 
   /////
   // Create the Type Support struct

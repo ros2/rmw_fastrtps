@@ -65,6 +65,8 @@ create_subscription(
   bool keyed,
   bool create_subscription_listener)
 {
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(nullptr);
+
   /////
   // Check input parameters
   RMW_CHECK_ARGUMENT_FOR_NULL(participant_info, nullptr);
@@ -150,13 +152,13 @@ create_subscription(
       fastdds_type))
   {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-      "create_publisher() called with existing topic name %s with incompatible type %s",
+      "create_subscription() called with existing topic name %s with incompatible type %s",
       topic_name_mangled.c_str(), type_name.c_str());
     return nullptr;
   }
 
   /////
-  // Create the RMW Subscriber struct (info)
+  // Create the custom Subscriber struct (info)
   CustomSubscriberInfo * info = nullptr;
 
   info = new (std::nothrow) CustomSubscriberInfo();

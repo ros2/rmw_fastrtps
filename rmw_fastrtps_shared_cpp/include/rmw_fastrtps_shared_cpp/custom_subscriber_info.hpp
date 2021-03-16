@@ -35,7 +35,6 @@
 
 #include "rmw/impl/cpp/macros.hpp"
 
-#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
 
 

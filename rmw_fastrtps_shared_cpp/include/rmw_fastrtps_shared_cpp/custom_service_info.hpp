@@ -40,7 +40,6 @@
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
-#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 
 class ServiceListener;
