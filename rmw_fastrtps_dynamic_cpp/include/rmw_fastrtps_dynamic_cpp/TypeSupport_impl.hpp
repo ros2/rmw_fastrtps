@@ -830,7 +830,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
     size_t array_size = 1;
     if (member->is_array_) {
       array_size = member->array_size_;
-      
+
       // Whether it is unbounded.
       if (0 == array_size) {
         this->max_size_bound_ = false;
