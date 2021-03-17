@@ -85,6 +85,7 @@ protected:
   TypeSupport();
 
   bool max_size_bound_;
+  bool is_plain_;
 };
 
 }  // namespace rmw_fastrtps_shared_cpp
