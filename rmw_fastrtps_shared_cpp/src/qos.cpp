@@ -26,6 +26,10 @@ static
 eprosima::fastrtps::Duration_t
 rmw_time_to_fastrtps(const rmw_time_t & time)
 {
+  if (rmw_time_equal(time, RMW_DURATION_INFINITE)) {
+    return eprosima::fastrtps::rtps::c_RTPSTimeInfinite.to_duration_t();
+  }
+
   rmw_time_t clamped_time = rmw_dds_common::clamp_rmw_time_to_dds_time(time);
   return eprosima::fastrtps::Duration_t(
     static_cast<int32_t>(clamped_time.sec),
@@ -34,9 +38,19 @@ rmw_time_to_fastrtps(const rmw_time_t & time)
 
 static
 bool
-is_time_default(const rmw_time_t & time)
+is_rmw_duration_unspecified(const rmw_time_t & time)
 {
-  return time.sec == 0 && time.nsec == 0;
+  return rmw_time_equal(time, RMW_DURATION_UNSPECIFIED);
+}
+
+rmw_time_t
+dds_duration_to_rmw(const eprosima::fastrtps::Duration_t & duration)
+{
+  if (duration == eprosima::fastrtps::rtps::c_RTPSTimeInfinite) {
+    return RMW_DURATION_INFINITE;
+  }
+  rmw_time_t result = {(uint64_t)duration.seconds, (uint64_t)duration.nanosec};
+  return result;
 }
 
 template<typename DDSEntityQos>
@@ -101,11 +115,11 @@ bool fill_entity_qos_from_profile(
     history_qos.depth = static_cast<int32_t>(qos_policies.depth);
   }
 
-  if (!is_time_default(qos_policies.lifespan)) {
+  if (!is_rmw_duration_unspecified(qos_policies.lifespan)) {
     entity_qos.m_lifespan.duration = rmw_time_to_fastrtps(qos_policies.lifespan);
   }
 
-  if (!is_time_default(qos_policies.deadline)) {
+  if (!is_rmw_duration_unspecified(qos_policies.deadline)) {
     entity_qos.m_deadline.period = rmw_time_to_fastrtps(qos_policies.deadline);
   }
 
@@ -122,7 +136,7 @@ bool fill_entity_qos_from_profile(
       RMW_SET_ERROR_MSG("Unknown QoS Liveliness policy");
       return false;
   }
-  if (!is_time_default(qos_policies.liveliness_lease_duration)) {
+  if (!is_rmw_duration_unspecified(qos_policies.liveliness_lease_duration)) {
     entity_qos.m_liveliness.lease_duration =
       rmw_time_to_fastrtps(qos_policies.liveliness_lease_duration);
 

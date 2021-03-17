@@ -23,6 +23,8 @@
 
 using eprosima::fastrtps::PublisherAttributes;
 using eprosima::fastrtps::SubscriberAttributes;
+static const eprosima::fastrtps::Duration_t InfiniteDuration =
+  eprosima::fastrtps::rtps::c_RTPSTimeInfinite.to_duration_t();
 
 class DDSAttributesToRMWQosTest : public ::testing::Test
 {
@@ -135,4 +137,24 @@ TEST_F(DDSAttributesToRMWQosTest, test_subscriber_lifespan_conversion) {
   dds_attributes_to_rmw_qos(subscriber_attributes_, &qos_profile_);
   EXPECT_EQ(qos_profile_.lifespan.sec, 9u);
   EXPECT_EQ(qos_profile_.lifespan.nsec, 432u);
+}
+
+TEST_F(DDSAttributesToRMWQosTest, test_subscriber_infinite_duration_conversions) {
+  subscriber_attributes_.qos.m_lifespan.duration = InfiniteDuration;
+  subscriber_attributes_.qos.m_deadline.period = InfiniteDuration;
+  subscriber_attributes_.qos.m_liveliness.lease_duration = InfiniteDuration;
+  dds_attributes_to_rmw_qos(subscriber_attributes_, &qos_profile_);
+  EXPECT_TRUE(rmw_time_equal(qos_profile_.deadline, RMW_DURATION_INFINITE));
+  EXPECT_TRUE(rmw_time_equal(qos_profile_.lifespan, RMW_DURATION_INFINITE));
+  EXPECT_TRUE(rmw_time_equal(qos_profile_.liveliness_lease_duration, RMW_DURATION_INFINITE));
+}
+
+TEST_F(DDSAttributesToRMWQosTest, test_publisher_infinite_duration_conversions) {
+  publisher_attributes_.qos.m_lifespan.duration = InfiniteDuration;
+  publisher_attributes_.qos.m_deadline.period = InfiniteDuration;
+  publisher_attributes_.qos.m_liveliness.lease_duration = InfiniteDuration;
+  dds_attributes_to_rmw_qos(publisher_attributes_, &qos_profile_);
+  EXPECT_TRUE(rmw_time_equal(qos_profile_.deadline, RMW_DURATION_INFINITE));
+  EXPECT_TRUE(rmw_time_equal(qos_profile_.lifespan, RMW_DURATION_INFINITE));
+  EXPECT_TRUE(rmw_time_equal(qos_profile_.liveliness_lease_duration, RMW_DURATION_INFINITE));
 }
