@@ -89,13 +89,14 @@ __rmw_destroy_service(
       nullptr);
   }
 
-  auto show_previous_error = [&final_ret]() {
-    if (RMW_RET_OK != final_ret) {
-      RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
-      RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "'\n");
-      rmw_reset_error();
-    }
-  };
+  auto show_previous_error =
+    [&final_ret]() {
+      if (RMW_RET_OK != final_ret) {
+        RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
+        RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "'\n");
+        rmw_reset_error();
+      }
+    };
 
   /////
   // Delete DataWriter and DataReader
