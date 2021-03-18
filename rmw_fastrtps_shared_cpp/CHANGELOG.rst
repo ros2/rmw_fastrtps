@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+4.5.0 (2021-03-18)
+------------------
+* Take and return new RMW_DURATION_INFINITE correctly (`#515 <https://github.com/ros2/rmw_fastrtps/issues/515>`_)
+* Contributors: Emerson Knapp
+
 4.4.0 (2021-03-01)
 ------------------
 * Add RMW function to check QoS compatibility (`#511 <https://github.com/ros2/rmw_fastrtps/issues/511>`_)
