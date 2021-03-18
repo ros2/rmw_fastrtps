@@ -338,17 +338,28 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
     return RMW_RET_ERROR;
   }
 
+  RMW_CHECK_ARGUMENT_FOR_NULL(participant_info->participant_, RMW_RET_ERROR);
+
+  // Make the participant stop listening to discovery
+  participant_info->participant_->set_listener(nullptr);
+
+  ReturnCode_t ret = ReturnCode_t::RETCODE_OK;
+
   // Remove publisher and subcriber from participant
-  ReturnCode_t ret = participant_info->participant_->delete_publisher(participant_info->publisher_);
-  if (ret != ReturnCode_t::RETCODE_OK) {
-    RMW_SET_ERROR_MSG("Fail in delete dds publisher from participant");
-    return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+  if (participant_info->publisher_) {
+    ret = participant_info->participant_->delete_publisher(participant_info->publisher_);
+    if (ret != ReturnCode_t::RETCODE_OK) {
+      RMW_SET_ERROR_MSG("Fail in delete dds publisher from participant");
+      return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+    }
   }
 
-  ret = participant_info->participant_->delete_subscriber(participant_info->subscriber_);
-  if (ret != ReturnCode_t::RETCODE_OK) {
-    RMW_SET_ERROR_MSG("Fail in delete dds subscriber from participant");
-    return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+  if (participant_info->subscriber_) {
+    ret = participant_info->participant_->delete_subscriber(participant_info->subscriber_);
+    if (ret != ReturnCode_t::RETCODE_OK) {
+      RMW_SET_ERROR_MSG("Fail in delete dds subscriber from participant");
+      return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+    }
   }
 
   // Delete Domain Participant
