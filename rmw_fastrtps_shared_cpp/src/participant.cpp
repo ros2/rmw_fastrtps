@@ -19,7 +19,11 @@
 #include "fastdds/dds/core/status/StatusMask.hpp"
 #include "fastdds/dds/domain/DomainParticipantFactory.hpp"
 #include "fastdds/dds/domain/qos/DomainParticipantQos.hpp"
+#include "fastdds/dds/publisher/DataWriter.hpp"
+#include "fastdds/dds/publisher/Publisher.hpp"
 #include "fastdds/dds/publisher/qos/PublisherQos.hpp"
+#include "fastdds/dds/subscriber/DataReader.hpp"
+#include "fastdds/dds/subscriber/Subscriber.hpp"
 #include "fastdds/dds/subscriber/qos/SubscriberQos.hpp"
 #include "fastdds/rtps/attributes/PropertyPolicy.h"
 #include "fastdds/rtps/common/Property.h"
@@ -345,8 +349,17 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
 
   ReturnCode_t ret = ReturnCode_t::RETCODE_OK;
 
-  // Remove publisher and subcriber from participant
+  // Collect topics that should be deleted
+  std::vector<const eprosima::fastdds::dds::TopicDescription *> topics_to_remove;
+
+  // Remove datawriters and publisher from participant
   if (participant_info->publisher_) {
+    std::vector<eprosima::fastdds::dds::DataWriter *> writers;
+    participant_info->publisher_->get_datawriters(writers);
+    for (auto writer : writers) {
+      topics_to_remove.push_back(writer->get_topic());
+      participant_info->publisher_->delete_datawriter(writer);
+    }
     ret = participant_info->participant_->delete_publisher(participant_info->publisher_);
     if (ret != ReturnCode_t::RETCODE_OK) {
       RMW_SET_ERROR_MSG("Fail in delete dds publisher from participant");
@@ -354,12 +367,25 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
     }
   }
 
+  // Remove datareaders and subscriber from participant
   if (participant_info->subscriber_) {
+    std::vector<eprosima::fastdds::dds::DataReader *> readers;
+    participant_info->subscriber_->get_datareaders(readers);
+    for (auto reader : readers) {
+        topics_to_remove.push_back(reader->get_topicdescription());
+        participant_info->subscriber_->delete_datareader(reader);
+    }
     ret = participant_info->participant_->delete_subscriber(participant_info->subscriber_);
     if (ret != ReturnCode_t::RETCODE_OK) {
       RMW_SET_ERROR_MSG("Fail in delete dds subscriber from participant");
       return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
     }
+  }
+
+  // Remove topics
+  eprosima::fastdds::dds::TypeSupport dummy_type;
+  for (auto topic : topics_to_remove) {
+    remove_topic_and_type(participant_info, topic, dummy_type);
   }
 
   // Delete Domain Participant
