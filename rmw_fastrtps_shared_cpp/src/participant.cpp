@@ -15,6 +15,7 @@
 
 #include <string>
 #include <memory>
+#include <vector>
 
 #include "fastdds/dds/core/status/StatusMask.hpp"
 #include "fastdds/dds/domain/DomainParticipantFactory.hpp"
@@ -372,8 +373,8 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
     std::vector<eprosima::fastdds::dds::DataReader *> readers;
     participant_info->subscriber_->get_datareaders(readers);
     for (auto reader : readers) {
-        topics_to_remove.push_back(reader->get_topicdescription());
-        participant_info->subscriber_->delete_datareader(reader);
+      topics_to_remove.push_back(reader->get_topicdescription());
+      participant_info->subscriber_->delete_datareader(reader);
     }
     ret = participant_info->participant_->delete_subscriber(participant_info->subscriber_);
     if (ret != ReturnCode_t::RETCODE_OK) {
