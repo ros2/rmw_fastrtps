@@ -158,11 +158,8 @@ rtps_qos_to_rmw_qos(
       break;
   }
 
-  qos->deadline.sec = rtps_qos.m_deadline.period.seconds;
-  qos->deadline.nsec = rtps_qos.m_deadline.period.nanosec;
-
-  qos->lifespan.sec = rtps_qos.m_lifespan.duration.seconds;
-  qos->lifespan.nsec = rtps_qos.m_lifespan.duration.nanosec;
+  qos->deadline = dds_duration_to_rmw(rtps_qos.m_deadline.period);
+  qos->lifespan = dds_duration_to_rmw(rtps_qos.m_lifespan.duration);
 
   switch (rtps_qos.m_liveliness.kind) {
     case eprosima::fastrtps::AUTOMATIC_LIVELINESS_QOS:
