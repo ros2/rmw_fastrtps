@@ -22,8 +22,15 @@
 namespace rmw_fastrtps_cpp
 {
 
-eprosima::fastdds::dds::DomainParticipant *
+eprosima::fastrtps::Participant *
 get_participant(rmw_node_t * node)
+{
+  (void)node;
+  return nullptr;
+}
+
+eprosima::fastdds::dds::DomainParticipant *
+get_domain_participant(rmw_node_t * node)
 {
   if (!node) {
     return nullptr;

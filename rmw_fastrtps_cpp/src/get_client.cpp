@@ -23,8 +23,22 @@
 namespace rmw_fastrtps_cpp
 {
 
-eprosima::fastdds::dds::DataWriter *
+eprosima::fastrtps::Publisher *
 get_request_publisher(rmw_client_t * client)
+{
+  (void)client;
+  return nullptr;
+}
+
+eprosima::fastrtps::Subscriber *
+get_response_subscriber(rmw_client_t * client)
+{
+  (void)client;
+  return nullptr;
+}
+
+eprosima::fastdds::dds::DataWriter *
+get_request_datawriter(rmw_client_t * client)
 {
   if (!client) {
     return nullptr;
@@ -37,7 +51,7 @@ get_request_publisher(rmw_client_t * client)
 }
 
 eprosima::fastdds::dds::DataReader *
-get_response_subscriber(rmw_client_t * client)
+get_response_datareader(rmw_client_t * client)
 {
   if (!client) {
     return nullptr;

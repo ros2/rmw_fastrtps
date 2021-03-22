@@ -18,11 +18,34 @@
 #include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
 
+#include "fastrtps/publisher/Publisher.h"
+#include "fastrtps/subscriber/Subscriber.h"
+
 #include "rmw/rmw.h"
 #include "rmw_fastrtps_dynamic_cpp/visibility_control.h"
 
 namespace rmw_fastrtps_dynamic_cpp
 {
+
+/// Return a native FastRTPS subscriber handle for the request.
+/**
+ * This function has been deprecated and always returns `NULL`.
+ *
+ * \return `NULL`
+ */
+RMW_FASTRTPS_DYNAMIC_CPP_PUBLIC
+eprosima::fastrtps::Subscriber *
+get_request_subscriber(rmw_service_t * service);
+
+/// Return a native FastRTPS publisher handle for the response.
+/**
+ * This function has been deprecated and always returns `NULL`.
+ *
+ * \return `NULL`
+ */
+RMW_FASTRTPS_DYNAMIC_CPP_PUBLIC
+eprosima::fastrtps::Publisher *
+get_response_publisher(rmw_service_t * service);
 
 /// Return a native Fast DDS DataReader handle for the request.
 /**
@@ -33,7 +56,7 @@ namespace rmw_fastrtps_dynamic_cpp
  */
 RMW_FASTRTPS_DYNAMIC_CPP_PUBLIC
 eprosima::fastdds::dds::DataReader *
-get_request_subscriber(rmw_service_t * service);
+get_request_datareader(rmw_service_t * service);
 
 /// Return a native Fast DDS DataWriter handle for the response.
 /**
@@ -44,7 +67,7 @@ get_request_subscriber(rmw_service_t * service);
  */
 RMW_FASTRTPS_DYNAMIC_CPP_PUBLIC
 eprosima::fastdds::dds::DataWriter *
-get_response_publisher(rmw_service_t * service);
+get_response_datawriter(rmw_service_t * service);
 
 }  // namespace rmw_fastrtps_dynamic_cpp
 

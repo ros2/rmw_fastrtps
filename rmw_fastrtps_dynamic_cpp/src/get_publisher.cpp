@@ -20,8 +20,15 @@
 namespace rmw_fastrtps_dynamic_cpp
 {
 
-eprosima::fastdds::dds::DataWriter *
+eprosima::fastrtps::Publisher *
 get_publisher(rmw_publisher_t * publisher)
+{
+  (void)publisher;
+  return nullptr;
+}
+
+eprosima::fastdds::dds::DataWriter *
+get_datawriter(rmw_publisher_t * publisher)
 {
   if (!publisher) {
     return nullptr;

@@ -20,8 +20,15 @@
 namespace rmw_fastrtps_cpp
 {
 
-eprosima::fastdds::dds::DataReader *
+eprosima::fastrtps::Subscriber *
 get_subscriber(rmw_subscription_t * subscription)
+{
+  (void)subscription;
+  return nullptr;
+}
+
+eprosima::fastdds::dds::DataReader *
+get_datareader(rmw_subscription_t * subscription)
 {
   if (!subscription) {
     return nullptr;
