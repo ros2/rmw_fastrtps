@@ -64,8 +64,7 @@ public:
   // new event from this listener has ocurred
   virtual void eventSetExecutorCallback(
     const void * user_data,
-    rmw_listener_callback_t callback,
-    bool use_previous_events) = 0;
+    rmw_listener_callback_t callback) = 0;
 
   rmw_listener_callback_t listener_callback_{nullptr};
   const void * user_data_{nullptr};

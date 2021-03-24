@@ -93,17 +93,14 @@ public:
   void
   guardConditionSetExecutorCallback(
     const void * user_data,
-    rmw_listener_callback_t callback,
-    bool use_previous_events)
+    rmw_listener_callback_t callback)
   {
     std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
 
     if (callback) {
-      if (use_previous_events) {
-        // Push events arrived before setting the executor's callback
-        for(uint64_t i = 0; i < unread_count_; i++) {
-          callback(user_data);
-        }
+      // Push events arrived before setting the executor's callback
+      for(uint64_t i = 0; i < unread_count_; i++) {
+        callback(user_data);
       }
       user_data_ = user_data;
       listener_callback_ = callback;
@@ -112,7 +109,6 @@ public:
       listener_callback_ = nullptr;
       return;
     }
-
 
     // Reset unread count
     unread_count_ = 0;

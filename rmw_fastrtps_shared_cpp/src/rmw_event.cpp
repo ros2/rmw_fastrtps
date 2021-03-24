@@ -72,14 +72,12 @@ rmw_ret_t
 __rmw_event_set_listener_callback(
   rmw_event_t * rmw_event,
   rmw_listener_callback_t callback,
-  const void * user_data,
-  bool use_previous_events)
+  const void * user_data)
 {
   auto custom_event_info = static_cast<CustomEventInfo *>(rmw_event->data);
   custom_event_info->getListener()->eventSetExecutorCallback(
     user_data,
-    callback,
-    use_previous_events);
+    callback);
   return RMW_RET_OK;
 }
 

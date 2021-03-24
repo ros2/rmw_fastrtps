@@ -93,18 +93,15 @@ bool PubListener::hasEvent(rmw_event_type_t event_type) const
 }
 
 void PubListener::eventSetExecutorCallback(
-    const void * user_data,
-    rmw_listener_callback_t callback,
-    bool use_previous_events)
+  const void * user_data,
+  rmw_listener_callback_t callback)
 {
   std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
 
   if (callback) {
-    if (use_previous_events) {
-      // Push events arrived before setting the executor's callback
-      for(uint64_t i = 0; i < unread_events_count_; i++) {
-        callback(user_data);
-      }
+    // Push events arrived before setting the executor's callback
+    for(uint64_t i = 0; i < unread_events_count_; i++) {
+      callback(user_data);
     }
     user_data_ = user_data;
     listener_callback_ = callback;
