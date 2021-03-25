@@ -45,7 +45,7 @@ PubListener::on_offered_deadline_missed(
   std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
 
   if(listener_callback_){
-    listener_callback_(user_data_);
+    listener_callback_(user_data_, 1);
   } else {
     unread_events_count_++;
   }
@@ -72,7 +72,7 @@ void PubListener::on_liveliness_lost(
   std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
 
   if(listener_callback_) {
-    listener_callback_(user_data_);
+    listener_callback_(user_data_, 1);
   } else {
     unread_events_count_++;
   }
@@ -100,19 +100,16 @@ void PubListener::eventSetExecutorCallback(
 
   if (callback) {
     // Push events arrived before setting the executor's callback
-    for(uint64_t i = 0; i < unread_events_count_; i++) {
-      callback(user_data);
+    if (unread_events_count_) {
+      callback(user_data, unread_events_count_);
+      unread_events_count_ = 0;
     }
     user_data_ = user_data;
     listener_callback_ = callback;
   } else {
     user_data_ = nullptr;
     listener_callback_ = nullptr;
-    return;
   }
-
-  // Reset unread count
-  unread_events_count_ = 0;
 }
 
 bool PubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)

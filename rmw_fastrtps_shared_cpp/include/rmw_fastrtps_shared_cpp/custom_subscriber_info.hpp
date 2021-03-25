@@ -102,7 +102,7 @@ public:
     std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
 
     if (listener_callback_) {
-      listener_callback_(user_data_);
+      listener_callback_(user_data_, 1);
     } else {
       update_has_data(reader);
     }
@@ -187,20 +187,16 @@ public:
 
     if (callback) {
       // Push events arrived before setting the executor's callback
-      for(uint64_t i = 0; i < new_data_unread_count_; i++) {
-        callback(user_data);
+      if (new_data_unread_count_) {
+        callback(user_data, new_data_unread_count_);
+        new_data_unread_count_ = 0;
       }
-
       user_data_ = user_data;
       listener_callback_ = callback;
     } else {
       user_data_ = nullptr;
       listener_callback_ = nullptr;
-      return;
     }
-
-    // Reset unread count
-    new_data_unread_count_ = 0;
   }
 
 private:

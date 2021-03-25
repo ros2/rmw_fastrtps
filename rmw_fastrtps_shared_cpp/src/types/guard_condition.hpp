@@ -40,7 +40,7 @@ public:
 
     if(listener_callback_)
     {
-      listener_callback_(user_data_);
+      listener_callback_(user_data_, 1);
     } else {
       std::lock_guard<std::mutex> lock(internalMutex_);
 
@@ -99,8 +99,9 @@ public:
 
     if (callback) {
       // Push events arrived before setting the executor's callback
-      for(uint64_t i = 0; i < unread_count_; i++) {
-        callback(user_data);
+      if (unread_count_) {
+        callback(user_data, unread_count_);
+        unread_count_ = 0;
       }
       user_data_ = user_data;
       listener_callback_ = callback;
@@ -109,9 +110,6 @@ public:
       listener_callback_ = nullptr;
       return;
     }
-
-    // Reset unread count
-    unread_count_ = 0;
   }
 
 private:
