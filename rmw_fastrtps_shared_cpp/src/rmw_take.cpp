@@ -65,7 +65,7 @@ _take(
     subscription->implementation_identifier, identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
-  CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
   eprosima::fastdds::dds::SampleInfo sinfo;
@@ -109,7 +109,7 @@ _take_sequence(
     subscription->implementation_identifier, identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
-  CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
   // Limit the upper bound of reads to the number unread at the beginning.
@@ -272,7 +272,7 @@ _take_serialized_message(
     subscription->implementation_identifier, identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
-  CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
   eprosima::fastcdr::FastBuffer buffer;

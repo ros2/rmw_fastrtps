@@ -138,14 +138,10 @@ rmw_create_service(
   // Find and check existing topics and types
 
   // Create Topic and Type names
-  const service_type_support_callbacks_t * service_members;
-  const message_type_support_callbacks_t * request_members;
-  const message_type_support_callbacks_t * response_members;
-
-  service_members = static_cast<const service_type_support_callbacks_t *>(type_support->data);
-  request_members = static_cast<const message_type_support_callbacks_t *>(
+  auto service_members = static_cast<const service_type_support_callbacks_t *>(type_support->data);
+  auto request_members = static_cast<const message_type_support_callbacks_t *>(
     service_members->request_members_->data);
-  response_members = static_cast<const message_type_support_callbacks_t *>(
+  auto response_members = static_cast<const message_type_support_callbacks_t *>(
     service_members->response_members_->data);
 
   std::string request_type_name = _create_type_name(request_members);

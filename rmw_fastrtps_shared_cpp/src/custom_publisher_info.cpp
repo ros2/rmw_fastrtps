@@ -81,8 +81,7 @@ bool PubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
   switch (event_type) {
     case RMW_EVENT_LIVELINESS_LOST:
       {
-        rmw_liveliness_lost_status_t * rmw_data =
-          static_cast<rmw_liveliness_lost_status_t *>(event_info);
+        auto rmw_data = static_cast<rmw_liveliness_lost_status_t *>(event_info);
         rmw_data->total_count = liveliness_lost_status_.total_count;
         rmw_data->total_count_change = liveliness_lost_status_.total_count_change;
         liveliness_lost_status_.total_count_change = 0;
@@ -91,8 +90,7 @@ bool PubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
       break;
     case RMW_EVENT_OFFERED_DEADLINE_MISSED:
       {
-        rmw_offered_deadline_missed_status_t * rmw_data =
-          static_cast<rmw_offered_deadline_missed_status_t *>(event_info);
+        auto rmw_data = static_cast<rmw_offered_deadline_missed_status_t *>(event_info);
         rmw_data->total_count = offered_deadline_missed_status_.total_count;
         rmw_data->total_count_change = offered_deadline_missed_status_.total_count_change;
         offered_deadline_missed_status_.total_count_change = 0;

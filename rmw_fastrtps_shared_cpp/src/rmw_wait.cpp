@@ -47,7 +47,7 @@ check_wait_set_for_data(
   if (clients) {
     for (size_t i = 0; i < clients->client_count; ++i) {
       void * data = clients->clients[i];
-      CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
+      auto custom_client_info = static_cast<CustomClientInfo *>(data);
       if (custom_client_info && custom_client_info->listener_->hasData()) {
         return true;
       }
@@ -57,7 +57,7 @@ check_wait_set_for_data(
   if (services) {
     for (size_t i = 0; i < services->service_count; ++i) {
       void * data = services->services[i];
-      CustomServiceInfo * custom_service_info = static_cast<CustomServiceInfo *>(data);
+      auto custom_service_info = static_cast<CustomServiceInfo *>(data);
       if (custom_service_info && custom_service_info->listener_->hasData()) {
         return true;
       }
@@ -114,7 +114,7 @@ __rmw_wait(
   // error.
   // - Heap is corrupt.
   // In all three cases, it's better if this crashes soon enough.
-  CustomWaitsetInfo * wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
+  auto wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
   std::mutex * conditionMutex = &wait_set_info->condition_mutex;
   std::condition_variable * conditionVariable = &wait_set_info->condition;
 
@@ -129,7 +129,7 @@ __rmw_wait(
   if (clients) {
     for (size_t i = 0; i < clients->client_count; ++i) {
       void * data = clients->clients[i];
-      CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
+      auto custom_client_info = static_cast<CustomClientInfo *>(data);
       custom_client_info->listener_->attachCondition(conditionMutex, conditionVariable);
     }
   }
@@ -205,7 +205,7 @@ __rmw_wait(
   if (clients) {
     for (size_t i = 0; i < clients->client_count; ++i) {
       void * data = clients->clients[i];
-      CustomClientInfo * custom_client_info = static_cast<CustomClientInfo *>(data);
+      auto custom_client_info = static_cast<CustomClientInfo *>(data);
       custom_client_info->listener_->detachCondition();
       if (!custom_client_info->listener_->hasData()) {
         clients->clients[i] = 0;
