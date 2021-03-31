@@ -68,7 +68,7 @@ struct TopicHolder
 */
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
-  cast_error_dds_to_rmw(eprosima::fastrtps::types::ReturnCode_t code);
+cast_error_dds_to_rmw(eprosima::fastrtps::types::ReturnCode_t code);
 
 /**
 * Auxiliary method to reuse or create a topic during the creation of an entity.
