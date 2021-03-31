@@ -94,14 +94,6 @@ rmw_fastrtps_cpp::create_publisher(
   }
 
   /////
-  // Get Participant and Publisher
-  eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
-  RMW_CHECK_FOR_NULL_WITH_MSG(domainParticipant, "participant handle is null", return nullptr);
-
-  eprosima::fastdds::dds::Publisher * publisher = participant_info->publisher_;
-  RMW_CHECK_FOR_NULL_WITH_MSG(publisher, "publisher handle is null", return nullptr);
-
-  /////
   // Get RMW Type Support
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
     type_supports, RMW_FASTRTPS_CPP_TYPESUPPORT_C);
@@ -150,6 +142,11 @@ rmw_fastrtps_cpp::create_publisher(
   }
 
   /////
+  // Get Participant and Publisher
+  eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
+  eprosima::fastdds::dds::Publisher * publisher = participant_info->publisher_;
+
+  /////
   // Create the custom Publisher struct (info)
   CustomPublisherInfo * info = nullptr;
 
@@ -160,7 +157,11 @@ rmw_fastrtps_cpp::create_publisher(
   }
 
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info]() {
+    [info, domainParticipant]() {
+      delete info->listener_;
+      if (info->type_support_) {
+        domainParticipant->unregister_type(info->type_support_.get_type_name());
+      }
       delete info;
     });
 
@@ -190,10 +191,6 @@ rmw_fastrtps_cpp::create_publisher(
     return nullptr;
   }
   info->type_support_ = fastdds_type;
-  auto cleanup_type_support = rcpputils::make_scope_exit(
-    [info, domainParticipant]() {
-      domainParticipant->unregister_type(info->type_support_.get_type_name());
-    });
 
   /////
   // Create Listener
@@ -207,49 +204,22 @@ rmw_fastrtps_cpp::create_publisher(
     }
   }
 
-  auto cleanup_listener = rcpputils::make_scope_exit(
-    [info]() {
-      delete info->listener_;
-    });
-
   /////
   // Create and register Topic
-  bool topic_created = false;
-  eprosima::fastdds::dds::Topic * topic = nullptr;
-  if (!des_topic) {
-    // Use Topic Qos Default
-    eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
-
-    if (!get_topic_qos(*qos_policies, topicQos)) {
-      RMW_SET_ERROR_MSG("create_publisher() failed setting topic QoS");
-      return nullptr;
-    }
-
-    topic = domainParticipant->create_topic(
-      topic_name_mangled,
-      type_name,
-      topicQos);
-
-    if (!topic) {
-      RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
-      return nullptr;
-    }
-
-    topic_created = true;
-  } else {
-    topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(des_topic);
-    if (!topic) {
-      RMW_SET_ERROR_MSG("create_publisher() failed, publisher topic can only be of class Topic");
-      return nullptr;
-    }
+  eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
+  if (!get_topic_qos(*qos_policies, topicQos)) {
+    RMW_SET_ERROR_MSG("create_publisher() failed setting topic QoS");
+    return nullptr;
   }
-
-  auto cleanup_topic = rcpputils::make_scope_exit(
-    [domainParticipant, topic, topic_created]() {
-      if (topic_created) {
-        domainParticipant->delete_topic(topic);
-      }
-    });
+  
+  rmw_fastrtps_shared_cpp::TopicHolder topic;
+  if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
+      domainParticipant, des_topic,
+      topic_name_mangled, type_name, topicQos, true, &topic))
+  {
+    RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
+    return nullptr;
+  }
 
   /////
   // Create DataWriter
@@ -284,7 +254,7 @@ rmw_fastrtps_cpp::create_publisher(
 
   // Creates DataWriter
   info->data_writer_ = publisher->create_datawriter(
-    topic,
+    topic.topic,
     dataWriterQos,
     info->listener_);
 
@@ -330,11 +300,10 @@ rmw_fastrtps_cpp::create_publisher(
 
   rmw_publisher->options = *publisher_options;
 
+  topic.should_be_deleted = false;
   cleanup_rmw_publisher.cancel();
   cleanup_datawriter.cancel();
-  cleanup_topic.cancel();
-  cleanup_listener.cancel();
-  cleanup_type_support.cancel();
   cleanup_info.cancel();
+
   return rmw_publisher;
 }
