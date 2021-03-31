@@ -140,8 +140,8 @@ rmw_fastrtps_cpp::create_publisher(
       participant_info,
       topic_name_mangled,
       type_name,
-      des_topic,
-      fastdds_type))
+      &des_topic,
+      &fastdds_type))
   {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "create_publisher() called for existing topic name %s with incompatible type %s",

@@ -56,18 +56,18 @@ find_and_check_topic_and_type(
   const CustomParticipantInfo * participant_info,
   const std::string & topic_name,
   const std::string & type_name,
-  eprosima::fastdds::dds::TopicDescription * & returned_topic,
-  eprosima::fastdds::dds::TypeSupport & returned_type)
+  eprosima::fastdds::dds::TopicDescription ** returned_topic,
+  eprosima::fastdds::dds::TypeSupport * returned_type)
 {
   // Searchs for an already existing topic
-  returned_topic = participant_info->participant_->lookup_topicdescription(topic_name);
-  if (nullptr != returned_topic) {
-    if (returned_topic->get_type_name() != type_name) {
+  *returned_topic = participant_info->participant_->lookup_topicdescription(topic_name);
+  if (nullptr != *returned_topic) {
+    if ((*returned_topic)->get_type_name() != type_name) {
       return false;
     }
   }
 
-  returned_type = participant_info->participant_->find_type(type_name);
+  *returned_type = participant_info->participant_->find_type(type_name);
   return true;
 }
 

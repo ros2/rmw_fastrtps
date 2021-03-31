@@ -42,8 +42,8 @@ find_and_check_topic_and_type(
   const CustomParticipantInfo * participant_info,
   const std::string & topic_name,
   const std::string & type_name,
-  eprosima::fastdds::dds::TopicDescription * & returned_topic,
-  eprosima::fastdds::dds::TypeSupport & returned_type);
+  eprosima::fastdds::dds::TopicDescription ** returned_topic,
+  eprosima::fastdds::dds::TypeSupport * returned_type);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 void

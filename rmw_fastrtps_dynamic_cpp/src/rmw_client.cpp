@@ -166,8 +166,8 @@ rmw_create_client(
       participant_info,
       request_topic_name,
       request_type_name,
-      request_topic_desc,
-      request_fastdds_type))
+      &request_topic_desc,
+      &request_fastdds_type))
   {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "create_client() called for existing request topic name %s with incompatible type %s",
@@ -182,8 +182,8 @@ rmw_create_client(
       participant_info,
       response_topic_name,
       response_type_name,
-      response_topic_desc,
-      response_fastdds_type))
+      &response_topic_desc,
+      &response_fastdds_type))
   {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "create_client() called for existing response topic name %s with incompatible type %s",
