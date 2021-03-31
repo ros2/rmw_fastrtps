@@ -509,13 +509,6 @@ __rmw_client_set_listener_callback(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
-__rmw_guard_condition_set_listener_callback(
-  rmw_guard_condition_t * rmw_guard_condition,
-  rmw_listener_callback_t callback,
-  const void * user_data);
-
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
-rmw_ret_t
 __rmw_event_set_listener_callback(
   rmw_event_t * rmw_event,
   rmw_listener_callback_t callback,

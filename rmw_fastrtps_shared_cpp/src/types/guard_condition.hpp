@@ -24,8 +24,6 @@
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
-#include "rmw/listener_callback_type.h"
-
 class GuardCondition
 {
 public:
@@ -36,27 +34,18 @@ public:
   void
   trigger()
   {
-    std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
+    std::lock_guard<std::mutex> lock(internalMutex_);
 
-    if(listener_callback_)
-    {
-      listener_callback_(user_data_, 1);
+    if (conditionMutex_ != nullptr) {
+      std::unique_lock<std::mutex> clock(*conditionMutex_);
+      // the change to hasTriggered_ needs to be mutually exclusive with
+      // rmw_wait() which checks hasTriggered() and decides if wait() needs to
+      // be called
+      hasTriggered_ = true;
+      clock.unlock();
+      conditionVariable_->notify_one();
     } else {
-      std::lock_guard<std::mutex> lock(internalMutex_);
-
-      if (conditionMutex_ != nullptr) {
-        std::unique_lock<std::mutex> clock(*conditionMutex_);
-        // the change to hasTriggered_ needs to be mutually exclusive with
-        // rmw_wait() which checks hasTriggered() and decides if wait() needs to
-        // be called
-        hasTriggered_ = true;
-        clock.unlock();
-        conditionVariable_->notify_one();
-      } else {
-        hasTriggered_ = true;
-      }
-
-      unread_count_++;
+      hasTriggered_ = true;
     }
   }
 
@@ -88,40 +77,11 @@ public:
     return hasTriggered_.exchange(false);
   }
 
-  // Provide handlers to perform an action when a
-  // new event from this listener has ocurred
-  void
-  guardConditionSetExecutorCallback(
-    const void * user_data,
-    rmw_listener_callback_t callback)
-  {
-    std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
-
-    if (callback) {
-      // Push events arrived before setting the executor's callback
-      if (unread_count_) {
-        callback(user_data, unread_count_);
-        unread_count_ = 0;
-      }
-      user_data_ = user_data;
-      listener_callback_ = callback;
-    } else {
-      user_data_ = nullptr;
-      listener_callback_ = nullptr;
-      return;
-    }
-  }
-
 private:
   std::mutex internalMutex_;
   std::atomic_bool hasTriggered_;
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
-
-  rmw_listener_callback_t listener_callback_{nullptr};
-  const void * user_data_{nullptr};
-  std::mutex listener_callback_mutex_;
-  uint64_t unread_count_ = 0;
 };
 
 #endif  // TYPES__GUARD_CONDITION_HPP_
