@@ -211,7 +211,7 @@ rmw_fastrtps_cpp::create_publisher(
     RMW_SET_ERROR_MSG("create_publisher() failed setting topic QoS");
     return nullptr;
   }
-  
+
   rmw_fastrtps_shared_cpp::TopicHolder topic;
   if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
       domainParticipant, des_topic,
