@@ -32,6 +32,8 @@
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
+#include "rmw_dds_common/time_utils.hpp"
+
 namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
@@ -117,6 +119,45 @@ __rmw_publisher_assert_liveliness(
 
   info->data_writer_->assert_liveliness();
   return RMW_RET_OK;
+}
+
+rmw_ret_t
+__rmw_publisher_wait_for_all_acked(
+  const char * identifier,
+  const rmw_publisher_t * publisher,
+  rmw_time_t wait_timeout)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher,
+    publisher->implementation_identifier,
+    identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
+  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
+  if (nullptr == info) {
+    RMW_SET_ERROR_MSG("publisher internal data is invalid");
+    return RMW_RET_ERROR;
+  }
+
+  eprosima::fastrtps::Duration_t timeout;
+
+  // TODO(Barry): While rmw_time_to_fastrtps() is changed to the public function, replace below
+  // codes.
+  if (rmw_time_equal(wait_timeout, RMW_DURATION_INFINITE)) {
+    timeout = eprosima::fastrtps::rtps::c_RTPSTimeInfinite.to_duration_t();
+  } else {
+    rmw_time_t clamped_time = rmw_dds_common::clamp_rmw_time_to_dds_time(wait_timeout);
+    timeout = eprosima::fastrtps::Duration_t(
+      static_cast<int32_t>(clamped_time.sec),
+      static_cast<uint32_t>(clamped_time.nsec));
+  }
+
+  if (info->publisher_->wait_for_all_acked(timeout)) {
+    return RMW_RET_OK;
+  } else {
+    return RMW_RET_TIMEOUT;
+  }
 }
 
 rmw_ret_t
