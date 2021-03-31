@@ -43,18 +43,8 @@ __rmw_destroy_client(
   auto participant_info =
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
   auto info = static_cast<CustomClientInfo *>(client->data);
-  bool info_is_valid = true;
-  if (nullptr == info || nullptr == info->request_writer_ || nullptr == info->response_reader_) {
-    RMW_SET_ERROR_MSG("destroy_client() called with invalid info struct");
-    final_ret = RMW_RET_INVALID_ARGUMENT;
-    info_is_valid = false;
-  } else if (nullptr == participant_info || nullptr == common_context) {
-    RMW_SET_ERROR_MSG("destroy_client() called on invalid context");
-    final_ret = RMW_RET_INVALID_ARGUMENT;
-    info_is_valid = false;
-  }
 
-  if (info_is_valid) {
+  {
     // Update graph
     std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
     rmw_gid_t gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
@@ -87,7 +77,7 @@ __rmw_destroy_client(
 
   /////
   // Delete DataWriter and DataReader
-  if (info_is_valid) {
+  {
     std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
 
     // Keep pointers to topics, so we can remove them later
@@ -99,7 +89,7 @@ __rmw_destroy_client(
     if (ret != ReturnCode_t::RETCODE_OK) {
       show_previous_error();
       RMW_SET_ERROR_MSG("destroy_client() failed to delete datareader");
-      final_ret = rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+      final_ret = RMW_RET_ERROR;
       info->response_reader_->set_listener(nullptr);
     }
 
@@ -113,7 +103,7 @@ __rmw_destroy_client(
     if (ret != ReturnCode_t::RETCODE_OK) {
       show_previous_error();
       RMW_SET_ERROR_MSG("destroy_client() failed to delete datawriter");
-      final_ret = rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+      final_ret = RMW_RET_ERROR;
       info->request_writer_->set_listener(nullptr);
     }
 
