@@ -100,14 +100,6 @@ create_subscription(
   }
 
   /////
-  // Get Participant and Subscriber
-  eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
-  RMW_CHECK_FOR_NULL_WITH_MSG(domainParticipant, "participant handle is null", return nullptr);
-
-  eprosima::fastdds::dds::Subscriber * subscriber = participant_info->subscriber_;
-  RMW_CHECK_FOR_NULL_WITH_MSG(subscriber, "subscriber handle is null", return nullptr);
-
-  /////
   // Get RMW Type Support
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
@@ -156,6 +148,11 @@ create_subscription(
   }
 
   /////
+  // Get Participant and Subscriber
+  eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
+  eprosima::fastdds::dds::Subscriber * subscriber = participant_info->subscriber_;
+
+  /////
   // Create the custom Subscriber struct (info)
   CustomSubscriberInfo * info = nullptr;
 
@@ -166,7 +163,11 @@ create_subscription(
   }
 
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info]() {
+    [info, domainParticipant]() {
+      delete info->listener_;
+      if (info->type_support_) {
+        domainParticipant->unregister_type(info->type_support_.get_type_name());
+      }
       delete info;
     });
 
@@ -208,10 +209,6 @@ create_subscription(
   }
 
   info->type_support_ = fastdds_type;
-  auto cleanup_type_support = rcpputils::make_scope_exit(
-    [info, domainParticipant]() {
-      domainParticipant->unregister_type(info->type_support_.get_type_name());
-    });
 
   /////
   // Create Listener
@@ -225,42 +222,24 @@ create_subscription(
     }
   }
 
-  auto cleanup_listener = rcpputils::make_scope_exit(
-    [info]() {
-      delete info->listener_;
-    });
-
   /////
   // Create and register Topic
-  eprosima::fastdds::dds::Topic * topic = nullptr;
-  if (!des_topic) {
-    // Use Topic Qos Default
-    eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
-
-    if (!get_topic_qos(*qos_policies, topicQos)) {
-      RMW_SET_ERROR_MSG("create_subscription() failed setting topic QoS");
-      return nullptr;
-    }
-
-    topic = domainParticipant->create_topic(
-      topic_name_mangled,
-      type_name,
-      topicQos);
-
-    if (!topic) {
-      RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
-      return nullptr;
-    }
-
-    des_topic = topic;
+  eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
+  if (!get_topic_qos(*qos_policies, topicQos)) {
+    RMW_SET_ERROR_MSG("create_publisher() failed setting topic QoS");
+    return nullptr;
+  }
+  
+  rmw_fastrtps_shared_cpp::TopicHolder topic;
+  if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
+      domainParticipant, des_topic,
+      topic_name_mangled, type_name, topicQos, false, &topic))
+  {
+    RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
+    return nullptr;
   }
 
-  auto cleanup_topic = rcpputils::make_scope_exit(
-    [domainParticipant, topic]() {
-      if (topic) {
-        domainParticipant->delete_topic(topic);
-      }
-    });
+  des_topic = topic.desc;
 
   /////
   // Create DataReader
@@ -332,11 +311,9 @@ create_subscription(
   rmw_subscription->options = *subscription_options;
   rmw_subscription->can_loan_messages = false;
 
+  topic.should_be_deleted = false;
   cleanup_rmw_subscription.cancel();
   cleanup_datareader.cancel();
-  cleanup_topic.cancel();
-  cleanup_listener.cancel();
-  cleanup_type_support.cancel();
   return_type_support.cancel();
   cleanup_info.cancel();
   return rmw_subscription;
