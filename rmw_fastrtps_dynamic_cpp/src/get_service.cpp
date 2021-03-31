@@ -20,20 +20,6 @@
 namespace rmw_fastrtps_dynamic_cpp
 {
 
-eprosima::fastrtps::Subscriber *
-get_request_subscriber(rmw_service_t * service)
-{
-  (void)service;
-  return nullptr;
-}
-
-eprosima::fastrtps::Publisher *
-get_response_publisher(rmw_service_t * service)
-{
-  (void)service;
-  return nullptr;
-}
-
 eprosima::fastdds::dds::DataReader *
 get_request_datareader(rmw_service_t * service)
 {

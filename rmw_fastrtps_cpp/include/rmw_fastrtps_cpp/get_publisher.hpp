@@ -17,23 +17,11 @@
 
 #include "fastdds/dds/publisher/DataWriter.hpp"
 
-#include "fastrtps/publisher/Publisher.h"
-
 #include "rmw/rmw.h"
 #include "rmw_fastrtps_cpp/visibility_control.h"
 
 namespace rmw_fastrtps_cpp
 {
-
-/// Return a native FastRTPS publisher handle.
-/**
- * This function has been deprecated and always returns `NULL`.
- *
- * \return `NULL`
- */
-RMW_FASTRTPS_CPP_PUBLIC
-eprosima::fastrtps::Publisher *
-get_publisher(rmw_publisher_t * publisher);
 
 /// Return a native Fast DDS DataWriter handle.
 /**

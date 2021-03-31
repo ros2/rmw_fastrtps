@@ -68,17 +68,6 @@ protected:
   rmw_node_t * node{nullptr};
 };
 
-TEST_F(TestNativeEntities, get_participant) {
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_participant(nullptr));
-
-  const char * implementation_identifier = node->implementation_identifier;
-  node->implementation_identifier = "not-an-rmw-implementation-identifier";
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_participant(node));
-  node->implementation_identifier = implementation_identifier;
-
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_participant(node));
-}
-
 TEST_F(TestNativeEntities, get_domain_participant) {
   EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_domain_participant(nullptr));
 
@@ -88,28 +77,6 @@ TEST_F(TestNativeEntities, get_domain_participant) {
   node->implementation_identifier = implementation_identifier;
 
   EXPECT_NE(nullptr, rmw_fastrtps_cpp::get_domain_participant(node));
-}
-
-TEST_F(TestNativeEntities, get_publisher) {
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_publisher(nullptr));
-
-  const rosidl_message_type_support_t * ts =
-    ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, BasicTypes);
-  constexpr char topic_name[] = "/test";
-  rmw_qos_profile_t qos_profile = rmw_qos_profile_default;
-  rmw_publisher_options_t options = rmw_get_default_publisher_options();
-  rmw_publisher_t * pub = rmw_create_publisher(node, ts, topic_name, &qos_profile, &options);
-  ASSERT_NE(nullptr, pub) << rmw_get_error_string().str;
-
-  const char * implementation_identifier = pub->implementation_identifier;
-  pub->implementation_identifier = "not-an-rmw-implementation-identifier";
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_publisher(pub));
-  pub->implementation_identifier = implementation_identifier;
-
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_publisher(pub));
-
-  rmw_ret_t ret = rmw_destroy_publisher(node, pub);
-  EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
 }
 
 TEST_F(TestNativeEntities, get_datawriter) {
@@ -131,29 +98,6 @@ TEST_F(TestNativeEntities, get_datawriter) {
   EXPECT_NE(nullptr, rmw_fastrtps_cpp::get_datawriter(pub));
 
   rmw_ret_t ret = rmw_destroy_publisher(node, pub);
-  EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
-}
-
-TEST_F(TestNativeEntities, get_subscriber) {
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_subscriber(nullptr));
-
-  const rosidl_message_type_support_t * ts =
-    ROSIDL_GET_MSG_TYPE_SUPPORT(test_msgs, msg, BasicTypes);
-  constexpr char topic_name[] = "/test";
-  rmw_qos_profile_t qos_profile = rmw_qos_profile_default;
-  rmw_subscription_options_t options = rmw_get_default_subscription_options();
-  rmw_subscription_t * sub =
-    rmw_create_subscription(node, ts, topic_name, &qos_profile, &options);
-  ASSERT_NE(nullptr, sub) << rmw_get_error_string().str;
-
-  const char * implementation_identifier = sub->implementation_identifier;
-  sub->implementation_identifier = "not-an-rmw-implementation-identifier";
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_subscriber(sub));
-  sub->implementation_identifier = implementation_identifier;
-
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_subscriber(sub));
-
-  rmw_ret_t ret = rmw_destroy_subscription(node, sub);
   EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
 }
 
@@ -181,30 +125,6 @@ TEST_F(TestNativeEntities, get_datareader) {
 }
 
 TEST_F(TestNativeEntities, get_service) {
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_request_subscriber(nullptr));
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_response_publisher(nullptr));
-
-  const rosidl_service_type_support_t * ts =
-    ROSIDL_GET_SRV_TYPE_SUPPORT(test_msgs, srv, BasicTypes);
-  constexpr char service_name[] = "/test";
-  rmw_qos_profile_t qos_profile = rmw_qos_profile_default;
-  rmw_service_t * srv = rmw_create_service(node, ts, service_name, &qos_profile);
-  ASSERT_NE(nullptr, srv) << rmw_get_error_string().str;
-
-  const char * implementation_identifier = srv->implementation_identifier;
-  srv->implementation_identifier = "not-an-rmw-implementation-identifier";
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_request_subscriber(srv));
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_response_publisher(srv));
-  srv->implementation_identifier = implementation_identifier;
-
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_request_subscriber(srv));
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_response_publisher(srv));
-
-  rmw_ret_t ret = rmw_destroy_service(node, srv);
-  EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
-}
-
-TEST_F(TestNativeEntities, get_service_dds) {
   EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_request_datareader(nullptr));
   EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_response_datawriter(nullptr));
 
@@ -229,30 +149,6 @@ TEST_F(TestNativeEntities, get_service_dds) {
 }
 
 TEST_F(TestNativeEntities, get_client) {
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_request_publisher(nullptr));
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_response_subscriber(nullptr));
-
-  const rosidl_service_type_support_t * ts =
-    ROSIDL_GET_SRV_TYPE_SUPPORT(test_msgs, srv, BasicTypes);
-  constexpr char service_name[] = "/test";
-  rmw_qos_profile_t qos_profile = rmw_qos_profile_default;
-  rmw_client_t * client = rmw_create_client(node, ts, service_name, &qos_profile);
-  ASSERT_NE(nullptr, client) << rmw_get_error_string().str;
-
-  const char * implementation_identifier = client->implementation_identifier;
-  client->implementation_identifier = "not-an-rmw-implementation-identifier";
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_request_publisher(client));
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_response_subscriber(client));
-  client->implementation_identifier = implementation_identifier;
-
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_request_publisher(client));
-  EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_response_subscriber(client));
-
-  rmw_ret_t ret = rmw_destroy_client(node, client);
-  EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
-}
-
-TEST_F(TestNativeEntities, get_client_dds) {
   EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_request_datawriter(nullptr));
   EXPECT_EQ(nullptr, rmw_fastrtps_cpp::get_response_datareader(nullptr));
 
