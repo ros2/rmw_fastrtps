@@ -107,13 +107,8 @@ rmw_create_service(
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
 
   eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
-  RMW_CHECK_FOR_NULL_WITH_MSG(domainParticipant, "participant handle is null", return nullptr);
-
   eprosima::fastdds::dds::Publisher * publisher = participant_info->publisher_;
-  RMW_CHECK_FOR_NULL_WITH_MSG(publisher, "publisher handle is null", return nullptr);
-
   eprosima::fastdds::dds::Subscriber * subscriber = participant_info->subscriber_;
-  RMW_CHECK_FOR_NULL_WITH_MSG(subscriber, "subscriber handle is null", return nullptr);
 
   /////
   // Get RMW Type Support
@@ -201,7 +196,15 @@ rmw_create_service(
     return nullptr;
   }
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info]() {
+    [info, domainParticipant]() {
+      delete info->pub_listener_;
+      delete info->listener_;
+      if (info->response_type_support_) {
+        domainParticipant->unregister_type(info->response_type_support_.get_type_name());
+      }
+      if (info->request_type_support_) {
+        domainParticipant->unregister_type(info->request_type_support_.get_type_name());
+      }
       delete info;
     });
 
@@ -236,20 +239,12 @@ rmw_create_service(
     return nullptr;
   }
   info->request_type_support_ = request_fastdds_type;
-  auto cleanup_type_support_request = rcpputils::make_scope_exit(
-    [info, domainParticipant]() {
-      domainParticipant->unregister_type(info->request_type_support_.get_type_name());
-    });
 
   if (ReturnCode_t::RETCODE_OK != response_fastdds_type.register_type(domainParticipant)) {
     RMW_SET_ERROR_MSG("create_service() failed to register response type");
     return nullptr;
   }
   info->response_type_support_ = response_fastdds_type;
-  auto cleanup_type_support_response = rcpputils::make_scope_exit(
-    [info, domainParticipant]() {
-      domainParticipant->unregister_type(info->response_type_support_.get_type_name());
-    });
 
   /////
   // Create Listeners
@@ -259,21 +254,11 @@ rmw_create_service(
     return nullptr;
   }
 
-  auto cleanup_listener = rcpputils::make_scope_exit(
-    [info]() {
-      delete info->listener_;
-    });
-
   info->pub_listener_ = new (std::nothrow) ServicePubListener(info);
   if (!info->pub_listener_) {
     RMW_SET_ERROR_MSG("create_service() failed to create response publisher listener");
     return nullptr;
   }
-
-  auto cleanup_pub_listener = rcpputils::make_scope_exit(
-    [info]() {
-      delete info->pub_listener_;
-    });
 
   /////
   // Create and register Topics
@@ -285,58 +270,26 @@ rmw_create_service(
   }
 
   // Create request topic
-  eprosima::fastdds::dds::Topic * request_topic = nullptr;
-  if (!request_topic_desc) {
-    request_topic = domainParticipant->create_topic(
-      request_topic_name,
-      request_type_name,
-      topicQos);
-
-    if (!request_topic) {
-      RMW_SET_ERROR_MSG("create_service() failed to create request topic");
-      return nullptr;
-    }
-
-    request_topic_desc = request_topic;
+  rmw_fastrtps_shared_cpp::TopicHolder request_topic;
+  if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
+      domainParticipant, request_topic_desc,
+      request_topic_name, request_type_name, topicQos, false, &request_topic))
+  {
+    RMW_SET_ERROR_MSG("create_service() failed to create request topic");
+    return nullptr;
   }
 
-  auto cleanup_request_topic = rcpputils::make_scope_exit(
-    [domainParticipant, request_topic]() {
-      if (request_topic) {
-        domainParticipant->delete_topic(request_topic);
-      }
-    });
+  request_topic_desc = request_topic.desc;
 
   // Create response topic
-  eprosima::fastdds::dds::Topic * response_topic = nullptr;
-  bool response_topic_created = false;
-  if (!response_topic_desc) {
-    response_topic = domainParticipant->create_topic(
-      response_topic_name,
-      response_type_name,
-      topicQos);
-
-    if (!response_topic) {
-      RMW_SET_ERROR_MSG("create_service() failed to create response topic");
-      return nullptr;
-    }
-
-    response_topic_desc = response_topic;
-    response_topic_created = true;
-  } else {
-    response_topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(response_topic_desc);
-    if (!response_topic) {
-      RMW_SET_ERROR_MSG("create_service() called with response topic not of class Topic");
-      return nullptr;
-    }
+  rmw_fastrtps_shared_cpp::TopicHolder response_topic;
+  if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
+      domainParticipant, response_topic_desc,
+      response_topic_name, response_type_name, topicQos, true, &response_topic))
+  {
+    RMW_SET_ERROR_MSG("create_service() failed to create response topic");
+    return nullptr;
   }
-
-  auto cleanup_response_topic = rcpputils::make_scope_exit(
-    [domainParticipant, response_topic, response_topic_created]() {
-      if (response_topic_created) {
-        domainParticipant->delete_topic(response_topic);
-      }
-    });
 
   // Keyword to find DataWrtier and DataReader QoS
   std::string topic_name_fallback = "service";
@@ -422,7 +375,7 @@ rmw_create_service(
 
   // Creates DataWriter
   info->response_writer_ = publisher->create_datawriter(
-    response_topic,
+    response_topic.topic,
     dataWriterQos,
     info->pub_listener_);
 
@@ -511,15 +464,11 @@ rmw_create_service(
     }
   }
 
+  request_topic.should_be_deleted = false;
+  response_topic.should_be_deleted = false;
   cleanup_rmw_service.cancel();
   cleanup_datawriter.cancel();
   cleanup_datareader.cancel();
-  cleanup_response_topic.cancel();
-  cleanup_request_topic.cancel();
-  cleanup_pub_listener.cancel();
-  cleanup_listener.cancel();
-  cleanup_type_support_response.cancel();
-  cleanup_type_support_request.cancel();
   cleanup_info.cancel();
   return rmw_service;
 }
