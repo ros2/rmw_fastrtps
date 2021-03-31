@@ -52,6 +52,43 @@ rmw_ret_t cast_error_dds_to_rmw(ReturnCode_t code)
 }
 
 bool
+cast_or_create_topic(
+  eprosima::fastdds::dds::DomainParticipant * participant,
+  eprosima::fastdds::dds::TopicDescription * desc,
+  const std::string & topic_name,
+  const std::string & type_name,
+  const eprosima::fastdds::dds::TopicQos & topic_qos,
+  bool is_writer_topic,
+  TopicHolder * topic_holder)
+{
+  topic_holder->should_be_deleted = false;
+  topic_holder->participant = participant;
+  topic_holder->desc = desc;
+  topic_holder->topic = nullptr;
+
+  if (nullptr == desc) {
+    topic_holder->topic = participant->create_topic(
+      topic_name,
+      type_name,
+      topic_qos);
+
+    if (!topic_holder->topic) {
+      return false;
+    }
+
+    topic_holder->desc = topic_holder->topic;
+    topic_holder->should_be_deleted = true;
+  } else {
+    if (is_writer_topic) {
+      topic_holder->topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(desc);
+      assert(nullptr != topic_holder->topic);
+    }
+  }
+
+  return true;
+}
+
+bool
 find_and_check_topic_and_type(
   const CustomParticipantInfo * participant_info,
   const std::string & topic_name,

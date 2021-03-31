@@ -32,9 +32,36 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
+/// Auxiliary struct to cleanup a topic created during entity creation
+struct TopicHolder
+{
+  ~TopicHolder()
+  {
+    if (should_be_deleted) {
+      participant->delete_topic(topic);
+    }
+  }
+
+  eprosima::fastdds::dds::DomainParticipant * participant = nullptr;
+  eprosima::fastdds::dds::TopicDescription * desc = nullptr;
+  eprosima::fastdds::dds::Topic * topic = nullptr;
+  bool should_be_deleted = false;
+};
+
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
   cast_error_dds_to_rmw(eprosima::fastrtps::types::ReturnCode_t);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+bool
+cast_or_create_topic(
+  eprosima::fastdds::dds::DomainParticipant * participant,
+  eprosima::fastdds::dds::TopicDescription * desc,
+  const std::string & topic_name,
+  const std::string & type_name,
+  const eprosima::fastdds::dds::TopicQos & topic_qos,
+  bool is_writer_topic,
+  TopicHolder * topic_holder);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
