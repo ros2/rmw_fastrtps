@@ -32,18 +32,18 @@ namespace rmw_fastrtps_shared_cpp
 rmw_ret_t cast_error_dds_to_rmw(ReturnCode_t code)
 {
   // not switch because it is not an enum class
-  if (code == ReturnCode_t::RETCODE_OK) {
+  if (ReturnCode_t::RETCODE_OK == code) {
     return RMW_RET_OK;
-  } else if (code == ReturnCode_t::RETCODE_ERROR) {
+  } else if (ReturnCode_t::RETCODE_ERROR == code) {
     // repeats the error to avoid too many 'if' comparisons
     return RMW_RET_ERROR;
-  } else if (code == ReturnCode_t::RETCODE_TIMEOUT) {
+  } else if (ReturnCode_t::RETCODE_TIMEOUT == code) {
     return RMW_RET_TIMEOUT;
-  } else if (code == ReturnCode_t::RETCODE_UNSUPPORTED) {
+  } else if (ReturnCode_t::RETCODE_UNSUPPORTED == code) {
     return RMW_RET_UNSUPPORTED;
-  } else if (code == ReturnCode_t::RETCODE_BAD_PARAMETER) {
+  } else if (ReturnCode_t::RETCODE_BAD_PARAMETER == code) {
     return RMW_RET_INVALID_ARGUMENT;
-  } else if (code == ReturnCode_t::RETCODE_OUT_OF_RESOURCES) {
+  } else if (ReturnCode_t::RETCODE_OUT_OF_RESOURCES == code) {
     // Could be that out of resources comes from a different source than a bad allocation
     return RMW_RET_BAD_ALLOC;
   } else {
