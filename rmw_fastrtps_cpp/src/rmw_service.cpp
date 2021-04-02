@@ -526,12 +526,12 @@ rmw_service_request_subscription_get_actual_qos(
 }
 
 rmw_ret_t
-rmw_service_set_listener_callback(
+rmw_service_set_on_new_request_callback(
   rmw_service_t * rmw_service,
-  rmw_listener_callback_t callback,
+  rmw_event_callback_t callback,
   const void * user_data)
 {
-  return rmw_fastrtps_shared_cpp::__rmw_service_set_listener_callback(
+  return rmw_fastrtps_shared_cpp::__rmw_service_set_on_new_request_callback(
     rmw_service,
     callback,
     user_data);

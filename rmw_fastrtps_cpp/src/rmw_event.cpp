@@ -49,12 +49,12 @@ rmw_subscription_event_init(
 }
 
 rmw_ret_t
-rmw_event_set_listener_callback(
+rmw_event_set_callback(
   rmw_event_t * rmw_event,
-  rmw_listener_callback_t callback,
+  rmw_event_callback_t callback,
   const void * user_data)
 {
-  return rmw_fastrtps_shared_cpp::__rmw_event_set_listener_callback(
+  return rmw_fastrtps_shared_cpp::__rmw_event_set_callback(
     rmw_event,
     callback,
     user_data);

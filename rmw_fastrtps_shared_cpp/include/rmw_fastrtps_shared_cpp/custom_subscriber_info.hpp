@@ -35,7 +35,7 @@
 #include "rcpputils/thread_safety_annotations.hpp"
 
 #include "rmw/impl/cpp/macros.hpp"
-#include "rmw/listener_callback_type.h"
+#include "rmw/event_callback_type.h"
 
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
 
@@ -128,7 +128,7 @@ public:
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void eventSetExecutorCallback(
     const void * user_data,
-    rmw_listener_callback_t callback) final;
+    rmw_event_callback_t callback) final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool
@@ -181,7 +181,7 @@ public:
   void
   subcriptionSetExecutorCallback(
     const void * user_data,
-    rmw_listener_callback_t callback)
+    rmw_event_callback_t callback)
   {
     std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
 

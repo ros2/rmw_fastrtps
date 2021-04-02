@@ -150,9 +150,9 @@ __rmw_client_response_subscription_get_actual_qos(
 }
 
 rmw_ret_t
-__rmw_client_set_listener_callback(
+__rmw_client_set_on_new_response_callback(
   rmw_client_t * rmw_client,
-  rmw_listener_callback_t callback,
+  rmw_event_callback_t callback,
   const void * user_data)
 {
   auto custom_client_info = static_cast<CustomClientInfo *>(rmw_client->data);

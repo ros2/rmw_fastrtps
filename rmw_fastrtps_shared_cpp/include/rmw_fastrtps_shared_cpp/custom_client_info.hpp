@@ -42,7 +42,7 @@
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
-#include "rmw/listener_callback_type.h"
+#include "rmw/event_callback_type.h"
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
@@ -197,7 +197,7 @@ public:
   void
   clientSetExecutorCallback(
     const void * user_data,
-    rmw_listener_callback_t callback)
+    rmw_event_callback_t callback)
   {
     std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
 
@@ -235,7 +235,7 @@ private:
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_;
 
-  rmw_listener_callback_t listener_callback_{nullptr};
+  rmw_event_callback_t listener_callback_{nullptr};
   const void * user_data_{nullptr};
   std::mutex listener_callback_mutex_;
   uint64_t unread_count_ = 0;

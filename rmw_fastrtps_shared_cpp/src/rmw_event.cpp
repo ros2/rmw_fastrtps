@@ -69,9 +69,9 @@ __rmw_init_event(
 }
 
 rmw_ret_t
-__rmw_event_set_listener_callback(
+__rmw_event_set_callback(
   rmw_event_t * rmw_event,
-  rmw_listener_callback_t callback,
+  rmw_event_callback_t callback,
   const void * user_data)
 {
   auto custom_event_info = static_cast<CustomEventInfo *>(rmw_event->data);

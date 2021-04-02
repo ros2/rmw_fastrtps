@@ -103,7 +103,7 @@ public:
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void eventSetExecutorCallback(
     const void * user_data,
-    rmw_listener_callback_t callback) final;
+    rmw_event_callback_t callback) final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool

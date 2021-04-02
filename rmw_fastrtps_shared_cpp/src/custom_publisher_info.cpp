@@ -94,7 +94,7 @@ bool PubListener::hasEvent(rmw_event_type_t event_type) const
 
 void PubListener::eventSetExecutorCallback(
   const void * user_data,
-  rmw_listener_callback_t callback)
+  rmw_event_callback_t callback)
 {
   std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
 

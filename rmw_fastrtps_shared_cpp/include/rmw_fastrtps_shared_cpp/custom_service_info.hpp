@@ -40,7 +40,7 @@
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
-#include "rmw/listener_callback_type.h"
+#include "rmw/event_callback_type.h"
 
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
@@ -312,7 +312,7 @@ public:
   void
   serviceSetExecutorCallback(
     const void * user_data,
-    rmw_listener_callback_t callback)
+    rmw_event_callback_t callback)
   {
     std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
 
@@ -338,7 +338,7 @@ private:
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
-  rmw_listener_callback_t listener_callback_{nullptr};
+  rmw_event_callback_t listener_callback_{nullptr};
   const void * user_data_{nullptr};
   std::mutex listener_callback_mutex_;
   uint64_t unread_count_ = 0;
