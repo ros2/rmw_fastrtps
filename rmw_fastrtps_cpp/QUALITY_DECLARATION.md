@@ -10,7 +10,7 @@ Below are the rationales, notes, and caveats for this claim, organized by each r
 
 ### Version Scheme [1.i]
 
-`rmw_fastrtps_cpp` uses `semver` according to the recommendation for ROS Core packages in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#versioning).
+`rmw_fastrtps_cpp` uses `semver` according to the recommendation for ROS Core packages in the [ROS 2 Developer Guide](https://docs.ros.org/en/foxy/Contributing/Developer-Guide.html#versioning).
 
 ### Version Stability [1.ii]
 
@@ -33,7 +33,7 @@ All installed headers are in the `include` directory of the package, headers in 
 
 ## Change Control Process [2]
 
-`rmw_fastrtps_cpp` follows the recommended guidelines for ROS Core packages in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#package-requirements).
+`rmw_fastrtps_cpp` follows the recommended guidelines for ROS Core packages in the [ROS 2 Developer Guide](https://docs.ros.org/en/foxy/Contributing/Developer-Guide.html#quality-practices).
 
 ### Change Requests [2.i]
 
@@ -109,7 +109,7 @@ Current coverage statistics can be viewed [here](https://ci.ros2.org/job/ci_linu
 This package claims to meet the coverage requirements for the current quality level, even though it doesn't have 95% line coverage.
 The justification is that the only uncovered lines have to do with system resource exhaustion and Fast DDS internal failure.
 
-A summary of how these statistics are calculated can be found in the [ROS 2 On-boarding guide](https://index.ros.org/doc/ros2/Contributing/ROS-2-On-boarding-Guide/#note-on-coverage-runs).
+A summary of how these statistics are calculated can be found in the [ROS 2 On-boarding guide](https://docs.ros.org/en/foxy/Contributing/Developer-Guide.html#note-on-coverage-runs).
 
 ### Performance [4.iv]
 
@@ -117,7 +117,7 @@ A summary of how these statistics are calculated can be found in the [ROS 2 On-b
 
 ### Linters and Static Analysis [4.v]
 
-`rmw_fastrtps_cpp` uses and passes all the standard linters and static analysis tools for a C++ package as described in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#linters).
+`rmw_fastrtps_cpp` uses and passes all the standard linters and static analysis tools for a C++ package as described in the [ROS 2 Developer Guide](https://docs.ros.org/en/foxy/Contributing/Developer-Guide.html#linters-and-static-analysis).
 
 Results of the nightly linter tests can be found [here](https://ci.ros2.org/view/nightly/job/nightly_linux_release/lastBuild/testReport/rmw_fastrtps_cpp).
 
