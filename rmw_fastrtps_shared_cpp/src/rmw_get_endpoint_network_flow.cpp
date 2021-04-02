@@ -19,6 +19,8 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw/get_network_flow_endpoints.h"
 
+#include <string>
+
 namespace rmw_fastrtps_shared_cpp
 {
 
@@ -34,61 +36,56 @@ __rmw_publisher_get_network_flow_endpoints(
   rcutils_allocator_t * allocator,
   rmw_network_flow_endpoint_array_t * network_flow_endpoint_array)
 {
-    rmw_ret_t res = RMW_RET_OK;
+  rmw_ret_t res = RMW_RET_OK;
 
-    // Retrieve the sender locators
-    CustomPublisherInfo * data =
-        static_cast<CustomPublisherInfo *>(publisher->data);
-    LocatorList_t locators;
-    data->publisher_->get_sending_locators(locators);
+  // Retrieve the sender locators
+  CustomPublisherInfo * data =
+    static_cast<CustomPublisherInfo *>(publisher->data);
+  LocatorList_t locators;
+  data->publisher_->get_sending_locators(locators);
 
-    if (locators.empty())
-    {
-        return res;
-    }
-
-    // It must be a non-initialized array
-    if( RMW_RET_OK !=
-        (res = rmw_network_flow_endpoint_array_check_zero(network_flow_endpoint_array)))
-    {
-       return res;
-    }
-
-    // Allocate
-    if( RMW_RET_OK !=
-        (res = rmw_network_flow_endpoint_array_init(
-                network_flow_endpoint_array,
-                locators.size(),
-                allocator)))
-    {
-        return res;
-    }
-
-    // Translate the locators, on error reset the array
-    try
-    {
-        auto rmw_nf = network_flow_endpoint_array->network_flow_endpoint;
-        for ( const Locator_t& loc : locators )
-        {
-            if( RMW_RET_OK !=
-                (res = fill_network_flow_endpoint(rmw_nf++, loc)))
-            {
-                throw res;
-            }
-        }
-    }
-    catch ( rmw_ret_t error )
-    {
-        // clear the array
-        rmw_network_flow_endpoint_array_fini(
-            network_flow_endpoint_array,
-            allocator);
-
-        // set error message
-        RMW_SET_ERROR_MSG("Failed to compose network_flow_endpoint_array");
-    }
-
+  if (locators.empty()) {
     return res;
+  }
+
+  // It must be a non-initialized array
+  if (RMW_RET_OK !=
+    (res = rmw_network_flow_endpoint_array_check_zero(network_flow_endpoint_array)))
+  {
+    return res;
+  }
+
+  // Allocate
+  if (RMW_RET_OK !=
+    (res = rmw_network_flow_endpoint_array_init(
+      network_flow_endpoint_array,
+      locators.size(),
+      allocator)))
+  {
+    return res;
+  }
+
+  // Translate the locators, on error reset the array
+  try {
+    auto rmw_nf = network_flow_endpoint_array->network_flow_endpoint;
+    for (const Locator_t & loc : locators) {
+      if (RMW_RET_OK !=
+        (res = fill_network_flow_endpoint(rmw_nf++, loc)))
+      {
+        throw res;
+      }
+    }
+  } catch (rmw_ret_t error) {
+    // clear the array
+    rmw_network_flow_endpoint_array_fini(
+      network_flow_endpoint_array,
+      allocator);
+
+    // set error message
+    RMW_SET_ERROR_MSG("Failed to compose network_flow_endpoint_array");
+  }
+
+  return res;
 }
 
 rmw_ret_t
@@ -97,141 +94,130 @@ __rmw_subscription_get_network_flow_endpoints(
   rcutils_allocator_t * allocator,
   rmw_network_flow_endpoint_array_t * network_flow_endpoint_array)
 {
-    rmw_ret_t res = RMW_RET_OK;
+  rmw_ret_t res = RMW_RET_OK;
 
-    // Retrieve the listener locators
-    CustomSubscriberInfo * data =
-        static_cast<CustomSubscriberInfo*>(subscription->data);
-    LocatorList_t locators;
-    data->subscriber_->get_listening_locators(locators);
+  // Retrieve the listener locators
+  CustomSubscriberInfo * data =
+    static_cast<CustomSubscriberInfo *>(subscription->data);
+  LocatorList_t locators;
+  data->subscriber_->get_listening_locators(locators);
 
-    if (locators.empty())
-    {
-        return res;
-    }
-
-    // It must be a non-initialized array
-    if( RMW_RET_OK !=
-        (res = rmw_network_flow_endpoint_array_check_zero(network_flow_endpoint_array)))
-    {
-       return res;
-    }
-
-    // Allocate
-    if( RMW_RET_OK !=
-        (res = rmw_network_flow_endpoint_array_init(
-                network_flow_endpoint_array,
-                locators.size(),
-                allocator)))
-    {
-        return res;
-    }
-
-    // Translate the locators, on error reset the array
-    try
-    {
-        auto rmw_nf = network_flow_endpoint_array->network_flow_endpoint;
-        for ( const Locator_t& loc : locators )
-        {
-            if( RMW_RET_OK !=
-                (res = fill_network_flow_endpoint(rmw_nf++, loc)))
-            {
-                throw res;
-            }
-        }
-    }
-    catch ( rmw_ret_t error )
-    {
-        // clear the array
-        rmw_network_flow_endpoint_array_fini(
-            network_flow_endpoint_array,
-            allocator);
-
-        // set error message
-        RMW_SET_ERROR_MSG("Failed to compose network_flow_endpoint_array");
-    }
-
+  if (locators.empty()) {
     return res;
+  }
+
+  // It must be a non-initialized array
+  if (RMW_RET_OK !=
+    (res = rmw_network_flow_endpoint_array_check_zero(network_flow_endpoint_array)))
+  {
+    return res;
+  }
+
+  // Allocate
+  if (RMW_RET_OK !=
+    (res = rmw_network_flow_endpoint_array_init(
+      network_flow_endpoint_array,
+      locators.size(),
+      allocator)))
+  {
+    return res;
+  }
+
+  // Translate the locators, on error reset the array
+  try {
+    auto rmw_nf = network_flow_endpoint_array->network_flow_endpoint;
+    for (const Locator_t & loc : locators) {
+      if (RMW_RET_OK !=
+        (res = fill_network_flow_endpoint(rmw_nf++, loc)))
+      {
+        throw res;
+      }
+    }
+  } catch (rmw_ret_t error) {
+    // clear the array
+    rmw_network_flow_endpoint_array_fini(
+      network_flow_endpoint_array,
+      allocator);
+
+    // set error message
+    RMW_SET_ERROR_MSG("Failed to compose network_flow_endpoint_array");
+  }
+
+  return res;
 }
 
 // Ancillary translation methods
 rmw_transport_protocol_t
-get_transport_protocol(const Locator_t& loc)
+get_transport_protocol(const Locator_t & loc)
 {
-    if ( loc.kind & (LOCATOR_KIND_UDPv4 | LOCATOR_KIND_UDPv6))
-    {
-        return RMW_TRANSPORT_PROTOCOL_UDP;
-    }
-    else if (loc.kind & (LOCATOR_KIND_TCPv4 | LOCATOR_KIND_TCPv6))
-    {
-        return RMW_TRANSPORT_PROTOCOL_TCP;
-    }
+  if (loc.kind & (LOCATOR_KIND_UDPv4 | LOCATOR_KIND_UDPv6)) {
+    return RMW_TRANSPORT_PROTOCOL_UDP;
+  } else if (loc.kind & (LOCATOR_KIND_TCPv4 | LOCATOR_KIND_TCPv6)) {
+    return RMW_TRANSPORT_PROTOCOL_TCP;
+  }
 
-    return RMW_TRANSPORT_PROTOCOL_UNKNOWN;
+  return RMW_TRANSPORT_PROTOCOL_UNKNOWN;
 }
 
 rmw_internet_protocol_t
-get_internet_protocol(const Locator_t& loc)
+get_internet_protocol(const Locator_t & loc)
 {
-    if ( loc.kind & (LOCATOR_KIND_UDPv4 | LOCATOR_KIND_TCPv4))
-    {
-        return RMW_INTERNET_PROTOCOL_IPV4;
-    }
-    else if (loc.kind & (LOCATOR_KIND_TCPv6 | LOCATOR_KIND_UDPv6))
-    {
-        return RMW_INTERNET_PROTOCOL_IPV6;
-    }
+  if (loc.kind & (LOCATOR_KIND_UDPv4 | LOCATOR_KIND_TCPv4)) {
+    return RMW_INTERNET_PROTOCOL_IPV4;
+  } else if (loc.kind & (LOCATOR_KIND_TCPv6 | LOCATOR_KIND_UDPv6)) {
+    return RMW_INTERNET_PROTOCOL_IPV6;
+  }
 
-    return RMW_INTERNET_PROTOCOL_UNKNOWN;
+  return RMW_INTERNET_PROTOCOL_UNKNOWN;
 }
 
 rmw_ret_t
 fill_network_flow_endpoint(
-        rmw_network_flow_endpoint_t * network_flow_endpoint,
-        const Locator_t & locator)
+  rmw_network_flow_endpoint_t * network_flow_endpoint,
+  const Locator_t & locator)
 {
-    rmw_ret_t res = RMW_RET_OK;
+  rmw_ret_t res = RMW_RET_OK;
 
-    // Translate transport protocol
-    if( RMW_RET_OK !=
-        (res = rmw_network_flow_endpoint_set_transport_protocol(
-            network_flow_endpoint,
-            get_transport_protocol(locator))))
-    {
-        return res;
-    }
-
-    // Translate internet protocol
-    if( RMW_RET_OK !=
-        (res = rmw_network_flow_endpoint_set_internet_protocol(
-            network_flow_endpoint,
-            get_internet_protocol(locator))))
-    {
-        return res;
-    }
-
-    // Set the port
-    if( RMW_RET_OK !=
-        (res = rmw_network_flow_endpoint_set_transport_port(
-             network_flow_endpoint,
-             IPLocator::getPhysicalPort(locator))) )
-    {
-        return res;
-    }
-
-    // Set the address
-    std::string address = IPLocator::ip_to_string(locator);
-
-    if( RMW_RET_OK !=
-        (res = rmw_network_flow_endpoint_set_internet_address(
-                network_flow_endpoint,
-                address.c_str(),
-                address.length())))
-    {
-        return res;
-    }
-
+  // Translate transport protocol
+  if (RMW_RET_OK !=
+    (res = rmw_network_flow_endpoint_set_transport_protocol(
+      network_flow_endpoint,
+      get_transport_protocol(locator))))
+  {
     return res;
+  }
+
+  // Translate internet protocol
+  if (RMW_RET_OK !=
+    (res = rmw_network_flow_endpoint_set_internet_protocol(
+      network_flow_endpoint,
+      get_internet_protocol(locator))))
+  {
+    return res;
+  }
+
+  // Set the port
+  if (RMW_RET_OK !=
+    (res = rmw_network_flow_endpoint_set_transport_port(
+      network_flow_endpoint,
+      IPLocator::getPhysicalPort(locator))) )
+  {
+    return res;
+  }
+
+  // Set the address
+  std::string address = IPLocator::ip_to_string(locator);
+
+  if (RMW_RET_OK !=
+    (res = rmw_network_flow_endpoint_set_internet_address(
+      network_flow_endpoint,
+      address.c_str(),
+      address.length())))
+  {
+    return res;
+  }
+
+  return res;
 }
 
 }  // namespace rmw_fastrtps_shared_cpp
