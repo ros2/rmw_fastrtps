@@ -12,8 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw/get_network_flow_endpoints.h"
 #include <string>
+
+#include "rmw/get_network_flow_endpoints.h"
 #include "rmw/error_handling.h"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
