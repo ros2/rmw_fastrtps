@@ -178,31 +178,13 @@ fill_network_flow_endpoint(
   rmw_ret_t res = RMW_RET_OK;
 
   // Translate transport protocol
-  if (RMW_RET_OK !=
-    (res = rmw_network_flow_endpoint_set_transport_protocol(
-      network_flow_endpoint,
-      get_transport_protocol(locator))))
-  {
-    return res;
-  }
+  network_flow_endpoint->transport_protocol = get_transport_protocol(locator);
 
   // Translate internet protocol
-  if (RMW_RET_OK !=
-    (res = rmw_network_flow_endpoint_set_internet_protocol(
-      network_flow_endpoint,
-      get_internet_protocol(locator))))
-  {
-    return res;
-  }
+  network_flow_endpoint->internet_protocol = get_internet_protocol(locator);
 
   // Set the port
-  if (RMW_RET_OK !=
-    (res = rmw_network_flow_endpoint_set_transport_port(
-      network_flow_endpoint,
-      IPLocator::getPhysicalPort(locator))) )
-  {
-    return res;
-  }
+  network_flow_endpoint->transport_port = IPLocator::getPhysicalPort(locator);
 
   // Set the address
   std::string address = IPLocator::ip_to_string(locator);
