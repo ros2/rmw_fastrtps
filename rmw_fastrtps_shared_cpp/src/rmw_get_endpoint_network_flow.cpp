@@ -12,14 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rmw/get_network_flow_endpoints.h"
+#include <string>
 #include "rmw/error_handling.h"
-#include "fastrtps/utils/IPLocator.h"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
-#include "rmw/get_network_flow_endpoints.h"
+#include "fastrtps/utils/IPLocator.h"
 
-#include <string>
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -28,7 +28,7 @@ using Locator_t = eprosima::fastrtps::rtps::Locator_t;
 using LocatorList_t = eprosima::fastrtps::rtps::LocatorList_t;
 using IPLocator = eprosima::fastrtps::rtps::IPLocator;
 
-rmw_ret_t fill_network_flow_endpoint(rmw_network_flow_endpoint_t*, const Locator_t &);
+rmw_ret_t fill_network_flow_endpoint(rmw_network_flow_endpoint_t *, const Locator_t &);
 
 rmw_ret_t
 __rmw_publisher_get_network_flow_endpoints(
