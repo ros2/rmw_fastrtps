@@ -78,8 +78,7 @@ __rmw_publisher_get_network_flow_endpoints(
   } catch (rmw_ret_t error) {
     // clear the array
     rmw_network_flow_endpoint_array_fini(
-      network_flow_endpoint_array,
-      allocator);
+      network_flow_endpoint_array);
 
     // set error message
     RMW_SET_ERROR_MSG("Failed to compose network_flow_endpoint_array");
@@ -136,8 +135,7 @@ __rmw_subscription_get_network_flow_endpoints(
   } catch (rmw_ret_t error) {
     // clear the array
     rmw_network_flow_endpoint_array_fini(
-      network_flow_endpoint_array,
-      allocator);
+      network_flow_endpoint_array);
 
     // set error message
     RMW_SET_ERROR_MSG("Failed to compose network_flow_endpoint_array");
