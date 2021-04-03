@@ -20,17 +20,16 @@
 
 extern "C"
 {
-
 rmw_ret_t
 rmw_publisher_get_network_flow_endpoints(
   const rmw_publisher_t * publisher,
   rcutils_allocator_t * allocator,
   rmw_network_flow_endpoint_array_t * network_flow_endpoint_array)
 {
-    return rmw_fastrtps_shared_cpp::__rmw_publisher_get_network_flow_endpoints(
-            publisher,
-            allocator,
-            network_flow_endpoint_array);
+  return rmw_fastrtps_shared_cpp::__rmw_publisher_get_network_flow_endpoints(
+    publisher,
+    allocator,
+    network_flow_endpoint_array);
 }
 
 rmw_ret_t
@@ -39,10 +38,9 @@ rmw_subscription_get_network_flow_endpoints(
   rcutils_allocator_t * allocator,
   rmw_network_flow_endpoint_array_t * network_flow_endpoint_array)
 {
-    return rmw_fastrtps_shared_cpp::__rmw_subscription_get_network_flow_endpoints(
-            subscription,
-            allocator,
-            network_flow_endpoint_array);
+  return rmw_fastrtps_shared_cpp::__rmw_subscription_get_network_flow_endpoints(
+    subscription,
+    allocator,
+    network_flow_endpoint_array);
 }
-
 }  // extern "C"

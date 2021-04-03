@@ -182,8 +182,7 @@ create_subscription(
   }
 
   eprosima::fastrtps::SubscriberAttributes originalParam = subscriberParam;
-  switch (subscription_options->require_unique_network_flow_endpoints)
-  {
+  switch (subscription_options->require_unique_network_flow_endpoints) {
     default:
     case RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_SYSTEM_DEFAULT:
     case RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED:
@@ -193,22 +192,28 @@ create_subscription(
     case RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED:
     case RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED:
       // Ensure we request unique network flow endpoints
-      if (nullptr == PropertyPolicyHelper::find_property(subscriberParam.properties, "fastdds.unique_network_flows")) {
+      if (nullptr ==
+        PropertyPolicyHelper::find_property(
+          subscriberParam.properties,
+          "fastdds.unique_network_flows"))
+      {
         subscriberParam.properties.properties().emplace_back("fastdds.unique_network_flows", "");
       }
       break;
   }
 
   info->subscriber_ = Domain::createSubscriber(
-          participant,
-          subscriberParam,
-          info->listener_);
+    participant,
+    subscriberParam,
+    info->listener_);
   if (!info->subscriber_ &&
-      (RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED == subscription_options->require_unique_network_flow_endpoints)) {
+    (RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED ==
+    subscription_options->require_unique_network_flow_endpoints))
+  {
     info->subscriber_ = Domain::createSubscriber(
-            participant,
-            originalParam,
-            info->listener_);
+      participant,
+      originalParam,
+      info->listener_);
   }
   if (!info->subscriber_) {
     RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber");
