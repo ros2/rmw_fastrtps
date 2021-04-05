@@ -52,6 +52,8 @@
 #include "type_support_common.hpp"
 #include "type_support_registry.hpp"
 
+using PropertyPolicyHelper = eprosima::fastrtps::rtps::PropertyPolicyHelper;
+
 namespace rmw_fastrtps_dynamic_cpp
 {
 
@@ -261,11 +263,41 @@ create_subscription(
     return nullptr;
   }
 
+  eprosima::fastdds::dds::DataReaderQos original_qos = reader_qos;
+  switch (subscription_options->require_unique_network_flow_endpoints) {
+    default:
+    case RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_SYSTEM_DEFAULT:
+    case RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED:
+      // Unique network flow endpoints not required. We leave the decission to the XML profile.
+      break;
+
+    case RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED:
+    case RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED:
+      // Ensure we request unique network flow endpoints
+      if (nullptr ==
+        PropertyPolicyHelper::find_property(
+          reader_qos.properties(),
+          "fastdds.unique_network_flows"))
+      {
+        reader_qos.properties().properties().emplace_back("fastdds.unique_network_flows", "");
+      }
+      break;
+  }
+
   // Creates DataReader (with subscriber name to not change name policy)
   info->data_reader_ = subscriber->create_datareader(
     des_topic,
     reader_qos,
     info->listener_);
+  if (!info->data_reader_ &&
+    (RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED ==
+    subscription_options->require_unique_network_flow_endpoints))
+  {
+    info->data_reader_ = subscriber->create_datareader(
+      des_topic,
+      original_qos,
+      info->listener_);
+  }
 
   if (!info->data_reader_) {
     RMW_SET_ERROR_MSG("create_subscription() could not create data reader");
