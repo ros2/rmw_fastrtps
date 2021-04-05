@@ -94,6 +94,7 @@ add_library(rmw_fastrtps_dynamic_cpp
   src/type_support_common.cpp
   src/type_support_proxy.cpp
   src/type_support_registry.cpp
+  src/rmw_get_endpoint_network_flow.cpp
 )
 target_link_libraries(rmw_fastrtps_dynamic_cpp
   fastcdr fastrtps)
