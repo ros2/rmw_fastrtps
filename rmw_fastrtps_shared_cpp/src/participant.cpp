@@ -323,11 +323,9 @@ rmw_ret_t
 rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant_info)
 {
   if (!participant_info) {
-    RMW_SET_ERROR_MSG("participant_info is null");
+    RMW_SET_ERROR_MSG("participant_info is null on destroy_participant");
     return RMW_RET_ERROR;
   }
-
-  RMW_CHECK_ARGUMENT_FOR_NULL(participant_info->participant_, RMW_RET_ERROR);
 
   // Make the participant stop listening to discovery
   participant_info->participant_->set_listener(nullptr);
@@ -338,7 +336,7 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
   std::vector<const eprosima::fastdds::dds::TopicDescription *> topics_to_remove;
 
   // Remove datawriters and publisher from participant
-  if (participant_info->publisher_) {
+  {
     std::vector<eprosima::fastdds::dds::DataWriter *> writers;
     participant_info->publisher_->get_datawriters(writers);
     for (auto writer : writers) {
@@ -346,14 +344,13 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
       participant_info->publisher_->delete_datawriter(writer);
     }
     ret = participant_info->participant_->delete_publisher(participant_info->publisher_);
-    if (ret != ReturnCode_t::RETCODE_OK) {
-      RMW_SET_ERROR_MSG("Fail in delete dds publisher from participant");
-      return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+    if (ReturnCode_t::RETCODE_OK != ret) {
+      RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to delete dds publisher from participant");
     }
   }
 
   // Remove datareaders and subscriber from participant
-  if (participant_info->subscriber_) {
+  {
     std::vector<eprosima::fastdds::dds::DataReader *> readers;
     participant_info->subscriber_->get_datareaders(readers);
     for (auto reader : readers) {
@@ -361,9 +358,8 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
       participant_info->subscriber_->delete_datareader(reader);
     }
     ret = participant_info->participant_->delete_subscriber(participant_info->subscriber_);
-    if (ret != ReturnCode_t::RETCODE_OK) {
-      RMW_SET_ERROR_MSG("Fail in delete dds subscriber from participant");
-      return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+    if (ReturnCode_t::RETCODE_OK != ret) {
+      RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to delete dds subscriber from participant");
     }
   }
 
@@ -378,9 +374,8 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
     eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(
     participant_info->participant_);
 
-  if (ret != ReturnCode_t::RETCODE_OK) {
-    RMW_SET_ERROR_MSG("Fail in delete participant");
-    return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+  if (ReturnCode_t::RETCODE_OK != ret) {
+    RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to delete participant");
   }
 
   // Delete Listener
