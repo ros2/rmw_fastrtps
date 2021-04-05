@@ -210,7 +210,6 @@ create_subscription(
 
   /////
   // Create Listener
-  info->listener_ = nullptr;
   if (create_subscription_listener) {
     info->listener_ = new (std::nothrow) SubListener(info);
 

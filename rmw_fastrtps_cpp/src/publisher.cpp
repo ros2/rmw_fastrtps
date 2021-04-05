@@ -192,7 +192,6 @@ rmw_fastrtps_cpp::create_publisher(
 
   /////
   // Create Listener
-  info->listener_ = nullptr;
   if (create_publisher_listener) {
     info->listener_ = new (std::nothrow) PubListener(info);
 
