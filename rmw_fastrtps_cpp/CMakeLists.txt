@@ -89,7 +89,6 @@ add_library(rmw_fastrtps_cpp
   src/serialization_format.cpp
   src/subscription.cpp
   src/type_support_common.cpp
-  src/rmw_get_endpoint_network_flow.cpp
 )
 target_link_libraries(rmw_fastrtps_cpp
   fastcdr fastrtps)

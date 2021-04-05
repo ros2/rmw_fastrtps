@@ -23,7 +23,6 @@
 #include "rmw/topic_endpoint_info_array.h"
 #include "rmw/types.h"
 #include "rmw/names_and_types.h"
-#include "rmw/network_flow_endpoint_array.h"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -401,20 +400,6 @@ __rmw_qos_profile_check_compatible(
   rmw_qos_compatibility_type_t * compatibility,
   char * reason,
   size_t reason_size);
-
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
-rmw_ret_t
-__rmw_publisher_get_network_flow_endpoints(
-  const rmw_publisher_t * publisher,
-  rcutils_allocator_t * allocator,
-  rmw_network_flow_endpoint_array_t * network_flow_endpoint_array);
-
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
-rmw_ret_t
-__rmw_subscription_get_network_flow_endpoints(
-  const rmw_subscription_t * subscription,
-  rcutils_allocator_t * allocator,
-  rmw_network_flow_endpoint_array_t * network_flow_endpoint_array);
 
 }  // namespace rmw_fastrtps_shared_cpp
 
