@@ -103,6 +103,10 @@ __create_participant(
   // lambda to delete participant info
   auto cleanup_participant_info = rcpputils::make_scope_exit(
     [participant_info]() {
+      participant_info->participant_->delete_publisher(participant_info->publisher_);
+      eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(
+        participant_info->participant_);
+      delete participant_info->listener_;
       delete participant_info;
     });
 
@@ -115,11 +119,6 @@ __create_participant(
     RMW_SET_ERROR_MSG("__create_participant failed to allocate participant listener");
     return nullptr;
   }
-  // lambda to delete listener
-  auto cleanup_listener = rcpputils::make_scope_exit(
-    [participant_info]() {
-      delete participant_info->listener_;
-    });
 
   /////
   // Create Participant
@@ -138,12 +137,6 @@ __create_participant(
     RMW_SET_ERROR_MSG("__create_participant failed to create participant");
     return nullptr;
   }
-  // lambda to delete participant
-  auto cleanup_participant = rcpputils::make_scope_exit(
-    [participant_info]() {
-      eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(
-        participant_info->participant_);
-    });
 
   /////
   // Set participant info parameters
@@ -162,12 +155,6 @@ __create_participant(
     return nullptr;
   }
 
-  // lambda to delete publisher
-  auto cleanup_publisher = rcpputils::make_scope_exit(
-    [participant_info]() {
-      participant_info->participant_->delete_publisher(participant_info->publisher_);
-    });
-
   /////
   // Create Subscriber
   eprosima::fastdds::dds::SubscriberQos subscriberQos =
@@ -180,9 +167,6 @@ __create_participant(
     return nullptr;
   }
 
-  cleanup_publisher.cancel();
-  cleanup_participant.cancel();
-  cleanup_listener.cancel();
   cleanup_participant_info.cancel();
 
   return participant_info;
