@@ -63,7 +63,7 @@ struct TopicHolder
 
 /**
 * Convert a Fast DDS return code into the corresponding rmw_ret_t
-* \param code The Fast DDS return code to be translated
+* \param[in] code The Fast DDS return code to be translated
 * \return the corresponding rmw_ret_t value
 */
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -73,21 +73,18 @@ cast_error_dds_to_rmw(eprosima::fastrtps::types::ReturnCode_t code);
 /**
 * Auxiliary method to reuse or create a topic during the creation of an entity.
 *
-* Input:
-* \param participant     DomainParticipant where the topic will be created.
-* \param desc            TopicDescription returned by find_and_check_topic_and_type.
-* \param topic_name      Name of the topic.
-* \param type_name       Name of the type.
-* \param topic_qos       QoS with which to create the topic.
-* \param is_writer_topic Whether the resulting topic will be used on a DataWriter.
-*
-* Output:
-* \param topic_holder    Will hold the pointer to the topic along with the necessary
-*                        information for its deletion.
-*                        When is_writer_topic is true, topic_holder->topic can be
-*                        directly used on a create_datawriter call.
-*                        When is_writer_topic is false, topic_holder->desc can be
-*                        directly used on a create_datareader call.
+* \param[in]  participant     DomainParticipant where the topic will be created.
+* \param[in]  desc            TopicDescription returned by find_and_check_topic_and_type.
+* \param[in]  topic_name      Name of the topic.
+* \param[in]  type_name       Name of the type.
+* \param[in]  topic_qos       QoS with which to create the topic.
+* \param[in]  is_writer_topic Whether the resulting topic will be used on a DataWriter.
+* \param[out] topic_holder    Will hold the pointer to the topic along with the necessary
+*                             information for its deletion.
+*                             When is_writer_topic is true, topic_holder->topic can be
+*                             directly used on a create_datawriter call.
+*                             When is_writer_topic is false, topic_holder->desc can be
+*                             directly used on a create_datareader call.
 *
 * \return true when the topic was reused (topic_holder->should_be_deleted will be false)
 * \return true when the topic was created (topic_holder->should_be_deleted will be true)
@@ -107,14 +104,11 @@ cast_or_create_topic(
 /**
 * Tries to find already registered topic and type.
 *
-* Input:
-* \param participant_info CustomParticipantInfo associated to the context.
-* \param topic_name       Name of the topic for the entity being created.
-* \param type_name        Name of the type for the entity being created.
-*
-* Output:
-* \param returned_topic   TopicDescription for topic_name
-* \param returned_type    TypeSupport for type_name
+* \param[in]  participant_info CustomParticipantInfo associated to the context.
+* \param[in]  topic_name       Name of the topic for the entity being created.
+* \param[in]  type_name        Name of the type for the entity being created.
+* \param[out] returned_topic   TopicDescription for topic_name
+* \param[out] returned_type    TypeSupport for type_name
 *
 * \return false if `topic_name` was previously created with a different type name.
 * \return true when there is no such conflict. Returned topic and type may be null
@@ -132,9 +126,9 @@ find_and_check_topic_and_type(
 /**
 * Performs removal of associated topic and type.
 *
-* \param participant_info CustomParticipantInfo associated to the context.
-* \param topic            Topic of the entity being deleted.
-* \param type             TypeSupport of the entity being deleted.
+* \param[in] participant_info CustomParticipantInfo associated to the context.
+* \param[in] topic            Topic of the entity being deleted.
+* \param[in] type             TypeSupport of the entity being deleted.
 */
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 void
