@@ -289,7 +289,7 @@ rmw_create_client(
   info->response_topic_ = response_topic_name;
 
   // Keyword to find DataWriter and DataReader QoS
-  std::string topic_name_fallback = "client";
+  const std::string topic_name_fallback = "client";
 
   /////
   // Create response DataReader

@@ -152,9 +152,7 @@ create_subscription(
 
   /////
   // Create the custom Subscriber struct (info)
-  CustomSubscriberInfo * info = nullptr;
-
-  info = new (std::nothrow) CustomSubscriberInfo();
+  auto info = new (std::nothrow) CustomSubscriberInfo();
   if (!info) {
     RMW_SET_ERROR_MSG("create_subscription() failed to allocate CustomSubscriberInfo");
     return nullptr;

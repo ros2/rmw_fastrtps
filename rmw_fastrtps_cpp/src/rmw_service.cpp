@@ -288,7 +288,7 @@ rmw_create_service(
   }
 
   // Keyword to find DataWrtier and DataReader QoS
-  std::string topic_name_fallback = "service";
+  const std::string topic_name_fallback = "service";
 
   /////
   // Create request DataReader

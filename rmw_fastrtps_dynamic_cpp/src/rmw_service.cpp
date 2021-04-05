@@ -144,12 +144,9 @@ rmw_create_service(
   // Find and check existing topics and types
 
   // Create Topic and Type names
-  const void * untyped_request_members;
-  const void * untyped_response_members;
-
-  untyped_request_members = get_request_ptr(
+  const void * untyped_request_members = get_request_ptr(
     type_support->data, type_support->typesupport_identifier);
-  untyped_response_members = get_response_ptr(
+  const void * untyped_response_members = get_response_ptr(
     type_support->data, type_support->typesupport_identifier);
 
   std::string request_type_name = _create_type_name(
@@ -322,7 +319,7 @@ rmw_create_service(
   }
 
   // Keyword to find DataWrtier and DataReader QoS
-  std::string topic_name_fallback = "service";
+  const std::string topic_name_fallback = "service";
 
   /////
   // Create request DataReader

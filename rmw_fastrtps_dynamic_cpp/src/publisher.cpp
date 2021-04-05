@@ -150,9 +150,7 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
 
   /////
   // Create the custom Publisher struct (info)
-  CustomPublisherInfo * info = nullptr;
-
-  info = new (std::nothrow) CustomPublisherInfo();
+  auto info = new (std::nothrow) CustomPublisherInfo();
   if (!info) {
     RMW_SET_ERROR_MSG("create_publisher() failed to allocate CustomPublisherInfo");
     return nullptr;
