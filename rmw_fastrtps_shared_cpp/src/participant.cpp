@@ -103,9 +103,11 @@ __create_participant(
   // lambda to delete participant info
   auto cleanup_participant_info = rcpputils::make_scope_exit(
     [participant_info]() {
-      participant_info->participant_->delete_publisher(participant_info->publisher_);
-      eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(
-        participant_info->participant_);
+      if (nullptr != participant_info->participant_) {
+        participant_info->participant_->delete_publisher(participant_info->publisher_);
+        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(
+          participant_info->participant_);
+      }
       delete participant_info->listener_;
       delete participant_info;
     });
