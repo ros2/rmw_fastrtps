@@ -39,41 +39,38 @@ destroy_subscription(
   assert(subscription->implementation_identifier == identifier);
   static_cast<void>(identifier);
 
-  // Get RMW Subscriber
-  rmw_ret_t ret = RMW_RET_OK;
-  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
-
-  if (nullptr != info) {
+  {
     std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
+
+    // Get RMW Subscriber
+    auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
 
     // Keep pointer to topic, so we can remove it later
     auto topic = info->data_reader_->get_topicdescription();
 
     // Delete DataReader
     ReturnCode_t ret = participant_info->subscriber_->delete_datareader(info->data_reader_);
-    if (ret != ReturnCode_t::RETCODE_OK) {
-      RMW_SET_ERROR_MSG("Fail in delete datareader");
-      return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+    if (ReturnCode_t::RETCODE_OK != ret) {
+      RMW_SET_ERROR_MSG("Failed to delete datareader");
+      // This is the first failure on this function, and we have not changed state.
+      // This means it should be safe to return an error
+      return RMW_RET_ERROR;
     }
 
     // Delete DataReader listener
-    if (nullptr != info->listener_) {
-      delete info->listener_;
-    }
+    delete info->listener_;
 
     // Delete topic and unregister type
     remove_topic_and_type(participant_info, topic, info->type_support_);
 
     // Delete CustomSubscriberInfo structure
     delete info;
-  } else {
-    ret = RMW_RET_INVALID_ARGUMENT;
   }
 
   rmw_free(const_cast<char *>(subscription->topic_name));
   rmw_subscription_free(subscription);
 
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
-  return ret;
+  return RMW_RET_OK;
 }
 }  // namespace rmw_fastrtps_shared_cpp

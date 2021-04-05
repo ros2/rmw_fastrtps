@@ -33,41 +33,38 @@ destroy_publisher(
   assert(publisher->implementation_identifier == identifier);
   static_cast<void>(identifier);
 
-  // Get RMW Publisher
-  rmw_ret_t ret = RMW_RET_OK;
-  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-
-  if (nullptr != info) {
+  {
     std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
+
+    // Get RMW Publisher
+    auto info = static_cast<CustomPublisherInfo *>(publisher->data);
 
     // Keep pointer to topic, so we can remove it later
     auto topic = info->data_writer_->get_topic();
 
     // Delete DataWriter
     ReturnCode_t ret = participant_info->publisher_->delete_datawriter(info->data_writer_);
-    if (ret != ReturnCode_t::RETCODE_OK) {
-      RMW_SET_ERROR_MSG("Fail in delete datawriter");
-      return rmw_fastrtps_shared_cpp::cast_error_dds_to_rmw(ret);
+    if (ReturnCode_t::RETCODE_OK != ret) {
+      RMW_SET_ERROR_MSG("Failed to delete datawriter");
+      // This is the first failure on this function, and we have not changed state.
+      // This means it should be safe to return an error
+      return RMW_RET_ERROR;
     }
 
     // Delete DataWriter listener
-    if (nullptr != info->listener_) {
-      delete info->listener_;
-    }
+    delete info->listener_;
 
     // Delete topic and unregister type
     remove_topic_and_type(participant_info, topic, info->type_support_);
 
     // Delete CustomPublisherInfo structure
     delete info;
-  } else {
-    ret = RMW_RET_INVALID_ARGUMENT;
   }
 
   rmw_free(const_cast<char *>(publisher->topic_name));
   rmw_publisher_free(publisher);
 
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
-  return ret;
+  return RMW_RET_OK;
 }
 }  // namespace rmw_fastrtps_shared_cpp
