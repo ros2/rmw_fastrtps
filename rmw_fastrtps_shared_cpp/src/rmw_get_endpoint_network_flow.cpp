@@ -76,7 +76,7 @@ __rmw_publisher_get_network_flow_endpoints(
         throw res;
       }
     }
-  } catch (rmw_ret_t error) {
+  } catch (rmw_ret_t) {
     // clear the array
     rmw_network_flow_endpoint_array_fini(
       network_flow_endpoint_array);
@@ -133,7 +133,7 @@ __rmw_subscription_get_network_flow_endpoints(
         throw res;
       }
     }
-  } catch (rmw_ret_t error) {
+  } catch (rmw_ret_t) {
     // clear the array
     rmw_network_flow_endpoint_array_fini(
       network_flow_endpoint_array);
