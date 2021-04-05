@@ -145,7 +145,7 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
 
   /////
   // Get Participant and Publisher
-  eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
+  eprosima::fastdds::dds::DomainParticipant * dds_participant = participant_info->participant_;
   eprosima::fastdds::dds::Publisher * publisher = participant_info->publisher_;
 
   /////
@@ -157,10 +157,10 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   }
 
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info, domainParticipant]() {
+    [info, dds_participant]() {
       delete info->listener_;
       if (info->type_support_) {
-        domainParticipant->unregister_type(info->type_support_.get_type_name());
+        dds_participant->unregister_type(info->type_support_.get_type_name());
       }
       delete info;
     });
@@ -197,7 +197,7 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
     return nullptr;
   }
 
-  if (ReturnCode_t::RETCODE_OK != fastdds_type.register_type(domainParticipant)) {
+  if (ReturnCode_t::RETCODE_OK != fastdds_type.register_type(dds_participant)) {
     RMW_SET_ERROR_MSG("create_publisher() failed to register type");
     return nullptr;
   }
@@ -217,17 +217,17 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
 
   /////
   // Create and register Topic
-  eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
+  eprosima::fastdds::dds::TopicQos topic_qos = dds_participant->get_default_topic_qos();
 
-  if (!get_topic_qos(*qos_policies, topicQos)) {
+  if (!get_topic_qos(*qos_policies, topic_qos)) {
     RMW_SET_ERROR_MSG("create_publisher() failed setting topic QoS");
     return nullptr;
   }
 
   rmw_fastrtps_shared_cpp::TopicHolder topic;
   if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
-      domainParticipant, des_topic,
-      topic_name_mangled, type_name, topicQos, true, &topic))
+      dds_participant, des_topic,
+      topic_name_mangled, type_name, topic_qos, true, &topic))
   {
     RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
     return nullptr;
@@ -239,27 +239,27 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
   // datawriter which profile name matches with topic_name. If such profile does not exist,
   // then use the default Fast DDS QoS.
-  eprosima::fastdds::dds::DataWriterQos dataWriterQos = publisher->get_default_datawriter_qos();
+  eprosima::fastdds::dds::DataWriterQos writer_qos = publisher->get_default_datawriter_qos();
 
   // Try to load the profile with the topic name
   // It does not need to check the return code, as if the profile does not exist,
   // the QoS is already the default
-  publisher->get_datawriter_qos_from_profile(topic_name, dataWriterQos);
+  publisher->get_datawriter_qos_from_profile(topic_name, writer_qos);
 
   // Modify specific DataWriter Qos
   if (!participant_info->leave_middleware_default_qos) {
     if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS) {
-      dataWriterQos.publish_mode().kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
+      writer_qos.publish_mode().kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
     } else if (participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
-      dataWriterQos.publish_mode().kind = eprosima::fastrtps::SYNCHRONOUS_PUBLISH_MODE;
+      writer_qos.publish_mode().kind = eprosima::fastrtps::SYNCHRONOUS_PUBLISH_MODE;
     }
 
-    dataWriterQos.endpoint().history_memory_policy =
+    writer_qos.endpoint().history_memory_policy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
 
   // Get QoS from RMW
-  if (!get_datawriter_qos(*qos_policies, dataWriterQos)) {
+  if (!get_datawriter_qos(*qos_policies, writer_qos)) {
     RMW_SET_ERROR_MSG("create_publisher() failed setting data writer QoS");
     return nullptr;
   }
@@ -267,7 +267,7 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   // Creates DataWriter (with publisher name to not change name policy)
   info->data_writer_ = publisher->create_datawriter(
     topic.topic,
-    dataWriterQos,
+    writer_qos,
     info->listener_);
 
   if (!info->data_writer_) {

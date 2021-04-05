@@ -35,19 +35,19 @@ RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
-  eprosima::fastdds::dds::DataReaderQos & dataReaderQos);
+  eprosima::fastdds::dds::DataReaderQos & reader_qos);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
-  eprosima::fastdds::dds::DataWriterQos & dataWriterQos);
+  eprosima::fastdds::dds::DataWriterQos & writer_qos);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_topic_qos(
   const rmw_qos_profile_t & qos_policies,
-  eprosima::fastdds::dds::TopicQos & topicQos);
+  eprosima::fastdds::dds::TopicQos & topic_qos);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_time_t

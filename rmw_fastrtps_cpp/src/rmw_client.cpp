@@ -101,7 +101,7 @@ rmw_create_client(
   auto participant_info =
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
 
-  eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
+  eprosima::fastdds::dds::DomainParticipant * dds_participant = participant_info->participant_;
   eprosima::fastdds::dds::Publisher * publisher = participant_info->publisher_;
   eprosima::fastdds::dds::Subscriber * subscriber = participant_info->subscriber_;
 
@@ -188,14 +188,14 @@ rmw_create_client(
   }
 
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info, domainParticipant]() {
+    [info, dds_participant]() {
       delete info->pub_listener_;
       delete info->listener_;
       if (info->response_type_support_) {
-        domainParticipant->unregister_type(info->response_type_support_.get_type_name());
+        dds_participant->unregister_type(info->response_type_support_.get_type_name());
       }
       if (info->request_type_support_) {
-        domainParticipant->unregister_type(info->request_type_support_.get_type_name());
+        dds_participant->unregister_type(info->request_type_support_.get_type_name());
       }
       delete info;
     });
@@ -228,13 +228,13 @@ rmw_create_client(
     response_fastdds_type.reset(tsupport);
   }
 
-  if (ReturnCode_t::RETCODE_OK != request_fastdds_type.register_type(domainParticipant)) {
+  if (ReturnCode_t::RETCODE_OK != request_fastdds_type.register_type(dds_participant)) {
     RMW_SET_ERROR_MSG("create_client() failed to register request type");
     return nullptr;
   }
   info->request_type_support_ = request_fastdds_type;
 
-  if (ReturnCode_t::RETCODE_OK != response_fastdds_type.register_type(domainParticipant)) {
+  if (ReturnCode_t::RETCODE_OK != response_fastdds_type.register_type(dds_participant)) {
     RMW_SET_ERROR_MSG("create_client() failed to register response type");
     return nullptr;
   }
@@ -257,8 +257,8 @@ rmw_create_client(
   /////
   // Create and register Topics
   // Same default topic QoS for both topics
-  eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
-  if (!get_topic_qos(*qos_policies, topicQos)) {
+  eprosima::fastdds::dds::TopicQos topic_qos = dds_participant->get_default_topic_qos();
+  if (!get_topic_qos(*qos_policies, topic_qos)) {
     RMW_SET_ERROR_MSG("create_client() failed setting topic QoS");
     return nullptr;
   }
@@ -266,8 +266,8 @@ rmw_create_client(
   // Create response topic
   rmw_fastrtps_shared_cpp::TopicHolder response_topic;
   if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
-      domainParticipant, response_topic_desc,
-      response_topic_name, response_type_name, topicQos, false, &response_topic))
+      dds_participant, response_topic_desc,
+      response_topic_name, response_type_name, topic_qos, false, &response_topic))
   {
     RMW_SET_ERROR_MSG("create_client() failed to create response topic");
     return nullptr;
@@ -278,8 +278,8 @@ rmw_create_client(
   // Create request topic
   rmw_fastrtps_shared_cpp::TopicHolder request_topic;
   if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
-      domainParticipant, request_topic_desc,
-      request_topic_name, request_type_name, topicQos, true, &request_topic))
+      dds_participant, request_topic_desc,
+      request_topic_name, request_type_name, topic_qos, true, &request_topic))
   {
     RMW_SET_ERROR_MSG("create_client() failed to create request topic");
     return nullptr;
@@ -297,7 +297,7 @@ rmw_create_client(
   // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill DataReader QoS with a subscriber profile
   // located based on topic name defined by _create_topic_name(). If no profile is found, a search
   // with profile_name "client" is attempted. Else, use the default Fast DDS QoS.
-  eprosima::fastdds::dds::DataReaderQos dataReaderQos = subscriber->get_default_datareader_qos();
+  eprosima::fastdds::dds::DataReaderQos reader_qos = subscriber->get_default_datareader_qos();
 
   // Try to load the profile named "client",
   // if it does not exist it tries with the response topic name
@@ -305,15 +305,15 @@ rmw_create_client(
   // the QoS is already set correctly:
   // If none exist is default, if only one exists is the one chosen,
   // if both exist topic name is chosen
-  subscriber->get_datareader_qos_from_profile(topic_name_fallback, dataReaderQos);
-  subscriber->get_datareader_qos_from_profile(response_topic_name, dataReaderQos);
+  subscriber->get_datareader_qos_from_profile(topic_name_fallback, reader_qos);
+  subscriber->get_datareader_qos_from_profile(response_topic_name, reader_qos);
 
   if (!participant_info->leave_middleware_default_qos) {
-    dataReaderQos.endpoint().history_memory_policy =
+    reader_qos.endpoint().history_memory_policy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
 
-  if (!get_datareader_qos(*qos_policies, dataReaderQos)) {
+  if (!get_datareader_qos(*qos_policies, reader_qos)) {
     RMW_SET_ERROR_MSG("create_client() failed setting response DataReader QoS");
     return nullptr;
   }
@@ -321,7 +321,7 @@ rmw_create_client(
   // Creates DataReader
   info->response_reader_ = subscriber->create_datareader(
     response_topic_desc,
-    dataReaderQos,
+    reader_qos,
     info->listener_);
 
   if (!info->response_reader_) {
@@ -338,7 +338,7 @@ rmw_create_client(
   // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill DataWriter QoS with a publisher profile
   // located based on topic name defined by _create_topic_name(). If no profile is found, a search
   // with profile_name "client" is attempted. Else, use the default Fast DDS QoS.
-  eprosima::fastdds::dds::DataWriterQos dataWriterQos = publisher->get_default_datawriter_qos();
+  eprosima::fastdds::dds::DataWriterQos writer_qos = publisher->get_default_datawriter_qos();
 
   // Try to load the profile named "client",
   // if it does not exist it tries with the request topic name
@@ -346,22 +346,22 @@ rmw_create_client(
   // the QoS is already set correctly:
   // If none exist is default, if only one exists is the one chosen,
   // if both exist topic name is chosen
-  publisher->get_datawriter_qos_from_profile(topic_name_fallback, dataWriterQos);
-  publisher->get_datawriter_qos_from_profile(request_topic_name, dataWriterQos);
+  publisher->get_datawriter_qos_from_profile(topic_name_fallback, writer_qos);
+  publisher->get_datawriter_qos_from_profile(request_topic_name, writer_qos);
 
   // Modify specific DataWriter Qos
   if (!participant_info->leave_middleware_default_qos) {
     if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS) {
-      dataWriterQos.publish_mode().kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
+      writer_qos.publish_mode().kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
     } else if (participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
-      dataWriterQos.publish_mode().kind = eprosima::fastrtps::SYNCHRONOUS_PUBLISH_MODE;
+      writer_qos.publish_mode().kind = eprosima::fastrtps::SYNCHRONOUS_PUBLISH_MODE;
     }
 
-    dataWriterQos.endpoint().history_memory_policy =
+    writer_qos.endpoint().history_memory_policy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
 
-  if (!get_datawriter_qos(*qos_policies, dataWriterQos)) {
+  if (!get_datawriter_qos(*qos_policies, writer_qos)) {
     RMW_SET_ERROR_MSG("create_client() failed setting request DataWriter QoS");
     return nullptr;
   }
@@ -369,7 +369,7 @@ rmw_create_client(
   // Creates DataWriter
   info->request_writer_ = publisher->create_datawriter(
     request_topic.topic,
-    dataWriterQos,
+    writer_qos,
     info->pub_listener_);
 
   if (!info->request_writer_) {

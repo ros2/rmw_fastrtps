@@ -149,7 +149,7 @@ create_subscription(
 
   /////
   // Get Participant and Subscriber
-  eprosima::fastdds::dds::DomainParticipant * domainParticipant = participant_info->participant_;
+  eprosima::fastdds::dds::DomainParticipant * dds_participant = participant_info->participant_;
   eprosima::fastdds::dds::Subscriber * subscriber = participant_info->subscriber_;
 
   /////
@@ -161,10 +161,10 @@ create_subscription(
   }
 
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info, domainParticipant]() {
+    [info, dds_participant]() {
       delete info->listener_;
       if (info->type_support_) {
-        domainParticipant->unregister_type(info->type_support_.get_type_name());
+        dds_participant->unregister_type(info->type_support_.get_type_name());
       }
       delete info;
     });
@@ -201,7 +201,7 @@ create_subscription(
     return nullptr;
   }
 
-  if (ReturnCode_t::RETCODE_OK != fastdds_type.register_type(domainParticipant)) {
+  if (ReturnCode_t::RETCODE_OK != fastdds_type.register_type(dds_participant)) {
     RMW_SET_ERROR_MSG("create_subscription() failed to register type");
     return nullptr;
   }
@@ -221,16 +221,16 @@ create_subscription(
 
   /////
   // Create and register Topic
-  eprosima::fastdds::dds::TopicQos topicQos = domainParticipant->get_default_topic_qos();
-  if (!get_topic_qos(*qos_policies, topicQos)) {
+  eprosima::fastdds::dds::TopicQos topic_qos = dds_participant->get_default_topic_qos();
+  if (!get_topic_qos(*qos_policies, topic_qos)) {
     RMW_SET_ERROR_MSG("create_publisher() failed setting topic QoS");
     return nullptr;
   }
 
   rmw_fastrtps_shared_cpp::TopicHolder topic;
   if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
-      domainParticipant, des_topic,
-      topic_name_mangled, type_name, topicQos, false, &topic))
+      dds_participant, des_topic,
+      topic_name_mangled, type_name, topic_qos, false, &topic))
   {
     RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
     return nullptr;
@@ -244,19 +244,19 @@ create_subscription(
   // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
   // datareader which profile name matches with topic_name. If such profile does not exist,
   // then use the default Fast DDS QoS.
-  eprosima::fastdds::dds::DataReaderQos dataReaderQos = subscriber->get_default_datareader_qos();
+  eprosima::fastdds::dds::DataReaderQos reader_qos = subscriber->get_default_datareader_qos();
 
   // Try to load the profile with the topic name
   // It does not need to check the return code, as if the profile does not exist,
   // the QoS is already the default
-  subscriber->get_datareader_qos_from_profile(topic_name, dataReaderQos);
+  subscriber->get_datareader_qos_from_profile(topic_name, reader_qos);
 
   if (!participant_info->leave_middleware_default_qos) {
-    dataReaderQos.endpoint().history_memory_policy =
+    reader_qos.endpoint().history_memory_policy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   }
 
-  if (!get_datareader_qos(*qos_policies, dataReaderQos)) {
+  if (!get_datareader_qos(*qos_policies, reader_qos)) {
     RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
     return nullptr;
   }
@@ -264,7 +264,7 @@ create_subscription(
   // Creates DataReader (with subscriber name to not change name policy)
   info->data_reader_ = subscriber->create_datareader(
     des_topic,
-    dataReaderQos,
+    reader_qos,
     info->listener_);
 
   if (!info->data_reader_) {
