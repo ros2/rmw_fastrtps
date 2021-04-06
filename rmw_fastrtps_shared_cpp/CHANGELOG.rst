@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Refactor to use DDS standard API (`#518 <https://github.com/ros2/rmw_fastrtps/issues/518>`_)
+* Unique network flows (`#502 <https://github.com/ros2/rmw_fastrtps/issues/502>`_)
+* updating quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#520 <https://github.com/ros2/rmw_fastrtps/issues/520>`_)
+* Contributors: Miguel Company, shonigmann
+
 4.5.0 (2021-03-18)
 ------------------
 * Take and return new RMW_DURATION_INFINITE correctly (`#515 <https://github.com/ros2/rmw_fastrtps/issues/515>`_)
