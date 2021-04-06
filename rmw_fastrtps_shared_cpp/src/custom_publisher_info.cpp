@@ -13,6 +13,8 @@
 // limitations under the License.
 
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
+#include "fastdds/dds/core/status/BaseStatus.hpp"
+#include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
 #include "types/event_types.hpp"
 
 EventListenerInterface *
@@ -23,8 +25,8 @@ CustomPublisherInfo::getListener() const
 
 void
 PubListener::on_offered_deadline_missed(
-  eprosima::fastrtps::Publisher * /* publisher */,
-  const eprosima::fastrtps::OfferedDeadlineMissedStatus & status)
+  eprosima::fastdds::dds::DataWriter * /* writer */,
+  const eprosima::fastdds::dds::OfferedDeadlineMissedStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
 
@@ -41,8 +43,8 @@ PubListener::on_offered_deadline_missed(
 }
 
 void PubListener::on_liveliness_lost(
-  eprosima::fastrtps::Publisher * /* publisher */,
-  const eprosima::fastrtps::LivelinessLostStatus & status)
+  eprosima::fastdds::dds::DataWriter * /* writer */,
+  const eprosima::fastdds::dds::LivelinessLostStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
 
@@ -79,8 +81,7 @@ bool PubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
   switch (event_type) {
     case RMW_EVENT_LIVELINESS_LOST:
       {
-        rmw_liveliness_lost_status_t * rmw_data =
-          static_cast<rmw_liveliness_lost_status_t *>(event_info);
+        auto rmw_data = static_cast<rmw_liveliness_lost_status_t *>(event_info);
         rmw_data->total_count = liveliness_lost_status_.total_count;
         rmw_data->total_count_change = liveliness_lost_status_.total_count_change;
         liveliness_lost_status_.total_count_change = 0;
@@ -89,8 +90,7 @@ bool PubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
       break;
     case RMW_EVENT_OFFERED_DEADLINE_MISSED:
       {
-        rmw_offered_deadline_missed_status_t * rmw_data =
-          static_cast<rmw_offered_deadline_missed_status_t *>(event_info);
+        auto rmw_data = static_cast<rmw_offered_deadline_missed_status_t *>(event_info);
         rmw_data->total_count = offered_deadline_missed_status_.total_count;
         rmw_data->total_count_change = offered_deadline_missed_status_.total_count_change;
         offered_deadline_missed_status_.total_count_change = 0;

@@ -25,6 +25,12 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
+// This method will create a DDS DomainParticipant along with
+// a DDS Publisher and a DDS Subscriber
+// For the creation of DDS DataWriter see method create_publisher
+// For the creation of DDS DataReader see method create_subscription
+// Note that ROS 2 Publishers and Subscriptions correspond with DDS DataWriters
+// and DataReaders respectively and not with DDS Publishers and Subscribers.
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 CustomParticipantInfo *
 create_participant(

@@ -19,11 +19,6 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
-#include "fastrtps/Domain.h"
-#include "fastrtps/TopicDataType.h"
-#include "fastrtps/participant/Participant.h"
-#include "fastrtps/subscriber/Subscriber.h"
-
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
@@ -31,10 +26,7 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/subscription.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
-
-using Domain = eprosima::fastrtps::Domain;
-using Participant = eprosima::fastrtps::Participant;
-using TopicDataType = eprosima::fastrtps::TopicDataType;
+#include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -47,22 +39,38 @@ destroy_subscription(
   assert(subscription->implementation_identifier == identifier);
   static_cast<void>(identifier);
 
-  rmw_ret_t ret = RMW_RET_OK;
-  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
-  if (!Domain::removeSubscriber(info->subscriber_)) {
-    RMW_SET_ERROR_MSG("failed to remove subscriber");
-    ret = RMW_RET_ERROR;
-  }
-  delete info->listener_;
+  {
+    std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
 
-  Participant * participant = participant_info->participant;
-  _unregister_type(participant, info->type_support_);
-  delete info;
+    // Get RMW Subscriber
+    auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+
+    // Keep pointer to topic, so we can remove it later
+    auto topic = info->data_reader_->get_topicdescription();
+
+    // Delete DataReader
+    ReturnCode_t ret = participant_info->subscriber_->delete_datareader(info->data_reader_);
+    if (ReturnCode_t::RETCODE_OK != ret) {
+      RMW_SET_ERROR_MSG("Failed to delete datareader");
+      // This is the first failure on this function, and we have not changed state.
+      // This means it should be safe to return an error
+      return RMW_RET_ERROR;
+    }
+
+    // Delete DataReader listener
+    delete info->listener_;
+
+    // Delete topic and unregister type
+    remove_topic_and_type(participant_info, topic, info->type_support_);
+
+    // Delete CustomSubscriberInfo structure
+    delete info;
+  }
 
   rmw_free(const_cast<char *>(subscription->topic_name));
   rmw_subscription_free(subscription);
 
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
-  return ret;
+  return RMW_RET_OK;
 }
 }  // namespace rmw_fastrtps_shared_cpp

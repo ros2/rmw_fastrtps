@@ -55,7 +55,7 @@ __rmw_publish(
   data.is_cdr_buffer = false;
   data.data = const_cast<void *>(ros_message);
   data.impl = info->type_support_impl_;
-  if (!info->publisher_->write(&data)) {
+  if (!info->data_writer_->write(&data)) {
     RMW_SET_ERROR_MSG("cannot publish data");
     return RMW_RET_ERROR;
   }
@@ -101,7 +101,7 @@ __rmw_publish_serialized_message(
   data.is_cdr_buffer = true;
   data.data = &ser;
   data.impl = nullptr;    // not used when is_cdr_buffer is true
-  if (!info->publisher_->write(&data)) {
+  if (!info->data_writer_->write(&data)) {
     RMW_SET_ERROR_MSG("cannot publish data");
     return RMW_RET_ERROR;
   }

@@ -12,30 +12,32 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <gtest/gtest.h>
+#include "gtest/gtest.h"
 
-#include "fastrtps/log/Log.h"
+#include "fastdds/dds/log/Log.hpp"
 
 #include "rmw/rmw.h"
 #include "rmw/error_handling.h"
 
 TEST(TestLogging, rmw_logging)
 {
+  using Log = eprosima::fastdds::dds::Log;
+
   rmw_ret_t ret = rmw_set_log_severity(RMW_LOG_SEVERITY_DEBUG);
   EXPECT_EQ(ret, RMW_RET_OK);
-  EXPECT_EQ(eprosima::fastrtps::Log::Kind::Info, eprosima::fastrtps::Log::GetVerbosity());
+  EXPECT_EQ(Log::Kind::Info, Log::GetVerbosity());
   ret = rmw_set_log_severity(RMW_LOG_SEVERITY_INFO);
   EXPECT_EQ(ret, RMW_RET_OK);
-  EXPECT_EQ(eprosima::fastrtps::Log::Kind::Info, eprosima::fastrtps::Log::GetVerbosity());
+  EXPECT_EQ(Log::Kind::Info, Log::GetVerbosity());
   ret = rmw_set_log_severity(RMW_LOG_SEVERITY_WARN);
   EXPECT_EQ(ret, RMW_RET_OK);
-  EXPECT_EQ(eprosima::fastrtps::Log::Kind::Warning, eprosima::fastrtps::Log::GetVerbosity());
+  EXPECT_EQ(Log::Kind::Warning, Log::GetVerbosity());
   ret = rmw_set_log_severity(RMW_LOG_SEVERITY_ERROR);
   EXPECT_EQ(ret, RMW_RET_OK);
-  EXPECT_EQ(eprosima::fastrtps::Log::Kind::Error, eprosima::fastrtps::Log::GetVerbosity());
+  EXPECT_EQ(Log::Kind::Error, Log::GetVerbosity());
   ret = rmw_set_log_severity(RMW_LOG_SEVERITY_FATAL);
   EXPECT_EQ(ret, RMW_RET_OK);
-  EXPECT_EQ(eprosima::fastrtps::Log::Kind::Error, eprosima::fastrtps::Log::GetVerbosity());
+  EXPECT_EQ(Log::Kind::Error, Log::GetVerbosity());
 }
 
 TEST(TestLogging, rmw_logging_bad_verbosity)

@@ -34,11 +34,3 @@ using_introspection_cpp_typesupport(const char * typesupport_identifier)
   return typesupport_identifier ==
          rosidl_typesupport_introspection_cpp::typesupport_identifier;
 }
-
-void
-_register_type(
-  eprosima::fastrtps::Participant * participant,
-  rmw_fastrtps_shared_cpp::TypeSupport * typed_typesupport)
-{
-  eprosima::fastrtps::Domain::registerType(participant, typed_typesupport);
-}

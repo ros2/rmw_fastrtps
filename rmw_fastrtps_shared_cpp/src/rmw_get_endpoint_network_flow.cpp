@@ -43,7 +43,7 @@ __rmw_publisher_get_network_flow_endpoints(
   CustomPublisherInfo * data =
     static_cast<CustomPublisherInfo *>(publisher->data);
   LocatorList_t locators;
-  data->publisher_->get_sending_locators(locators);
+  data->data_writer_->get_sending_locators(locators);
 
   if (locators.empty()) {
     return res;
@@ -100,7 +100,7 @@ __rmw_subscription_get_network_flow_endpoints(
   CustomSubscriberInfo * data =
     static_cast<CustomSubscriberInfo *>(subscription->data);
   LocatorList_t locators;
-  data->subscriber_->get_listening_locators(locators);
+  data->data_reader_->get_listening_locators(locators);
 
   if (locators.empty()) {
     return res;

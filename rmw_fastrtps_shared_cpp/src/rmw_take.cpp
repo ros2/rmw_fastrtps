@@ -17,9 +17,7 @@
 #include "rmw/serialized_message.h"
 #include "rmw/rmw.h"
 
-#include "fastrtps/subscriber/Subscriber.h"
-#include "fastrtps/subscriber/SampleInfo.h"
-#include "fastrtps/attributes/SubscriberAttributes.h"
+#include "fastdds/dds/subscriber/SampleInfo.hpp"
 
 #include "fastcdr/Cdr.h"
 #include "fastcdr/FastBuffer.h"
@@ -28,17 +26,19 @@
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
+
 void
 _assign_message_info(
   const char * identifier,
   rmw_message_info_t * message_info,
-  const eprosima::fastrtps::SampleInfo_t * sinfo)
+  const eprosima::fastdds::dds::SampleInfo * sinfo)
 {
-  message_info->source_timestamp = sinfo->sourceTimestamp.to_ns();
-  message_info->received_timestamp = sinfo->receptionTimestamp.to_ns();
+  message_info->source_timestamp = sinfo->source_timestamp.to_ns();
+  message_info->received_timestamp = sinfo->reception_timestamp.to_ns();
   rmw_gid_t * sender_gid = &message_info->publisher_gid;
   sender_gid->implementation_identifier = identifier;
   memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
@@ -65,19 +65,21 @@ _take(
     subscription->implementation_identifier, identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
-  CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
-  eprosima::fastrtps::SampleInfo_t sinfo;
+  eprosima::fastdds::dds::SampleInfo sinfo;
 
   rmw_fastrtps_shared_cpp::SerializedData data;
+
   data.is_cdr_buffer = false;
   data.data = ros_message;
   data.impl = info->type_support_impl_;
-  if (info->subscriber_->takeNextData(&data, &sinfo)) {
-    info->listener_->update_unread_count(info->subscriber_);
+  if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
+    // Update hasData from listener
+    info->listener_->update_has_data(info->data_reader_);
 
-    if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
+    if (sinfo.valid_data) {
       if (message_info) {
         _assign_message_info(identifier, message_info, &sinfo);
       }
@@ -107,13 +109,13 @@ _take_sequence(
     subscription->implementation_identifier, identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
-  CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
   // Limit the upper bound of reads to the number unread at the beginning.
   // This prevents any samples that are added after the beginning of the
   // _take_sequence call from being read.
-  auto unread_count = info->subscriber_->get_unread_count();
+  auto unread_count = info->data_reader_->get_unread_count();
   if (unread_count < count) {
     count = unread_count;
   }
@@ -270,20 +272,22 @@ _take_serialized_message(
     subscription->implementation_identifier, identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
 
-  CustomSubscriberInfo * info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
   eprosima::fastcdr::FastBuffer buffer;
-  eprosima::fastrtps::SampleInfo_t sinfo;
+  eprosima::fastdds::dds::SampleInfo sinfo;
 
   rmw_fastrtps_shared_cpp::SerializedData data;
   data.is_cdr_buffer = true;
   data.data = &buffer;
   data.impl = nullptr;    // not used when is_cdr_buffer is true
-  if (info->subscriber_->takeNextData(&data, &sinfo)) {
-    info->listener_->update_unread_count(info->subscriber_);
 
-    if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
+  if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
+    // Update hasData from listener
+    info->listener_->update_has_data(info->data_reader_);
+
+    if (sinfo.valid_data) {
       auto buffer_size = static_cast<size_t>(buffer.getBufferSize());
       if (serialized_message->buffer_capacity < buffer_size) {
         auto ret = rmw_serialized_message_resize(serialized_message, buffer_size);

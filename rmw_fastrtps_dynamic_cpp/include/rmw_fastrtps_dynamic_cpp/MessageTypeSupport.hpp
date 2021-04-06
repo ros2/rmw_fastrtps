@@ -15,11 +15,11 @@
 #ifndef RMW_FASTRTPS_DYNAMIC_CPP__MESSAGETYPESUPPORT_HPP_
 #define RMW_FASTRTPS_DYNAMIC_CPP__MESSAGETYPESUPPORT_HPP_
 
-#include <fastcdr/FastBuffer.h>
-#include <fastcdr/Cdr.h>
-
 #include <cassert>
 #include <memory>
+
+#include "fastcdr/FastBuffer.h"
+#include "fastcdr/Cdr.h"
 
 #include "TypeSupport.hpp"
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"

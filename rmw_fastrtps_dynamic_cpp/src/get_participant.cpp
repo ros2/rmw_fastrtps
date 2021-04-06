@@ -14,6 +14,8 @@
 
 #include "rmw_fastrtps_dynamic_cpp/get_participant.hpp"
 
+#include "fastdds/dds/domain/DomainParticipant.hpp"
+
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
@@ -21,8 +23,8 @@
 namespace rmw_fastrtps_dynamic_cpp
 {
 
-eprosima::fastrtps::Participant *
-get_participant(rmw_node_t * node)
+eprosima::fastdds::dds::DomainParticipant *
+get_domain_participant(rmw_node_t * node)
 {
   if (!node) {
     return nullptr;
@@ -31,7 +33,7 @@ get_participant(rmw_node_t * node)
     return nullptr;
   }
   auto impl = static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
-  return impl->participant;
+  return impl->participant_;
 }
 
 }  // namespace rmw_fastrtps_dynamic_cpp

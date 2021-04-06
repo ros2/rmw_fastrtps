@@ -15,35 +15,36 @@
 #ifndef RMW_FASTRTPS_CPP__GET_SERVICE_HPP_
 #define RMW_FASTRTPS_CPP__GET_SERVICE_HPP_
 
-#include "fastrtps/publisher/Publisher.h"
-#include "fastrtps/subscriber/Subscriber.h"
+#include "fastdds/dds/publisher/DataWriter.hpp"
+#include "fastdds/dds/subscriber/DataReader.hpp"
+
 #include "rmw/rmw.h"
 #include "rmw_fastrtps_cpp/visibility_control.h"
 
 namespace rmw_fastrtps_cpp
 {
 
-/// Return a native FastRTPS subscriber handle for the request.
+/// Return a native Fast DDS DataReader handle for the request.
 /**
  * The function returns `NULL` when either the service handle is `NULL` or
  * when the service handle is from a different rmw implementation.
  *
- * \return native FastRTPS subscriber handle if successful, otherwise `NULL`
+ * \return native Fast DDS DataReader handle if successful, otherwise `NULL`
  */
 RMW_FASTRTPS_CPP_PUBLIC
-eprosima::fastrtps::Subscriber *
-get_request_subscriber(rmw_service_t * service);
+eprosima::fastdds::dds::DataReader *
+get_request_datareader(rmw_service_t * service);
 
-/// Return a native FastRTPS publisher handle for the response.
+/// Return a native Fast DDS DataWriter handle for the response.
 /**
  * The function returns `NULL` when either the service handle is `NULL` or
  * when the service handle is from a different rmw implementation.
  *
- * \return native FastRTPS publisher handle if successful, otherwise `NULL`
+ * \return native Fast DDS DataWriter handle if successful, otherwise `NULL`
  */
 RMW_FASTRTPS_CPP_PUBLIC
-eprosima::fastrtps::Publisher *
-get_response_publisher(rmw_service_t * service);
+eprosima::fastdds::dds::DataWriter *
+get_response_datawriter(rmw_service_t * service);
 
 }  // namespace rmw_fastrtps_cpp
 

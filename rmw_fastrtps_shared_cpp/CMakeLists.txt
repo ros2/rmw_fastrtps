@@ -41,8 +41,8 @@ find_package(rmw_dds_common REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr REQUIRED CONFIG)
-find_package(fastrtps REQUIRED CONFIG)
-find_package(FastRTPS REQUIRED MODULE)
+find_package(fastrtps 2.3 REQUIRED CONFIG)
+find_package(FastRTPS 2.3 REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
 
@@ -61,6 +61,7 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_compare_gids_equal.cpp
   src/rmw_count.cpp
   src/rmw_event.cpp
+  src/rmw_get_endpoint_network_flow.cpp
   src/rmw_get_gid_for_publisher.cpp
   src/rmw_get_topic_endpoint_info.cpp
   src/rmw_guard_condition.cpp
@@ -86,7 +87,7 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_wait_set.cpp
   src/subscription.cpp
   src/TypeSupport_impl.cpp
-  src/rmw_get_endpoint_network_flow.cpp
+  src/utils.cpp
 )
 target_include_directories(rmw_fastrtps_shared_cpp
   PUBLIC

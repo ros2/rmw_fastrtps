@@ -24,17 +24,23 @@
 
 #include "fastcdr/FastBuffer.h"
 
-#include "fastrtps/participant/Participant.h"
-#include "fastrtps/publisher/Publisher.h"
-#include "fastrtps/publisher/PublisherListener.h"
-#include "fastrtps/subscriber/Subscriber.h"
-#include "fastrtps/subscriber/SubscriberListener.h"
-#include "fastrtps/subscriber/SampleInfo.h"
+#include "fastdds/dds/core/status/PublicationMatchedStatus.hpp"
+#include "fastdds/dds/core/status/SubscriptionMatchedStatus.hpp"
+#include "fastdds/dds/publisher/DataWriter.hpp"
+#include "fastdds/dds/publisher/DataWriterListener.hpp"
+#include "fastdds/dds/subscriber/DataReader.hpp"
+#include "fastdds/dds/subscriber/DataReaderListener.hpp"
+#include "fastdds/dds/subscriber/SampleInfo.hpp"
+#include "fastdds/dds/topic/TypeSupport.hpp"
+
+#include "fastdds/rtps/common/Guid.h"
+#include "fastdds/rtps/common/InstanceHandle.h"
+#include "fastdds/rtps/common/SampleIdentity.h"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
-#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 class ServiceListener;
 class ServicePubListener;
@@ -49,15 +55,16 @@ enum class client_present_t
 
 typedef struct CustomServiceInfo
 {
-  rmw_fastrtps_shared_cpp::TypeSupport * request_type_support_{nullptr};
+  eprosima::fastdds::dds::TypeSupport request_type_support_{nullptr};
   const void * request_type_support_impl_{nullptr};
-  rmw_fastrtps_shared_cpp::TypeSupport * response_type_support_{nullptr};
+  eprosima::fastdds::dds::TypeSupport response_type_support_{nullptr};
   const void * response_type_support_impl_{nullptr};
-  eprosima::fastrtps::Subscriber * request_subscriber_{nullptr};
-  eprosima::fastrtps::Publisher * response_publisher_{nullptr};
+  eprosima::fastdds::dds::DataReader * request_reader_{nullptr};
+  eprosima::fastdds::dds::DataWriter * response_writer_{nullptr};
+
   ServiceListener * listener_{nullptr};
   ServicePubListener * pub_listener_{nullptr};
-  eprosima::fastrtps::Participant * participant_{nullptr};
+
   const char * typesupport_identifier_{nullptr};
 } CustomServiceInfo;
 
@@ -65,13 +72,13 @@ typedef struct CustomServiceRequest
 {
   eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
   eprosima::fastcdr::FastBuffer * buffer_;
-  eprosima::fastrtps::SampleInfo_t sample_info_ {};
+  eprosima::fastdds::dds::SampleInfo sample_info_ {};
 
   CustomServiceRequest()
   : buffer_(nullptr) {}
 } CustomServiceRequest;
 
-class ServicePubListener : public eprosima::fastrtps::PublisherListener
+class ServicePubListener : public eprosima::fastdds::dds::DataWriterListener
 {
   using subscriptions_set_t =
     std::unordered_set<eprosima::fastrtps::rtps::GUID_t,
@@ -82,23 +89,27 @@ class ServicePubListener : public eprosima::fastrtps::PublisherListener
       rmw_fastrtps_shared_cpp::hash_fastrtps_guid>;
 
 public:
-  ServicePubListener() = default;
+  explicit ServicePubListener(CustomServiceInfo * info)
+  {
+    (void) info;
+  }
 
   void
-  onPublicationMatched(
-    eprosima::fastrtps::Publisher * pub,
-    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
+  on_publication_matched(
+    eprosima::fastdds::dds::DataWriter * /* writer */,
+    const eprosima::fastdds::dds::PublicationMatchedStatus & info) final
   {
-    (void) pub;
     std::lock_guard<std::mutex> lock(mutex_);
-    if (eprosima::fastrtps::rtps::MATCHED_MATCHING == matchingInfo.status) {
-      subscriptions_.insert(matchingInfo.remoteEndpointGuid);
-    } else if (eprosima::fastrtps::rtps::REMOVED_MATCHING == matchingInfo.status) {
-      subscriptions_.erase(matchingInfo.remoteEndpointGuid);
-      auto endpoint = clients_endpoints_.find(matchingInfo.remoteEndpointGuid);
+    if (info.current_count_change == 1) {
+      subscriptions_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
+    } else if (info.current_count_change == -1) {
+      eprosima::fastrtps::rtps::GUID_t erase_endpoint_guid =
+        eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle);
+      subscriptions_.erase(erase_endpoint_guid);
+      auto endpoint = clients_endpoints_.find(erase_endpoint_guid);
       if (endpoint != clients_endpoints_.end()) {
         clients_endpoints_.erase(endpoint->second);
-        clients_endpoints_.erase(matchingInfo.remoteEndpointGuid);
+        clients_endpoints_.erase(erase_endpoint_guid);
       }
     } else {
       return;
@@ -166,31 +177,30 @@ private:
   std::condition_variable cv_;
 };
 
-class ServiceListener : public eprosima::fastrtps::SubscriberListener
+class ServiceListener : public eprosima::fastdds::dds::DataReaderListener
 {
 public:
   explicit ServiceListener(CustomServiceInfo * info)
   : info_(info), list_has_data_(false),
     conditionMutex_(nullptr), conditionVariable_(nullptr)
   {
-    (void)info_;
   }
 
   void
-  onSubscriptionMatched(
-    eprosima::fastrtps::Subscriber * sub,
-    eprosima::fastrtps::rtps::MatchingInfo & matchingInfo)
+  on_subscription_matched(
+    eprosima::fastdds::dds::DataReader * /* reader */,
+    const eprosima::fastdds::dds::SubscriptionMatchedStatus & info) final
   {
-    (void) sub;
-    if (eprosima::fastrtps::rtps::REMOVED_MATCHING == matchingInfo.status) {
-      info_->pub_listener_->endpoint_erase_if_exists(matchingInfo.remoteEndpointGuid);
+    if (info.current_count_change == -1) {
+      info_->pub_listener_->endpoint_erase_if_exists(
+        eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
     }
   }
 
   void
-  onNewDataMessage(eprosima::fastrtps::Subscriber * sub)
+  on_data_available(eprosima::fastdds::dds::DataReader * reader) final
   {
-    assert(sub);
+    assert(reader);
 
     CustomServiceRequest request;
     request.buffer_ = new eprosima::fastcdr::FastBuffer();
@@ -199,8 +209,8 @@ public:
     data.is_cdr_buffer = true;
     data.data = request.buffer_;
     data.impl = nullptr;    // not used when is_cdr_buffer is true
-    if (sub->takeNextData(&data, &request.sample_info_)) {
-      if (eprosima::fastrtps::rtps::ALIVE == request.sample_info_.sampleKind) {
+    if (reader->take_next_sample(&data, &request.sample_info_) == ReturnCode_t::RETCODE_OK) {
+      if (request.sample_info_.valid_data) {
         request.sample_identity_ = request.sample_info_.sample_identity;
         // Use response subscriber guid (on related_sample_identity) when present.
         const eprosima::fastrtps::rtps::GUID_t & reader_guid =

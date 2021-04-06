@@ -20,7 +20,7 @@
 #include <cstring>
 #include <type_traits>
 
-#include "fastrtps/rtps/common/Guid.h"
+#include "fastdds/rtps/common/Guid.h"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -63,7 +63,7 @@ struct hash_fastrtps_guid
     union u_convert {
       uint8_t plain_value[sizeof(guid)];
       uint32_t plain_ints[sizeof(guid) / sizeof(uint32_t)];
-    } u;
+    } u {};
 
     static_assert(
       sizeof(guid) == 16 &&

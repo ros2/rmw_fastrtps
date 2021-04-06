@@ -20,6 +20,9 @@
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
+#include "fastdds/dds/publisher/DataWriter.hpp"
+#include "fastdds/dds/publisher/qos/DataWriterQos.hpp"
+
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
@@ -112,7 +115,7 @@ __rmw_publisher_assert_liveliness(
     return RMW_RET_ERROR;
   }
 
-  info->publisher_->assert_liveliness();
+  info->data_writer_->assert_liveliness();
   return RMW_RET_OK;
 }
 
@@ -122,11 +125,10 @@ __rmw_publisher_get_actual_qos(
   rmw_qos_profile_t * qos)
 {
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  eprosima::fastrtps::Publisher * fastrtps_pub = info->publisher_;
-  const eprosima::fastrtps::PublisherAttributes & attributes =
-    fastrtps_pub->getAttributes();
+  eprosima::fastdds::dds::DataWriter * fastdds_dw = info->data_writer_;
+  const eprosima::fastdds::dds::DataWriterQos & dds_qos = fastdds_dw->get_qos();
 
-  dds_attributes_to_rmw_qos(attributes, qos);
+  dds_qos_to_rmw_qos(dds_qos, qos);
 
   return RMW_RET_OK;
 }

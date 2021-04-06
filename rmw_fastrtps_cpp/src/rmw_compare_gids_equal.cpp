@@ -12,8 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "fastrtps/rtps/common/Guid.h"
-
 #include "rmw/rmw.h"
 #include "rmw/error_handling.h"
 #include "rmw/types.h"

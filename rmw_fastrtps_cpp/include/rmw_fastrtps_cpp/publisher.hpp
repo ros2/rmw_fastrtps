@@ -30,7 +30,6 @@ create_publisher(
   const rmw_publisher_options_t * publisher_options,
   bool keyed,
   bool create_publisher_listener);
-
 }  // namespace rmw_fastrtps_cpp
 
 #endif  // RMW_FASTRTPS_CPP__PUBLISHER_HPP_

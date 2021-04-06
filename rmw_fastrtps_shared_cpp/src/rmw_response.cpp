@@ -16,7 +16,7 @@
 
 #include "fastcdr/Cdr.h"
 
-#include "fastrtps/subscriber/Subscriber.h"
+#include "fastdds/rtps/common/WriteParams.h"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -55,15 +55,17 @@ __rmw_take_response(
   CustomClientResponse response;
 
   if (info->listener_->getResponse(response)) {
+    auto raw_type_support = dynamic_cast<rmw_fastrtps_shared_cpp::TypeSupport *>(
+      info->response_type_support_.get());
     eprosima::fastcdr::Cdr deser(
       *response.buffer_,
       eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::Cdr::DDS_CDR);
-    if (info->response_type_support_->deserializeROSmessage(
+    if (raw_type_support->deserializeROSmessage(
         deser, ros_response, info->response_type_support_impl_))
     {
-      request_header->source_timestamp = response.sample_info_.sourceTimestamp.to_ns();
-      request_header->received_timestamp = response.sample_info_.receptionTimestamp.to_ns();
+      request_header->source_timestamp = response.sample_info_.source_timestamp.to_ns();
+      request_header->received_timestamp = response.sample_info_.reception_timestamp.to_ns();
       request_header->request_id.sequence_number =
         ((int64_t)response.sample_identity_.sequence_number().high) <<
         32 | response.sample_identity_.sequence_number().low;
@@ -133,7 +135,7 @@ __rmw_send_response(
   data.is_cdr_buffer = false;
   data.data = const_cast<void *>(ros_response);
   data.impl = info->response_type_support_impl_;
-  if (info->response_publisher_->write(&data, wparams)) {
+  if (info->response_writer_->write(&data, wparams)) {
     returnedValue = RMW_RET_OK;
   } else {
     RMW_SET_ERROR_MSG("cannot publish data");

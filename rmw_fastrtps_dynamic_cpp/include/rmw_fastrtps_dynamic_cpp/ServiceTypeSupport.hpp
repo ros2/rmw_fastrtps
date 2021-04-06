@@ -15,9 +15,10 @@
 #ifndef RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_HPP_
 #define RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_HPP_
 
-#include <fastcdr/FastBuffer.h>
-#include <fastcdr/Cdr.h>
 #include <cassert>
+
+#include "fastcdr/FastBuffer.h"
+#include "fastcdr/Cdr.h"
 
 #include "TypeSupport.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"

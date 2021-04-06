@@ -18,9 +18,6 @@
 #include <sstream>
 #include <string>
 
-#include "fastrtps/Domain.h"
-#include "fastrtps/participant/Participant.h"
-
 #include "rcpputils/find_and_replace.hpp"
 
 #include "rmw/error_handling.h"
@@ -111,10 +108,5 @@ _create_type_name(
   RMW_SET_ERROR_MSG("Unknown typesupport identifier");
   return "";
 }
-
-void
-_register_type(
-  eprosima::fastrtps::Participant * participant,
-  rmw_fastrtps_shared_cpp::TypeSupport * typed_typesupport);
 
 #endif  // TYPE_SUPPORT_COMMON_HPP_

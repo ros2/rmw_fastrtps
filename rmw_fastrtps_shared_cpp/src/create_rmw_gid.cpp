@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "fastrtps/rtps/common/Guid.h"
+#include "fastdds/rtps/common/Guid.h"
 
 #include "rmw/types.h"
 

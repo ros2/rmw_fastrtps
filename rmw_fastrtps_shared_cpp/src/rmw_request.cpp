@@ -17,7 +17,7 @@
 #include "fastcdr/Cdr.h"
 #include "fastcdr/FastBuffer.h"
 
-#include "fastrtps/subscriber/Subscriber.h"
+#include "fastdds/rtps/common/WriteParams.h"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -58,7 +58,7 @@ __rmw_send_request(
   data.data = const_cast<void *>(ros_request);
   data.impl = info->request_type_support_impl_;
   wparams.related_sample_identity().writer_guid() = info->reader_guid_;
-  if (info->request_publisher_->write(&data, wparams)) {
+  if (info->request_writer_->write(&data, wparams)) {
     returnedValue = RMW_RET_OK;
     *sequence_id = ((int64_t)wparams.sample_identity().sequence_number().high) << 32 |
       wparams.sample_identity().sequence_number().low;
@@ -94,9 +94,11 @@ __rmw_take_request(
   CustomServiceRequest request = info->listener_->getRequest();
 
   if (request.buffer_ != nullptr) {
+    auto raw_type_support = dynamic_cast<rmw_fastrtps_shared_cpp::TypeSupport *>(
+      info->response_type_support_.get());
     eprosima::fastcdr::Cdr deser(*request.buffer_, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::Cdr::DDS_CDR);
-    if (info->request_type_support_->deserializeROSmessage(
+    if (raw_type_support->deserializeROSmessage(
         deser, ros_request, info->request_type_support_impl_))
     {
       // Get header
@@ -106,8 +108,8 @@ __rmw_take_request(
       request_header->request_id.sequence_number =
         ((int64_t)request.sample_identity_.sequence_number().high) <<
         32 | request.sample_identity_.sequence_number().low;
-      request_header->source_timestamp = request.sample_info_.sourceTimestamp.to_ns();
-      request_header->received_timestamp = request.sample_info_.receptionTimestamp.to_ns();
+      request_header->source_timestamp = request.sample_info_.source_timestamp.to_ns();
+      request_header->received_timestamp = request.sample_info_.source_timestamp.to_ns();
       *taken = true;
     }
 

@@ -16,6 +16,9 @@
 #include <string>
 #include <vector>
 
+#include "fastdds/rtps/common/Property.h"
+#include "fastdds/rtps/attributes/PropertyPolicy.h"
+
 #include "fastrtps/config.h"
 #include "rcutils/filesystem.h"
 #include "rmw/error_handling.h"
@@ -266,7 +269,7 @@ TEST_F(SecurityLoggingTest, test_apply_logging_fails)
   eprosima::fastrtps::rtps::PropertyPolicy policy;
   EXPECT_FALSE(apply_security_logging_configuration(policy));
   EXPECT_TRUE(rmw_error_is_set());
-  EXPECT_THAT(rmw_get_error_string().str, HasSubstr("Please compile Fast-RTPS"));
+  EXPECT_THAT(rmw_get_error_string().str, HasSubstr("Please compile Fast DDS"));
 }
 
 #endif

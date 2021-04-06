@@ -15,7 +15,7 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CREATE_RMW_GID_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CREATE_RMW_GID_HPP_
 
-#include "fastrtps/rtps/common/Guid.h"
+#include "fastdds/rtps/common/Guid.h"
 
 #include "rmw/types.h"
 

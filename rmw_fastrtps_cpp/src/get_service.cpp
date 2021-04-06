@@ -20,8 +20,8 @@
 namespace rmw_fastrtps_cpp
 {
 
-eprosima::fastrtps::Subscriber *
-get_request_subscriber(rmw_service_t * service)
+eprosima::fastdds::dds::DataReader *
+get_request_datareader(rmw_service_t * service)
 {
   if (!service) {
     return nullptr;
@@ -30,11 +30,11 @@ get_request_subscriber(rmw_service_t * service)
     return nullptr;
   }
   auto impl = static_cast<CustomServiceInfo *>(service->data);
-  return impl->request_subscriber_;
+  return impl->request_reader_;
 }
 
-eprosima::fastrtps::Publisher *
-get_response_publisher(rmw_service_t * service)
+eprosima::fastdds::dds::DataWriter *
+get_response_datawriter(rmw_service_t * service)
 {
   if (!service) {
     return nullptr;
@@ -43,7 +43,7 @@ get_response_publisher(rmw_service_t * service)
     return nullptr;
   }
   auto impl = static_cast<CustomServiceInfo *>(service->data);
-  return impl->response_publisher_;
+  return impl->response_writer_;
 }
 
 }  // namespace rmw_fastrtps_cpp
