@@ -146,6 +146,14 @@ __rmw_publish_serialized_message(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_borrow_loaned_message(
+  const char * identifier,
+  const rmw_publisher_t * publisher,
+  const rosidl_message_type_support_t * type_support,
+  void ** ros_message);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_publish_loaned_message(
   const char * identifier,
   const rmw_publisher_t * publisher,
