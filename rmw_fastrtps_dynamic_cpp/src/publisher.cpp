@@ -306,7 +306,7 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
       rmw_publisher_free(rmw_publisher);
     });
 
-  rmw_publisher->can_loan_messages = false;
+  rmw_publisher->can_loan_messages = info->type_support_->is_plain();
   rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_publisher->data = info;
 
