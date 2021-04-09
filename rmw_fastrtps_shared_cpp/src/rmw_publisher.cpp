@@ -162,4 +162,29 @@ __rmw_borrow_loaned_message(
 
   return RMW_RET_OK;
 }
+
+rmw_ret_t
+__rmw_return_loaned_message_from_publisher(
+  const char * identifier,
+  const rmw_publisher_t * publisher,
+  void * loaned_message)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher, publisher->implementation_identifier, identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (!publisher->can_loan_messages) {
+    RMW_SET_ERROR_MSG("Loaning is not supported");
+    return RMW_RET_UNSUPPORTED;
+  }
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(loaned_message, RMW_RET_INVALID_ARGUMENT);
+
+  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
+  if (!info->data_writer_->discard_loan(loaned_message)) {
+    return RMW_RET_ERROR;
+  }
+
+  return RMW_RET_OK;
+}
 }  // namespace rmw_fastrtps_shared_cpp

@@ -179,12 +179,8 @@ rmw_return_loaned_message_from_publisher(
   const rmw_publisher_t * publisher,
   void * loaned_message)
 {
-  (void) publisher;
-  (void) loaned_message;
-
-  RMW_SET_ERROR_MSG(
-    "rmw_return_loaned_message_from_publisher is not implemented for rmw_fastrtps_dynamic_cpp");
-  return RMW_RET_UNSUPPORTED;
+  return rmw_fastrtps_shared_cpp::__rmw_return_loaned_message_from_publisher(
+    eprosima_fastrtps_identifier, publisher, loaned_message);
 }
 
 using BaseTypeSupport = rmw_fastrtps_dynamic_cpp::BaseTypeSupport;

@@ -154,6 +154,13 @@ __rmw_borrow_loaned_message(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_return_loaned_message_from_publisher(
+  const char * identifier,
+  const rmw_publisher_t * publisher,
+  void * loaned_message);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_publish_loaned_message(
   const char * identifier,
   const rmw_publisher_t * publisher,
