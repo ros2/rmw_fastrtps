@@ -332,6 +332,22 @@ __rmw_take_sequence(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_take_loaned_message_internal(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  void ** loaned_message,
+  bool * taken,
+  rmw_message_info_t * message_info);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_return_loaned_message_from_subscription(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  void * loaned_message);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_take_event(
   const char * identifier,
   const rmw_event_t * event_handle,

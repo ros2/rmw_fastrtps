@@ -353,4 +353,48 @@ __rmw_take_serialized_message_with_info(
   return _take_serialized_message(
     identifier, subscription, serialized_message, taken, message_info, allocation);
 }
+
+rmw_ret_t
+__rmw_take_loaned_message_internal(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  void ** loaned_message,
+  bool * taken,
+  rmw_message_info_t * message_info)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(subscription, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription, subscription->implementation_identifier, identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (!subscription->can_loan_messages) {
+    RMW_SET_ERROR_MSG("Loaning is not supported");
+    return RMW_RET_UNSUPPORTED;
+  }
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(loaned_message, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(taken, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_SET_ERROR_MSG("Loaning is not implemented");
+  return RMW_RET_UNSUPPORTED;
+}
+
+rmw_ret_t
+__rmw_return_loaned_message_from_subscription(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  void * loaned_message)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(subscription, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription, subscription->implementation_identifier, identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (!subscription->can_loan_messages) {
+    RMW_SET_ERROR_MSG("Loaning is not supported");
+    return RMW_RET_UNSUPPORTED;
+  }
+  RMW_CHECK_ARGUMENT_FOR_NULL(loaned_message, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_SET_ERROR_MSG("Loaning is not implemented");
+  return RMW_RET_UNSUPPORTED;
+}
 }  // namespace rmw_fastrtps_shared_cpp
