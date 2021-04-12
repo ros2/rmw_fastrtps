@@ -19,6 +19,8 @@
 
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
 
+#include "fastrtps/utils/collections/ResourceLimitedVector.hpp"
+
 #include "fastcdr/Cdr.h"
 #include "fastcdr/FastBuffer.h"
 
@@ -354,6 +356,31 @@ __rmw_take_serialized_message_with_info(
     identifier, subscription, serialized_message, taken, message_info, allocation);
 }
 
+// ----------------- Loans related code ------------------------- //
+
+struct GenericSequence : public eprosima::fastdds::dds::LoanableCollection
+{
+  GenericSequence() = default;
+
+  void resize(size_type new_length) override
+  {
+    // This kind of collection should only be used with loans
+    throw std::bad_alloc();
+  }
+};
+
+struct LoanManager
+{
+  struct Item
+  {
+    GenericSequence data_seq{};
+    eprosima::fastdds::dds::SampleInfoSeq info_seq{};
+  };
+
+  std::mutex mtx;
+  eprosima::fastrtps::ResourceLimitedVector<Item> items RCPPUTILS_TSA_GUARDED_BY(mtx);
+};
+
 rmw_ret_t
 __rmw_take_loaned_message_internal(
   const char * identifier,
@@ -374,8 +401,35 @@ __rmw_take_loaned_message_internal(
   RMW_CHECK_ARGUMENT_FOR_NULL(loaned_message, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_ARGUMENT_FOR_NULL(taken, RMW_RET_INVALID_ARGUMENT);
 
-  RMW_SET_ERROR_MSG("Loaning is not implemented");
-  return RMW_RET_UNSUPPORTED;
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  auto loan_mgr = info->loan_manager_;
+  std::unique_lock<std::mutex> guard(loan_mgr->mtx);
+  auto item = loan_mgr->items.emplace_back();
+  if (nullptr == item) {
+    RMW_SET_ERROR_MSG("Out of resources for loaned message info");
+    return RMW_RET_ERROR;
+  }
+
+  while (ReturnCode_t::RETCODE_OK == info->data_reader_->take(item->data_seq, item->info_seq, 1)) {
+    if (item->info_seq[0].valid_data) {
+      if (nullptr != message_info) {
+        _assign_message_info(identifier, message_info, &item->info_seq[0]);
+      }
+      *loaned_message = item->data_seq.buffer()[0];
+      *taken = true;
+      info->listener_->update_has_data(info->data_reader_);
+      return RMW_RET_OK;
+    }
+
+    // Should return loan before taking again
+    info->data_reader_->return_loan(item->data_seq, item->info_seq);
+  }
+
+  // No data available, return loan information.
+  loan_mgr->items.pop_back();
+  *taken = false;
+  info->listener_->update_has_data(info->data_reader_);
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
@@ -394,7 +448,21 @@ __rmw_return_loaned_message_from_subscription(
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(loaned_message, RMW_RET_INVALID_ARGUMENT);
 
-  RMW_SET_ERROR_MSG("Loaning is not implemented");
-  return RMW_RET_UNSUPPORTED;
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  auto loan_mgr = info->loan_manager_;
+  std::lock_guard<std::mutex> guard(loan_mgr->mtx);
+  for (auto it = loan_mgr->items.begin(); it != loan_mgr->items.end(); ++it) {
+    if (loaned_message == it->data_seq.buffer()[0]) {
+      if (!info->data_reader_->return_loan(it->data_seq, it->info_seq)) {
+        RMW_SET_ERROR_MSG("Error returning loan");
+        return RMW_RET_ERROR;
+      }
+      loan_mgr->items.erase(it);
+      return RMW_RET_OK;
+    }
+  }
+
+  RMW_SET_ERROR_MSG("Trying to return message not loaned by this subscription");
+  return RMW_RET_ERROR;
 }
 }  // namespace rmw_fastrtps_shared_cpp

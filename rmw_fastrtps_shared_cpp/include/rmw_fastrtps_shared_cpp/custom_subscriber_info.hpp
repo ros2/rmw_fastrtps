@@ -17,6 +17,7 @@
 
 #include <atomic>
 #include <condition_variable>
+#include <memory>
 #include <mutex>
 #include <set>
 #include <utility>
@@ -40,6 +41,11 @@
 
 class SubListener;
 
+namespace rmw_fastrtps_shared_cpp
+{
+struct LoanManager;
+}  // namespace rmw_fastrtps_shared_cpp
+
 struct CustomSubscriberInfo : public CustomEventInfo
 {
   virtual ~CustomSubscriberInfo() = default;
@@ -50,6 +56,7 @@ struct CustomSubscriberInfo : public CustomEventInfo
   const void * type_support_impl_{nullptr};
   rmw_gid_t subscription_gid_{};
   const char * typesupport_identifier_{nullptr};
+  std::shared_ptr<rmw_fastrtps_shared_cpp::LoanManager> loan_manager_;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *
