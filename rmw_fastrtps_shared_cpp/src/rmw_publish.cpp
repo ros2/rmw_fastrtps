@@ -115,6 +115,7 @@ __rmw_publish_loaned_message(
   const void * ros_message,
   rmw_publisher_allocation_t * allocation)
 {
+  static_cast<void>(allocation);
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_INVALID_ARGUMENT);
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);

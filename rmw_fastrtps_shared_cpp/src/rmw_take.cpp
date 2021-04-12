@@ -365,7 +365,7 @@ struct GenericSequence : public eprosima::fastdds::dds::LoanableCollection
 {
   GenericSequence() = default;
 
-  void resize(size_type new_length) override
+  void resize(size_type /*new_length*/) override
   {
     // This kind of collection should only be used with loans
     throw std::bad_alloc();
