@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/serialized_message.h"
@@ -27,6 +29,7 @@
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/subscription.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
 
@@ -377,9 +380,27 @@ struct LoanManager
     eprosima::fastdds::dds::SampleInfoSeq info_seq{};
   };
 
+  explicit LoanManager(const eprosima::fastrtps::ResourceLimitedContainerConfig & items_cfg)
+  : items(items_cfg)
+  {
+  }
+
   std::mutex mtx;
   eprosima::fastrtps::ResourceLimitedVector<Item> items RCPPUTILS_TSA_GUARDED_BY(mtx);
 };
+
+void
+__init_subscription_for_loans(
+  rmw_subscription_t * subscription)
+{
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  subscription->can_loan_messages = info->type_support_->is_plain();
+  if (subscription->can_loan_messages) {
+    const auto & qos = info->data_reader_->get_qos();
+    const auto & allocation_qos = qos.reader_resource_limits().outstanding_reads_allocation;
+    info->loan_manager_ = std::make_shared<LoanManager>(allocation_qos);
+  }
+}
 
 rmw_ret_t
 __rmw_take_loaned_message_internal(
