@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.2.5 (2021-04-14)
+------------------
+* Update quality declaration links (re: `ros2/docs.ros2.org#52 <https://github.com/ros2/docs.ros2.org/issues/52>`_) (`#521 <https://github.com/eProsima/rmw_fastrtps/issues/521>`_)
+* Use interface whitelist for localhost only (`#476 <https://github.com/eProsima/rmw_fastrtps/issues/476>`_)
+* Avoid unused identifier variable warnings (`#422 <https://github.com/eProsima/rmw_fastrtps/issues/422>`_) (`#494 <https://github.com/eProsima/rmw_fastrtps/issues/494>`_)
+* Contributors: Jacob Perron, Michel Hidalgo, Miguel Company, Simon Honigmann, Tomoya Fujita
+
 1.2.4 (2020-12-09)
 ------------------
 * Make sure to lock the mutex protecting client_endpoints\_ (`#492 <https://github.com/ros2/rmw_fastrtps/issues/492>`_) (`#493 <https://github.com/ros2/rmw_fastrtps/issues/493>`_)
