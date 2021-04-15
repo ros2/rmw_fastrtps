@@ -153,7 +153,8 @@ __rmw_publisher_wait_for_all_acked(
       static_cast<uint32_t>(clamped_time.nsec));
   }
 
-  if (info->publisher_->wait_for_all_acked(timeout)) {
+  ReturnCode_t ret = info->data_writer_->wait_for_acknowledgments(timeout);
+  if (ret == ReturnCode_t::RETCODE_OK) {
     return RMW_RET_OK;
   } else {
     return RMW_RET_TIMEOUT;
