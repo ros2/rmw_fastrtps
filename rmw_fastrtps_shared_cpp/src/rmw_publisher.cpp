@@ -32,7 +32,7 @@
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
-#include "rmw_dds_common/time_utils.hpp"
+#include "time_utils.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -140,18 +140,7 @@ __rmw_publisher_wait_for_all_acked(
     return RMW_RET_ERROR;
   }
 
-  eprosima::fastrtps::Duration_t timeout;
-
-  // TODO(Barry): While rmw_time_to_fastrtps() is changed to the public function, replace below
-  // codes.
-  if (rmw_time_equal(wait_timeout, RMW_DURATION_INFINITE)) {
-    timeout = eprosima::fastrtps::rtps::c_RTPSTimeInfinite.to_duration_t();
-  } else {
-    rmw_time_t clamped_time = rmw_dds_common::clamp_rmw_time_to_dds_time(wait_timeout);
-    timeout = eprosima::fastrtps::Duration_t(
-      static_cast<int32_t>(clamped_time.sec),
-      static_cast<uint32_t>(clamped_time.nsec));
-  }
+  eprosima::fastrtps::Duration_t timeout = rmw_time_to_fastrtps(wait_timeout);
 
   ReturnCode_t ret = info->data_writer_->wait_for_acknowledgments(timeout);
   if (ret == ReturnCode_t::RETCODE_OK) {

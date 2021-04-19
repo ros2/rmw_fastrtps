@@ -19,24 +19,10 @@
 #include "fastdds/dds/publisher/qos/DataWriterQos.hpp"
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
 #include "fastdds/dds/topic/qos/TopicQos.hpp"
-#include "fastdds/rtps/common/Time_t.h"
 
 #include "rmw/error_handling.h"
-#include "rmw_dds_common/time_utils.hpp"
 
-static
-eprosima::fastrtps::Duration_t
-rmw_time_to_fastrtps(const rmw_time_t & time)
-{
-  if (rmw_time_equal(time, RMW_DURATION_INFINITE)) {
-    return eprosima::fastrtps::rtps::c_RTPSTimeInfinite.to_duration_t();
-  }
-
-  rmw_time_t clamped_time = rmw_dds_common::clamp_rmw_time_to_dds_time(time);
-  return eprosima::fastrtps::Duration_t(
-    static_cast<int32_t>(clamped_time.sec),
-    static_cast<uint32_t>(clamped_time.nsec));
-}
+#include "time_utils.hpp"
 
 static
 bool
