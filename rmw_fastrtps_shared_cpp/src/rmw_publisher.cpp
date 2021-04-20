@@ -135,10 +135,6 @@ __rmw_publisher_wait_for_all_acked(
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  if (nullptr == info) {
-    RMW_SET_ERROR_MSG("publisher internal data is invalid");
-    return RMW_RET_ERROR;
-  }
 
   eprosima::fastrtps::Duration_t timeout = rmw_time_to_fastrtps(wait_timeout);
 
