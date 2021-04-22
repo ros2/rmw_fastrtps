@@ -248,6 +248,8 @@ rmw_fastrtps_cpp::create_publisher(
 
     writer_qos.endpoint().history_memory_policy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+    writer_qos.data_sharing().off();
   }
 
   // Get QoS from RMW

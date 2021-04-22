@@ -310,6 +310,8 @@ rmw_create_service(
   if (!participant_info->leave_middleware_default_qos) {
     reader_qos.endpoint().history_memory_policy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+    reader_qos.data_sharing().off();
   }
 
   if (!get_datareader_qos(*qos_policies, reader_qos)) {
@@ -362,6 +364,8 @@ rmw_create_service(
 
     writer_qos.endpoint().history_memory_policy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+    writer_qos.data_sharing().off();
   }
 
   if (!get_datawriter_qos(*qos_policies, writer_qos)) {
