@@ -168,7 +168,7 @@ __rmw_service_set_on_new_request_callback(
   const void * user_data)
 {
   auto custom_service_info = static_cast<CustomServiceInfo *>(rmw_service->data);
-  custom_service_info->listener_->serviceSetExecutorCallback(
+  custom_service_info->listener_->set_on_new_request_callback(
     user_data,
     callback);
   return RMW_RET_OK;

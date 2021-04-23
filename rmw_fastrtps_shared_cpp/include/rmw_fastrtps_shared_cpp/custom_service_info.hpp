@@ -249,11 +249,10 @@ public:
           list_has_data_.store(true);
         }
 
-        // Add the service to the event queue
-        std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
+        std::unique_lock<std::mutex> lock_mutex(on_new_request_m_);
 
-        if(listener_callback_) {
-          listener_callback_(user_data_, 1);
+        if(on_new_request_cb_) {
+          on_new_request_cb_(user_data_, 1);
         } else {
           unread_count_++;
         }
@@ -310,11 +309,11 @@ public:
   // Provide handlers to perform an action when a
   // new event from this listener has ocurred
   void
-  serviceSetExecutorCallback(
+  set_on_new_request_callback(
     const void * user_data,
     rmw_event_callback_t callback)
   {
-    std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
+    std::unique_lock<std::mutex> lock_mutex(on_new_request_m_);
 
     if (callback) {
       // Push events arrived before setting the the executor callback
@@ -323,10 +322,10 @@ public:
         unread_count_ = 0;
       }
       user_data_ = user_data;
-      listener_callback_ = callback;
+      on_new_request_cb_ = callback;
     } else {
       user_data_ = nullptr;
-      listener_callback_ = nullptr;
+      on_new_request_cb_ = nullptr;
     }
   }
 
@@ -338,9 +337,9 @@ private:
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
-  rmw_event_callback_t listener_callback_{nullptr};
+  rmw_event_callback_t on_new_request_cb_{nullptr};
   const void * user_data_{nullptr};
-  std::mutex listener_callback_mutex_;
+  std::mutex on_new_request_m_;
   uint64_t unread_count_ = 0;
 };
 

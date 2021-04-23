@@ -62,14 +62,14 @@ public:
 
   // Provide handlers to perform an action when a
   // new event from this listener has ocurred
-  virtual void eventSetExecutorCallback(
+  virtual void set_on_new_event_callback(
     const void * user_data,
     rmw_event_callback_t callback) = 0;
 
-  rmw_event_callback_t listener_callback_{nullptr};
+  rmw_event_callback_t on_new_event_cb_{nullptr};
   const void * user_data_{nullptr};
   uint64_t unread_events_count_ = 0;
-  std::mutex listener_callback_mutex_;
+  std::mutex on_new_event_m_;
 };
 
 class EventListenerInterface::ConditionalScopedLock

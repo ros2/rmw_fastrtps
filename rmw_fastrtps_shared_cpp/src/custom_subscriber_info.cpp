@@ -43,11 +43,10 @@ SubListener::on_requested_deadline_missed(
 
   deadline_changes_.store(true, std::memory_order_relaxed);
 
-  // Callback: add the subscription event to the event queue
-  std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
+  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
-  if(listener_callback_) {
-    listener_callback_(user_data_, 1);
+  if(on_new_event_cb_) {
+    on_new_event_cb_(user_data_, 1);
   } else {
     unread_events_count_++;
   }
@@ -72,11 +71,10 @@ void SubListener::on_liveliness_changed(
 
   liveliness_changes_.store(true, std::memory_order_relaxed);
 
-  // Callback: add the subscription event to the event queue
-  std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
+  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
-  if(listener_callback_) {
-    listener_callback_(user_data_, 1);
+  if(on_new_event_cb_) {
+    on_new_event_cb_(user_data_, 1);
   } else {
     unread_events_count_++;
   }
@@ -96,11 +94,11 @@ bool SubListener::hasEvent(rmw_event_type_t event_type) const
   return false;
 }
 
-void SubListener::eventSetExecutorCallback(
+void SubListener::set_on_new_event_callback(
   const void * user_data,
   rmw_event_callback_t callback)
 {
-  std::unique_lock<std::mutex> lock_mutex(listener_callback_mutex_);
+  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   if (callback) {
     // Push events arrived before setting the executor's callback
@@ -109,10 +107,10 @@ void SubListener::eventSetExecutorCallback(
       unread_events_count_ = 0;
     }
     user_data_ = user_data;
-    listener_callback_ = callback;
+    on_new_event_cb_ = callback;
   } else {
     user_data_ = nullptr;
-    listener_callback_ = nullptr;
+    on_new_event_cb_ = nullptr;
     return;
   }
 }

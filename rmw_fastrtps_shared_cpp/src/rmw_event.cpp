@@ -75,7 +75,7 @@ __rmw_event_set_callback(
   const void * user_data)
 {
   auto custom_event_info = static_cast<CustomEventInfo *>(rmw_event->data);
-  custom_event_info->getListener()->eventSetExecutorCallback(
+  custom_event_info->getListener()->set_on_new_event_callback(
     user_data,
     callback);
   return RMW_RET_OK;

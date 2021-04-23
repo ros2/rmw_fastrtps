@@ -156,7 +156,7 @@ __rmw_client_set_on_new_response_callback(
   const void * user_data)
 {
   auto custom_client_info = static_cast<CustomClientInfo *>(rmw_client->data);
-  custom_client_info->listener_->clientSetExecutorCallback(
+  custom_client_info->listener_->set_on_new_response_callback(
     user_data,
     callback);
   return RMW_RET_OK;
