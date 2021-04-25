@@ -239,7 +239,7 @@ __rmw_wait(
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
       void * data = guard_conditions->guard_conditions[i];
       auto guard_condition = static_cast<GuardCondition *>(data);
-      guard_condition->detachCondition();
+      guard_condition->detachCondition(conditionMutex, conditionVariable);
       if (!guard_condition->getHasTriggered()) {
         guard_conditions->guard_conditions[i] = 0;
       }
