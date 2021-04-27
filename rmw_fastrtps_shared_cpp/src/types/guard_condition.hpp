@@ -20,9 +20,9 @@
 #include <atomic>
 #include <cassert>
 #include <condition_variable>
-#include <list>
 #include <mutex>
 #include <utility>
+#include <vector>
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
@@ -82,7 +82,7 @@ public:
 private:
   std::mutex internalMutex_;
   std::atomic_bool hasTriggered_;
-  std::list<std::pair<std::mutex *, std::condition_variable *>> conditions_
+  std::vector<std::pair<std::mutex *, std::condition_variable *>> conditions_
     RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 };
 
