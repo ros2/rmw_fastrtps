@@ -24,8 +24,8 @@
 
 #include "fastrtps/config.h"
 
+#include "rcutils/env.h"
 #include "rcutils/filesystem.h"
-#include "rcutils/get_env.h"
 
 #include "rmw/error_handling.h"
 #include "rmw/qos_profiles.h"
