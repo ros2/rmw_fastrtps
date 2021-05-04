@@ -32,8 +32,8 @@
 #include "fastdds/rtps/transport/shared_mem/SharedMemTransportDescriptor.h"
 
 #include "rcpputils/scope_exit.hpp"
+#include "rcutils/env.h"
 #include "rcutils/filesystem.h"
-#include "rcutils/get_env.h"
 
 #include "rmw/allocators.h"
 
