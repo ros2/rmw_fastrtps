@@ -118,6 +118,7 @@ ament_export_targets(rmw_fastrtps_shared_cpp)
 ament_export_dependencies(rcpputils)
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rmw)
+ament_export_dependencies(rmw_dds_common)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
