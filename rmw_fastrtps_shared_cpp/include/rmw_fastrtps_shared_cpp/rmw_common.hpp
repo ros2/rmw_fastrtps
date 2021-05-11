@@ -146,6 +146,29 @@ __rmw_publish_serialized_message(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_borrow_loaned_message(
+  const char * identifier,
+  const rmw_publisher_t * publisher,
+  const rosidl_message_type_support_t * type_support,
+  void ** ros_message);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_return_loaned_message_from_publisher(
+  const char * identifier,
+  const rmw_publisher_t * publisher,
+  void * loaned_message);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_publish_loaned_message(
+  const char * identifier,
+  const rmw_publisher_t * publisher,
+  const void * ros_message,
+  rmw_publisher_allocation_t * allocation);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_publisher_assert_liveliness(
   const char * identifier,
   const rmw_publisher_t * publisher);
@@ -306,6 +329,22 @@ __rmw_take_sequence(
   rmw_message_info_sequence_t * message_info_sequence,
   size_t * taken,
   rmw_subscription_allocation_t * allocation);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_take_loaned_message_internal(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  void ** loaned_message,
+  bool * taken,
+  rmw_message_info_t * message_info);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_return_loaned_message_from_subscription(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  void * loaned_message);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t

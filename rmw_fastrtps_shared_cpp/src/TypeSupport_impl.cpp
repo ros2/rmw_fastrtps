@@ -30,6 +30,7 @@ TypeSupport::TypeSupport()
 {
   m_isGetKeyDefined = false;
   max_size_bound_ = false;
+  is_plain_ = false;
 }
 
 void TypeSupport::deleteData(void * data)
