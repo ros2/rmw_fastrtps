@@ -108,4 +108,35 @@ __rmw_publish_serialized_message(
 
   return RMW_RET_OK;
 }
+rmw_ret_t
+__rmw_publish_loaned_message(
+  const char * identifier,
+  const rmw_publisher_t * publisher,
+  const void * ros_message,
+  rmw_publisher_allocation_t * allocation)
+{
+  static_cast<void>(allocation);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_INVALID_ARGUMENT);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher, publisher->implementation_identifier, identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  if (!publisher->can_loan_messages) {
+    RMW_SET_ERROR_MSG("Loaning is not supported");
+    return RMW_RET_UNSUPPORTED;
+  }
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(ros_message, RMW_RET_INVALID_ARGUMENT);
+
+  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
+  if (!info->data_writer_->write(const_cast<void *>(ros_message))) {
+    RMW_SET_ERROR_MSG("cannot publish data");
+    return RMW_RET_ERROR;
+  }
+
+  return RMW_RET_OK;
+}
 }  // namespace rmw_fastrtps_shared_cpp

@@ -40,6 +40,7 @@
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/subscription.hpp"
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 #include "fastrtps/participant/Participant.h"
@@ -256,6 +257,8 @@ create_subscription(
   if (!participant_info->leave_middleware_default_qos) {
     reader_qos.endpoint().history_memory_policy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+    reader_qos.data_sharing().off();
   }
 
   if (!get_datareader_qos(*qos_policies, reader_qos)) {
@@ -338,7 +341,7 @@ create_subscription(
   memcpy(const_cast<char *>(rmw_subscription->topic_name), topic_name, strlen(topic_name) + 1);
 
   rmw_subscription->options = *subscription_options;
-  rmw_subscription->can_loan_messages = false;
+  rmw_fastrtps_shared_cpp::__init_subscription_for_loans(rmw_subscription);
 
   topic.should_be_deleted = false;
   cleanup_rmw_subscription.cancel();

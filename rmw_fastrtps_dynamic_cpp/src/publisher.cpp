@@ -49,6 +49,7 @@
 #include "type_support_common.hpp"
 #include "type_support_registry.hpp"
 
+using DataSharingKind = eprosima::fastdds::dds::DataSharingKind;
 using TypeSupportProxy = rmw_fastrtps_dynamic_cpp::TypeSupportProxy;
 
 rmw_publisher_t *
@@ -263,6 +264,8 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
 
     writer_qos.endpoint().history_memory_policy =
       eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+    writer_qos.data_sharing().off();
   }
 
   // Get QoS from RMW
@@ -306,7 +309,8 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
       rmw_publisher_free(rmw_publisher);
     });
 
-  rmw_publisher->can_loan_messages = false;
+  bool has_data_sharing = DataSharingKind::OFF != writer_qos.data_sharing().kind();
+  rmw_publisher->can_loan_messages = has_data_sharing && info->type_support_->is_plain();
   rmw_publisher->implementation_identifier = eprosima_fastrtps_identifier;
   rmw_publisher->data = info;
 
