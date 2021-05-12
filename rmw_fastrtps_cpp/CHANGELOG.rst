@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.1.0 (2021-05-12)
+------------------
 * Loan messages implementation (`#523 <https://github.com/ros2/rmw_fastrtps/issues/523>`_)
   * Added is_plain\_ attribute to base TypeSupport.
   * Added new methods to base TypeSupport.
