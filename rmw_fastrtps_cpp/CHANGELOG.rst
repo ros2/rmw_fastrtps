@@ -2,6 +2,18 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Loan messages implementation (`#523 <https://github.com/ros2/rmw_fastrtps/issues/523>`_)
+  * Added is_plain\_ attribute to base TypeSupport.
+  * Added new methods to base TypeSupport.
+  * Implementation of rmw_borrow_loaned_message.
+  * Implementation of rmw_return_loaned_message_from_publisher.
+  * Enable loan messages on publishers of plain types.
+  * Implementation for taking loaned messages.
+  * Enable loan messages on subscriptions of plain types.
+* Contributors: Miguel Company
+
 5.0.0 (2021-04-06)
 ------------------
 * Refactor to use DDS standard API (`#518 <https://github.com/ros2/rmw_fastrtps/issues/518>`_)
