@@ -105,11 +105,13 @@ bool fill_entity_qos_from_profile(
   }
 
   if (!is_rmw_duration_unspecified(qos_policies.lifespan)) {
-    entity_qos.lifespan().duration = rmw_time_to_fastrtps(qos_policies.lifespan);
+    entity_qos.lifespan().duration =
+      rmw_fastrtps_shared_cpp::rmw_time_to_fastrtps(qos_policies.lifespan);
   }
 
   if (!is_rmw_duration_unspecified(qos_policies.deadline)) {
-    entity_qos.deadline().period = rmw_time_to_fastrtps(qos_policies.deadline);
+    entity_qos.deadline().period =
+      rmw_fastrtps_shared_cpp::rmw_time_to_fastrtps(qos_policies.deadline);
   }
 
   switch (qos_policies.liveliness) {
@@ -127,7 +129,7 @@ bool fill_entity_qos_from_profile(
   }
   if (!is_rmw_duration_unspecified(qos_policies.liveliness_lease_duration)) {
     entity_qos.liveliness().lease_duration =
-      rmw_time_to_fastrtps(qos_policies.liveliness_lease_duration);
+      rmw_fastrtps_shared_cpp::rmw_time_to_fastrtps(qos_policies.liveliness_lease_duration);
 
     // Docs suggest setting no higher than 0.7 * lease_duration, choosing 2/3 to give safe buffer.
     // See doc at https://github.com/eProsima/Fast-RTPS/blob/

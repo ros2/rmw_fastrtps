@@ -16,6 +16,9 @@
 
 #include "time_utils.hpp"
 
+namespace rmw_fastrtps_shared_cpp
+{
+
 eprosima::fastrtps::Duration_t
 rmw_time_to_fastrtps(const rmw_time_t & time)
 {
@@ -28,3 +31,5 @@ rmw_time_to_fastrtps(const rmw_time_t & time)
     static_cast<int32_t>(clamped_time.sec),
     static_cast<uint32_t>(clamped_time.nsec));
 }
+
+}  // namespace rmw_fastrtps_shared_cpp

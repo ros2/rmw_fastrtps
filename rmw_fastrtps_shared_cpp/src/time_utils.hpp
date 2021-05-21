@@ -17,6 +17,11 @@
 
 #include "fastdds/rtps/common/Time_t.h"
 
+namespace rmw_fastrtps_shared_cpp
+{
+
 eprosima::fastrtps::Duration_t rmw_time_to_fastrtps(const rmw_time_t & time);
+
+}  // namespace rmw_fastrtps_shared_cpp
 
 #endif  // TIME_UTILS_HPP_

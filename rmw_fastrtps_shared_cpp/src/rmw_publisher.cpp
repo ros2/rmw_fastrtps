@@ -139,11 +139,11 @@ __rmw_publisher_wait_for_all_acked(
   eprosima::fastrtps::Duration_t timeout = rmw_time_to_fastrtps(wait_timeout);
 
   ReturnCode_t ret = info->data_writer_->wait_for_acknowledgments(timeout);
-  if (ret == ReturnCode_t::RETCODE_OK) {
+  if (ReturnCode_t::RETCODE_OK == ret) {
     return RMW_RET_OK;
-  } else {
-    return RMW_RET_TIMEOUT;
   }
+
+  return RMW_RET_TIMEOUT;
 }
 
 rmw_ret_t
