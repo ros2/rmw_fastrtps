@@ -83,6 +83,15 @@ _take(
   data.data = ros_message;
   data.impl = info->type_support_impl_;
   if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
+    if (subscription->options.ignore_local_publications) {
+      auto sample_writer_guid =
+        eprosima::fastrtps::rtps::iHandle2GUID(sinfo.publication_handle);
+
+      if (sample_writer_guid.guidPrefix == info->data_reader_->guid().guidPrefix) {
+        // This is a local publication. Ignore it
+        return RMW_RET_OK;
+      }
+    }
     // Update hasData from listener
     info->listener_->update_has_data(info->data_reader_);
 
