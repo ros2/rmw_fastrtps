@@ -75,6 +75,16 @@ _take(
   data.data = ros_message;
   data.impl = info->type_support_impl_;
   if (info->subscriber_->takeNextData(&data, &sinfo)) {
+
+    if (subscription->options.ignore_local_publications) {
+      auto sample_writer_guid = sinfo.sample_identity.writer_guid();
+
+      if (sample_writer_guid.guidPrefix == info->subscriber_->getGuid().guidPrefix) {
+        // This is a local publication. Ignore it
+        return RMW_RET_OK;
+      }
+    }
+
     info->listener_->data_taken(info->subscriber_);
 
     if (eprosima::fastrtps::rtps::ALIVE == sinfo.sampleKind) {
