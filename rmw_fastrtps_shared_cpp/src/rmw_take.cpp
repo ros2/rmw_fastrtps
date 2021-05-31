@@ -75,7 +75,6 @@ _take(
   data.data = ros_message;
   data.impl = info->type_support_impl_;
   if (info->subscriber_->takeNextData(&data, &sinfo)) {
-
     if (subscription->options.ignore_local_publications) {
       auto sample_writer_guid = sinfo.sample_identity.writer_guid();
 
