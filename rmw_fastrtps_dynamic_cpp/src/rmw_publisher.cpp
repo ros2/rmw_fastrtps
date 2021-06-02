@@ -148,6 +148,13 @@ rmw_publisher_assert_liveliness(const rmw_publisher_t * publisher)
 }
 
 rmw_ret_t
+rmw_publisher_wait_for_all_acked(const rmw_publisher_t * publisher, rmw_time_t wait_timeout)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_publisher_wait_for_all_acked(
+    eprosima_fastrtps_identifier, publisher, wait_timeout);
+}
+
+rmw_ret_t
 rmw_publisher_get_actual_qos(
   const rmw_publisher_t * publisher,
   rmw_qos_profile_t * qos)

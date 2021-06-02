@@ -175,6 +175,13 @@ __rmw_publisher_assert_liveliness(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_publisher_wait_for_all_acked(
+  const char * identifier,
+  const rmw_publisher_t * publisher,
+  rmw_time_t wait_timeout);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_destroy_publisher(
   const char * identifier,
   const rmw_node_t * node,
