@@ -101,7 +101,7 @@ Unit, integration, and system tests higher up in the stack, such as those found 
 
 ### Coverage [4.iii]
 
-`rmw_fastrtps_cpp` follows the recommendations for ROS Core packages in the [ROS 2 Developer Guide](https://index.ros.org/doc/ros2/Contributing/Developer-Guide/#coverage), and opts to use branch coverage instead of line coverage.
+`rmw_fastrtps_cpp` follows the recommendations for ROS Core packages in the [ROS 2 Developer Guide](https://docs.ros.org/en/rolling/Contributing/Developer-Guide.html#code-coverage), and opts to use branch coverage instead of line coverage.
 
 This includes:
 
