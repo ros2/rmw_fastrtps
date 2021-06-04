@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add rmw_publisher_wait_for_all_acked support. (`#519 <https://github.com/ros2/rmw_fastrtps/issues/519>`_)
+* Contributors: Barry Xu
+
 5.1.0 (2021-05-12)
 ------------------
 * Loan messages implementation (`#523 <https://github.com/ros2/rmw_fastrtps/issues/523>`_)
