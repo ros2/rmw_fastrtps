@@ -903,7 +903,7 @@ template<typename MembersType>
 size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
   const void * ros_message, const void * impl) const
 {
-  if (max_size_bound_) {
+  if (is_plain_) {
     return m_typeSize;
   }
 
