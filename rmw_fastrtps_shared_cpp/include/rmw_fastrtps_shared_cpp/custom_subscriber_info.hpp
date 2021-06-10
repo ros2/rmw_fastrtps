@@ -224,7 +224,7 @@ private:
   rmw_event_callback_t on_new_message_cb_{nullptr};
   std::mutex on_new_message_m_;
   size_t qos_depth_;
-  uint64_t new_data_unread_count_ = 0;
+  size_t new_data_unread_count_ = 0;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
