@@ -75,15 +75,29 @@ _take(
   data.is_cdr_buffer = false;
   data.data = ros_message;
   data.impl = info->type_support_impl_;
-  if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
-    // Update hasData from listener
-    info->listener_->update_has_data(info->data_reader_);
 
-    if (sinfo.valid_data) {
-      if (message_info) {
-        _assign_message_info(identifier, message_info, &sinfo);
+  while (0 < info->data_reader_->get_unread_count()) {
+    if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
+      // Update hasData from listener
+      info->listener_->update_has_data(info->data_reader_);
+
+      if (subscription->options.ignore_local_publications) {
+        auto sample_writer_guid =
+          eprosima::fastrtps::rtps::iHandle2GUID(sinfo.publication_handle);
+
+        if (sample_writer_guid.guidPrefix == info->data_reader_->guid().guidPrefix) {
+          // This is a local publication. Ignore it
+          continue;
+        }
       }
-      *taken = true;
+
+      if (sinfo.valid_data) {
+        if (message_info) {
+          _assign_message_info(identifier, message_info, &sinfo);
+        }
+        *taken = true;
+        break;
+      }
     }
   }
 
