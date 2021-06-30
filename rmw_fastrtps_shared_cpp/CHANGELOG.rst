@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use the new rmw_dds_common::get_security_files (`#544 <https://github.com/ros2/rmw_fastrtps/issues/544>`_)
+* Support for SubscriptionOptions::ignore_local_publications (`#536 <https://github.com/ros2/rmw_fastrtps/issues/536>`_)
+* Change links from index.ros.org -> docs.ros.org (`#539 <https://github.com/ros2/rmw_fastrtps/issues/539>`_)
+* Contributors: Chris Lalancette, Jose Antonio Moral
+
 5.2.0 (2021-06-04)
 ------------------
 * Add rmw_publisher_wait_for_all_acked support. (`#519 <https://github.com/ros2/rmw_fastrtps/issues/519>`_)
