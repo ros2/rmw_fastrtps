@@ -258,6 +258,11 @@ rmw_fastrtps_shared_cpp::create_participant(
         "dds.sec.access.builtin.Access-Permissions.permissions",
         security_files_paths["PERMISSIONS"]);
 
+      if (security_files_paths.count("CRL") > 0) {
+        property_policy.properties().emplace_back(
+          "dds.sec.auth.builtin.PKI-DH.identity_crl", security_files_paths["CRL"]);
+      }
+
       // Configure security logging
       if (!apply_security_logging_configuration(property_policy)) {
         return nullptr;
