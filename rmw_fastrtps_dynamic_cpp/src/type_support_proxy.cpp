@@ -21,8 +21,7 @@ TypeSupportProxy::TypeSupportProxy(rmw_fastrtps_shared_cpp::TypeSupport * inner_
 {
   setName(inner_type->getName());
   m_typeSize = inner_type->m_typeSize;
-  is_plain_ = inner_type->is_plain();
-  max_size_bound_ = inner_type->is_bounded();
+  max_size_bound_ = inner_type->is_plain();
 }
 
 size_t TypeSupportProxy::getEstimatedSerializedSize(

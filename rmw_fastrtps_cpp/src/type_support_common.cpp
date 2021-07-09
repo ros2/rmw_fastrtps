@@ -27,22 +27,15 @@ TypeSupport::TypeSupport()
 {
   m_isGetKeyDefined = false;
   max_size_bound_ = false;
-  is_plain_ = false;
 }
 
 void TypeSupport::set_members(const message_type_support_callbacks_t * members)
 {
   members_ = members;
 
-#ifdef ROSIDL_TYPESUPPORT_FASTRTPS_HAS_PLAIN_TYPES
-  char bounds_info;
-  auto data_size = static_cast<uint32_t>(members->max_serialized_size(bounds_info));
-  max_size_bound_ = 0 != (bounds_info & ROSIDL_TYPESUPPORT_FASTRTPS_BOUNDED_TYPE);
-  is_plain_ = bounds_info == ROSIDL_TYPESUPPORT_FASTRTPS_PLAIN_TYPE;
-#else
+  // Fully bound by default
   max_size_bound_ = true;
   auto data_size = static_cast<uint32_t>(members->max_serialized_size(max_size_bound_));
-#endif
 
   // A fully bound message of size 0 is an empty message
   if (max_size_bound_ && (data_size == 0) ) {

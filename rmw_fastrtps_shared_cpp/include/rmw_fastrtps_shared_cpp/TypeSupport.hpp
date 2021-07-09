@@ -92,7 +92,7 @@ public:
   override
 #endif
   {
-    return is_plain_;
+    return max_size_bound_;
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -103,7 +103,6 @@ protected:
   TypeSupport();
 
   bool max_size_bound_;
-  bool is_plain_;
 };
 
 }  // namespace rmw_fastrtps_shared_cpp

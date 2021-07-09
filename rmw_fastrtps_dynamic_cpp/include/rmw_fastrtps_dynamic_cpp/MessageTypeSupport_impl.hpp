@@ -50,9 +50,8 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(
   ss << "dds_::" << message_name << "_";
   this->setName(ss.str().c_str());
 
-  // Fully bound and plain by default
+  // Fully bound by default
   this->max_size_bound_ = true;
-  this->is_plain_ = true;
   // Encapsulation size
   this->m_typeSize = 4;
   if (this->members_->member_count_ != 0) {
