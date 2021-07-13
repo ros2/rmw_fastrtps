@@ -431,7 +431,7 @@ __rmw_take_loaned_message_internal(
   auto item = loan_mgr->items.emplace_back();
   if (nullptr == item) {
     RMW_SET_ERROR_MSG("Out of resources for loaned message info");
-    return RMW_RET_ERROR;
+    return RMW_RET_BAD_ALLOC;
   }
 
   while (ReturnCode_t::RETCODE_OK == info->data_reader_->take(item->data_seq, item->info_seq, 1)) {
