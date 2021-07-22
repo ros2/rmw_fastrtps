@@ -58,6 +58,7 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
   } else {
     this->m_typeSize++;
   }
+  this->m_typeSize = (this->m_typeSize + 3) & ~3;
 }
 
 template<typename ServiceMembersType, typename MessageMembersType>
@@ -88,6 +89,7 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
   } else {
     this->m_typeSize++;
   }
+  this->m_typeSize = (this->m_typeSize + 3) & ~3;
 }
 
 }  // namespace rmw_fastrtps_dynamic_cpp
