@@ -40,12 +40,13 @@ void TypeSupport::set_members(const message_type_support_callbacks_t * members)
   max_size_bound_ = 0 != (bounds_info & ROSIDL_TYPESUPPORT_FASTRTPS_BOUNDED_TYPE);
   is_plain_ = bounds_info == ROSIDL_TYPESUPPORT_FASTRTPS_PLAIN_TYPE;
 #else
-  max_size_bound_ = true;
-  auto data_size = static_cast<uint32_t>(members->max_serialized_size(max_size_bound_));
+  is_plain_ = true;
+  auto data_size = static_cast<uint32_t>(members->max_serialized_size(is_plain_));
+  max_size_bound_ = is_plain_;
 #endif
 
-  // A fully bound message of size 0 is an empty message
-  if (max_size_bound_ && (data_size == 0) ) {
+  // A plain message of size 0 is an empty message
+  if (is_plain_ && (data_size == 0) ) {
     has_data_ = false;
     ++data_size;  // Dummy byte
   } else {
@@ -60,7 +61,7 @@ void TypeSupport::set_members(const message_type_support_callbacks_t * members)
 
 size_t TypeSupport::getEstimatedSerializedSize(const void * ros_message, const void * impl) const
 {
-  if (max_size_bound_) {
+  if (is_plain_) {
     return m_typeSize;
   }
 
