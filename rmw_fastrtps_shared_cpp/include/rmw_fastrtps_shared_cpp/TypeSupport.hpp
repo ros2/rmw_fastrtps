@@ -78,6 +78,24 @@ public:
   void deleteData(void * data) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  inline bool is_bounded() const
+#ifdef TOPIC_DATA_TYPE_API_HAS_IS_BOUNDED
+  override
+#endif
+  {
+    return max_size_bound_;
+  }
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  inline bool is_plain() const
+#ifdef TOPIC_DATA_TYPE_API_HAS_IS_PLAIN
+  override
+#endif
+  {
+    return max_size_bound_;
+  }
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   virtual ~TypeSupport() {}
 
 protected:

@@ -47,6 +47,8 @@ void TypeSupport::set_members(const message_type_support_callbacks_t * members)
 
   // Total size is encapsulation size + data size
   m_typeSize = 4 + data_size;
+  // Account for RTPS submessage alignment
+  m_typeSize = (m_typeSize + 3) & ~3;
 }
 
 size_t TypeSupport::getEstimatedSerializedSize(const void * ros_message, const void * impl) const

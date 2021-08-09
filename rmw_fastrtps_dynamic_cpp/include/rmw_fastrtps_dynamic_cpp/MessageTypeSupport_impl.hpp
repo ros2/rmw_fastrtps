@@ -59,6 +59,8 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(
   } else {
     this->m_typeSize++;
   }
+  // Account for RTPS submessage alignment
+  this->m_typeSize = (this->m_typeSize + 3) & ~3;
 }
 
 }  // namespace rmw_fastrtps_dynamic_cpp
