@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Correctly recalculate serialized size on bounded sequences. (`#540 <https://github.com/ros2/rmw_fastrtps/issues/540>`_)
+* Fix type size alignment. (`#550 <https://github.com/ros2/rmw_fastrtps/issues/550>`_)
+* Contributors: Miguel Company
+
 5.2.1 (2021-06-30)
 ------------------
 * Change links from index.ros.org -> docs.ros.org (`#539 <https://github.com/ros2/rmw_fastrtps/issues/539>`_)

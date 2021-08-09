@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Pass the CRL down to Fast-DDS if available. (`#546 <https://github.com/ros2/rmw_fastrtps/issues/546>`_)
+* Contributors: Chris Lalancette
+
 5.2.1 (2021-06-30)
 ------------------
 * Use the new rmw_dds_common::get_security_files (`#544 <https://github.com/ros2/rmw_fastrtps/issues/544>`_)
