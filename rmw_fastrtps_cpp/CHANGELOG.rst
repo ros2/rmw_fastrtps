@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [Galactic] Loan messages implementation (`#547 <https://github.com/ros2/rmw_fastrtps/issues/547>`_)
+* Contributors: Miguel Company
+
 5.0.0 (2021-04-06)
 ------------------
 * Refactor to use DDS standard API (`#518 <https://github.com/ros2/rmw_fastrtps/issues/518>`_)

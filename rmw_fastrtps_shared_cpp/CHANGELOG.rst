@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* [Galactic] Loan messages implementation (`#547 <https://github.com/ros2/rmw_fastrtps/issues/547>`_)
+* Support for SubscriptionOptions::ignore_local_publications (`#536 <https://github.com/ros2/rmw_fastrtps/issues/536>`_) (`#549 <https://github.com/ros2/rmw_fastrtps/issues/549>`_)
+* Contributors: Michel Hidalgo, Miguel Company
+
 5.0.0 (2021-04-06)
 ------------------
 * Refactor to use DDS standard API (`#518 <https://github.com/ros2/rmw_fastrtps/issues/518>`_)
