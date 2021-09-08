@@ -124,6 +124,9 @@ The following table presents different combinations of node namespaces and user 
 | `/chatter` | `/test_namespace` | `/chatter` | `/chatter` |
 
 
+**IMPORTANT**: As shown in the table, node namespaces are NOT prepended to user specified topic names starting with `/`, a.k.a Fully Qualified Names (FQN).
+For a complete description of topic name remapping please refer to [Remapping Names](http://design.ros2.org/articles/static_remapping.html).
+
 ##### Creating services with different profiles
 
 ROS 2 services contain a subscription for receiving requests, and a publisher to reply to them.
