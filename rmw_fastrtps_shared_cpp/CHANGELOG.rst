@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.0.0 (2021-09-15)
+------------------
 * Update rmw_context_impl_t definition. (`#558 <https://github.com/ros2/rmw_fastrtps/issues/558>`_)
 * Update the LoanManager to do internal locking. (`#552 <https://github.com/ros2/rmw_fastrtps/issues/552>`_)
 * Contributors: Chris Lalancette, Michel Hidalgo
