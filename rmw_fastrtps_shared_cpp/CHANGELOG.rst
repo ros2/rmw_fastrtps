@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Update rmw_context_impl_t definition. (`#558 <https://github.com/ros2/rmw_fastrtps/issues/558>`_)
+* Update the LoanManager to do internal locking. (`#552 <https://github.com/ros2/rmw_fastrtps/issues/552>`_)
+* Contributors: Chris Lalancette, Michel Hidalgo
+
 5.2.2 (2021-08-09)
 ------------------
 * Pass the CRL down to Fast-DDS if available. (`#546 <https://github.com/ros2/rmw_fastrtps/issues/546>`_)
