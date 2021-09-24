@@ -319,6 +319,30 @@ __rmw_subscription_get_actual_qos(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_service_response_publisher_get_actual_qos(
+  const rmw_service_t * service,
+  rmw_qos_profile_t * qos);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_service_request_subscription_get_actual_qos(
+  const rmw_service_t * service,
+  rmw_qos_profile_t * qos);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_client_request_publisher_get_actual_qos(
+  const rmw_client_t * client,
+  rmw_qos_profile_t * qos);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_client_response_subscription_get_actual_qos(
+  const rmw_client_t * client,
+  rmw_qos_profile_t * qos);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_take(
   const char * identifier,
   const rmw_subscription_t * subscription,
