@@ -31,6 +31,7 @@
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/DataReaderListener.hpp"
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
+#include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 
 #include "fastdds/rtps/common/Guid.h"
@@ -225,6 +226,12 @@ public:
         info_->pub_listener_->endpoint_add_reader_and_writer(reader_guid, writer_guid);
 
         std::lock_guard<std::mutex> lock(internalMutex_);
+        const eprosima::fastrtps::HistoryQosPolicy & history = reader->get_qos().history();
+        if (eprosima::fastrtps::KEEP_LAST_HISTORY_QOS == history.kind) {
+          while (list.size() >= static_cast<size_t>(history.depth)) {
+            list.pop_front();
+          }
+        }
 
         if (conditionMutex_ != nullptr) {
           std::unique_lock<std::mutex> clock(*conditionMutex_);
