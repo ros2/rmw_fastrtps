@@ -151,13 +151,11 @@ rmw_subscription_get_actual_qos(
 rmw_ret_t
 rmw_subscription_set_cft_expression_parameters(
   rmw_subscription_t * subscription,
-  const char * filter_expression,
-  const rcutils_string_array_t * expression_parameters)
+  const rmw_subscription_content_filtered_topic_options_t * options)
 {
   // Unused in current implementation.
   (void) subscription;
-  (void) filter_expression;
-  (void) expression_parameters;
+  (void) options;
   RMW_SET_ERROR_MSG("unimplemented");
   return RMW_RET_UNSUPPORTED;
 }
@@ -165,13 +163,13 @@ rmw_subscription_set_cft_expression_parameters(
 rmw_ret_t
 rmw_subscription_get_cft_expression_parameters(
   const rmw_subscription_t * subscription,
-  char ** filter_expression,
-  rcutils_string_array_t * expression_parameters)
+  rcutils_allocator_t * allocator,
+  rmw_subscription_content_filtered_topic_options_t * options)
 {
   // Unused in current implementation.
   (void) subscription;
-  (void) filter_expression;
-  (void) expression_parameters;
+  (void) allocator;
+  (void) options;
   RMW_SET_ERROR_MSG("unimplemented");
   return RMW_RET_UNSUPPORTED;
 }
