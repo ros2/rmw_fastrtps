@@ -449,8 +449,7 @@ __init_subscription_for_loans(
 {
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   const auto & qos = info->data_reader_->get_qos();
-  bool has_data_sharing = DataSharingKind::OFF != qos.data_sharing().kind();
-  subscription->can_loan_messages = has_data_sharing && info->type_support_->is_plain();
+  subscription->can_loan_messages = info->type_support_->is_plain();
   if (subscription->can_loan_messages) {
     const auto & allocation_qos = qos.reader_resource_limits().outstanding_reads_allocation;
     info->loan_manager_ = std::make_shared<LoanManager>(allocation_qos);
