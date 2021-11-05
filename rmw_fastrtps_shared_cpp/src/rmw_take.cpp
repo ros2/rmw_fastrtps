@@ -39,8 +39,6 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
-using DataSharingKind = eprosima::fastdds::dds::DataSharingKind;
-
 void
 _assign_message_info(
   const char * identifier,

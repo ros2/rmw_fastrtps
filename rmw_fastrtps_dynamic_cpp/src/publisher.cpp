@@ -49,7 +49,6 @@
 #include "type_support_common.hpp"
 #include "type_support_registry.hpp"
 
-using DataSharingKind = eprosima::fastdds::dds::DataSharingKind;
 using TypeSupportProxy = rmw_fastrtps_dynamic_cpp::TypeSupportProxy;
 
 rmw_publisher_t *

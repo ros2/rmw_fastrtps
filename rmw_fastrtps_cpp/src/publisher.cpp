@@ -51,8 +51,6 @@
 
 #include "type_support_common.hpp"
 
-using DataSharingKind = eprosima::fastdds::dds::DataSharingKind;
-
 rmw_publisher_t *
 rmw_fastrtps_cpp::create_publisher(
   const CustomParticipantInfo * participant_info,
