@@ -126,4 +126,26 @@ __rmw_destroy_client(
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
   return final_ret;
 }
+
+rmw_ret_t
+__rmw_client_request_publisher_get_actual_qos(
+  const rmw_client_t * client,
+  rmw_qos_profile_t * qos)
+{
+  auto cli = static_cast<CustomClientInfo *>(client->data);
+  eprosima::fastdds::dds::DataWriter * fastdds_rw = cli->request_writer_;
+  dds_qos_to_rmw_qos(fastdds_rw->get_qos(), qos);
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+__rmw_client_response_subscription_get_actual_qos(
+  const rmw_client_t * client,
+  rmw_qos_profile_t * qos)
+{
+  auto cli = static_cast<CustomClientInfo *>(client->data);
+  eprosima::fastdds::dds::DataReader * fastdds_dr = cli->response_reader_;
+  dds_qos_to_rmw_qos(fastdds_dr->get_qos(), qos);
+  return RMW_RET_OK;
+}
 }  // namespace rmw_fastrtps_shared_cpp
