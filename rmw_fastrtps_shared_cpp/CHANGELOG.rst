@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.1.0 (2021-11-19)
+------------------
 * Add client/service QoS getters. (`#560 <https://github.com/ros2/rmw_fastrtps/issues/560>`_)
 * Fix QoS depth settings for clients/service being ignored. (`#564 <https://github.com/ros2/rmw_fastrtps/issues/564>`_)
 * Contributors: Chen Lihui, mauropasse
