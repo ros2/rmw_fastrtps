@@ -189,7 +189,7 @@ rmw_fastrtps_shared_cpp::create_participant(
   domainParticipantQos.name(enclave);
 
   bool leave_middleware_default_qos = false;
-  publishing_mode_t publishing_mode = publishing_mode_t::ASYNCHRONOUS;
+  publishing_mode_t publishing_mode = publishing_mode_t::SYNCHRONOUS;
   const char * env_value;
   const char * error_str;
   error_str = rcutils_get_env("RMW_FASTRTPS_USE_QOS_FROM_XML", &env_value);
