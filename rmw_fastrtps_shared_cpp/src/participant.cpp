@@ -207,10 +207,8 @@ rmw_fastrtps_shared_cpp::create_participant(
       return nullptr;
     }
     if (env_value != nullptr) {
-      // Synchronous publishing
       if (strcmp(env_value, "SYNCHRONOUS") == 0) {
         publishing_mode = publishing_mode_t::SYNCHRONOUS;
-      // Asynchronous publishing
       } else if (strcmp(env_value, "ASYNCHRONOUS") == 0) {
         publishing_mode = publishing_mode_t::ASYNCHRONOUS;
       } else if (strcmp(env_value, "AUTO") == 0) {
