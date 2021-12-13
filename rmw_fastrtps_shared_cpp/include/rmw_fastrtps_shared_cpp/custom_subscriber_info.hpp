@@ -170,11 +170,11 @@ private:
 
   std::atomic_bool deadline_changes_;
   eprosima::fastdds::dds::RequestedDeadlineMissedStatus requested_deadline_missed_status_
-    RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::atomic_bool liveliness_changes_;
   eprosima::fastdds::dds::LivelinessChangedStatus liveliness_changed_status_
-    RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
