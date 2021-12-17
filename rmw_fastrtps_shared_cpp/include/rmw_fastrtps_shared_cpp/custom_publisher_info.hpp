@@ -131,15 +131,15 @@ private:
   mutable std::mutex internalMutex_;
 
   std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_
-    RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::atomic_bool deadline_changes_;
   eprosima::fastdds::dds::OfferedDeadlineMissedStatus offered_deadline_missed_status_
-    RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::atomic_bool liveliness_changes_;
   eprosima::fastdds::dds::LivelinessLostStatus liveliness_lost_status_
-    RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
