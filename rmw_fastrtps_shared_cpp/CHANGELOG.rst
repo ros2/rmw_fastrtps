@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.1.1 (2021-12-17)
+------------------
 * Fixes for uncrustify 0.72 (`#572 <https://github.com/ros2/rmw_fastrtps/issues/572>`_)
 * Contributors: Chris Lalancette
 
