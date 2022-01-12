@@ -21,7 +21,7 @@
 #include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
 #include <fastdds/dds/topic/qos/TopicQos.hpp>
 
-#include <fastrtps/qos/QosPolicies.h>
+#include "fastrtps/qos/QosPolicies.h"
 
 #include "rmw/rmw.h"
 
