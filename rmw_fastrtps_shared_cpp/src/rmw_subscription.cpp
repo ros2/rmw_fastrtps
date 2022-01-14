@@ -20,6 +20,8 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
+#include "rcpputils/scope_exit.hpp"
+
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
 
@@ -30,6 +32,7 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 #include "rmw_fastrtps_shared_cpp/subscription.hpp"
+#include "rmw_fastrtps_shared_cpp/utils.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 namespace rmw_fastrtps_shared_cpp
@@ -38,7 +41,8 @@ rmw_ret_t
 __rmw_destroy_subscription(
   const char * identifier,
   const rmw_node_t * node,
-  rmw_subscription_t * subscription)
+  rmw_subscription_t * subscription,
+  bool reset_cft)
 {
   assert(node->implementation_identifier == identifier);
   assert(subscription->implementation_identifier == identifier);
@@ -68,7 +72,7 @@ __rmw_destroy_subscription(
 
   auto participant_info =
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
-  rmw_ret_t local_ret = destroy_subscription(identifier, participant_info, subscription);
+  rmw_ret_t local_ret = destroy_subscription(identifier, participant_info, subscription, reset_cft);
   if (RMW_RET_OK != local_ret) {
     if (RMW_RET_OK != ret) {
       RMW_SAFE_FWRITE_TO_STDERR(error_string.str);
@@ -105,6 +109,155 @@ __rmw_subscription_get_actual_qos(
   dds_qos_to_rmw_qos(dds_qos, qos);
 
   return RMW_RET_OK;
+}
+
+rmw_ret_t
+__rmw_subscription_set_content_filter(
+  rmw_subscription_t * subscription,
+  const rmw_subscription_content_filter_options_t * options
+)
+{
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic = info->filtered_topic_;
+  const bool filter_expression_empty = (*options->filter_expression == '\0');
+
+  if (!filtered_topic && filter_expression_empty) {
+    // can't reset current subscriber
+    RMW_SET_ERROR_MSG(
+      "current subscriber has no content filter topic");
+    return RMW_RET_ERROR;
+  } else if (filtered_topic && !filter_expression_empty) {
+    std::vector<std::string> expression_parameters;
+    if (options->expression_parameters) {
+      for (size_t i = 0; i < options->expression_parameters->size; ++i) {
+        expression_parameters.push_back(options->expression_parameters->data[i]);
+      }
+    }
+
+    ReturnCode_t ret =
+      filtered_topic->set_filter_expression(options->filter_expression, expression_parameters);
+    if (ret != ReturnCode_t::RETCODE_OK) {
+      RMW_SET_ERROR_MSG(
+        "failed to set_filter_expression");
+      return RMW_RET_ERROR;
+    }
+    return RMW_RET_OK;
+  }
+
+  eprosima::fastdds::dds::DomainParticipant * dds_participant =
+    info->dds_participant_;
+  eprosima::fastdds::dds::TopicDescription * des_topic = nullptr;
+  const char * eprosima_fastrtps_identifier = subscription->implementation_identifier;
+
+  rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_destroy_subscription(
+    eprosima_fastrtps_identifier,
+    info->node_,
+    subscription,
+    true /* reset_cft */);
+  if (ret != RMW_RET_OK) {
+    RMW_SET_ERROR_MSG("delete subscription with reset cft");
+    return RMW_RET_ERROR;
+  }
+
+  if (!filtered_topic) {
+    // create content filtered topic
+    eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic = nullptr;
+    if (!rmw_fastrtps_shared_cpp::create_content_filtered_topic(
+      dds_participant, info->topic_,
+      info->topic_name_mangled_, options, &filtered_topic)) {
+      RMW_SET_ERROR_MSG("create_contentfilteredtopic() failed to create contentfilteredtopic");
+      return RMW_RET_ERROR;
+    }
+    info->filtered_topic_ = filtered_topic;
+    des_topic = filtered_topic;
+  } else {
+    // use the existing parent topic
+    des_topic = info->topic_;
+  }
+
+  // create data reader
+  eprosima::fastdds::dds::Subscriber * subscriber = info->subscriber_;
+  const rmw_subscription_options_t * subscription_options =
+    &subscription->options;
+  if (!rmw_fastrtps_shared_cpp::create_datareader(info->datareader_qos_,
+    subscription_options,
+    subscriber,
+    des_topic,
+    info->listener_,
+    &info->data_reader_))
+  {
+    RMW_SET_ERROR_MSG("create_datareader() could not create data reader");
+    return RMW_RET_ERROR;
+  }
+  // lambda to delete datareader
+  auto cleanup_datareader = rcpputils::make_scope_exit(
+    [subscriber, info]() {
+      subscriber->delete_datareader(info->data_reader_);
+    });
+
+  /////
+  // Update RMW GID
+  info->subscription_gid_ = rmw_fastrtps_shared_cpp::create_rmw_gid(
+    eprosima_fastrtps_identifier, info->data_reader_->guid());
+
+  {
+    rmw_dds_common::Context * common_context = info->common_context_;
+    const rmw_node_t * node = info->node_;
+
+    // Update graph
+    std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
+    rmw_dds_common::msg::ParticipantEntitiesInfo msg =
+      common_context->graph_cache.associate_reader(
+      info->subscription_gid_, common_context->gid, node->name, node->namespace_);
+    rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
+      eprosima_fastrtps_identifier,
+      common_context->pub,
+      static_cast<void *>(&msg),
+      nullptr);
+    if (RMW_RET_OK != rmw_ret) {
+      static_cast<void>(common_context->graph_cache.dissociate_writer(
+        info->subscription_gid_, common_context->gid, node->name, node->namespace_));
+      return RMW_RET_ERROR;
+    }
+  }
+  cleanup_datareader.cancel();
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+__rmw_subscription_get_content_filter(
+  const rmw_subscription_t * subscription,
+  rcutils_allocator_t * allocator,
+  rmw_subscription_content_filter_options_t * options
+)
+{
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic = info->filtered_topic_;
+
+  if (nullptr == filtered_topic) {
+    RMW_SET_ERROR_MSG("this subscriber has not created a ContentFilteredTopic");
+    return RMW_RET_ERROR;
+  }
+  std::vector<std::string> expression_parameters;
+  ReturnCode_t ret = filtered_topic->get_expression_parameters(expression_parameters);
+  if (ret != ReturnCode_t::RETCODE_OK) {
+    RMW_SET_ERROR_MSG(
+      "failed to get_expression_parameters");
+    return RMW_RET_ERROR;
+  }
+
+  std::vector<const char *> string_array;
+  for (size_t i = 0; i < expression_parameters.size(); ++i) {
+    string_array.push_back(expression_parameters[i].c_str());
+  }
+
+  return rmw_subscription_content_filter_options_init(
+    filtered_topic->get_filter_expression().c_str(),
+    string_array.size(),
+    string_array.data(),
+    allocator,
+    options
+  );
 }
 
 rmw_ret_t

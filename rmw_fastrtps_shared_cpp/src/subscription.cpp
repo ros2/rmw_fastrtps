@@ -34,7 +34,8 @@ rmw_ret_t
 destroy_subscription(
   const char * identifier,
   CustomParticipantInfo * participant_info,
-  rmw_subscription_t * subscription)
+  rmw_subscription_t * subscription,
+  bool reset_cft)
 {
   assert(subscription->implementation_identifier == identifier);
   static_cast<void>(identifier);
@@ -45,9 +46,6 @@ destroy_subscription(
     // Get RMW Subscriber
     auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
 
-    // Keep pointer to topic, so we can remove it later
-    auto topic = info->data_reader_->get_topicdescription();
-
     // Delete DataReader
     ReturnCode_t ret = participant_info->subscriber_->delete_datareader(info->data_reader_);
     if (ReturnCode_t::RETCODE_OK != ret) {
@@ -57,11 +55,21 @@ destroy_subscription(
       return RMW_RET_ERROR;
     }
 
+    // Delete ContentFilteredTopic
+    if (nullptr != info->filtered_topic_) {
+      participant_info->participant_->delete_contentfilteredtopic(info->filtered_topic_);
+      info->filtered_topic_ = nullptr;
+    }
+
+    if (reset_cft) {
+      return RMW_RET_OK;
+    }
+
     // Delete DataReader listener
     delete info->listener_;
 
     // Delete topic and unregister type
-    remove_topic_and_type(participant_info, topic, info->type_support_);
+    remove_topic_and_type(participant_info, info->topic_, info->type_support_);
 
     // Delete CustomSubscriberInfo structure
     delete info;

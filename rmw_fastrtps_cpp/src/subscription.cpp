@@ -224,7 +224,29 @@ create_subscription(
     return nullptr;
   }
 
+  info->dds_participant_ = dds_participant;
+  info->subscriber_ = subscriber;
+  info->topic_name_mangled_ = topic_name_mangled;
+  info->topic_ = topic.desc;
   des_topic = topic.desc;
+
+  // Create ContentFilteredTopic
+  if (subscription_options->content_filter_options) {
+    rmw_subscription_content_filter_options_t * options =
+      subscription_options->content_filter_options;
+    if (nullptr != options->filter_expression) {
+      eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic = nullptr;
+      if (!rmw_fastrtps_shared_cpp::create_content_filtered_topic(
+          dds_participant, des_topic,
+          topic_name_mangled, options, &filtered_topic))
+      {
+        RMW_SET_ERROR_MSG("create_contentfilteredtopic() failed to create contentfilteredtopic");
+        return nullptr;
+      }
+      info->filtered_topic_ = filtered_topic;
+      des_topic = filtered_topic;
+    }
+  }
 
   /////
   // Create DataReader
@@ -251,44 +273,18 @@ create_subscription(
     return nullptr;
   }
 
-  eprosima::fastdds::dds::DataReaderQos original_qos = reader_qos;
-  switch (subscription_options->require_unique_network_flow_endpoints) {
-    default:
-    case RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_SYSTEM_DEFAULT:
-    case RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED:
-      // Unique network flow endpoints not required. We leave the decission to the XML profile.
-      break;
+  info->datareader_qos_ = reader_qos;
 
-    case RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED:
-    case RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED:
-      // Ensure we request unique network flow endpoints
-      if (nullptr ==
-        PropertyPolicyHelper::find_property(
-          reader_qos.properties(),
-          "fastdds.unique_network_flows"))
-      {
-        reader_qos.properties().properties().emplace_back("fastdds.unique_network_flows", "");
-      }
-      break;
-  }
-
-  // Creates DataReader (with subscriber name to not change name policy)
-  info->data_reader_ = subscriber->create_datareader(
-    des_topic,
-    reader_qos,
-    info->listener_);
-  if (!info->data_reader_ &&
-    (RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED ==
-    subscription_options->require_unique_network_flow_endpoints))
-  {
-    info->data_reader_ = subscriber->create_datareader(
+  // create_datareader
+  if (!rmw_fastrtps_shared_cpp::create_datareader(
+      info->datareader_qos_,
+      subscription_options,
+      subscriber,
       des_topic,
-      original_qos,
-      info->listener_);
-  }
-
-  if (!info->data_reader_) {
-    RMW_SET_ERROR_MSG("create_subscription() could not create data reader");
+      info->listener_,
+      &info->data_reader_))
+  {
+    RMW_SET_ERROR_MSG("create_datareader() could not create data reader");
     return nullptr;
   }
 
@@ -327,7 +323,7 @@ create_subscription(
   }
   rmw_subscription->options = *subscription_options;
   rmw_fastrtps_shared_cpp::__init_subscription_for_loans(rmw_subscription);
-  rmw_subscription->is_cft_enabled = false;
+  rmw_subscription->is_cft_enabled = info->filtered_topic_ != nullptr;
 
   topic.should_be_deleted = false;
   cleanup_rmw_subscription.cancel();

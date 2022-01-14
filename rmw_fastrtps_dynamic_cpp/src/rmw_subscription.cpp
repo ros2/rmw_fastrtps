@@ -87,7 +87,7 @@ rmw_create_subscription(
   }
 
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
-  auto info = static_cast<const CustomSubscriberInfo *>(subscription->data);
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   {
     // Update graph
     std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
@@ -115,6 +115,9 @@ rmw_create_subscription(
       return nullptr;
     }
   }
+  info->node_ = node;
+  info->common_context_ = common_context;
+
   return subscription;
 }
 

@@ -24,6 +24,7 @@
 #include "fastrtps/types/TypesBase.h"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 #include "rmw/rmw.h"
@@ -136,6 +137,50 @@ remove_topic_and_type(
   const CustomParticipantInfo * participant_info,
   const eprosima::fastdds::dds::TopicDescription * topic,
   const eprosima::fastdds::dds::TypeSupport & type);
+
+/**
+* Create content filtered topic.
+*
+* \param[in]  participant             DomainParticipant where the topic will be created.
+* \param[in]  topic_desc              TopicDescription returned by find_and_check_topic_and_type.
+* \param[in]  topic_name_mangled      Mangled Name of the topic.
+* \param[in]  options                 Options of the content filtered topic.
+* \param[out] content_filtered_topic  Will hold the pointer to the content filtered topic along
+                                      with the necessary information for its deletion.
+*
+* \return true when the content filtered topic was created
+* \return false when the content filtered topic could not be created
+*/
+bool
+create_content_filtered_topic(
+  eprosima::fastdds::dds::DomainParticipant * participant,
+  eprosima::fastdds::dds::TopicDescription * topic_desc,
+  const std::string & topic_name_mangled,
+  const rmw_subscription_content_filter_options_t * options,
+  eprosima::fastdds::dds::ContentFilteredTopic ** content_filtered_topic);
+
+
+/**
+* Create data reader.
+*
+* \param[in]  datareader_qos         QoS of data reader.
+* \param[in]  subscription_options   Options of the subscription.
+* \param[in]  subscriber             A subsciber to create the data reader.
+* \param[in]  des_topic              TopicDescription returned by find_and_check_topic_and_type.
+* \param[in]  listener               The listener of the data reader.
+* \param[out] data_reader            Will hold the pointer to the data reader.
+*
+* \return true when the data reader was created
+* \return false when the data reader could not be created
+*/
+bool
+create_datareader(
+  const eprosima::fastdds::dds::DataReaderQos & datareader_qos,
+  const rmw_subscription_options_t * subscription_options,
+  eprosima::fastdds::dds::Subscriber * subscriber,
+  eprosima::fastdds::dds::TopicDescription * des_topic,
+  SubListener * listener,
+  eprosima::fastdds::dds::DataReader ** data_reader);
 
 }  // namespace rmw_fastrtps_shared_cpp
 

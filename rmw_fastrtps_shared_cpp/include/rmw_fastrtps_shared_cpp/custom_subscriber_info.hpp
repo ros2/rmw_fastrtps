@@ -29,6 +29,8 @@
 #include "fastdds/dds/core/status/SubscriptionMatchedStatus.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/DataReaderListener.hpp"
+#include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
+#include "fastdds/dds/topic/ContentFilteredTopic.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 
 #include "fastdds/rtps/common/Guid.h"
@@ -38,6 +40,8 @@
 
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/event_callback_type.h"
+
+#include "rmw_dds_common/context.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
 
@@ -60,6 +64,16 @@ struct CustomSubscriberInfo : public CustomEventInfo
   rmw_gid_t subscription_gid_{};
   const char * typesupport_identifier_{nullptr};
   std::shared_ptr<rmw_fastrtps_shared_cpp::LoanManager> loan_manager_;
+
+  // for re-create or delete content filtered topic
+  const rmw_node_t * node_ {nullptr};
+  rmw_dds_common::Context * common_context_ {nullptr};
+  eprosima::fastdds::dds::DomainParticipant * dds_participant_ {nullptr};
+  eprosima::fastdds::dds::Subscriber * subscriber_ {nullptr};
+  std::string topic_name_mangled_;
+  eprosima::fastdds::dds::TopicDescription * topic_ {nullptr};
+  eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic_ {nullptr};
+  eprosima::fastdds::dds::DataReaderQos datareader_qos_;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *
