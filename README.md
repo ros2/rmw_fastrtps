@@ -55,7 +55,7 @@ This entails that any blocking call occurring during the write operation would b
 It is important to note that this mode typically yields higher throughput rates at lower latencies, since the notification and context switching between threads is not present.
 * `AUTO`: let Fast DDS select the publication mode. This implies using the publication mode set in the XML file or, failing that, the default value set in Fast DDS (which currently is set to `SYNCHRONOUS`).
 
-If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` behave as if it were set to `ASYNCHRONOUS`.
+If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` behave as if it were set to `SYNCHRONOUS`.
 
 ### Full QoS configuration
 
