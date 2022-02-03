@@ -2,6 +2,9 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2022-02-03)
+------------------
+
 1.2.6 (2021-08-31)
 ------------------
 * Remove unnecessary includes (`#524 <https://github.com/ros2/rmw_fastrtps/issues/524>`_)

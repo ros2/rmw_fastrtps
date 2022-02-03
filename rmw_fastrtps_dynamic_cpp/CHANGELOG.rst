@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.0 (2022-02-03)
+------------------
+* Avoid memory leaks and undefined behavior in rmw_fastrtps_dynamic_cpp typesupport code (`#429 <https://github.com/ros2/rmw_fastrtps/issues/429>`_) (`#577 <https://github.com/ros2/rmw_fastrtps/issues/577>`_)
+* Contributors: Jacob Perron, Miguel Company
+
 1.2.6 (2021-08-31)
 ------------------
 
