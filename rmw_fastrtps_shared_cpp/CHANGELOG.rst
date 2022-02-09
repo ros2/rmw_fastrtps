@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.1.2 (2022-01-14)
+------------------
+* Fix cpplint error (`#574 <https://github.com/ros2/rmw_fastrtps/issues/574>`_)
+* Contributors: Jacob Perron
+
 6.1.1 (2021-12-17)
 ------------------
 * Fixes for uncrustify 0.72 (`#572 <https://github.com/ros2/rmw_fastrtps/issues/572>`_)
