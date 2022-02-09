@@ -64,6 +64,24 @@ void SubListener::on_liveliness_changed(
   liveliness_changes_.store(true, std::memory_order_relaxed);
 }
 
+void SubListener::on_sample_lost(
+  eprosima::fastdds::dds::DataReader * /* reader */,
+  const eprosima::fastdds::dds::SampleLostStatus & status)
+{
+  std::lock_guard<std::mutex> lock(internalMutex_);
+
+  // the change to sample_lost_status_ needs to be mutually exclusive with
+  // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
+  ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
+
+  // Assign absolute values
+  sample_lost_status_.total_count = status.total_count;
+  // Accumulate deltas
+  sample_lost_status_.total_count_change += status.total_count_change;
+
+  sample_lost_changes_.store(true, std::memory_order_relaxed);
+}
+
 bool SubListener::hasEvent(rmw_event_type_t event_type) const
 {
   assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
@@ -72,6 +90,8 @@ bool SubListener::hasEvent(rmw_event_type_t event_type) const
       return liveliness_changes_.load(std::memory_order_relaxed);
     case RMW_EVENT_REQUESTED_DEADLINE_MISSED:
       return deadline_changes_.load(std::memory_order_relaxed);
+    case RMW_EVENT_MESSAGE_LOST:
+      return sample_lost_changes_.load(std::memory_order_relaxed);
     default:
       break;
   }
@@ -102,6 +122,15 @@ bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
         rmw_data->total_count_change = requested_deadline_missed_status_.total_count_change;
         requested_deadline_missed_status_.total_count_change = 0;
         deadline_changes_.store(false, std::memory_order_relaxed);
+      }
+      break;
+    case RMW_EVENT_MESSAGE_LOST:
+      {
+        auto rmw_data = static_cast<rmw_message_lost_status_t *>(event_info);
+        rmw_data->total_count = sample_lost_status_.total_count;
+        rmw_data->total_count_change = sample_lost_status_.total_count_change;
+        sample_lost_status_.total_count_change = 0;
+        sample_lost_changes_.store(false, std::memory_order_relaxed);
       }
       break;
     default:

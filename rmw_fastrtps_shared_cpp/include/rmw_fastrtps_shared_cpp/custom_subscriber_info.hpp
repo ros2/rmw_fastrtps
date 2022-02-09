@@ -112,6 +112,12 @@ public:
     eprosima::fastdds::dds::DataReader *,
     const eprosima::fastrtps::LivelinessChangedStatus &) final;
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_sample_lost(
+    eprosima::fastdds::dds::DataReader *,
+    const eprosima::fastdds::dds::SampleLostStatus &) final;
+
   // EventListenerInterface implementation
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool
@@ -174,6 +180,10 @@ private:
 
   std::atomic_bool liveliness_changes_;
   eprosima::fastdds::dds::LivelinessChangedStatus liveliness_changed_status_
+  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
+  std::atomic_bool sample_lost_changes_;
+  eprosima::fastdds::dds::SampleLostStatus sample_lost_status_
   RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
