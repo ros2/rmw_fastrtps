@@ -23,7 +23,10 @@ static const std::unordered_set<rmw_event_type_t> g_rmw_event_type_set{
   RMW_EVENT_LIVELINESS_CHANGED,
   RMW_EVENT_REQUESTED_DEADLINE_MISSED,
   RMW_EVENT_LIVELINESS_LOST,
-  RMW_EVENT_OFFERED_DEADLINE_MISSED
+  RMW_EVENT_OFFERED_DEADLINE_MISSED,
+  // TODO(clalancette): This isn't really supported at the moment, but enabling
+  // it here allows rviz2 to start-up when using rmw_fastrtps_cpp
+  RMW_EVENT_MESSAGE_LOST
 };
 
 namespace rmw_fastrtps_shared_cpp
