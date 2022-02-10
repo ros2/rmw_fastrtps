@@ -118,6 +118,12 @@ public:
     eprosima::fastdds::dds::DataReader *,
     const eprosima::fastdds::dds::SampleLostStatus &) final;
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_requested_incompatible_qos(
+    eprosima::fastdds::dds::DataReader *,
+    const eprosima::fastdds::dds::RequestedIncompatibleQosStatus &) final;
+
   // EventListenerInterface implementation
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool

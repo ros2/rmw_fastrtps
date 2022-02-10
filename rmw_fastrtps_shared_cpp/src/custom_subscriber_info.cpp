@@ -82,6 +82,12 @@ void SubListener::on_sample_lost(
   sample_lost_changes_.store(true, std::memory_order_relaxed);
 }
 
+void SubListener::on_requested_incompatible_qos(
+  eprosima::fastdds::dds::DataReader * /* reader */,
+  const eprosima::fastdds::dds::RequestedIncompatibleQosStatus & status)
+{
+}
+
 bool SubListener::hasEvent(rmw_event_type_t event_type) const
 {
   assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
