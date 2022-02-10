@@ -68,6 +68,18 @@ void SubListener::on_sample_lost(
   eprosima::fastdds::dds::DataReader * /* reader */,
   const eprosima::fastdds::dds::SampleLostStatus & status)
 {
+  std::lock_guard<std::mutex> lock(internalMutex_);
+
+  // the change to sample_lost_status_ needs to be mutually exclusive with
+  // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
+  ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
+
+  // Assign absolute values
+  sample_lost_status_.total_count = status.total_count;
+  // Accumulate deltas
+  sample_lost_status_.total_count_change += status.total_count_change;
+
+  sample_lost_changes_.store(true, std::memory_order_relaxed);
 }
 
 bool SubListener::hasEvent(rmw_event_type_t event_type) const

@@ -182,6 +182,10 @@ private:
   eprosima::fastdds::dds::LivelinessChangedStatus liveliness_changed_status_
   RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
+  std::atomic_bool sample_lost_changes_;
+  eprosima::fastdds::dds::SampleLostStatus sample_lost_status_
+  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
