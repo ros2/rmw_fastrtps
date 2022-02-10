@@ -90,6 +90,8 @@ bool SubListener::hasEvent(rmw_event_type_t event_type) const
       return liveliness_changes_.load(std::memory_order_relaxed);
     case RMW_EVENT_REQUESTED_DEADLINE_MISSED:
       return deadline_changes_.load(std::memory_order_relaxed);
+    case RMW_EVENT_MESSAGE_LOST:
+      return sample_lost_changes_.load(std::memory_order_relaxed);
     default:
       break;
   }
@@ -120,6 +122,15 @@ bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
         rmw_data->total_count_change = requested_deadline_missed_status_.total_count_change;
         requested_deadline_missed_status_.total_count_change = 0;
         deadline_changes_.store(false, std::memory_order_relaxed);
+      }
+      break;
+    case RMW_EVENT_MESSAGE_LOST:
+      {
+        auto rmw_data = static_cast<rmw_message_lost_status_t *>(event_info);
+        rmw_data->total_count = sample_lost_status_.total_count;
+        rmw_data->total_count_change = sample_lost_status_.total_count_change;
+        sample_lost_status_.total_count_change = 0;
+        sample_lost_changes_.store(false, std::memory_order_relaxed);
       }
       break;
     default:
