@@ -43,7 +43,7 @@ PubListener::on_offered_deadline_missed(
 
   std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
-  if(on_new_event_cb_){
+  if (on_new_event_cb_){
     on_new_event_cb_(user_data_, 1);
   } else {
     unread_events_count_++;
@@ -69,7 +69,7 @@ void PubListener::on_liveliness_lost(
 
   std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
-  if(on_new_event_cb_) {
+  if (on_new_event_cb_) {
     on_new_event_cb_(user_data_, 1);
   } else {
     unread_events_count_++;

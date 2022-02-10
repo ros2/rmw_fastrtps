@@ -251,7 +251,7 @@ public:
 
         std::unique_lock<std::mutex> lock_mutex(on_new_request_m_);
 
-        if(on_new_request_cb_) {
+        if (on_new_request_cb_) {
           on_new_request_cb_(user_data_, 1);
         } else {
           unread_count_++;

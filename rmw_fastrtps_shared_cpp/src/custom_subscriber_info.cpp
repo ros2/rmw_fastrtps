@@ -45,7 +45,7 @@ SubListener::on_requested_deadline_missed(
 
   std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
-  if(on_new_event_cb_) {
+  if (on_new_event_cb_) {
     on_new_event_cb_(user_data_, 1);
   } else {
     unread_events_count_++;
@@ -73,7 +73,7 @@ void SubListener::on_liveliness_changed(
 
   std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
-  if(on_new_event_cb_) {
+  if (on_new_event_cb_) {
     on_new_event_cb_(user_data_, 1);
   } else {
     unread_events_count_++;
