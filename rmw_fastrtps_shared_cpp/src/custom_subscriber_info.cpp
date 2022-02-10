@@ -64,6 +64,12 @@ void SubListener::on_liveliness_changed(
   liveliness_changes_.store(true, std::memory_order_relaxed);
 }
 
+void SubListener::on_sample_lost(
+  eprosima::fastdds::dds::DataReader * /* reader */,
+  const eprosima::fastdds::dds::SampleLostStatus & status)
+{
+}
+
 bool SubListener::hasEvent(rmw_event_type_t event_type) const
 {
   assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));

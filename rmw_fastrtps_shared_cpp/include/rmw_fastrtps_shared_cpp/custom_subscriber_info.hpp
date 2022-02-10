@@ -112,6 +112,12 @@ public:
     eprosima::fastdds::dds::DataReader *,
     const eprosima::fastrtps::LivelinessChangedStatus &) final;
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_sample_lost(
+    eprosima::fastdds::dds::DataReader *,
+    const eprosima::fastdds::dds::SampleLostStatus &) final;
+
   // EventListenerInterface implementation
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool
