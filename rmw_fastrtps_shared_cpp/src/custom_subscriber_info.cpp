@@ -111,6 +111,8 @@ bool SubListener::hasEvent(rmw_event_type_t event_type) const
       return deadline_changes_.load(std::memory_order_relaxed);
     case RMW_EVENT_MESSAGE_LOST:
       return sample_lost_changes_.load(std::memory_order_relaxed);
+    case RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE:
+      return incompatible_qos_changes_.load(std::memory_order_relaxed);
     default:
       break;
   }
@@ -150,6 +152,15 @@ bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
         rmw_data->total_count_change = sample_lost_status_.total_count_change;
         sample_lost_status_.total_count_change = 0;
         sample_lost_changes_.store(false, std::memory_order_relaxed);
+      }
+      break;
+    case RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE:
+      {
+        auto rmw_data = static_cast<rmw_requested_qos_incompatible_event_status_t *>(event_info);
+        rmw_data->total_count = incompatible_qos_status_.total_count;
+        rmw_data->total_count_change = incompatible_qos_status_.total_count_change;
+        incompatible_qos_status_.total_count_change = 0;
+        incompatible_qos_changes_.store(false, std::memory_order_relaxed);
       }
       break;
     default:
