@@ -192,6 +192,10 @@ private:
   eprosima::fastdds::dds::SampleLostStatus sample_lost_status_
   RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
+  std::atomic_bool incompatible_qos_changes_;
+  eprosima::fastdds::dds::RequestedIncompatibleQosStatus incompatible_qos_status_
+  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
