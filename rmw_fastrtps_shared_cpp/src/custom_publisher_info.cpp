@@ -60,6 +60,12 @@ void PubListener::on_liveliness_lost(
   liveliness_changes_.store(true, std::memory_order_relaxed);
 }
 
+void PubListener::on_offered_incompatible_qos(
+  eprosima::fastdds::dds::DataWriter * /* writer */,
+  const eprosima::fastdds::dds::OfferedIncompatibleQosStatus & status)
+{
+}
+
 bool PubListener::hasEvent(rmw_event_type_t event_type) const
 {
   assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));

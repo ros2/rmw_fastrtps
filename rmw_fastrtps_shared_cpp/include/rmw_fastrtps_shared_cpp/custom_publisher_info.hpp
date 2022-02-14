@@ -94,6 +94,11 @@ public:
     eprosima::fastdds::dds::DataWriter * writer,
     const eprosima::fastdds::dds::LivelinessLostStatus & status) final;
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_offered_incompatible_qos(
+    eprosima::fastdds::dds::DataWriter *,
+    const eprosima::fastdds::dds::OfferedIncompatibleQosStatus &) final;
 
   // EventListenerInterface implementation
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
