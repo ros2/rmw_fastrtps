@@ -64,6 +64,19 @@ void PubListener::on_offered_incompatible_qos(
   eprosima::fastdds::dds::DataWriter * /* writer */,
   const eprosima::fastdds::dds::OfferedIncompatibleQosStatus & status)
 {
+  std::lock_guard<std::mutex> lock(internalMutex_);
+
+  // the change to incompatible_qos_status_ needs to be mutually exclusive with
+  // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
+  ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
+
+  // Assign absolute values
+  incompatible_qos_status_.last_policy_id = status.last_policy_id;
+  incompatible_qos_status_.total_count = status.total_count;
+  // Accumulate deltas
+  incompatible_qos_status_.total_count_change += status.total_count_change;
+
+  incompatible_qos_changes_.store(true, std::memory_order_relaxed);
 }
 
 bool PubListener::hasEvent(rmw_event_type_t event_type) const
