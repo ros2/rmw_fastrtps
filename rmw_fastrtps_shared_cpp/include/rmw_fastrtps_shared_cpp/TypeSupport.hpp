@@ -110,7 +110,7 @@ protected:
 
 bool register_type_object(
   const rosidl_message_type_support_t * type_supports,
-  const std::string& type_name);
+  const std::string & type_name);
 
 }  // namespace rmw_fastrtps_shared_cpp
 

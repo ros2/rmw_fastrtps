@@ -150,12 +150,11 @@ create_content_filtered_topic(
   std::string cft_topic_name = topic_name_mangled + CONTENT_FILTERED_TOPIC_POSTFIX;
   eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic =
     participant->create_contentfilteredtopic(
-      cft_topic_name,
-      topic,
-      options->filter_expression,
-      expression_parameters);
-  if (filtered_topic == nullptr)
-  {
+    cft_topic_name,
+    topic,
+    options->filter_expression,
+    expression_parameters);
+  if (filtered_topic == nullptr) {
     return false;
   }
 
@@ -171,7 +170,7 @@ create_datareader(
   eprosima::fastdds::dds::TopicDescription * des_topic,
   SubListener * listener,
   eprosima::fastdds::dds::DataReader ** data_reader
-  )
+)
 {
   eprosima::fastdds::dds::DataReaderQos updated_qos = datareader_qos;
   switch (subscription_options->require_unique_network_flow_endpoints) {

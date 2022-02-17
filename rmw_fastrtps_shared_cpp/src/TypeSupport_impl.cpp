@@ -193,24 +193,23 @@ _create_type_name(
   return ss.str();
 }
 
-typedef std::pair<const TypeIdentifier*, std::string> MemberIdentifierName;
+typedef std::pair<const TypeIdentifier *, std::string> MemberIdentifierName;
 
 template<typename MembersType>
 MemberIdentifierName GetTypeIdentifier(const MembersType * member, size_t index, bool complete);
 
 template<typename MembersType>
-const TypeObject* GetCompleteObject(
-  const std::string& type_name,
+const TypeObject * GetCompleteObject(
+  const std::string & type_name,
   const MembersType * members)
 {
-  const TypeObject* c_type_object =
+  const TypeObject * c_type_object =
     TypeObjectFactory::get_instance()->get_type_object(type_name, true);
-  if (c_type_object != nullptr && c_type_object->_d() == EK_COMPLETE)
-  {
-      return c_type_object;
+  if (c_type_object != nullptr && c_type_object->_d() == EK_COMPLETE) {
+    return c_type_object;
   }
 
-  TypeObject *type_object = new TypeObject();
+  TypeObject * type_object = new TypeObject();
 
   type_object->_d(EK_COMPLETE);
   type_object->complete()._d(TK_STRUCTURE);
@@ -250,21 +249,20 @@ const TypeObject* GetCompleteObject(
   SerializedPayload_t payload(static_cast<uint32_t>(
       CompleteStructType::getCdrSerializedSize(type_object->complete().struct_type()) + 4));
 
-  eprosima::fastcdr::FastBuffer fastbuffer((char*) payload.data, payload.max_size);
+  eprosima::fastcdr::FastBuffer fastbuffer((char *) payload.data, payload.max_size);
   // Fixed endian (Page 221, EquivalenceHash definition of Extensible and Dynamic Topic Types for DDS document)
   eprosima::fastcdr::Cdr ser(
-      fastbuffer, eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
-      eprosima::fastcdr::Cdr::DDS_CDR); // Object that serializes the data.
+    fastbuffer, eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
+    eprosima::fastcdr::Cdr::DDS_CDR); // Object that serializes the data.
   payload.encapsulation = CDR_LE;
 
   type_object->serialize(ser);
   payload.length = (uint32_t)ser.getSerializedDataLength(); //Get the serialized length
   MD5 objectHash;
-  objectHash.update((char*)payload.data, payload.length);
+  objectHash.update((char *)payload.data, payload.length);
   objectHash.finalize();
-  for(int i = 0; i < 14; ++i)
-  {
-      identifier.equivalence_hash()[i] = objectHash.digest[i];
+  for (int i = 0; i < 14; ++i) {
+    identifier.equivalence_hash()[i] = objectHash.digest[i];
   }
 
   TypeObjectFactory::get_instance()->add_type_object(type_name, &identifier, type_object);
@@ -274,18 +272,17 @@ const TypeObject* GetCompleteObject(
 }
 
 template<typename MembersType>
-const TypeObject* GetMinimalObject(
-  const std::string& type_name,
+const TypeObject * GetMinimalObject(
+  const std::string & type_name,
   const MembersType * members)
 {
-  const TypeObject* c_type_object =
+  const TypeObject * c_type_object =
     TypeObjectFactory::get_instance()->get_type_object(type_name, false);
-  if (c_type_object != nullptr)
-  {
-      return c_type_object;
+  if (c_type_object != nullptr) {
+    return c_type_object;
   }
 
-  TypeObject *type_object = new TypeObject();
+  TypeObject * type_object = new TypeObject();
   type_object->_d(EK_MINIMAL);
   type_object->minimal()._d(TK_STRUCTURE);
   type_object->minimal().struct_type().struct_flags().IS_FINAL(false);
@@ -311,9 +308,8 @@ const TypeObject* GetMinimalObject(
     }
     mst_field.common().member_type_id(*pair.first);
     MD5 field_hash(pair.second);
-    for(int i = 0; i < 4; ++i)
-    {
-        mst_field.detail().name_hash()[i] = field_hash.digest[i];
+    for (int i = 0; i < 4; ++i) {
+      mst_field.detail().name_hash()[i] = field_hash.digest[i];
     }
     type_object->minimal().struct_type().member_seq().emplace_back(std::move(mst_field));
   }
@@ -321,24 +317,24 @@ const TypeObject* GetMinimalObject(
   TypeIdentifier identifier;
   identifier._d(EK_MINIMAL);
 
-  SerializedPayload_t payload(static_cast<uint32_t>(
-    MinimalStructType::getCdrSerializedSize(type_object->minimal().struct_type()) + 4));
+  SerializedPayload_t payload(
+    static_cast<uint32_t>(
+      MinimalStructType::getCdrSerializedSize(type_object->minimal().struct_type()) + 4));
 
-  eprosima::fastcdr::FastBuffer fastbuffer((char*) payload.data, payload.max_size);
+  eprosima::fastcdr::FastBuffer fastbuffer((char *) payload.data, payload.max_size);
   // Fixed endian (Page 221, EquivalenceHash definition of Extensible and Dynamic Topic Types for DDS document)
   eprosima::fastcdr::Cdr ser(
-      fastbuffer, eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
-      eprosima::fastcdr::Cdr::DDS_CDR); // Object that serializes the data.
+    fastbuffer, eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
+    eprosima::fastcdr::Cdr::DDS_CDR); // Object that serializes the data.
   payload.encapsulation = CDR_LE;
 
   type_object->serialize(ser);
   payload.length = (uint32_t)ser.getSerializedDataLength(); //Get the serialized length
   MD5 objectHash;
-  objectHash.update((char*)payload.data, payload.length);
+  objectHash.update((char *)payload.data, payload.length);
   objectHash.finalize();
-  for(int i = 0; i < 14; ++i)
-  {
-      identifier.equivalence_hash()[i] = objectHash.digest[i];
+  for (int i = 0; i < 14; ++i) {
+    identifier.equivalence_hash()[i] = objectHash.digest[i];
   }
 
   TypeObjectFactory::get_instance()->add_type_object(type_name, &identifier, type_object);
@@ -355,106 +351,106 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, size_t index
 
   std::string type_name;
   bool complete_type = false;
-  switch (member->type_id_)
-  {
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT:
-    {
-      type_name = "float";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_DOUBLE:
-    {
-      type_name = "double";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_LONG_DOUBLE:
-    {
-      type_name = "longdouble";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
-    {
-      type_name = "char";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WCHAR:
-    {
-      // is "wchar" supported ?
-      type_name = "wchar";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOLEAN:
-    {
-      type_name = "bool";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_OCTET:
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
-    {
-      type_name = "uint8_t";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-    {
-      type_name = "int8_t";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-    {
-      type_name = "uint16_t";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
-    {
-      type_name = "int16_t";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-    {
-      type_name = "uint32_t";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
-    {
-      type_name = "int32_t";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-    {
-      type_name = "uint64_t";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
-    {
-      type_name = "int64_t";
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-    {
-      type_identifier = TypeObjectFactory::get_instance()->get_string_identifier(255, false);
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING:
-    {
-      break;
-    }
-  case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
-    {
-      const rosidl_message_type_support_t * type_support_intro =
-        get_type_support_intro(member->members_);
-      const MembersType * sub_members = static_cast<const MembersType *>(type_support_intro->data);
-      std::string sub_type_name = _create_type_name(sub_members);
-      if (complete) {
-        GetCompleteObject(sub_type_name, sub_members);
-      } else {
-        GetMinimalObject(sub_type_name, sub_members);
+  switch (member->type_id_) {
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT:
+      {
+        type_name = "float";
+        break;
       }
-      type_name = sub_type_name;
-      complete_type = complete;
-    }
-    break;
-  default:
-    break;
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_DOUBLE:
+      {
+        type_name = "double";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_LONG_DOUBLE:
+      {
+        type_name = "longdouble";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
+      {
+        type_name = "char";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WCHAR:
+      {
+        // is "wchar" supported ?
+        type_name = "wchar";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOLEAN:
+      {
+        type_name = "bool";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_OCTET:
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
+      {
+        type_name = "uint8_t";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
+      {
+        type_name = "int8_t";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
+      {
+        type_name = "uint16_t";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
+      {
+        type_name = "int16_t";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
+      {
+        type_name = "uint32_t";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
+      {
+        type_name = "int32_t";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
+      {
+        type_name = "uint64_t";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
+      {
+        type_name = "int64_t";
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
+      {
+        type_identifier = TypeObjectFactory::get_instance()->get_string_identifier(255, false);
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING:
+      {
+        break;
+      }
+    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
+      {
+        const rosidl_message_type_support_t * type_support_intro =
+          get_type_support_intro(member->members_);
+        const MembersType * sub_members =
+          static_cast<const MembersType *>(type_support_intro->data);
+        std::string sub_type_name = _create_type_name(sub_members);
+        if (complete) {
+          GetCompleteObject(sub_type_name, sub_members);
+        } else {
+          GetMinimalObject(sub_type_name, sub_members);
+        }
+        type_name = sub_type_name;
+        complete_type = complete;
+      }
+      break;
+    default:
+      break;
   }
 
   if (!type_name.empty()) {
@@ -474,18 +470,15 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, size_t index
 }
 
 template<typename MembersType>
-const TypeObject* GetTypeObject(
-  const std::string& type_name, bool complete,
+const TypeObject * GetTypeObject(
+  const std::string & type_name, bool complete,
   const MembersType * members)
 {
-  const TypeObject* c_type_object =
+  const TypeObject * c_type_object =
     TypeObjectFactory::get_instance()->get_type_object(type_name, complete);
-  if (c_type_object != nullptr)
-  {
+  if (c_type_object != nullptr) {
     return c_type_object;
-  }
-  else if (complete)
-  {
+  } else if (complete) {
     return GetCompleteObject(type_name, members);
   }
   // else
@@ -493,14 +486,13 @@ const TypeObject* GetTypeObject(
 }
 
 template<typename MembersType>
-const TypeIdentifier* GetTypeIdentifier(
-  const std::string& type_name, bool complete,
+const TypeIdentifier * GetTypeIdentifier(
+  const std::string & type_name, bool complete,
   const MembersType * members)
 {
-  const TypeIdentifier* c_identifier =
+  const TypeIdentifier * c_identifier =
     TypeObjectFactory::get_instance()->get_type_identifier(type_name, complete);
-  if (c_identifier != nullptr && (!complete || c_identifier->_d() == EK_COMPLETE))
-  {
+  if (c_identifier != nullptr && (!complete || c_identifier->_d() == EK_COMPLETE)) {
     return c_identifier;
   }
 
@@ -512,14 +504,14 @@ template<typename MembersType>
 inline bool
 add_type_object(
   const void * untype_members,
-  const std::string& type_name)
+  const std::string & type_name)
 {
   const MembersType * members = static_cast<const MembersType *>(untype_members);
   if (!members) {
     return false;
   }
 
-  TypeObjectFactory *factory = TypeObjectFactory::get_instance();
+  TypeObjectFactory * factory = TypeObjectFactory::get_instance();
   if (!factory) {
     return false;
   }
@@ -552,7 +544,7 @@ add_type_object(
 
 bool register_type_object(
   const rosidl_message_type_support_t * type_supports,
-  const std::string& type_name)
+  const std::string & type_name)
 {
   const rosidl_message_type_support_t * type_support_intro =
     get_type_support_intro(type_supports);
@@ -561,7 +553,9 @@ bool register_type_object(
   }
 
   bool ret = false;
-  if (type_support_intro->typesupport_identifier == rosidl_typesupport_introspection_c__identifier) {
+  if (type_support_intro->typesupport_identifier ==
+    rosidl_typesupport_introspection_c__identifier)
+  {
     ret = add_type_object<rosidl_typesupport_introspection_c__MessageMembers>(
       type_support_intro->data, type_name);
   } else {

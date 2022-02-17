@@ -163,8 +163,9 @@ __rmw_subscription_set_content_filter(
     // create content filtered topic
     eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic = nullptr;
     if (!rmw_fastrtps_shared_cpp::create_content_filtered_topic(
-      dds_participant, info->topic_,
-      info->topic_name_mangled_, options, &filtered_topic)) {
+        dds_participant, info->topic_,
+        info->topic_name_mangled_, options, &filtered_topic))
+    {
       RMW_SET_ERROR_MSG("create_contentfilteredtopic() failed to create contentfilteredtopic");
       return RMW_RET_ERROR;
     }
@@ -179,12 +180,13 @@ __rmw_subscription_set_content_filter(
   eprosima::fastdds::dds::Subscriber * subscriber = info->subscriber_;
   const rmw_subscription_options_t * subscription_options =
     &subscription->options;
-  if (!rmw_fastrtps_shared_cpp::create_datareader(info->datareader_qos_,
-    subscription_options,
-    subscriber,
-    des_topic,
-    info->listener_,
-    &info->data_reader_))
+  if (!rmw_fastrtps_shared_cpp::create_datareader(
+      info->datareader_qos_,
+      subscription_options,
+      subscriber,
+      des_topic,
+      info->listener_,
+      &info->data_reader_))
   {
     RMW_SET_ERROR_MSG("create_datareader() could not create data reader");
     return RMW_RET_ERROR;
