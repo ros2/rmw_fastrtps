@@ -374,7 +374,6 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, size_t index
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WCHAR:
       {
-        // is "wchar" supported ?
         type_name = "wchar";
         break;
       }
@@ -426,11 +425,12 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, size_t index
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
       {
-        type_identifier = TypeObjectFactory::get_instance()->get_string_identifier(255, false);
+        type_name = TypeNamesGenerator::get_string_type_name(255, false);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING:
       {
+        type_name = TypeNamesGenerator::get_string_type_name(255, true);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
