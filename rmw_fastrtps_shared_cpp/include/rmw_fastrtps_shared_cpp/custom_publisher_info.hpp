@@ -61,6 +61,7 @@ public:
   explicit PubListener(CustomPublisherInfo * info)
   : deadline_changes_(false),
     liveliness_changes_(false),
+    incompatible_qos_changes_(false),
     conditionMutex_(nullptr),
     conditionVariable_(nullptr)
   {
