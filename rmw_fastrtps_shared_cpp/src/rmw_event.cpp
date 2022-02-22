@@ -17,13 +17,17 @@
 #include "rmw/impl/cpp/macros.hpp"
 
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "event_helpers.hpp"
 #include "types/event_types.hpp"
 
 static const std::unordered_set<rmw_event_type_t> g_rmw_event_type_set{
   RMW_EVENT_LIVELINESS_CHANGED,
   RMW_EVENT_REQUESTED_DEADLINE_MISSED,
   RMW_EVENT_LIVELINESS_LOST,
-  RMW_EVENT_OFFERED_DEADLINE_MISSED
+  RMW_EVENT_OFFERED_DEADLINE_MISSED,
+  RMW_EVENT_MESSAGE_LOST,
+  RMW_EVENT_OFFERED_QOS_INCOMPATIBLE,
+  RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE
 };
 
 namespace rmw_fastrtps_shared_cpp
@@ -34,6 +38,29 @@ namespace internal
 bool is_event_supported(rmw_event_type_t event_type)
 {
   return g_rmw_event_type_set.count(event_type) == 1;
+}
+
+rmw_qos_policy_kind_t dds_qos_policy_to_rmw_qos_policy(
+  eprosima::fastdds::dds::QosPolicyId_t policy_id)
+{
+  using eprosima::fastdds::dds::QosPolicyId_t;
+
+  switch (policy_id) {
+    case QosPolicyId_t::DURABILITY_QOS_POLICY_ID:
+      return RMW_QOS_POLICY_DURABILITY;
+    case QosPolicyId_t::DEADLINE_QOS_POLICY_ID:
+      return RMW_QOS_POLICY_DEADLINE;
+    case QosPolicyId_t::LIVELINESS_QOS_POLICY_ID:
+      return RMW_QOS_POLICY_LIVELINESS;
+    case QosPolicyId_t::RELIABILITY_QOS_POLICY_ID:
+      return RMW_QOS_POLICY_RELIABILITY;
+    case QosPolicyId_t::HISTORY_QOS_POLICY_ID:
+      return RMW_QOS_POLICY_HISTORY;
+    case QosPolicyId_t::LIFESPAN_QOS_POLICY_ID:
+      return RMW_QOS_POLICY_LIFESPAN;
+    default:
+      return RMW_QOS_POLICY_INVALID;
+  }
 }
 
 }  // namespace internal

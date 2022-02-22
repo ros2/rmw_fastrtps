@@ -70,6 +70,8 @@ public:
   : data_(false),
     deadline_changes_(false),
     liveliness_changes_(false),
+    sample_lost_changes_(false),
+    incompatible_qos_changes_(false),
     conditionMutex_(nullptr),
     conditionVariable_(nullptr)
   {
@@ -111,6 +113,18 @@ public:
   on_liveliness_changed(
     eprosima::fastdds::dds::DataReader *,
     const eprosima::fastrtps::LivelinessChangedStatus &) final;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_sample_lost(
+    eprosima::fastdds::dds::DataReader *,
+    const eprosima::fastdds::dds::SampleLostStatus &) final;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_requested_incompatible_qos(
+    eprosima::fastdds::dds::DataReader *,
+    const eprosima::fastdds::dds::RequestedIncompatibleQosStatus &) final;
 
   // EventListenerInterface implementation
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -174,6 +188,14 @@ private:
 
   std::atomic_bool liveliness_changes_;
   eprosima::fastdds::dds::LivelinessChangedStatus liveliness_changed_status_
+  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
+  std::atomic_bool sample_lost_changes_;
+  eprosima::fastdds::dds::SampleLostStatus sample_lost_status_
+  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
+  std::atomic_bool incompatible_qos_changes_;
+  eprosima::fastdds::dds::RequestedIncompatibleQosStatus incompatible_qos_status_
   RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
