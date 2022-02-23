@@ -48,6 +48,8 @@ TypeSupport::TypeSupport()
   m_isGetKeyDefined = false;
   max_size_bound_ = false;
   is_plain_ = false;
+  auto_fill_type_object(false);
+  auto_fill_type_information(false);
 }
 
 void TypeSupport::deleteData(void * data)
@@ -196,7 +198,7 @@ _create_type_name(
 typedef std::pair<const TypeIdentifier *, std::string> MemberIdentifierName;
 
 template<typename MembersType>
-MemberIdentifierName GetTypeIdentifier(const MembersType * member, size_t index, bool complete);
+MemberIdentifierName GetTypeIdentifier(const MembersType * member, uint32_t index, bool complete);
 
 template<typename MembersType>
 const TypeObject * GetCompleteObject(
@@ -237,7 +239,7 @@ const TypeObject * GetCompleteObject(
     }
     cst_field.common().member_type_id(*pair.first);
     cst_field.detail().name(pair.second);
-    type_object->complete().struct_type().member_seq().emplace_back(std::move(cst_field));
+    type_object->complete().struct_type().member_seq().emplace_back(cst_field);
   }
 
   // Header
@@ -311,7 +313,7 @@ const TypeObject * GetMinimalObject(
     for (int i = 0; i < 4; ++i) {
       mst_field.detail().name_hash()[i] = field_hash.digest[i];
     }
-    type_object->minimal().struct_type().member_seq().emplace_back(std::move(mst_field));
+    type_object->minimal().struct_type().member_seq().emplace_back(mst_field);
   }
 
   TypeIdentifier identifier;
@@ -343,7 +345,7 @@ const TypeObject * GetMinimalObject(
 }
 
 template<typename MembersType>
-MemberIdentifierName GetTypeIdentifier(const MembersType * members, size_t index, bool complete)
+MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t index, bool complete)
 {
   const auto member = members->members_ + index;
   const TypeIdentifier * type_identifier = nullptr;
@@ -424,13 +426,15 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, size_t index
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
-      {
-        type_name = TypeNamesGenerator::get_string_type_name(255, false);
-        break;
-      }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING:
       {
-        type_name = TypeNamesGenerator::get_string_type_name(255, true);
+        uint32_t bound = member->string_upper_bound_ ? member->string_upper_bound_ : 255;
+        bool wide =
+          (member->type_id_ == ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING) ?
+          false : true;
+        TypeObjectFactory::get_instance()->get_string_identifier(bound, wide);
+        type_name = TypeNamesGenerator::get_string_type_name(
+          bound, wide);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
