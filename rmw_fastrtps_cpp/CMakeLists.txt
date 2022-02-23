@@ -117,10 +117,11 @@ configure_rmw_library(rmw_fastrtps_cpp)
 target_compile_definitions(${PROJECT_NAME}
 PRIVATE "RMW_FASTRTPS_CPP_BUILDING_LIBRARY")
 
-# specific order: dependents before dependencies
-ament_export_include_directories(include)
+# Export old-style CMake variables
+ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(rmw_fastrtps_cpp)
 
+# specific order: dependents before dependencies
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rmw)
 ament_export_dependencies(rmw_dds_common)
@@ -159,7 +160,7 @@ ament_package(
 
 install(
   DIRECTORY include/
-  DESTINATION include
+  DESTINATION include/${PROJECT_NAME}
 )
 
 install(

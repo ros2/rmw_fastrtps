@@ -61,6 +61,7 @@ public:
   explicit PubListener(CustomPublisherInfo * info)
   : deadline_changes_(false),
     liveliness_changes_(false),
+    incompatible_qos_changes_(false),
     conditionMutex_(nullptr),
     conditionVariable_(nullptr)
   {
@@ -94,6 +95,11 @@ public:
     eprosima::fastdds::dds::DataWriter * writer,
     const eprosima::fastdds::dds::LivelinessLostStatus & status) final;
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  on_offered_incompatible_qos(
+    eprosima::fastdds::dds::DataWriter *,
+    const eprosima::fastdds::dds::OfferedIncompatibleQosStatus &) final;
 
   // EventListenerInterface implementation
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -144,6 +150,10 @@ private:
 
   std::atomic_bool liveliness_changes_;
   eprosima::fastdds::dds::LivelinessLostStatus liveliness_lost_status_
+  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
+  std::atomic_bool incompatible_qos_changes_;
+  eprosima::fastdds::dds::OfferedIncompatibleQosStatus incompatible_qos_status_
   RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
