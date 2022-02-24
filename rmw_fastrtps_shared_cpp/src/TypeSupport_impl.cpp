@@ -13,7 +13,9 @@
 // limitations under the License.
 
 #include <cassert>
+#include <sstream>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "fastdds/rtps/common/SerializedPayload.h"
@@ -21,18 +23,15 @@
 #include "fastcdr/FastBuffer.h"
 #include "fastcdr/Cdr.h"
 
-#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
-#include "rmw/error_handling.h"
-
-#include <utility>
-#include <sstream>
 #include "fastrtps/rtps/common/SerializedPayload.h"
 #include "fastrtps/utils/md5.h"
+#include "fastrtps/types/TypesBase.h"
 #include "fastrtps/types/TypeObjectFactory.h"
 #include "fastrtps/types/TypeNamesGenerator.h"
 #include "fastrtps/types/AnnotationParameterValue.h"
-#include "fastcdr/FastBuffer.h"
-#include "fastcdr/Cdr.h"
+
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+#include "rmw/error_handling.h"
 
 #include "rosidl_typesupport_introspection_c/identifier.h"
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
@@ -142,8 +141,16 @@ std::function<uint32_t()> TypeSupport::getSerializedSizeProvider(void * data)
   return ser_size;
 }
 
-using namespace eprosima::fastrtps::types;
-using namespace eprosima::fastrtps::rtps;
+// TODO(iuhilnehc-ynos): add the following content into new files named TypeObject?
+using CompleteStructType = eprosima::fastrtps::types::CompleteStructType;
+using CompleteStructMember = eprosima::fastrtps::types::CompleteStructMember;
+using MinimalStructType = eprosima::fastrtps::types::MinimalStructType;
+using MinimalStructMember = eprosima::fastrtps::types::MinimalStructMember;
+using SerializedPayload_t = eprosima::fastrtps::rtps::SerializedPayload_t;
+using TypeNamesGenerator = eprosima::fastrtps::types::TypeNamesGenerator;
+using TypeIdentifier = eprosima::fastrtps::types::TypeIdentifier;
+using TypeObject = eprosima::fastrtps::types::TypeObject;
+using TypeObjectFactory = eprosima::fastrtps::types::TypeObjectFactory;
 
 const rosidl_message_type_support_t *
 get_type_support_intro(
@@ -207,31 +214,31 @@ const TypeObject * GetCompleteObject(
 {
   const TypeObject * c_type_object =
     TypeObjectFactory::get_instance()->get_type_object(type_name, true);
-  if (c_type_object != nullptr && c_type_object->_d() == EK_COMPLETE) {
+  if (c_type_object != nullptr && c_type_object->_d() == eprosima::fastrtps::types::EK_COMPLETE) {
     return c_type_object;
   }
 
   TypeObject * type_object = new TypeObject();
 
-  type_object->_d(EK_COMPLETE);
-  type_object->complete()._d(TK_STRUCTURE);
+  type_object->_d(eprosima::fastrtps::types::EK_COMPLETE);
+  type_object->complete()._d(eprosima::fastrtps::types::TK_STRUCTURE);
   type_object->complete().struct_type().struct_flags().IS_FINAL(false);
   type_object->complete().struct_type().struct_flags().IS_APPENDABLE(false);
   type_object->complete().struct_type().struct_flags().IS_MUTABLE(false);
   // Not sure whether current type is nested or not, make all Type Nested
   type_object->complete().struct_type().struct_flags().IS_NESTED(true);
-  type_object->complete().struct_type().struct_flags().IS_AUTOID_HASH(false); // Unsupported
+  type_object->complete().struct_type().struct_flags().IS_AUTOID_HASH(false);  // Unsupported
 
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     CompleteStructMember cst_field;
     cst_field.common().member_id(i);
-    cst_field.common().member_flags().TRY_CONSTRUCT1(false); // Unsupported
-    cst_field.common().member_flags().TRY_CONSTRUCT2(false); // Unsupported
-    cst_field.common().member_flags().IS_EXTERNAL(false); // Unsupported
+    cst_field.common().member_flags().TRY_CONSTRUCT1(false);  // Unsupported
+    cst_field.common().member_flags().TRY_CONSTRUCT2(false);  // Unsupported
+    cst_field.common().member_flags().IS_EXTERNAL(false);  // Unsupported
     cst_field.common().member_flags().IS_OPTIONAL(false);
     cst_field.common().member_flags().IS_MUST_UNDERSTAND(false);
     cst_field.common().member_flags().IS_KEY(false);
-    cst_field.common().member_flags().IS_DEFAULT(false); // Doesn't apply
+    cst_field.common().member_flags().IS_DEFAULT(false);  // Doesn't apply
 
     MemberIdentifierName pair = GetTypeIdentifier(members, i, true);
     if (!pair.first) {
@@ -246,22 +253,26 @@ const TypeObject * GetCompleteObject(
   type_object->complete().struct_type().header().detail().type_name(type_name);
 
   TypeIdentifier identifier;
-  identifier._d(EK_COMPLETE);
+  identifier._d(eprosima::fastrtps::types::EK_COMPLETE);
 
   SerializedPayload_t payload(static_cast<uint32_t>(
       CompleteStructType::getCdrSerializedSize(type_object->complete().struct_type()) + 4));
 
-  eprosima::fastcdr::FastBuffer fastbuffer((char *) payload.data, payload.max_size);
-  // Fixed endian (Page 221, EquivalenceHash definition of Extensible and Dynamic Topic Types for DDS document)
+  eprosima::fastcdr::FastBuffer fastbuffer(
+    reinterpret_cast<char *>(payload.data), payload.max_size);
+
+  // Fixed endian (Page 221, EquivalenceHash definition of Extensible and Dynamic Topic Types for
+  // DDS document)
   eprosima::fastcdr::Cdr ser(
     fastbuffer, eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
-    eprosima::fastcdr::Cdr::DDS_CDR); // Object that serializes the data.
+    eprosima::fastcdr::Cdr::DDS_CDR);  // Object that serializes the data.
   payload.encapsulation = CDR_LE;
 
   type_object->serialize(ser);
-  payload.length = (uint32_t)ser.getSerializedDataLength(); //Get the serialized length
+  payload.length =
+    static_cast<uint32_t>(ser.getSerializedDataLength());  // Get the serialized length
   MD5 objectHash;
-  objectHash.update((char *)payload.data, payload.length);
+  objectHash.update(reinterpret_cast<char *>(payload.data), payload.length);
   objectHash.finalize();
   for (int i = 0; i < 14; ++i) {
     identifier.equivalence_hash()[i] = objectHash.digest[i];
@@ -285,24 +296,24 @@ const TypeObject * GetMinimalObject(
   }
 
   TypeObject * type_object = new TypeObject();
-  type_object->_d(EK_MINIMAL);
-  type_object->minimal()._d(TK_STRUCTURE);
+  type_object->_d(eprosima::fastrtps::types::EK_MINIMAL);
+  type_object->minimal()._d(eprosima::fastrtps::types::TK_STRUCTURE);
   type_object->minimal().struct_type().struct_flags().IS_FINAL(false);
   type_object->minimal().struct_type().struct_flags().IS_APPENDABLE(false);
   type_object->minimal().struct_type().struct_flags().IS_MUTABLE(false);
   type_object->minimal().struct_type().struct_flags().IS_NESTED(true);
-  type_object->minimal().struct_type().struct_flags().IS_AUTOID_HASH(false); // Unsupported
+  type_object->minimal().struct_type().struct_flags().IS_AUTOID_HASH(false);  // Unsupported
 
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     MinimalStructMember mst_field;
     mst_field.common().member_id(i);
-    mst_field.common().member_flags().TRY_CONSTRUCT1(false); // Unsupported
-    mst_field.common().member_flags().TRY_CONSTRUCT2(false); // Unsupported
-    mst_field.common().member_flags().IS_EXTERNAL(false); // Unsupported
+    mst_field.common().member_flags().TRY_CONSTRUCT1(false);  // Unsupported
+    mst_field.common().member_flags().TRY_CONSTRUCT2(false);  // Unsupported
+    mst_field.common().member_flags().IS_EXTERNAL(false);  // Unsupported
     mst_field.common().member_flags().IS_OPTIONAL(false);
     mst_field.common().member_flags().IS_MUST_UNDERSTAND(false);
     mst_field.common().member_flags().IS_KEY(false);
-    mst_field.common().member_flags().IS_DEFAULT(false); // Doesn't apply
+    mst_field.common().member_flags().IS_DEFAULT(false);  // Doesn't apply
 
     MemberIdentifierName pair = GetTypeIdentifier(members, i, false);
     if (!pair.first) {
@@ -317,23 +328,27 @@ const TypeObject * GetMinimalObject(
   }
 
   TypeIdentifier identifier;
-  identifier._d(EK_MINIMAL);
+  identifier._d(eprosima::fastrtps::types::EK_MINIMAL);
 
   SerializedPayload_t payload(
     static_cast<uint32_t>(
       MinimalStructType::getCdrSerializedSize(type_object->minimal().struct_type()) + 4));
 
-  eprosima::fastcdr::FastBuffer fastbuffer((char *) payload.data, payload.max_size);
-  // Fixed endian (Page 221, EquivalenceHash definition of Extensible and Dynamic Topic Types for DDS document)
+  eprosima::fastcdr::FastBuffer fastbuffer(
+    reinterpret_cast<char *>(payload.data), payload.max_size);
+
+  // Fixed endian (Page 221, EquivalenceHash definition of Extensible and Dynamic Topic Types for
+  // DDS document)
   eprosima::fastcdr::Cdr ser(
     fastbuffer, eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
-    eprosima::fastcdr::Cdr::DDS_CDR); // Object that serializes the data.
+    eprosima::fastcdr::Cdr::DDS_CDR);  // Object that serializes the data.
   payload.encapsulation = CDR_LE;
 
   type_object->serialize(ser);
-  payload.length = (uint32_t)ser.getSerializedDataLength(); //Get the serialized length
+  payload.length =
+    static_cast<uint32_t>(ser.getSerializedDataLength());  // Get the serialized length
   MD5 objectHash;
-  objectHash.update((char *)payload.data, payload.length);
+  objectHash.update(reinterpret_cast<char *>(payload.data), payload.length);
   objectHash.finalize();
   for (int i = 0; i < 14; ++i) {
     identifier.equivalence_hash()[i] = objectHash.digest[i];
@@ -496,11 +511,13 @@ const TypeIdentifier * GetTypeIdentifier(
 {
   const TypeIdentifier * c_identifier =
     TypeObjectFactory::get_instance()->get_type_identifier(type_name, complete);
-  if (c_identifier != nullptr && (!complete || c_identifier->_d() == EK_COMPLETE)) {
+  if (c_identifier != nullptr &&
+    (!complete || c_identifier->_d() == eprosima::fastrtps::types::EK_COMPLETE))
+  {
     return c_identifier;
   }
 
-  GetTypeObject(type_name, complete, members); // Generated inside
+  GetTypeObject(type_name, complete, members);  // Generated inside
   return TypeObjectFactory::get_instance()->get_type_identifier(type_name, complete);
 }
 
