@@ -43,6 +43,14 @@ SubListener::on_requested_deadline_missed(
   requested_deadline_missed_status_.total_count_change += status.total_count_change;
 
   deadline_changes_.store(true, std::memory_order_relaxed);
+
+  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+
+  if (on_new_event_cb_) {
+    on_new_event_cb_(user_data_, 1);
+  } else {
+    unread_events_count_++;
+  }
 }
 
 void SubListener::on_liveliness_changed(
@@ -63,6 +71,14 @@ void SubListener::on_liveliness_changed(
   liveliness_changed_status_.not_alive_count_change += status.not_alive_count_change;
 
   liveliness_changes_.store(true, std::memory_order_relaxed);
+
+  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+
+  if (on_new_event_cb_) {
+    on_new_event_cb_(user_data_, 1);
+  } else {
+    unread_events_count_++;
+  }
 }
 
 void SubListener::on_sample_lost(
@@ -118,6 +134,27 @@ bool SubListener::hasEvent(rmw_event_type_t event_type) const
       break;
   }
   return false;
+}
+
+void SubListener::set_on_new_event_callback(
+  const void * user_data,
+  rmw_event_callback_t callback)
+{
+  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+
+  if (callback) {
+    // Push events arrived before setting the executor's callback
+    if (unread_events_count_) {
+      callback(user_data, unread_events_count_);
+      unread_events_count_ = 0;
+    }
+    user_data_ = user_data;
+    on_new_event_cb_ = callback;
+  } else {
+    user_data_ = nullptr;
+    on_new_event_cb_ = nullptr;
+    return;
+  }
 }
 
 bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)

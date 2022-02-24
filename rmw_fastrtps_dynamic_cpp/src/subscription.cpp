@@ -214,7 +214,7 @@ create_subscription(
   /////
   // Create Listener
   if (create_subscription_listener) {
-    info->listener_ = new (std::nothrow) SubListener(info);
+    info->listener_ = new (std::nothrow) SubListener(info, qos_policies->depth);
 
     if (!info->listener_) {
       RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
@@ -263,6 +263,12 @@ create_subscription(
 
   if (!get_datareader_qos(*qos_policies, reader_qos)) {
     RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
+    return nullptr;
+  }
+
+  info->listener_ = new (std::nothrow) SubListener(info, qos_policies->depth);
+  if (!info->listener_) {
+    RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber listener");
     return nullptr;
   }
 

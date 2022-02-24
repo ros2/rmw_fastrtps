@@ -16,8 +16,9 @@
 
 #include "rmw/impl/cpp/macros.hpp"
 
-#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "event_helpers.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "types/event_types.hpp"
 
 static const std::unordered_set<rmw_event_type_t> g_rmw_event_type_set{
@@ -91,6 +92,19 @@ __rmw_init_event(
   rmw_event->data = data;
   rmw_event->event_type = event_type;
 
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+__rmw_event_set_callback(
+  rmw_event_t * rmw_event,
+  rmw_event_callback_t callback,
+  const void * user_data)
+{
+  auto custom_event_info = static_cast<CustomEventInfo *>(rmw_event->data);
+  custom_event_info->getListener()->set_on_new_event_callback(
+    user_data,
+    callback);
   return RMW_RET_OK;
 }
 

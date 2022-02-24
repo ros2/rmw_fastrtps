@@ -148,4 +148,17 @@ __rmw_client_response_subscription_get_actual_qos(
   dds_qos_to_rmw_qos(fastdds_dr->get_qos(), qos);
   return RMW_RET_OK;
 }
+
+rmw_ret_t
+__rmw_client_set_on_new_response_callback(
+  rmw_client_t * rmw_client,
+  rmw_event_callback_t callback,
+  const void * user_data)
+{
+  auto custom_client_info = static_cast<CustomClientInfo *>(rmw_client->data);
+  custom_client_info->listener_->set_on_new_response_callback(
+    user_data,
+    callback);
+  return RMW_RET_OK;
+}
 }  // namespace rmw_fastrtps_shared_cpp
