@@ -2,6 +2,14 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add EventsExecutor (`#468 <https://github.com/ros2/rmw_fastrtps/issues/468>`_)
+* Complete events support (`#583 <https://github.com/ros2/rmw_fastrtps/issues/583>`_)
+* Install headers to include/${PROJECT_NAME} (`#578 <https://github.com/ros2/rmw_fastrtps/issues/578>`_)
+* Change default to synchronous (`#571 <https://github.com/ros2/rmw_fastrtps/issues/571>`_)
+* Contributors: Audrow Nash, Miguel Company, Shane Loretz, iRobot ROS
+
 6.1.2 (2022-01-14)
 ------------------
 * Fix cpplint error (`#574 <https://github.com/ros2/rmw_fastrtps/issues/574>`_)
