@@ -22,7 +22,6 @@
 
 #include "fastdds/dds/core/status/BaseStatus.hpp"
 #include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
-#include "fastdds/dds/core/status/PublicationMatchedStatus.hpp"
 #include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
 #include "fastdds/dds/topic/Topic.hpp"
@@ -71,20 +70,6 @@ public:
   // DataWriterListener implementation
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void
-  on_publication_matched(
-    eprosima::fastdds::dds::DataWriter * /* writer */,
-    const eprosima::fastdds::dds::PublicationMatchedStatus & info) final
-  {
-    std::lock_guard<std::mutex> lock(internalMutex_);
-    if (info.current_count_change == 1) {
-      subscriptions_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
-    } else if (info.current_count_change == -1) {
-      subscriptions_.erase(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
-    }
-  }
-
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void
   on_offered_deadline_missed(
     eprosima::fastdds::dds::DataWriter * writer,
     const eprosima::fastdds::dds::OfferedDeadlineMissedStatus & status) final;
@@ -116,12 +101,6 @@ public:
   takeNextEvent(rmw_event_type_t event_type, void * event_info) final;
 
   // PubListener API
-  size_t subscriptionCount()
-  {
-    std::lock_guard<std::mutex> lock(internalMutex_);
-    return subscriptions_.size();
-  }
-
   void
   attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable)
   {
@@ -140,9 +119,6 @@ public:
 
 private:
   mutable std::mutex internalMutex_;
-
-  std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_
-  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   std::atomic_bool deadline_changes_;
   eprosima::fastdds::dds::OfferedDeadlineMissedStatus offered_deadline_missed_status_
