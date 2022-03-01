@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.2.0 (2022-03-01)
+------------------
 * Add EventsExecutor (`#468 <https://github.com/ros2/rmw_fastrtps/issues/468>`_)
 * Complete events support (`#583 <https://github.com/ros2/rmw_fastrtps/issues/583>`_)
 * Install headers to include/${PROJECT_NAME} (`#578 <https://github.com/ros2/rmw_fastrtps/issues/578>`_)
