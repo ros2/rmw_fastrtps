@@ -47,6 +47,10 @@ _assign_message_info(
 {
   message_info->source_timestamp = sinfo->source_timestamp.to_ns();
   message_info->received_timestamp = sinfo->reception_timestamp.to_ns();
+  auto fastdds_sn = sinfo->sample_identity.sequence_number();
+  message_info->publication_sequence_number = (static_cast<int64_t>(fastdds_sn.high)) <<
+    32 | static_cast<int64_t>(fastdds_sn.low);
+  message_info->reception_sequence_number = sinfo->reception_timestamp.to_ns();
   rmw_gid_t * sender_gid = &message_info->publisher_gid;
   sender_gid->implementation_identifier = identifier;
   memset(sender_gid->data, 0, RMW_GID_STORAGE_SIZE);
