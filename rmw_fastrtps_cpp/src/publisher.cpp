@@ -47,6 +47,8 @@
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/publisher.hpp"
 
+#include "tracetools/tracetools.h"
+
 #include "type_support_common.hpp"
 
 using DataSharingKind = eprosima::fastdds::dds::DataSharingKind;
@@ -321,5 +323,9 @@ rmw_fastrtps_cpp::create_publisher(
   cleanup_datawriter.cancel();
   cleanup_info.cancel();
 
+  TRACEPOINT(
+    rmw_publisher_init,
+    static_cast<const void *>(rmw_publisher),
+    info->publisher_gid.data);
   return rmw_publisher;
 }

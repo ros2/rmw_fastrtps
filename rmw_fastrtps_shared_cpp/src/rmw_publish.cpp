@@ -24,6 +24,8 @@
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
+#include "tracetools/tracetools.h"
+
 namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
@@ -55,6 +57,7 @@ __rmw_publish(
   data.is_cdr_buffer = false;
   data.data = const_cast<void *>(ros_message);
   data.impl = info->type_support_impl_;
+  TRACEPOINT(rmw_publish, ros_message);
   if (!info->data_writer_->write(&data)) {
     RMW_SET_ERROR_MSG("cannot publish data");
     return RMW_RET_ERROR;

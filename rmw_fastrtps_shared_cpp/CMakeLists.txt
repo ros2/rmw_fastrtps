@@ -40,6 +40,7 @@ find_package(rcutils REQUIRED)
 find_package(rmw_dds_common REQUIRED)
 find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
+find_package(tracetools REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr REQUIRED CONFIG)
@@ -109,6 +110,7 @@ ament_target_dependencies(rmw_fastrtps_shared_cpp
   "rmw_dds_common"
   "rosidl_typesupport_introspection_c"
   "rosidl_typesupport_introspection_cpp"
+  "tracetools"
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -130,6 +132,7 @@ ament_export_dependencies(rmw)
 ament_export_dependencies(rmw_dds_common)
 ament_export_dependencies(rosidl_typesupport_introspection_c)
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
+ament_export_dependencies(tracetools)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
