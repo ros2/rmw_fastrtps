@@ -139,11 +139,8 @@ create_content_filtered_topic(
   eprosima::fastdds::dds::ContentFilteredTopic ** content_filtered_topic)
 {
   std::vector<std::string> expression_parameters;
-  rcutils_string_array_t * string_array = options->expression_parameters;
-  if (string_array) {
-    for (size_t i = 0; i < string_array->size; ++i) {
-      expression_parameters.push_back(string_array->data[i]);
-    }
+  for (size_t i = 0; i < options->expression_parameters.size; ++i) {
+    expression_parameters.push_back(options->expression_parameters.data[i]);
   }
 
   auto topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(topic_desc);

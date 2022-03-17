@@ -128,10 +128,8 @@ __rmw_subscription_set_content_filter(
     return RMW_RET_ERROR;
   } else if (filtered_topic && !filter_expression_empty) {
     std::vector<std::string> expression_parameters;
-    if (options->expression_parameters) {
-      for (size_t i = 0; i < options->expression_parameters->size; ++i) {
-        expression_parameters.push_back(options->expression_parameters->data[i]);
-      }
+    for (size_t i = 0; i < options->expression_parameters.size; ++i) {
+      expression_parameters.push_back(options->expression_parameters.data[i]);
     }
 
     ReturnCode_t ret =
