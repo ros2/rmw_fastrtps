@@ -153,7 +153,7 @@ using TypeObject = eprosima::fastrtps::types::TypeObject;
 using TypeObjectFactory = eprosima::fastrtps::types::TypeObjectFactory;
 
 const rosidl_message_type_support_t *
-get_type_support_intro(
+get_type_support_introspection(
   const rosidl_message_type_support_t * type_supports)
 {
   const rosidl_message_type_support_t * type_support =
@@ -455,7 +455,7 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_MESSAGE:
       {
         const rosidl_message_type_support_t * type_support_intro =
-          get_type_support_intro(member->members_);
+          get_type_support_introspection(member->members_);
         const MembersType * sub_members =
           static_cast<const MembersType *>(type_support_intro->data);
         std::string sub_type_name = _create_type_name(sub_members);
@@ -568,7 +568,7 @@ bool register_type_object(
   const std::string & type_name)
 {
   const rosidl_message_type_support_t * type_support_intro =
-    get_type_support_intro(type_supports);
+    get_type_support_introspection(type_supports);
   if (!type_support_intro) {
     return false;
   }
