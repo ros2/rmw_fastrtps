@@ -18,7 +18,6 @@
 
 extern "C"
 {
-
 bool
 rmw_feature_supported(rmw_feature_t feature)
 {
