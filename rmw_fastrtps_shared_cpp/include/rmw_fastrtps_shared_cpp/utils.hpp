@@ -151,6 +151,7 @@ remove_topic_and_type(
 * \return true when the content filtered topic was created
 * \return false when the content filtered topic could not be created
 */
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 create_content_filtered_topic(
   eprosima::fastdds::dds::DomainParticipant * participant,
@@ -173,6 +174,7 @@ create_content_filtered_topic(
 * \return true when the data reader was created
 * \return false when the data reader could not be created
 */
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 create_datareader(
   const eprosima::fastdds::dds::DataReaderQos & datareader_qos,

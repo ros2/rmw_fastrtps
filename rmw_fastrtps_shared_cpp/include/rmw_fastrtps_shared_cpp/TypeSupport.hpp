@@ -108,6 +108,7 @@ protected:
   bool is_plain_;
 };
 
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool register_type_object(
   const rosidl_message_type_support_t * type_supports,
   const std::string & type_name);
