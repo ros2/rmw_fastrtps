@@ -443,7 +443,8 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING:
       {
-        uint32_t bound = member->string_upper_bound_ ? member->string_upper_bound_ : 255;
+        uint32_t bound = member->string_upper_bound_ ?
+          static_cast<uint32_t>(member->string_upper_bound_) : 255;
         bool wide =
           (member->type_id_ == ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING) ?
           false : true;
