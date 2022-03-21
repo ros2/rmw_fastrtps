@@ -26,7 +26,6 @@
 
 #include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
 #include "fastdds/dds/core/status/LivelinessChangedStatus.hpp"
-#include "fastdds/dds/core/status/SubscriptionMatchedStatus.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/DataReaderListener.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
@@ -89,14 +88,6 @@ public:
     eprosima::fastdds::dds::DataReader * reader,
     const eprosima::fastdds::dds::SubscriptionMatchedStatus & info) final
   {
-    {
-      std::lock_guard<std::mutex> lock(internalMutex_);
-      if (info.current_count_change == 1) {
-        publishers_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
-      } else if (info.current_count_change == -1) {
-        publishers_.erase(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
-      }
-    }
     update_has_data(reader);
   }
 
@@ -188,12 +179,6 @@ public:
     data_.store(has_data, std::memory_order_relaxed);
   }
 
-  size_t publisherCount()
-  {
-    std::lock_guard<std::mutex> lock(internalMutex_);
-    return publishers_.size();
-  }
-
   // Provide handlers to perform an action when a
   // new event from this listener has ocurred
   void
@@ -241,8 +226,6 @@ private:
 
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
-
-  std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
   rmw_event_callback_t on_new_message_cb_{nullptr};
   std::mutex on_new_message_m_;

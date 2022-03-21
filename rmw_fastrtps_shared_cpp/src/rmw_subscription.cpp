@@ -20,6 +20,7 @@
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 
+#include "fastdds/dds/core/status/SubscriptionMatchedStatus.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
 
@@ -87,8 +88,9 @@ __rmw_subscription_count_matched_publishers(
   size_t * publisher_count)
 {
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
-
-  *publisher_count = info->listener_->publisherCount();
+  eprosima::fastdds::dds::SubscriptionMatchedStatus status{};
+  info->data_reader_->get_subscription_matched_status(status);
+  *publisher_count = status.current_count;
 
   return RMW_RET_OK;
 }
