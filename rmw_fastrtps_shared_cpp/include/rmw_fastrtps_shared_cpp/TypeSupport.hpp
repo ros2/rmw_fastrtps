@@ -28,6 +28,8 @@
 
 #include "rcutils/logging_macros.h"
 
+#include "rosidl_runtime_c/message_type_support_struct.h"
+
 #include "./visibility_control.h"
 
 namespace rmw_fastrtps_shared_cpp
@@ -105,6 +107,11 @@ protected:
   bool max_size_bound_;
   bool is_plain_;
 };
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+bool register_type_object(
+  const rosidl_message_type_support_t * type_supports,
+  const std::string & type_name);
 
 }  // namespace rmw_fastrtps_shared_cpp
 

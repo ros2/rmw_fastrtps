@@ -32,7 +32,8 @@ rmw_ret_t
 destroy_subscription(
   const char * identifier,
   CustomParticipantInfo * participant_info,
-  rmw_subscription_t * subscription);
+  rmw_subscription_t * subscription,
+  bool reset_cft = false);
 
 }  // namespace rmw_fastrtps_shared_cpp
 
