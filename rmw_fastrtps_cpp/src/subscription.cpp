@@ -49,6 +49,8 @@
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/subscription.hpp"
 
+#include "tracetools/tracetools.h"
+
 #include "type_support_common.hpp"
 
 using PropertyPolicyHelper = eprosima::fastrtps::rtps::PropertyPolicyHelper;
@@ -336,6 +338,11 @@ create_subscription(
   cleanup_rmw_subscription.cancel();
   cleanup_datareader.cancel();
   cleanup_info.cancel();
+
+  TRACEPOINT(
+    rmw_subscription_init,
+    static_cast<const void *>(rmw_subscription),
+    info->subscription_gid_.data);
   return rmw_subscription;
 }
 }  // namespace rmw_fastrtps_cpp

@@ -35,6 +35,7 @@ find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw_dds_common REQUIRED)
 find_package(rmw_fastrtps_shared_cpp REQUIRED)
+find_package(tracetools REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr REQUIRED CONFIG)
@@ -105,6 +106,7 @@ ament_target_dependencies(rmw_fastrtps_cpp
   "rmw_fastrtps_shared_cpp"
   "rmw"
   "rosidl_runtime_c"
+  "tracetools"
 )
 
 target_link_libraries(rmw_fastrtps_cpp
@@ -130,6 +132,7 @@ ament_export_dependencies(rmw_fastrtps_shared_cpp)
 ament_export_dependencies(rosidl_runtime_c)
 ament_export_dependencies(rosidl_typesupport_fastrtps_c)
 ament_export_dependencies(rosidl_typesupport_fastrtps_cpp)
+ament_export_dependencies(tracetools)
 
 register_rmw_implementation(
   "c:rosidl_typesupport_c:rosidl_typesupport_fastrtps_c:rosidl_typesupport_introspection_c"
