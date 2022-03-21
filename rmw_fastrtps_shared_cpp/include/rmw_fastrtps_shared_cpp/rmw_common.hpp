@@ -19,6 +19,7 @@
 
 #include "rmw/error_handling.h"
 #include "rmw/event.h"
+#include "rmw/features.h"
 #include "rmw/rmw.h"
 #include "rmw/topic_endpoint_info_array.h"
 #include "rmw/types.h"
@@ -513,6 +514,10 @@ __rmw_event_set_callback(
   rmw_event_t * rmw_event,
   rmw_event_callback_t callback,
   const void * user_data);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+bool
+__rmw_feature_supported(rmw_feature_t feature);
 
 }  // namespace rmw_fastrtps_shared_cpp
 
