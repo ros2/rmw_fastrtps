@@ -22,8 +22,6 @@
   <build_depend>rcutils</build_depend>
   <build_depend>rmw</build_depend>
   <build_depend>rmw_dds_common</build_depend>
-  <build_depend>rosidl_typesupport_introspection_c</build_depend>
-  <build_depend>rosidl_typesupport_introspection_cpp</build_depend>
   <build_depend>tracetools</build_depend>
 
   <build_export_depend>fastcdr</build_export_depend>
@@ -33,8 +31,6 @@
   <build_export_depend>rcutils</build_export_depend>
   <build_export_depend>rmw</build_export_depend>
   <build_export_depend>rmw_dds_common</build_export_depend>
-  <build_export_depend>rosidl_typesupport_introspection_c</build_export_depend>
-  <build_export_depend>rosidl_typesupport_introspection_cpp</build_export_depend>
   <build_export_depend>tracetools</build_export_depend>
 
   <test_depend>ament_lint_auto</test_depend>

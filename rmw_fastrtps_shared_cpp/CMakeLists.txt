@@ -91,7 +91,6 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_wait_set.cpp
   src/subscription.cpp
   src/time_utils.cpp
-  src/TypeSupport_impl.cpp
   src/utils.cpp
 )
 target_include_directories(rmw_fastrtps_shared_cpp
@@ -108,8 +107,6 @@ ament_target_dependencies(rmw_fastrtps_shared_cpp
   "rcutils"
   "rmw"
   "rmw_dds_common"
-  "rosidl_typesupport_introspection_c"
-  "rosidl_typesupport_introspection_cpp"
   "tracetools"
 )
 
@@ -130,8 +127,6 @@ ament_export_dependencies(rcpputils)
 ament_export_dependencies(rcutils)
 ament_export_dependencies(rmw)
 ament_export_dependencies(rmw_dds_common)
-ament_export_dependencies(rosidl_typesupport_introspection_c)
-ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 ament_export_dependencies(tracetools)
 
 if(BUILD_TESTING)
