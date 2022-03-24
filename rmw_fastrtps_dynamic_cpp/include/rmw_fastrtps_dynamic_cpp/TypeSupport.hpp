@@ -26,6 +26,8 @@
 
 #include "rcutils/logging_macros.h"
 
+#include "rmw_fastrtps_dynamic_cpp/visibility_control.h"
+
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
@@ -193,6 +195,11 @@ private:
     const MembersType * members,
     void * ros_message) const;
 };
+
+RMW_FASTRTPS_DYNAMIC_CPP_PUBLIC
+bool register_type_object(
+  const rosidl_message_type_support_t * type_supports,
+  const std::string & type_name);
 
 }  // namespace rmw_fastrtps_dynamic_cpp
 

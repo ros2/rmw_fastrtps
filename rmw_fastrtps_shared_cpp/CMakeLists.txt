@@ -89,6 +89,7 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_wait_set.cpp
   src/subscription.cpp
   src/time_utils.cpp
+  src/TypeSupport.cpp
   src/utils.cpp
 )
 target_include_directories(rmw_fastrtps_shared_cpp

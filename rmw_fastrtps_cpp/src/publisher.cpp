@@ -201,13 +201,6 @@ rmw_fastrtps_cpp::create_publisher(
   }
   info->type_support_ = fastdds_type;
 
-  if (!rmw_fastrtps_shared_cpp::register_type_object(type_supports, type_name)) {
-    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-      "failed to register type object with incompatible type %s",
-      type_name.c_str());
-    return nullptr;
-  }
-
   /////
   // Create Listener
   if (create_publisher_listener) {
