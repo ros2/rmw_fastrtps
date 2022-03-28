@@ -2,6 +2,14 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.1 (2022-03-28)
+------------------
+* Add pub/sub init, publish and take instrumentation using tracetools (`#591 <https://github.com/ros2/rmw_fastrtps/issues/591>`_)
+* Add content filter topic feature (`#513 <https://github.com/ros2/rmw_fastrtps/issues/513>`_)
+* Add sequence numbers to message info structure (`#587 <https://github.com/ros2/rmw_fastrtps/issues/587>`_)
+* Removed some heap interactions in rmw_serialize.cpp (`#590 <https://github.com/ros2/rmw_fastrtps/issues/590>`_)
+* Contributors: Chen Lihui, Christophe Bedard, Ivan Santiago Paunovic, WideAwakeTN
+
 6.2.0 (2022-03-01)
 ------------------
 * Add EventsExecutor (`#468 <https://github.com/ros2/rmw_fastrtps/issues/468>`_)

@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.1 (2022-03-28)
+------------------
+* Add content filter topic feature (`#513 <https://github.com/ros2/rmw_fastrtps/issues/513>`_)
+* Add sequence numbers to message info structure (`#587 <https://github.com/ros2/rmw_fastrtps/issues/587>`_)
+* Contributors: Chen Lihui, Ivan Santiago Paunovic
+
 6.2.0 (2022-03-01)
 ------------------
 * Add EventsExecutor (`#468 <https://github.com/ros2/rmw_fastrtps/issues/468>`_)
