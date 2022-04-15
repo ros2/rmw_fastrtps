@@ -17,9 +17,12 @@
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
+#include "rmw/get_topic_endpoint_info.h"
 #include "rmw/rmw.h"
 
 #include "rmw/impl/cpp/macros.hpp"
+
+#include "rmw_dds_common/qos.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
@@ -72,6 +75,16 @@ rmw_create_publisher(
     node->implementation_identifier,
     eprosima_fastrtps_identifier,
     return nullptr);
+  RMW_CHECK_ARGUMENT_FOR_NULL(qos_policies, nullptr);
+
+  // Adapt any 'best available' QoS options
+  rmw_qos_profile_t adapted_qos_policies = *qos_policies;
+  rmw_ret_t ret = rmw_dds_common::qos_profile_get_best_available_for_topic_publisher(
+    node, topic_name, &adapted_qos_policies, rmw_get_subscriptions_info_by_topic);
+  if (RMW_RET_OK != ret) {
+    return nullptr;
+  }
+
 
   auto participant_info =
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
@@ -80,7 +93,7 @@ rmw_create_publisher(
     participant_info,
     type_supports,
     topic_name,
-    qos_policies,
+    &adapted_qos_policies,
     publisher_options,
     false,
     true);
