@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+5.0.2 (2022-04-28)
+------------------
 * Export rmw_dds_common as an rmw_fastrtps_shared_cpp dependency (`#530 <https://github.com/ros2/rmw_fastrtps/issues/530>`_) (`#567 <https://github.com/ros2/rmw_fastrtps/issues/567>`_)
 * Contributors: Michel Hidalgo
 
