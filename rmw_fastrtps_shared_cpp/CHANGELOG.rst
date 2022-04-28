@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Export rmw_dds_common as an rmw_fastrtps_shared_cpp dependency (`#530 <https://github.com/ros2/rmw_fastrtps/issues/530>`_) (`#567 <https://github.com/ros2/rmw_fastrtps/issues/567>`_)
+* Contributors: Michel Hidalgo
+
 5.0.1 (2021-08-18)
 ------------------
 * [Galactic] Loan messages implementation (`#547 <https://github.com/ros2/rmw_fastrtps/issues/547>`_)

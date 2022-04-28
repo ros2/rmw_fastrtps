@@ -2,6 +2,9 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 5.0.1 (2021-08-18)
 ------------------
 * [Galactic] Loan messages implementation (`#547 <https://github.com/ros2/rmw_fastrtps/issues/547>`_)
