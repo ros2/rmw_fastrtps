@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.3.0 (2022-05-03)
+------------------
+* Handle 'best_available' QoS policies (`#598 <https://github.com/ros2/rmw_fastrtps/issues/598>`_)
+* Contributors: Jacob Perron
+
 6.2.1 (2022-03-28)
 ------------------
 * Add pub/sub init, publish and take instrumentation using tracetools (`#591 <https://github.com/ros2/rmw_fastrtps/issues/591>`_)

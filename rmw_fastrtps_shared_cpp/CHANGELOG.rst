@@ -2,6 +2,9 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.3.0 (2022-05-03)
+------------------
+
 6.2.1 (2022-03-28)
 ------------------
 * Address linter waning for windows. (`#592 <https://github.com/ros2/rmw_fastrtps/issues/592>`_)
