@@ -221,4 +221,19 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
   return rmw_fastrtps_shared_cpp::__rmw_destroy_subscription(
     eprosima_fastrtps_identifier, node, subscription);
 }
+
+rmw_ret_t
+rmw_subscription_set_on_new_message_callback(
+  rmw_subscription_t * rmw_subscription,
+  rmw_event_callback_t callback,
+  const void * user_data)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(rmw_subscription, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(callback, RMW_RET_INVALID_ARGUMENT);
+
+  return rmw_fastrtps_shared_cpp::__rmw_subscription_set_on_new_message_callback(
+    rmw_subscription,
+    callback,
+    user_data);
+}
 }  // extern "C"
