@@ -533,7 +533,6 @@ rmw_client_set_on_new_response_callback(
   const void * user_data)
 {
   RMW_CHECK_ARGUMENT_FOR_NULL(rmw_client, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_ARGUMENT_FOR_NULL(callback, RMW_RET_INVALID_ARGUMENT);
 
   return rmw_fastrtps_shared_cpp::__rmw_client_set_on_new_response_callback(
     rmw_client,
