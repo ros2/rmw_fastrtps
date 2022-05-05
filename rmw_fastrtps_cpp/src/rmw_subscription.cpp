@@ -227,6 +227,8 @@ rmw_subscription_set_on_new_message_callback(
   rmw_event_callback_t callback,
   const void * user_data)
 {
+  RMW_CHECK_ARGUMENT_FOR_NULL(rmw_subscription, RMW_RET_INVALID_ARGUMENT);
+
   return rmw_fastrtps_shared_cpp::__rmw_subscription_set_on_new_message_callback(
     rmw_subscription,
     callback,

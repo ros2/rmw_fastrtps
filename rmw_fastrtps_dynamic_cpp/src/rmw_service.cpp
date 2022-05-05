@@ -583,6 +583,8 @@ rmw_service_set_on_new_request_callback(
   rmw_event_callback_t callback,
   const void * user_data)
 {
+  RMW_CHECK_ARGUMENT_FOR_NULL(rmw_service, RMW_RET_INVALID_ARGUMENT);
+
   return rmw_fastrtps_shared_cpp::__rmw_service_set_on_new_request_callback(
     rmw_service,
     callback,
