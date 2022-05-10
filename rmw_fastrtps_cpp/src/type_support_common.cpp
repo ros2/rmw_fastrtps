@@ -88,19 +88,26 @@ bool TypeSupport::deserializeROSmessage(
   assert(ros_message);
   assert(impl);
 
-  // Deserialize encapsulation.
-  deser.read_encapsulation();
+  try {
+    // Deserialize encapsulation.
+    deser.read_encapsulation();
 
-  // If type is not empty, deserialize message
-  if (has_data_) {
-    auto callbacks = static_cast<const message_type_support_callbacks_t *>(impl);
-    return callbacks->cdr_deserialize(deser, ros_message);
+    // If type is not empty, deserialize message
+    if (has_data_) {
+      auto callbacks = static_cast<const message_type_support_callbacks_t *>(impl);
+      return callbacks->cdr_deserialize(deser, ros_message);
+    }
+
+    // Otherwise, consume dummy byte
+    uint8_t dump = 0;
+    deser >> dump;
+    (void)dump;
+  } catch (const eprosima::fastcdr::exception::Exception &) {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "Fast CDR exception deserializing message of type %s.",
+      getName());
+    return false;
   }
-
-  // Otherwise, consume dummy byte
-  uint8_t dump = 0;
-  deser >> dump;
-  (void)dump;
 
   return true;
 }
