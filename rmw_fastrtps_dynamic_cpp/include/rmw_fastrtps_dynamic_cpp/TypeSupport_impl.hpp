@@ -834,8 +834,8 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
                 deser, sub_members,
                 get_subros_message(
                   member, field, index, member->array_size_,
-                  member->is_upper_bound_))
-              ) {
+                  member->is_upper_bound_)))
+              {
                 return false;
               }
             }
