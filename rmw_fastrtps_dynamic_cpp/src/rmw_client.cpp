@@ -572,4 +572,18 @@ rmw_client_response_subscription_get_actual_qos(
 
   return rmw_fastrtps_shared_cpp::__rmw_client_response_subscription_get_actual_qos(client, qos);
 }
+
+rmw_ret_t
+rmw_client_set_on_new_response_callback(
+  rmw_client_t * rmw_client,
+  rmw_event_callback_t callback,
+  const void * user_data)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(rmw_client, RMW_RET_INVALID_ARGUMENT);
+
+  return rmw_fastrtps_shared_cpp::__rmw_client_set_on_new_response_callback(
+    rmw_client,
+    callback,
+    user_data);
+}
 }  // extern "C"

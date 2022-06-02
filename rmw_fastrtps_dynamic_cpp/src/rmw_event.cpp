@@ -47,4 +47,18 @@ rmw_subscription_event_init(
     subscription->data,
     event_type);
 }
+
+rmw_ret_t
+rmw_event_set_callback(
+  rmw_event_t * rmw_event,
+  rmw_event_callback_t callback,
+  const void * user_data)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(rmw_event, RMW_RET_INVALID_ARGUMENT);
+
+  return rmw_fastrtps_shared_cpp::__rmw_event_set_callback(
+    rmw_event,
+    callback,
+    user_data);
+}
 }  // extern "C"
