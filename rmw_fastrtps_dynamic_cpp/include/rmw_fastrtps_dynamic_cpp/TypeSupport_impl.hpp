@@ -17,6 +17,8 @@
 
 #include <fastcdr/FastBuffer.h>
 #include <fastcdr/Cdr.h>
+#include <fastcdr/exceptions/Exception.h>
+
 #include <cassert>
 #include <string>
 #include <vector>
@@ -803,7 +805,9 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
         {
           auto sub_members = static_cast<const MembersType *>(member->members_->data);
           if (!member->is_array_) {
-            deserializeROSmessage(deser, sub_members, field);
+            if (!deserializeROSmessage(deser, sub_members, field)) {
+              return false;
+            }
           } else {
             size_t array_size = 0;
 
@@ -826,11 +830,14 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
               return false;
             }
             for (size_t index = 0; index < array_size; ++index) {
-              deserializeROSmessage(
-                deser, sub_members,
-                get_subros_message(
-                  member, field, index, member->array_size_,
-                  member->is_upper_bound_));
+              if (!deserializeROSmessage(
+                  deser, sub_members,
+                  get_subros_message(
+                    member, field, index, member->array_size_,
+                    member->is_upper_bound_)))
+              {
+                return false;
+              }
             }
           }
         }
@@ -972,16 +979,23 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
   assert(ros_message);
   assert(members_);
 
-  // Deserialize encapsulation.
-  deser.read_encapsulation();
+  try {
+    // Deserialize encapsulation.
+    deser.read_encapsulation();
 
-  (void)impl;
-  if (members_->member_count_ != 0) {
-    TypeSupport::deserializeROSmessage(deser, members_, ros_message);
-  } else {
+    (void)impl;
+    if (members_->member_count_ != 0) {
+      return TypeSupport::deserializeROSmessage(deser, members_, ros_message);
+    }
+
     uint8_t dump = 0;
     deser >> dump;
     (void)dump;
+  } catch (const eprosima::fastcdr::exception::Exception &) {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "Fast CDR exception deserializing message of type %s.",
+      getName());
+    return false;
   }
 
   return true;
