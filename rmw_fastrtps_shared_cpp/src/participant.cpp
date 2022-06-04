@@ -316,7 +316,7 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
     }
     ret = participant_info->participant_->delete_publisher(participant_info->publisher_);
     if (ReturnCode_t::RETCODE_OK != ret) {
-      RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to delete dds publisher from participant");
+      RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to delete dds publisher from participant.\n");
     }
   }
 
@@ -330,7 +330,7 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
     }
     ret = participant_info->participant_->delete_subscriber(participant_info->subscriber_);
     if (ReturnCode_t::RETCODE_OK != ret) {
-      RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to delete dds subscriber from participant");
+      RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to delete dds subscriber from participant.\n");
     }
   }
 
@@ -346,7 +346,7 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
     participant_info->participant_);
 
   if (ReturnCode_t::RETCODE_OK != ret) {
-    RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to delete participant");
+    RCUTILS_SAFE_FWRITE_TO_STDERR("Failed to delete participant.\n");
   }
 
   // Delete Listener
