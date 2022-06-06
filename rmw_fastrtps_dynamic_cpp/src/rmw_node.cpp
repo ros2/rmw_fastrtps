@@ -68,7 +68,7 @@ rmw_create_node(
     if (RMW_RET_OK != rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(context)) {
       RCUTILS_SAFE_FWRITE_TO_STDERR(
         "'decrement_context_impl_ref_count' failed while being executed due to '"
-        RCUTILS_STRINGIFY(__function__) "' failing");
+        RCUTILS_STRINGIFY(__function__) "' failing.\n");
     }
   }
   return node;

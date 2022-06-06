@@ -69,7 +69,7 @@ rmw_fastrtps_shared_cpp::run_listener_thread(rmw_context_t * context)
     {
       RCUTILS_SAFE_FWRITE_TO_STDERR(
         RCUTILS_STRINGIFY(__FILE__) ":" RCUTILS_STRINGIFY(__function__) ":"
-        RCUTILS_STRINGIFY(__LINE__) ": Failed to destroy guard condition");
+        RCUTILS_STRINGIFY(__LINE__) ": Failed to destroy guard condition.\n");
     }
   }
   return RMW_RET_ERROR;
