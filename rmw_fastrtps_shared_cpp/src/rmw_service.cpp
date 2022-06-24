@@ -102,12 +102,6 @@ __rmw_destroy_service(
       show_previous_error();
       RMW_SET_ERROR_MSG("Fail in delete datareader");
       final_ret = RMW_RET_ERROR;
-      info->request_reader_->set_listener(nullptr);
-    }
-
-    // Delete DataReader listener
-    if (nullptr != info->listener_) {
-      delete info->listener_;
     }
 
     // Delete DataWriter
@@ -116,7 +110,6 @@ __rmw_destroy_service(
       show_previous_error();
       RMW_SET_ERROR_MSG("Fail in delete datawriter");
       final_ret = RMW_RET_ERROR;
-      info->response_writer_->set_listener(nullptr);
     }
 
     // Delete DataWriter listener
@@ -168,9 +161,11 @@ __rmw_service_set_on_new_request_callback(
   const void * user_data)
 {
   auto custom_service_info = static_cast<CustomServiceInfo *>(rmw_service->data);
+  /*
   custom_service_info->listener_->set_on_new_request_callback(
     user_data,
     callback);
+    */
   return RMW_RET_OK;
 }
 }  // namespace rmw_fastrtps_shared_cpp

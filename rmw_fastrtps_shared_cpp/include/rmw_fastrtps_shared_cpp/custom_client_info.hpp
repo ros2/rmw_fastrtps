@@ -31,7 +31,6 @@
 #include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
-#include "fastdds/dds/subscriber/DataReaderListener.hpp"
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
@@ -46,7 +45,6 @@
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
-class ClientListener;
 class ClientPubListener;
 
 typedef struct CustomClientInfo
@@ -61,7 +59,6 @@ typedef struct CustomClientInfo
   std::string request_topic_;
   std::string response_topic_;
 
-  ClientListener * listener_{nullptr};
   eprosima::fastrtps::rtps::GUID_t writer_guid_;
   eprosima::fastrtps::rtps::GUID_t reader_guid_;
 
@@ -78,6 +75,7 @@ typedef struct CustomClientResponse
   eprosima::fastdds::dds::SampleInfo sample_info_ {};
 } CustomClientResponse;
 
+/*
 class ClientListener : public eprosima::fastdds::dds::DataReaderListener
 {
 public:
@@ -175,7 +173,7 @@ public:
   }
 
   void on_subscription_matched(
-    eprosima::fastdds::dds::DataReader * /* reader */,
+    eprosima::fastdds::dds::DataReader * ,
     const eprosima::fastdds::dds::SubscriptionMatchedStatus & info) final
   {
     if (info_ == nullptr) {
@@ -239,6 +237,7 @@ private:
   std::mutex on_new_response_m_;
   uint64_t unread_count_ = 0;
 };
+*/
 
 class ClientPubListener : public eprosima::fastdds::dds::DataWriterListener
 {

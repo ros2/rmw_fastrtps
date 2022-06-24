@@ -54,6 +54,7 @@ __rmw_take_response(
 
   CustomClientResponse response;
 
+  /* TODO
   if (info->listener_->getResponse(response)) {
     auto raw_type_support = dynamic_cast<rmw_fastrtps_shared_cpp::TypeSupport *>(
       info->response_type_support_.get());
@@ -73,6 +74,7 @@ __rmw_take_response(
       *taken = true;
     }
   }
+  */
 
   return RMW_RET_OK;
 }

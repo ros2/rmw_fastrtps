@@ -91,6 +91,7 @@ _take(
   data.data = ros_message;
   data.impl = info->type_support_impl_;
 
+  /* TODO
   while (0 < info->data_reader_->get_unread_count()) {
     if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
       // Update hasData from listener
@@ -115,6 +116,7 @@ _take(
       }
     }
   }
+  */
 
   TRACEPOINT(
     rmw_take,
@@ -318,6 +320,7 @@ _take_serialized_message(
   data.data = &buffer;
   data.impl = nullptr;    // not used when is_cdr_buffer is true
 
+  /* TODO
   if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
     // Update hasData from listener
     info->listener_->update_has_data(info->data_reader_);
@@ -339,6 +342,7 @@ _take_serialized_message(
       *taken = true;
     }
   }
+  */
 
   return RMW_RET_OK;
 }
@@ -481,6 +485,7 @@ __rmw_take_loaned_message_internal(
 
   auto item = std::make_unique<rmw_fastrtps_shared_cpp::LoanManager::Item>();
 
+  /* TODO
   while (ReturnCode_t::RETCODE_OK == info->data_reader_->take(item->data_seq, item->info_seq, 1)) {
     if (item->info_seq[0].valid_data) {
       if (nullptr != message_info) {
@@ -498,10 +503,10 @@ __rmw_take_loaned_message_internal(
     // Should return loan before taking again
     info->data_reader_->return_loan(item->data_seq, item->info_seq);
   }
+  */
 
   // No data available, return loan information.
   *taken = false;
-  info->listener_->update_has_data(info->data_reader_);
   return RMW_RET_OK;
 }
 

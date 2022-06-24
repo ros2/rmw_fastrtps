@@ -206,7 +206,6 @@ rmw_create_service(
   auto cleanup_info = rcpputils::make_scope_exit(
     [info, dds_participant]() {
       delete info->pub_listener_;
-      delete info->listener_;
       if (info->response_type_support_) {
         dds_participant->unregister_type(info->response_type_support_.get_type_name());
       }
@@ -280,12 +279,6 @@ rmw_create_service(
 
   /////
   // Create Listeners
-  info->listener_ = new (std::nothrow) ServiceListener(info);
-  if (!info->listener_) {
-    RMW_SET_ERROR_MSG("create_service() failed to create request subscriber listener");
-    return nullptr;
-  }
-
   info->pub_listener_ = new (std::nothrow) ServicePubListener(info);
   if (!info->pub_listener_) {
     RMW_SET_ERROR_MSG("create_service() failed to create response publisher listener");
@@ -358,8 +351,7 @@ rmw_create_service(
   // Creates DataReader
   info->request_reader_ = subscriber->create_datareader(
     request_topic_desc,
-    reader_qos,
-    info->listener_);
+    reader_qos);
 
   if (!info->request_reader_) {
     RMW_SET_ERROR_MSG("create_service() failed to create request DataReader");

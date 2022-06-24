@@ -92,7 +92,9 @@ __rmw_subscription_count_matched_publishers(
 {
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
 
+  /* TODO
   *publisher_count = info->listener_->publisherCount();
+  */
 
   return RMW_RET_OK;
 }
@@ -183,7 +185,6 @@ __rmw_subscription_set_content_filter(
       subscription_options,
       subscriber,
       des_topic,
-      info->listener_,
       &info->data_reader_))
   {
     RMW_SET_ERROR_MSG("create_datareader() could not create data reader");
@@ -267,9 +268,11 @@ __rmw_subscription_set_on_new_message_callback(
   const void * user_data)
 {
   auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(rmw_subscription->data);
+  /* TODO
   custom_subscriber_info->listener_->set_on_new_message_callback(
     user_data,
     callback);
+    */
   return RMW_RET_OK;
 }
 }  // namespace rmw_fastrtps_shared_cpp

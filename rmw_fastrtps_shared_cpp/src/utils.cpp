@@ -165,7 +165,6 @@ create_datareader(
   const rmw_subscription_options_t * subscription_options,
   eprosima::fastdds::dds::Subscriber * subscriber,
   eprosima::fastdds::dds::TopicDescription * des_topic,
-  SubListener * listener,
   eprosima::fastdds::dds::DataReader ** data_reader
 )
 {
@@ -194,16 +193,14 @@ create_datareader(
   // Creates DataReader (with subscriber name to not change name policy)
   *data_reader = subscriber->create_datareader(
     des_topic,
-    updated_qos,
-    listener);
+    updated_qos);
   if (!data_reader &&
     (RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED ==
     subscription_options->require_unique_network_flow_endpoints))
   {
     *data_reader = subscriber->create_datareader(
       des_topic,
-      datareader_qos,
-      listener);
+      datareader_qos);
   }
   return true;
 }

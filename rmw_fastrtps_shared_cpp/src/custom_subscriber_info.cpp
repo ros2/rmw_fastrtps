@@ -20,6 +20,12 @@
 #include "event_helpers.hpp"
 #include "types/event_types.hpp"
 
+eprosima::fastdds::dds::StatusCondition& CustomSubscriberInfo::get_statuscondition() const
+{
+    return data_reader_->get_statuscondition();
+}
+
+/*
 EventListenerInterface *
 CustomSubscriberInfo::getListener() const
 {
@@ -28,7 +34,7 @@ CustomSubscriberInfo::getListener() const
 
 void
 SubListener::on_requested_deadline_missed(
-  eprosima::fastdds::dds::DataReader * /* reader */,
+  eprosima::fastdds::dds::DataReader * ,
   const eprosima::fastdds::dds::RequestedDeadlineMissedStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
@@ -54,7 +60,7 @@ SubListener::on_requested_deadline_missed(
 }
 
 void SubListener::on_liveliness_changed(
-  eprosima::fastdds::dds::DataReader * /* reader */,
+  eprosima::fastdds::dds::DataReader * ,
   const eprosima::fastdds::dds::LivelinessChangedStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
@@ -82,7 +88,7 @@ void SubListener::on_liveliness_changed(
 }
 
 void SubListener::on_sample_lost(
-  eprosima::fastdds::dds::DataReader * /* reader */,
+  eprosima::fastdds::dds::DataReader * ,
   const eprosima::fastdds::dds::SampleLostStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
@@ -100,7 +106,7 @@ void SubListener::on_sample_lost(
 }
 
 void SubListener::on_requested_incompatible_qos(
-  eprosima::fastdds::dds::DataReader * /* reader */,
+  eprosima::fastdds::dds::DataReader * ,
   const eprosima::fastdds::dds::RequestedIncompatibleQosStatus & status)
 {
   std::lock_guard<std::mutex> lock(internalMutex_);
@@ -209,3 +215,4 @@ bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
   }
   return true;
 }
+*/

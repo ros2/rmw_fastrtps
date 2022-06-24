@@ -65,8 +65,7 @@ create_subscription(
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
   const rmw_subscription_options_t * subscription_options,
-  bool keyed,
-  bool create_subscription_listener)
+  bool keyed)
 {
   /////
   // Check input parameters
@@ -165,7 +164,6 @@ create_subscription(
 
   auto cleanup_info = rcpputils::make_scope_exit(
     [info, dds_participant]() {
-      delete info->listener_;
       if (info->type_support_) {
         dds_participant->unregister_type(info->type_support_.get_type_name());
       }
@@ -204,16 +202,6 @@ create_subscription(
       "failed to register type object with incompatible type %s",
       type_name.c_str());
     return nullptr;
-  }
-
-  /////
-  // Create Listener
-  if (create_subscription_listener) {
-    info->listener_ = new (std::nothrow) SubListener(info, qos_policies->depth);
-    if (!info->listener_) {
-      RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
-      return nullptr;
-    }
   }
 
   /////
@@ -290,7 +278,6 @@ create_subscription(
       subscription_options,
       subscriber,
       des_topic,
-      info->listener_,
       &info->data_reader_))
   {
     RMW_SET_ERROR_MSG("create_datareader() could not create data reader");

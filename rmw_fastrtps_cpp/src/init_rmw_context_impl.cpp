@@ -119,8 +119,7 @@ init_context_impl(rmw_context_t * context)
       "ros_discovery_info",
       &qos,
       &subscription_options,
-      false,  // our fastrtps typesupport doesn't support keyed topics
-      true),
+      false),  // our fastrtps typesupport doesn't support keyed topics
     [&](rmw_subscription_t * sub) {
       if (RMW_RET_OK != rmw_fastrtps_shared_cpp::destroy_subscription(
         eprosima_fastrtps_identifier,
@@ -159,11 +158,6 @@ init_context_impl(rmw_context_t * context)
 
   context->impl->common = common_context.get();
   context->impl->participant_info = participant_info.get();
-
-  rmw_ret_t ret = rmw_fastrtps_shared_cpp::run_listener_thread(context);
-  if (RMW_RET_OK != ret) {
-    return ret;
-  }
 
   common_context->graph_cache.set_on_change_callback(
     [guard_condition = graph_guard_condition.get()]() {

@@ -65,9 +65,6 @@ destroy_subscription(
       return RMW_RET_OK;
     }
 
-    // Delete DataReader listener
-    delete info->listener_;
-
     // Delete topic and unregister type
     remove_topic_and_type(participant_info, info->topic_, info->type_support_);
 

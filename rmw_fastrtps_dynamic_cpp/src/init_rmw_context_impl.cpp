@@ -119,8 +119,7 @@ init_context_impl(rmw_context_t * context)
       "ros_discovery_info",
       &qos,
       &subscription_options,
-      false,  // our fastrtps typesupport doesn't support keyed topics
-      true),
+      false),  // our fastrtps typesupport doesn't support keyed topics
     [&](rmw_subscription_t * sub) {
       if (RMW_RET_OK != rmw_fastrtps_shared_cpp::destroy_subscription(
         eprosima_fastrtps_identifier,

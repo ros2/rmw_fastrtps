@@ -91,6 +91,7 @@ __rmw_take_request(
   auto info = static_cast<CustomServiceInfo *>(service->data);
   assert(info);
 
+  /* TODO
   CustomServiceRequest request = info->listener_->getRequest();
 
   if (request.buffer_ != nullptr) {
@@ -115,6 +116,7 @@ __rmw_take_request(
 
     delete request.buffer_;
   }
+  */
 
   return RMW_RET_OK;
 }

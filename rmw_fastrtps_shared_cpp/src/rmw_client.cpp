@@ -93,11 +93,6 @@ __rmw_destroy_client(
       info->response_reader_->set_listener(nullptr);
     }
 
-    // Delete DataReader listener
-    if (nullptr != info->listener_) {
-      delete info->listener_;
-    }
-
     // Delete DataWriter
     ret = participant_info->publisher_->delete_datawriter(info->request_writer_);
     if (ret != ReturnCode_t::RETCODE_OK) {
@@ -156,9 +151,11 @@ __rmw_client_set_on_new_response_callback(
   const void * user_data)
 {
   auto custom_client_info = static_cast<CustomClientInfo *>(rmw_client->data);
+  /* TODO
   custom_client_info->listener_->set_on_new_response_callback(
     user_data,
     callback);
+    */
   return RMW_RET_OK;
 }
 }  // namespace rmw_fastrtps_shared_cpp

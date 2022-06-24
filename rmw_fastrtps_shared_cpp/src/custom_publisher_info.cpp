@@ -20,6 +20,11 @@
 #include "event_helpers.hpp"
 #include "types/event_types.hpp"
 
+eprosima::fastdds::dds::StatusCondition& CustomPublisherInfo::get_statuscondition() const
+{
+    return data_writer_->get_statuscondition();
+}
+
 EventListenerInterface *
 CustomPublisherInfo::getListener() const
 {

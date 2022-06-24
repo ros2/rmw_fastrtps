@@ -51,6 +51,9 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   const char * typesupport_identifier_{nullptr};
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  eprosima::fastdds::dds::StatusCondition& get_statuscondition() const final;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *
   getListener() const final;
 } CustomPublisherInfo;
