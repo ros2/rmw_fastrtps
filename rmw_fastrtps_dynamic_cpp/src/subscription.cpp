@@ -164,6 +164,7 @@ create_subscription(
 
   auto cleanup_info = rcpputils::make_scope_exit(
     [info, dds_participant]() {
+      delete info->listener_;
       if (info->type_support_) {
         dds_participant->unregister_type(info->type_support_.get_type_name());
       }
@@ -210,6 +211,15 @@ create_subscription(
   info->type_support_ = fastdds_type;
 
   /////
+  // Create Listener
+  info->listener_ = new (std::nothrow) SubListener(info, qos_policies->depth);
+
+  if (!info->listener_) {
+      RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
+      return nullptr;
+  }
+
+  /////
   // Create and register Topic
   eprosima::fastdds::dds::TopicQos topic_qos = dds_participant->get_default_topic_qos();
   if (!get_topic_qos(*qos_policies, topic_qos)) {
@@ -253,6 +263,12 @@ create_subscription(
     return nullptr;
   }
 
+  info->listener_ = new (std::nothrow) SubListener(info, qos_policies->depth);
+  if (!info->listener_) {
+    RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber listener");
+    return nullptr;
+  }
+
   eprosima::fastdds::dds::DataReaderQos original_qos = reader_qos;
   switch (subscription_options->require_unique_network_flow_endpoints) {
     default:
@@ -277,20 +293,27 @@ create_subscription(
   // Creates DataReader (with subscriber name to not change name policy)
   info->data_reader_ = subscriber->create_datareader(
     des_topic,
-    reader_qos);
+    reader_qos,
+    info->listener_,
+    eprosima::fastdds::dds::StatusMask::none());
   if (!info->data_reader_ &&
     (RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED ==
     subscription_options->require_unique_network_flow_endpoints))
   {
     info->data_reader_ = subscriber->create_datareader(
       des_topic,
-      original_qos);
+      original_qos,
+      info->listener_,
+    eprosima::fastdds::dds::StatusMask::none());
   }
 
   if (!info->data_reader_) {
     RMW_SET_ERROR_MSG("create_subscription() could not create data reader");
     return nullptr;
   }
+
+  // Initialize DataReader's StatusCondition to 
+  info->data_reader_->get_statuscondition().set_enabled_statuses(eprosima::fastdds::dds::StatusMask::data_available());
 
   // lambda to delete datareader
   auto cleanup_datareader = rcpputils::make_scope_exit(

@@ -195,6 +195,7 @@ rmw_create_client(
   auto cleanup_info = rcpputils::make_scope_exit(
     [info, dds_participant]() {
       delete info->pub_listener_;
+      delete info->listener_;
       if (info->response_type_support_) {
         dds_participant->unregister_type(info->response_type_support_.get_type_name());
       }
@@ -245,6 +246,13 @@ rmw_create_client(
   info->response_type_support_ = response_fastdds_type;
 
   /////
+  // Create Listeners
+  info->listener_ = new (std::nothrow) ClientListener(info);
+  if (!info->listener_) {
+    RMW_SET_ERROR_MSG("create_client() failed to create response subscriber listener");
+    return nullptr;
+  }
+
   info->pub_listener_ = new (std::nothrow) ClientPubListener(info);
   if (!info->pub_listener_) {
     RMW_SET_ERROR_MSG("create_client() failed to create request publisher listener");
@@ -320,7 +328,9 @@ rmw_create_client(
   // Creates DataReader
   info->response_reader_ = subscriber->create_datareader(
     response_topic_desc,
-    reader_qos);
+    reader_qos,
+    info->listener_,
+    eprosima::fastdds::dds::StatusMask::subscription_matched());
 
   if (!info->response_reader_) {
     RMW_SET_ERROR_MSG("create_client() failed to create response DataReader");

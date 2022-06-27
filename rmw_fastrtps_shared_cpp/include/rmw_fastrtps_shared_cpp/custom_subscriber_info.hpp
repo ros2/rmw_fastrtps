@@ -81,17 +81,10 @@ struct CustomSubscriberInfo : public CustomEventInfo
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *
-  getListener() const final
-  {
-      return nullptr;
-  }
+  getListener() const final;
 };
 
-class SubListener
-{
-};
 
-/*
 class SubListener : public EventListenerInterface, public eprosima::fastdds::dds::DataReaderListener
 {
 public:
@@ -178,6 +171,42 @@ public:
   bool
   takeNextEvent(rmw_event_type_t event_type, void * event_info) final;
 
+  // SubListener API
+  void
+  attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable)
+  {
+    std::lock_guard<std::mutex> lock(internalMutex_);
+    conditionMutex_ = conditionMutex;
+    conditionVariable_ = conditionVariable;
+  }
+
+  void
+  detachCondition()
+  {
+    std::lock_guard<std::mutex> lock(internalMutex_);
+    conditionMutex_ = nullptr;
+    conditionVariable_ = nullptr;
+  }
+
+  bool
+  hasData() const
+  {
+    return data_.load(std::memory_order_relaxed);
+  }
+
+  void
+  update_has_data(eprosima::fastdds::dds::DataReader * reader)
+  {
+    // Make sure to call into Fast DDS before taking the lock to avoid an
+    // ABBA deadlock between internalMutex_ and mutexes inside of Fast DDS.
+    auto unread_count = reader->get_unread_count();
+    bool has_data = unread_count > 0;
+
+    std::lock_guard<std::mutex> lock(internalMutex_);
+    ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
+    data_.store(has_data, std::memory_order_relaxed);
+  }
+
   size_t publisherCount()
   {
     std::lock_guard<std::mutex> lock(internalMutex_);
@@ -239,6 +268,5 @@ private:
   size_t qos_depth_;
   size_t new_data_unread_count_ = 0;
 };
-*/
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_

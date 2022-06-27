@@ -104,6 +104,7 @@ private:
 struct CustomEventInfo
 {
   virtual eprosima::fastdds::dds::StatusCondition& get_statuscondition() const = 0;
+
   virtual EventListenerInterface * getListener() const = 0;
 };
 

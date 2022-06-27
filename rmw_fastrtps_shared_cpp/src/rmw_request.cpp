@@ -91,10 +91,31 @@ __rmw_take_request(
   auto info = static_cast<CustomServiceInfo *>(service->data);
   assert(info);
 
-  /* TODO
-  CustomServiceRequest request = info->listener_->getRequest();
+  CustomServiceRequest request;
+
+
+  request.buffer_ = new eprosima::fastcdr::FastBuffer();
 
   if (request.buffer_ != nullptr) {
+    rmw_fastrtps_shared_cpp::SerializedData data;
+    data.is_cdr_buffer = true;
+    data.data = request.buffer_;
+    data.impl = nullptr;    // not used when is_cdr_buffer is true
+    if (info->request_reader_->take_next_sample(&data, &request.sample_info_) == ReturnCode_t::RETCODE_OK) {
+      if (request.sample_info_.valid_data) {
+        request.sample_identity_ = request.sample_info_.sample_identity;
+        // Use response subscriber guid (on related_sample_identity) when present.
+        const eprosima::fastrtps::rtps::GUID_t & reader_guid =
+          request.sample_info_.related_sample_identity.writer_guid();
+        if (reader_guid != eprosima::fastrtps::rtps::GUID_t::unknown() ) {
+          request.sample_identity_.writer_guid() = reader_guid;
+        }
+
+        // Save both guids in the clients_endpoints map
+        const eprosima::fastrtps::rtps::GUID_t & writer_guid =
+          request.sample_info_.sample_identity.writer_guid();
+        info->pub_listener_->endpoint_add_reader_and_writer(reader_guid, writer_guid);
+
     auto raw_type_support = dynamic_cast<rmw_fastrtps_shared_cpp::TypeSupport *>(
       info->response_type_support_.get());
     eprosima::fastcdr::Cdr deser(*request.buffer_, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
@@ -114,9 +135,12 @@ __rmw_take_request(
       *taken = true;
     }
 
+      }
+    }
+
     delete request.buffer_;
   }
-  */
+
 
   return RMW_RET_OK;
 }

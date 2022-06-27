@@ -185,6 +185,7 @@ __rmw_subscription_set_content_filter(
       subscription_options,
       subscriber,
       des_topic,
+      info->listener_,
       &info->data_reader_))
   {
     RMW_SET_ERROR_MSG("create_datareader() could not create data reader");

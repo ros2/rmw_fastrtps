@@ -36,6 +36,40 @@ namespace rmw_fastrtps_shared_cpp
 namespace internal
 {
 
+eprosima::fastdds::dds::StatusMask rmw_event_to_dds_statusmask(
+        const rmw_event_type_t event_type)
+{
+    eprosima::fastdds::dds::StatusMask ret_statusmask = eprosima::fastdds::dds::StatusMask::none();
+    switch (event_type)
+    {
+        case RMW_EVENT_LIVELINESS_CHANGED:
+            ret_statusmask = eprosima::fastdds::dds::StatusMask::liveliness_changed();
+            break;
+        case RMW_EVENT_REQUESTED_DEADLINE_MISSED:
+            ret_statusmask = eprosima::fastdds::dds::StatusMask::requested_deadline_missed();
+            break;
+        case RMW_EVENT_LIVELINESS_LOST:
+            ret_statusmask = eprosima::fastdds::dds::StatusMask::liveliness_lost();
+            break;
+        case RMW_EVENT_OFFERED_DEADLINE_MISSED:
+            ret_statusmask = eprosima::fastdds::dds::StatusMask::offered_deadline_missed();
+            break;
+        case RMW_EVENT_MESSAGE_LOST:
+            ret_statusmask = eprosima::fastdds::dds::StatusMask::sample_lost();
+            break;
+        case RMW_EVENT_OFFERED_QOS_INCOMPATIBLE:
+            ret_statusmask = eprosima::fastdds::dds::StatusMask::offered_incompatible_qos();
+            break;
+        case RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE:
+            ret_statusmask = eprosima::fastdds::dds::StatusMask::requested_incompatible_qos();
+            break;
+        default:
+            break;
+    }
+
+    return ret_statusmask;
+}
+
 bool is_event_supported(rmw_event_type_t event_type)
 {
   return g_rmw_event_type_set.count(event_type) == 1;
@@ -91,6 +125,10 @@ __rmw_init_event(
   rmw_event->implementation_identifier = topic_endpoint_impl_identifier;
   rmw_event->data = data;
   rmw_event->event_type = event_type;
+  CustomEventInfo* event = static_cast<CustomEventInfo*>(rmw_event->data);
+  eprosima::fastdds::dds::StatusMask statusmask = event->get_statuscondition().get_enabled_statuses();
+  statusmask << internal::rmw_event_to_dds_statusmask(event_type);
+  event->get_statuscondition().set_enabled_statuses(statusmask);
 
   return RMW_RET_OK;
 }

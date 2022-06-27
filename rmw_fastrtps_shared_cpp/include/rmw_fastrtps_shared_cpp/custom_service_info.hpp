@@ -29,6 +29,7 @@
 #include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
+#include "fastdds/dds/subscriber/DataReaderListener.hpp"
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
@@ -44,6 +45,7 @@
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
+class ServiceListener;
 class ServicePubListener;
 
 enum class client_present_t
@@ -63,6 +65,7 @@ typedef struct CustomServiceInfo
   eprosima::fastdds::dds::DataReader * request_reader_{nullptr};
   eprosima::fastdds::dds::DataWriter * response_writer_{nullptr};
 
+  ServiceListener * listener_{nullptr};
   ServicePubListener * pub_listener_{nullptr};
 
   const char * typesupport_identifier_{nullptr};
@@ -177,7 +180,6 @@ private:
   std::condition_variable cv_;
 };
 
-/*
 class ServiceListener : public eprosima::fastdds::dds::DataReaderListener
 {
 public:
@@ -340,6 +342,5 @@ private:
   std::mutex on_new_request_m_;
   uint64_t unread_count_ = 0;
 };
-*/
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_

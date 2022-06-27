@@ -164,6 +164,7 @@ create_subscription(
 
   auto cleanup_info = rcpputils::make_scope_exit(
     [info, dds_participant]() {
+      delete info->listener_;
       if (info->type_support_) {
         dds_participant->unregister_type(info->type_support_.get_type_name());
       }
@@ -202,6 +203,14 @@ create_subscription(
       "failed to register type object with incompatible type %s",
       type_name.c_str());
     return nullptr;
+  }
+
+  /////
+  // Create Listener
+  info->listener_ = new (std::nothrow) SubListener(info, qos_policies->depth);
+  if (!info->listener_) {
+      RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
+      return nullptr;
   }
 
   /////
@@ -278,11 +287,15 @@ create_subscription(
       subscription_options,
       subscriber,
       des_topic,
+      info->listener_,
       &info->data_reader_))
   {
     RMW_SET_ERROR_MSG("create_datareader() could not create data reader");
     return nullptr;
   }
+
+  // Initialize DataReader's StatusCondition to 
+  info->data_reader_->get_statuscondition().set_enabled_statuses(eprosima::fastdds::dds::StatusMask::data_available());
 
   // lambda to delete datareader
   auto cleanup_datareader = rcpputils::make_scope_exit(

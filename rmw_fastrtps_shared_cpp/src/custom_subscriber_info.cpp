@@ -25,7 +25,6 @@ eprosima::fastdds::dds::StatusCondition& CustomSubscriberInfo::get_statusconditi
     return data_reader_->get_statuscondition();
 }
 
-/*
 EventListenerInterface *
 CustomSubscriberInfo::getListener() const
 {
@@ -215,4 +214,3 @@ bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
   }
   return true;
 }
-*/
