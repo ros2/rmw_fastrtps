@@ -295,7 +295,7 @@ create_subscription(
     des_topic,
     reader_qos,
     info->listener_,
-    eprosima::fastdds::dds::StatusMask::none());
+    eprosima::fastdds::dds::StatusMask::subscription_matched());
   if (!info->data_reader_ &&
     (RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED ==
     subscription_options->require_unique_network_flow_endpoints))
@@ -304,7 +304,7 @@ create_subscription(
       des_topic,
       original_qos,
       info->listener_,
-    eprosima::fastdds::dds::StatusMask::none());
+    eprosima::fastdds::dds::StatusMask::subscription_matched());
   }
 
   if (!info->data_reader_) {

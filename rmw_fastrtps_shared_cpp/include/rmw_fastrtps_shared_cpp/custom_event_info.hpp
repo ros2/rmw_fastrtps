@@ -106,6 +106,8 @@ struct CustomEventInfo
   virtual eprosima::fastdds::dds::StatusCondition& get_statuscondition() const = 0;
 
   virtual EventListenerInterface * getListener() const = 0;
+
+  virtual bool take_event(rmw_event_type_t event_type, void * event_info) const = 0;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_EVENT_INFO_HPP_

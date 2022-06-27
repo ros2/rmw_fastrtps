@@ -82,6 +82,9 @@ struct CustomSubscriberInfo : public CustomEventInfo
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *
   getListener() const final;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  bool take_event(rmw_event_type_t event_type, void * event_info) const final;
 };
 
 

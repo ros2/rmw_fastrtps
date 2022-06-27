@@ -47,11 +47,6 @@ rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(rmw_context_t * contex
   rmw_ret_t ret = RMW_RET_OK;
   rmw_error_string_t error_string;
 
-  ret = rmw_fastrtps_shared_cpp::join_listener_thread(context);
-  if (RMW_RET_OK != ret) {
-    return ret;
-  }
-
   auto common_context = static_cast<rmw_dds_common::Context *>(context->impl->common);
   auto participant_info = static_cast<CustomParticipantInfo *>(context->impl->participant_info);
 

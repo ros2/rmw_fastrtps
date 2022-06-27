@@ -31,6 +31,52 @@ CustomPublisherInfo::getListener() const
   return listener_;
 }
 
+bool CustomPublisherInfo::take_event(rmw_event_type_t event_type, void * event_info) const
+{
+  assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
+  switch (event_type) {
+    case RMW_EVENT_LIVELINESS_LOST:
+      {
+        auto rmw_data = static_cast<rmw_liveliness_lost_status_t *>(event_info);
+        eprosima::fastdds::dds::LivelinessLostStatus liveliness_lost_status;
+        data_writer_->get_liveliness_lost_status(liveliness_lost_status);
+        rmw_data->total_count = liveliness_lost_status.total_count;
+        rmw_data->total_count_change = liveliness_lost_status.total_count_change;
+        //liveliness_lost_status_.total_count_change = 0;
+        //liveliness_changes_.store(false, std::memory_order_relaxed);
+      }
+      break;
+    case RMW_EVENT_OFFERED_DEADLINE_MISSED:
+      {
+        auto rmw_data = static_cast<rmw_offered_deadline_missed_status_t *>(event_info);
+        eprosima::fastdds::dds::OfferedDeadlineMissedStatus offered_deadline_missed_status;
+        data_writer_->get_offered_deadline_missed_status(offered_deadline_missed_status);
+        rmw_data->total_count = offered_deadline_missed_status.total_count;
+        rmw_data->total_count_change = offered_deadline_missed_status.total_count_change;
+        //offered_deadline_missed_status_.total_count_change = 0;
+        //deadline_changes_.store(false, std::memory_order_relaxed);
+      }
+      break;
+    case RMW_EVENT_OFFERED_QOS_INCOMPATIBLE:
+      {
+        auto rmw_data = static_cast<rmw_offered_qos_incompatible_event_status_t *>(event_info);
+        eprosima::fastdds::dds::OfferedIncompatibleQosStatus offered_incompatible_qos_status;
+        data_writer_->get_offered_incompatible_qos_status(offered_incompatible_qos_status);
+        rmw_data->total_count = offered_incompatible_qos_status.total_count;
+        rmw_data->total_count_change = offered_incompatible_qos_status.total_count_change;
+        rmw_data->last_policy_kind =
+          rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
+          offered_incompatible_qos_status.last_policy_id);
+        //incompatible_qos_status_.total_count_change = 0;
+        //incompatible_qos_changes_.store(false, std::memory_order_relaxed);
+      }
+      break;
+    default:
+      return false;
+  }
+  return true;
+}
+
 void
 PubListener::on_offered_deadline_missed(
   eprosima::fastdds::dds::DataWriter * /* writer */,

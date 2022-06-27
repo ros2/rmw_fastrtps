@@ -367,6 +367,8 @@ rmw_create_service(
     return nullptr;
   }
 
+  info->request_reader_->get_statuscondition().set_enabled_statuses(eprosima::fastdds::dds::StatusMask::data_available());
+
   // lambda to delete datareader
   auto cleanup_datareader = rcpputils::make_scope_exit(
     [subscriber, info]() {
@@ -414,12 +416,15 @@ rmw_create_service(
   info->response_writer_ = publisher->create_datawriter(
     response_topic.topic,
     writer_qos,
-    info->pub_listener_);
+    info->pub_listener_,
+    eprosima::fastdds::dds::StatusMask::publication_matched());
 
   if (!info->response_writer_) {
     RMW_SET_ERROR_MSG("create_service() failed to create response DataWriter");
     return nullptr;
   }
+
+  info->response_writer_->get_statuscondition().set_enabled_statuses(eprosima::fastdds::dds::StatusMask::none());
 
   // lambda to delete datawriter
   auto cleanup_datawriter = rcpputils::make_scope_exit(

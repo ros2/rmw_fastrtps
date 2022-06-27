@@ -194,7 +194,7 @@ __rmw_take_event(
     return RMW_RET_ERROR);
 
   auto event = static_cast<CustomEventInfo *>(event_handle->data);
-  if (event->getListener()->takeNextEvent(event_handle->event_type, event_info)) {
+  if (event->take_event(event_handle->event_type, event_info)) {
     *taken = true;
     return RMW_RET_OK;
   }

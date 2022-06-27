@@ -159,11 +159,6 @@ init_context_impl(rmw_context_t * context)
   context->impl->common = common_context.get();
   context->impl->participant_info = participant_info.get();
 
-  rmw_ret_t ret = rmw_fastrtps_shared_cpp::run_listener_thread(context);
-  if (RMW_RET_OK != ret) {
-    return ret;
-  }
-
   common_context->graph_cache.set_on_change_callback(
     [guard_condition = graph_guard_condition.get()]() {
       rmw_fastrtps_shared_cpp::__rmw_trigger_guard_condition(
