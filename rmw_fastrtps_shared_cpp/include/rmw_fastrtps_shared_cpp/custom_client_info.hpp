@@ -85,8 +85,13 @@ public:
     data.is_cdr_buffer = true;
     data.data = response.buffer_.get();
     data.impl = nullptr;    // not used when is_cdr_buffer is true
+<<<<<<< HEAD
     if (sub->takeNextData(&data, &response.sample_info_)) {
       if (eprosima::fastrtps::rtps::ALIVE == response.sample_info_.sampleKind) {
+=======
+    while (reader->take_next_sample(&data, &response.sample_info_) == ReturnCode_t::RETCODE_OK) {
+      if (response.sample_info_.valid_data) {
+>>>>>>> e9abdc4 (Take all available samples on service/client on_data_available. (#616))
         response.sample_identity_ = response.sample_info_.related_sample_identity;
 
         if (response.sample_identity_.writer_guid() == info_->reader_guid_ ||
