@@ -163,12 +163,6 @@ public:
             eprosima::fastdds::dds::DataReader*,
             const eprosima::fastdds::dds::RequestedIncompatibleQosStatus&) final;
 
-    // EventListenerInterface implementation
-    RMW_FASTRTPS_SHARED_CPP_PUBLIC
-    bool
-    has_event(
-            rmw_event_type_t event_type) const final;
-
     // SubListener API
     void
     attachCondition(
@@ -265,22 +259,22 @@ private:
 
     std::atomic_bool data_;
 
-    std::atomic_bool deadline_changes_;
+    bool deadline_changes_;
     eprosima::fastdds::dds::RequestedDeadlineMissedStatus requested_deadline_missed_status_
     RCPPUTILS_TSA_GUARDED_BY(
             internalMutex_);
 
-    std::atomic_bool liveliness_changes_;
+    bool liveliness_changes_;
     eprosima::fastdds::dds::LivelinessChangedStatus liveliness_changed_status_
     RCPPUTILS_TSA_GUARDED_BY(
             internalMutex_);
 
-    std::atomic_bool sample_lost_changes_;
+    bool sample_lost_changes_;
     eprosima::fastdds::dds::SampleLostStatus sample_lost_status_
     RCPPUTILS_TSA_GUARDED_BY(
             internalMutex_);
 
-    std::atomic_bool incompatible_qos_changes_;
+    bool incompatible_qos_changes_;
     eprosima::fastdds::dds::RequestedIncompatibleQosStatus incompatible_qos_status_
     RCPPUTILS_TSA_GUARDED_BY(
             internalMutex_);

@@ -15,7 +15,6 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 
-#include <atomic>
 #include <condition_variable>
 #include <mutex>
 #include <set>
@@ -106,12 +105,6 @@ public:
             eprosima::fastdds::dds::DataWriter*,
             const eprosima::fastdds::dds::OfferedIncompatibleQosStatus&) final;
 
-    // EventListenerInterface implementation
-    RMW_FASTRTPS_SHARED_CPP_PUBLIC
-    bool
-    has_event(
-            rmw_event_type_t event_type) const final;
-
     // PubListener API
     size_t subscriptionCount()
     {
@@ -161,17 +154,17 @@ private:
     RCPPUTILS_TSA_GUARDED_BY(
             internalMutex_);
 
-    std::atomic_bool deadline_changes_;
+    bool deadline_changes_;
     eprosima::fastdds::dds::OfferedDeadlineMissedStatus offered_deadline_missed_status_
     RCPPUTILS_TSA_GUARDED_BY(
             internalMutex_);
 
-    std::atomic_bool liveliness_changes_;
+    bool liveliness_changes_;
     eprosima::fastdds::dds::LivelinessLostStatus liveliness_lost_status_
     RCPPUTILS_TSA_GUARDED_BY(
             internalMutex_);
 
-    std::atomic_bool incompatible_qos_changes_;
+    bool incompatible_qos_changes_;
     eprosima::fastdds::dds::OfferedIncompatibleQosStatus incompatible_qos_status_
     RCPPUTILS_TSA_GUARDED_BY(
             internalMutex_);

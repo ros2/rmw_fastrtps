@@ -43,13 +43,13 @@ bool SubListener::take_event(
         case RMW_EVENT_LIVELINESS_CHANGED:
         {
             auto rmw_data = static_cast<rmw_liveliness_changed_status_t*>(event_info);
-            if (liveliness_changes_.load(std::memory_order_relaxed))
+            if (liveliness_changes_)
             {
                 rmw_data->alive_count = liveliness_changed_status_.alive_count;
                 rmw_data->not_alive_count = liveliness_changed_status_.not_alive_count;
                 rmw_data->alive_count_change = liveliness_changed_status_.alive_count_change;
                 rmw_data->not_alive_count_change = liveliness_changed_status_.not_alive_count_change;
-                liveliness_changes_.store(false, std::memory_order_relaxed);
+                liveliness_changes_ = false;
             }
             else
             {
@@ -67,11 +67,11 @@ bool SubListener::take_event(
         case RMW_EVENT_REQUESTED_DEADLINE_MISSED:
         {
             auto rmw_data = static_cast<rmw_requested_deadline_missed_status_t*>(event_info);
-            if (deadline_changes_.load(std::memory_order_relaxed))
+            if (deadline_changes_)
             {
                 rmw_data->total_count = requested_deadline_missed_status_.total_count;
                 rmw_data->total_count_change = requested_deadline_missed_status_.total_count_change;
-                deadline_changes_.store(false, std::memory_order_relaxed);
+                deadline_changes_ = false;
             }
             else
             {
@@ -86,11 +86,11 @@ bool SubListener::take_event(
         case RMW_EVENT_MESSAGE_LOST:
         {
             auto rmw_data = static_cast<rmw_message_lost_status_t*>(event_info);
-            if (sample_lost_changes_.load(std::memory_order_relaxed))
+            if (sample_lost_changes_)
             {
                 rmw_data->total_count = sample_lost_status_.total_count;
                 rmw_data->total_count_change = sample_lost_status_.total_count_change;
-                sample_lost_changes_.store(false, std::memory_order_relaxed);
+                sample_lost_changes_ = false;
             }
             else
             {
@@ -105,14 +105,14 @@ bool SubListener::take_event(
         case RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE:
         {
             auto rmw_data = static_cast<rmw_requested_qos_incompatible_event_status_t*>(event_info);
-            if (incompatible_qos_changes_.load(std::memory_order_relaxed))
+            if (incompatible_qos_changes_)
             {
                 rmw_data->total_count = incompatible_qos_status_.total_count;
                 rmw_data->total_count_change = incompatible_qos_status_.total_count_change;
                 rmw_data->last_policy_kind =
                         rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
                     incompatible_qos_status_.last_policy_id);
-                incompatible_qos_changes_.store(false, std::memory_order_relaxed);
+                incompatible_qos_changes_ = false;
             }
             else
             {
@@ -132,6 +132,7 @@ bool SubListener::take_event(
             return false;
     }
 
+    event_guard[event_type].set_trigger_value(false);
     return true;
 }
 
@@ -144,8 +145,6 @@ void SubListener::set_on_new_event_callback(
 
     if (callback)
     {
-        size_t last_total_count = 0;
-
         switch (event_type){
             case RMW_EVENT_LIVELINESS_CHANGED:
             {
@@ -214,12 +213,14 @@ SubListener::on_requested_deadline_missed(
     // Accumulate deltas
     requested_deadline_missed_status_.total_count_change += status.total_count_change;
 
-    deadline_changes_.store(true, std::memory_order_relaxed);
+    deadline_changes_ = true;
 
     if (on_new_event_cb_[RMW_EVENT_REQUESTED_DEADLINE_MISSED])
     {
         on_new_event_cb_[RMW_EVENT_REQUESTED_DEADLINE_MISSED](user_data_[RMW_EVENT_REQUESTED_DEADLINE_MISSED], 1);
     }
+
+    event_guard[RMW_EVENT_REQUESTED_DEADLINE_MISSED].set_trigger_value(true);
 }
 
 void SubListener::on_liveliness_changed(
@@ -235,12 +236,14 @@ void SubListener::on_liveliness_changed(
     liveliness_changed_status_.alive_count_change += status.alive_count_change;
     liveliness_changed_status_.not_alive_count_change += status.not_alive_count_change;
 
-    liveliness_changes_.store(true, std::memory_order_relaxed);
+    liveliness_changes_ = true;
 
     if (on_new_event_cb_[RMW_EVENT_LIVELINESS_CHANGED])
     {
         on_new_event_cb_[RMW_EVENT_LIVELINESS_CHANGED](user_data_[RMW_EVENT_LIVELINESS_CHANGED], 1);
     }
+
+    event_guard[RMW_EVENT_LIVELINESS_CHANGED].set_trigger_value(true);
 }
 
 void SubListener::on_sample_lost(
@@ -254,12 +257,14 @@ void SubListener::on_sample_lost(
     // Accumulate deltas
     sample_lost_status_.total_count_change += status.total_count_change;
 
-    sample_lost_changes_.store(true, std::memory_order_relaxed);
+    sample_lost_changes_ = true;
 
     if (on_new_event_cb_[RMW_EVENT_MESSAGE_LOST])
     {
         on_new_event_cb_[RMW_EVENT_MESSAGE_LOST](user_data_[RMW_EVENT_MESSAGE_LOST], 1);
     }
+
+    event_guard[RMW_EVENT_MESSAGE_LOST].set_trigger_value(true);
 }
 
 void SubListener::on_requested_incompatible_qos(
@@ -274,29 +279,12 @@ void SubListener::on_requested_incompatible_qos(
     // Accumulate deltas
     incompatible_qos_status_.total_count_change += status.total_count_change;
 
-    incompatible_qos_changes_.store(true, std::memory_order_relaxed);
+    incompatible_qos_changes_ = true;
 
     if (on_new_event_cb_[RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE])
     {
         on_new_event_cb_[RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE](user_data_[RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE], 1);
     }
-}
 
-bool SubListener::has_event(
-        rmw_event_type_t event_type) const
-{
-    assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
-    switch (event_type){
-        case RMW_EVENT_LIVELINESS_CHANGED:
-            return liveliness_changes_.load(std::memory_order_relaxed);
-        case RMW_EVENT_REQUESTED_DEADLINE_MISSED:
-            return deadline_changes_.load(std::memory_order_relaxed);
-        case RMW_EVENT_MESSAGE_LOST:
-            return sample_lost_changes_.load(std::memory_order_relaxed);
-        case RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE:
-            return incompatible_qos_changes_.load(std::memory_order_relaxed);
-        default:
-            break;
-    }
-    return false;
+    event_guard[RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE].set_trigger_value(true);
 }

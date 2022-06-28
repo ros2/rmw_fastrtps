@@ -24,6 +24,7 @@
 
 #include "fastcdr/FastBuffer.h"
 #include "fastdds/dds/core/condition/StatusCondition.hpp"
+#include "fastdds/dds/core/condition/GuardCondition.hpp"
 
 #include "rmw/event.h"
 #include "rmw/event_callback_type.h"
@@ -52,14 +53,6 @@ public:
     /// Unset the information from attachCondition.
     virtual void detachCondition() = 0;
 
-    /// Check if there is new data available for a specific event type.
-    /**
-     * \param event_type The event type to check on.
-     * \return `true` if new data is available.
-     */
-    virtual bool has_event(
-            rmw_event_type_t event_type) const = 0;
-
     /// Take ready data for an event type.
     /**
      * \param event_type The event type to get data for.
@@ -77,6 +70,9 @@ public:
             rmw_event_type_t event_type,
             const void* user_data,
             rmw_event_callback_t callback) = 0;
+
+
+    eprosima::fastdds::dds::GuardCondition event_guard[RMW_EVENT_INVALID];
 
 protected:
 

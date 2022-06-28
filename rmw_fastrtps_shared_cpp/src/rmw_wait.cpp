@@ -93,6 +93,7 @@ __rmw_wait(
             auto event = static_cast<rmw_event_t*>(events->events[i]);
             auto custom_event_info = static_cast<CustomEventInfo*>(event->data);
             fastdds_wait_set->attach_condition(custom_event_info->get_listener()->get_statuscondition());
+            fastdds_wait_set->attach_condition(custom_event_info->get_listener()->event_guard[event->event_type]);
         }
     }
 
@@ -216,6 +217,9 @@ __rmw_wait(
                     custom_event_info->get_listener()->get_statuscondition();
             fastdds_wait_set->detach_condition(status_condition);
             eprosima::fastdds::dds::Condition* condition = &status_condition;
+            eprosima::fastdds::dds::GuardCondition* guard_condition =
+                    &custom_event_info->get_listener()->event_guard[event->event_type];
+            bool active = false;
             if (ReturnCode_t::RETCODE_OK == ret_code &&
                     triggered_coditions.end() != std::find_if(triggered_coditions.begin(), triggered_coditions.end(),
                     [condition](const eprosima::fastdds::dds::Condition* c)
@@ -225,15 +229,28 @@ __rmw_wait(
             {
                 eprosima::fastdds::dds::Entity* entity = status_condition.get_entity();
                 eprosima::fastdds::dds::StatusMask changed_statuses = entity->get_status_changes();
-                if (!custom_event_info->get_listener()->has_event(event->event_type) &&
-                        !changed_statuses.is_active(rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(
-                            event->
-                                    event_type)))
+                if (changed_statuses.is_active(rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(
+                            event->event_type)))
                 {
-                    events->events[i] = 0;
+                    active = true;
                 }
             }
-            else
+            if (ReturnCode_t::RETCODE_OK == ret_code &&
+                    triggered_coditions.end() != std::find_if(triggered_coditions.begin(), triggered_coditions.end(),
+                    [guard_condition](const eprosima::fastdds::dds::Condition* c)
+                    {
+                        return c == guard_condition;
+                    }))
+            {
+                if (guard_condition->get_trigger_value())
+                {
+                    active = true;
+                    guard_condition->set_trigger_value(false);
+                }
+            }
+
+
+            if (!active)
             {
                 events->events[i] = 0;
             }
