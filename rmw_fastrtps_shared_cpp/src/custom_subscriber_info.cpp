@@ -202,6 +202,52 @@ void SubListener::set_on_new_event_callback(
 }
 
 void
+SubListener::set_on_new_message_callback(
+        const void* user_data,
+        rmw_event_callback_t callback)
+{
+    std::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
+
+    if (callback)
+    {
+        auto unread_count = subscriber_info_->data_reader_->get_unread_count();
+        // Push events arrived before setting the executor's callback
+        if (unread_count)
+        {
+            callback(user_data, unread_count);
+        }
+
+        new_message_user_data_ = user_data;
+        on_new_message_cb_ = callback;
+
+        eprosima::fastdds::dds::StatusMask status_mask = subscriber_info_->data_reader_->get_status_mask();
+        subscriber_info_->data_reader_->set_listener(this,
+                status_mask << eprosima::fastdds::dds::StatusMask::data_available());
+    }
+    else
+    {
+        eprosima::fastdds::dds::StatusMask status_mask = subscriber_info_->data_reader_->get_status_mask();
+        subscriber_info_->data_reader_->set_listener(this,
+                status_mask >> eprosima::fastdds::dds::StatusMask::data_available());
+
+        new_message_user_data_ = nullptr;
+        on_new_message_cb_ = nullptr;
+    }
+}
+
+void
+SubListener::on_data_available(
+        eprosima::fastdds::dds::DataReader*)
+{
+    std::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
+
+    if (on_new_message_cb_)
+    {
+        on_new_message_cb_(new_message_user_data_, 1);
+    }
+}
+
+void
 SubListener::on_requested_deadline_missed(
         eprosima::fastdds::dds::DataReader*,
         const eprosima::fastdds::dds::RequestedDeadlineMissedStatus& status)

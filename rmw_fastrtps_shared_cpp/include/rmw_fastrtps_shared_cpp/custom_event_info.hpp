@@ -15,10 +15,6 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_EVENT_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_EVENT_INFO_HPP_
 
-#include <atomic>
-#include <condition_variable>
-#include <list>
-#include <memory>
 #include <mutex>
 #include <utility>
 
@@ -34,24 +30,9 @@
 
 class EventListenerInterface
 {
-protected:
-
-    class ConditionalScopedLock;
-
 public:
 
     virtual eprosima::fastdds::dds::StatusCondition& get_statuscondition() const = 0;
-
-
-    //TODO(richiwre) review
-    /// Connect a condition variable so a waiter can be notified of new data.
-    virtual void attachCondition(
-            std::mutex* conditionMutex,
-            std::condition_variable* conditionVariable) = 0;
-
-    //TODO(richiwre) review
-    /// Unset the information from attachCondition.
-    virtual void detachCondition() = 0;
 
     /// Take ready data for an event type.
     /**
@@ -81,40 +62,6 @@ protected:
     const void* user_data_[RMW_EVENT_INVALID] = {nullptr};
 
     std::mutex on_new_event_m_;
-};
-
-class EventListenerInterface::ConditionalScopedLock
-{
-public:
-
-    ConditionalScopedLock(
-            std::mutex* mutex,
-            std::condition_variable* condition_variable = nullptr)
-        : mutex_(mutex)
-        , cv_(condition_variable)
-    {
-        if (nullptr != mutex_)
-        {
-            mutex_->lock();
-        }
-    }
-
-    ~ConditionalScopedLock()
-    {
-        if (nullptr != mutex_)
-        {
-            mutex_->unlock();
-            if (nullptr != cv_)
-            {
-                cv_->notify_all();
-            }
-        }
-    }
-
-private:
-
-    std::mutex* mutex_;
-    std::condition_variable* cv_;
 };
 
 struct CustomEventInfo

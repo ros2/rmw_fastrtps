@@ -64,8 +64,6 @@ public:
         , deadline_changes_(false)
         , liveliness_changes_(false)
         , incompatible_qos_changes_(false)
-        , conditionMutex_(nullptr)
-        , conditionVariable_(nullptr)
     {
     }
 
@@ -76,7 +74,7 @@ public:
             eprosima::fastdds::dds::DataWriter* /* writer */,
             const eprosima::fastdds::dds::PublicationMatchedStatus& info) final
     {
-        std::lock_guard<std::mutex> lock(internalMutex_);
+        std::lock_guard<std::mutex> lock(discovery_m_);
         if (info.current_count_change == 1)
         {
             subscriptions_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
@@ -108,26 +106,8 @@ public:
     // PubListener API
     size_t subscriptionCount()
     {
-        std::lock_guard<std::mutex> lock(internalMutex_);
+        std::lock_guard<std::mutex> lock(discovery_m_);
         return subscriptions_.size();
-    }
-
-    void
-    attachCondition(
-            std::mutex* conditionMutex,
-            std::condition_variable* conditionVariable)
-    {
-        std::lock_guard<std::mutex> lock(internalMutex_);
-        conditionMutex_ = conditionMutex;
-        conditionVariable_ = conditionVariable;
-    }
-
-    void
-    detachCondition()
-    {
-        std::lock_guard<std::mutex> lock(internalMutex_);
-        conditionMutex_ = nullptr;
-        conditionVariable_ = nullptr;
     }
 
     RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -148,31 +128,26 @@ private:
 
     CustomPublisherInfo* publisher_info_ = nullptr;
 
-    mutable std::mutex internalMutex_;
-
     std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_
     RCPPUTILS_TSA_GUARDED_BY(
-            internalMutex_);
+            discovery_m_);
+
+    std::mutex discovery_m_;
 
     bool deadline_changes_;
     eprosima::fastdds::dds::OfferedDeadlineMissedStatus offered_deadline_missed_status_
     RCPPUTILS_TSA_GUARDED_BY(
-            internalMutex_);
+            on_new_event_m_);
 
     bool liveliness_changes_;
     eprosima::fastdds::dds::LivelinessLostStatus liveliness_lost_status_
     RCPPUTILS_TSA_GUARDED_BY(
-            internalMutex_);
+            on_new_event_m_);
 
     bool incompatible_qos_changes_;
     eprosima::fastdds::dds::OfferedIncompatibleQosStatus incompatible_qos_status_
     RCPPUTILS_TSA_GUARDED_BY(
-            internalMutex_);
-
-    std::mutex* conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(
-            internalMutex_);
-    std::condition_variable* conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(
-            internalMutex_);
+            on_new_event_m_);
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
