@@ -20,208 +20,222 @@
 #include "event_helpers.hpp"
 #include "types/event_types.hpp"
 
-eprosima::fastdds::dds::StatusCondition& CustomPublisherInfo::get_statuscondition() const
+EventListenerInterface*
+CustomPublisherInfo::get_listener() const
 {
-    return data_writer_->get_statuscondition();
+    return listener_;
 }
 
-EventListenerInterface *
-CustomPublisherInfo::getListener() const
+eprosima::fastdds::dds::StatusCondition& PubListener::get_statuscondition() const
 {
-  return listener_;
+    return publisher_info_->data_writer_->get_statuscondition();
 }
 
-bool CustomPublisherInfo::take_event(rmw_event_type_t event_type, void * event_info) const
+bool PubListener::take_event(
+        rmw_event_type_t event_type,
+        void* event_info)
 {
-  assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
-  switch (event_type) {
-    case RMW_EVENT_LIVELINESS_LOST:
-      {
-        auto rmw_data = static_cast<rmw_liveliness_lost_status_t *>(event_info);
-        eprosima::fastdds::dds::LivelinessLostStatus liveliness_lost_status;
-        data_writer_->get_liveliness_lost_status(liveliness_lost_status);
-        rmw_data->total_count = liveliness_lost_status.total_count;
-        rmw_data->total_count_change = liveliness_lost_status.total_count_change;
-        //liveliness_lost_status_.total_count_change = 0;
-        //liveliness_changes_.store(false, std::memory_order_relaxed);
-      }
-      break;
-    case RMW_EVENT_OFFERED_DEADLINE_MISSED:
-      {
-        auto rmw_data = static_cast<rmw_offered_deadline_missed_status_t *>(event_info);
-        eprosima::fastdds::dds::OfferedDeadlineMissedStatus offered_deadline_missed_status;
-        data_writer_->get_offered_deadline_missed_status(offered_deadline_missed_status);
-        rmw_data->total_count = offered_deadline_missed_status.total_count;
-        rmw_data->total_count_change = offered_deadline_missed_status.total_count_change;
-        //offered_deadline_missed_status_.total_count_change = 0;
-        //deadline_changes_.store(false, std::memory_order_relaxed);
-      }
-      break;
-    case RMW_EVENT_OFFERED_QOS_INCOMPATIBLE:
-      {
-        auto rmw_data = static_cast<rmw_offered_qos_incompatible_event_status_t *>(event_info);
-        eprosima::fastdds::dds::OfferedIncompatibleQosStatus offered_incompatible_qos_status;
-        data_writer_->get_offered_incompatible_qos_status(offered_incompatible_qos_status);
-        rmw_data->total_count = offered_incompatible_qos_status.total_count;
-        rmw_data->total_count_change = offered_incompatible_qos_status.total_count_change;
-        rmw_data->last_policy_kind =
-          rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
-          offered_incompatible_qos_status.last_policy_id);
-        //incompatible_qos_status_.total_count_change = 0;
-        //incompatible_qos_changes_.store(false, std::memory_order_relaxed);
-      }
-      break;
-    default:
-      return false;
-  }
-  return true;
+    assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
+
+    std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+
+    switch (event_type){
+        case RMW_EVENT_LIVELINESS_LOST:
+        {
+            auto rmw_data = static_cast<rmw_liveliness_lost_status_t*>(event_info);
+            if (liveliness_changes_.load(std::memory_order_relaxed))
+            {
+                rmw_data->total_count = liveliness_lost_status_.total_count;
+                rmw_data->total_count_change = liveliness_lost_status_.total_count_change;
+                liveliness_changes_.store(false, std::memory_order_relaxed);
+            }
+            else
+            {
+                eprosima::fastdds::dds::LivelinessLostStatus liveliness_lost_status;
+                publisher_info_->data_writer_->get_liveliness_lost_status(liveliness_lost_status);
+                rmw_data->total_count = liveliness_lost_status.total_count;
+                rmw_data->total_count_change = liveliness_lost_status.total_count_change;
+            }
+            liveliness_lost_status_.total_count_change = 0;
+        }
+        break;
+        case RMW_EVENT_OFFERED_DEADLINE_MISSED:
+        {
+            auto rmw_data = static_cast<rmw_offered_deadline_missed_status_t*>(event_info);
+            if (deadline_changes_.load(std::memory_order_relaxed))
+            {
+                rmw_data->total_count = offered_deadline_missed_status_.total_count;
+                rmw_data->total_count_change = offered_deadline_missed_status_.total_count_change;
+                deadline_changes_.store(false, std::memory_order_relaxed);
+            }
+            else
+            {
+                eprosima::fastdds::dds::OfferedDeadlineMissedStatus offered_deadline_missed_status;
+                publisher_info_->data_writer_->get_offered_deadline_missed_status(offered_deadline_missed_status);
+                rmw_data->total_count = offered_deadline_missed_status.total_count;
+                rmw_data->total_count_change = offered_deadline_missed_status.total_count_change;
+            }
+            offered_deadline_missed_status_.total_count_change = 0;
+        }
+        break;
+        case RMW_EVENT_OFFERED_QOS_INCOMPATIBLE:
+        {
+            auto rmw_data = static_cast<rmw_offered_qos_incompatible_event_status_t*>(event_info);
+            if (incompatible_qos_changes_.load(std::memory_order_relaxed))
+            {
+                rmw_data->total_count = incompatible_qos_status_.total_count;
+                rmw_data->total_count_change = incompatible_qos_status_.total_count_change;
+                rmw_data->last_policy_kind =
+                        rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
+                    incompatible_qos_status_.last_policy_id);
+                incompatible_qos_changes_.store(false, std::memory_order_relaxed);
+            }
+            else
+            {
+                eprosima::fastdds::dds::OfferedIncompatibleQosStatus offered_incompatible_qos_status;
+                publisher_info_->data_writer_->get_offered_incompatible_qos_status(offered_incompatible_qos_status);
+                rmw_data->total_count = offered_incompatible_qos_status.total_count;
+                rmw_data->total_count_change = offered_incompatible_qos_status.total_count_change;
+                rmw_data->last_policy_kind =
+                        rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
+                    offered_incompatible_qos_status.last_policy_id);
+            }
+            incompatible_qos_status_.total_count_change = 0;
+        }
+        break;
+        default:
+            return false;
+    }
+    return true;
+}
+
+void PubListener::set_on_new_event_callback(
+        rmw_event_type_t event_type,
+        const void* user_data,
+        rmw_event_callback_t callback)
+{
+    std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+
+    if (callback)
+    {
+        size_t last_total_count = 0;
+
+        switch (event_type)
+        {
+            case RMW_EVENT_LIVELINESS_LOST:
+                publisher_info_->data_writer_->get_liveliness_lost_status(liveliness_lost_status_);
+                callback(user_data, liveliness_lost_status_.total_count_change);
+                liveliness_lost_status_.total_count_change = 0;
+                break;
+            case RMW_EVENT_OFFERED_DEADLINE_MISSED:
+                last_total_count = offered_deadline_missed_status_.total_count;
+                publisher_info_->data_writer_->get_offered_deadline_missed_status(offered_deadline_missed_status_);
+                callback(user_data,
+                        offered_deadline_missed_status_.total_count_change);
+                offered_deadline_missed_status_.total_count_change = 0;
+                break;
+            case RMW_EVENT_OFFERED_QOS_INCOMPATIBLE:
+                last_total_count = incompatible_qos_status_.total_count;
+                publisher_info_->data_writer_->get_offered_incompatible_qos_status(incompatible_qos_status_);
+                callback(user_data,
+                        incompatible_qos_status_.total_count_change);
+                incompatible_qos_status_.total_count_change = 0;
+                break;
+            default:
+                break;
+        }
+
+        user_data_[event_type] = user_data;
+        on_new_event_cb_[event_type] = callback;
+
+        eprosima::fastdds::dds::StatusMask status_mask = publisher_info_->data_writer_->get_status_mask();
+        publisher_info_->data_writer_->set_listener(this, status_mask << rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(
+                    event_type));
+    }
+    else
+    {
+        eprosima::fastdds::dds::StatusMask status_mask = publisher_info_->data_writer_->get_status_mask();
+        publisher_info_->data_writer_->set_listener(this, status_mask >> rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(
+                    event_type));
+
+        user_data_[event_type] = nullptr;
+        on_new_event_cb_[event_type] = nullptr;
+    }
 }
 
 void
 PubListener::on_offered_deadline_missed(
-  eprosima::fastdds::dds::DataWriter * /* writer */,
-  const eprosima::fastdds::dds::OfferedDeadlineMissedStatus & status)
+        eprosima::fastdds::dds::DataWriter* /* writer */,
+        const eprosima::fastdds::dds::OfferedDeadlineMissedStatus& status)
 {
-  std::lock_guard<std::mutex> lock(internalMutex_);
+    std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
-  // the change to liveliness_lost_count_ needs to be mutually exclusive with
-  // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
-  ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
+    // Assign absolute values
+    offered_deadline_missed_status_.total_count = status.total_count;
+    // Accumulate deltas
+    offered_deadline_missed_status_.total_count_change += status.total_count_change;
 
-  // Assign absolute values
-  offered_deadline_missed_status_.total_count = status.total_count;
-  // Accumulate deltas
-  offered_deadline_missed_status_.total_count_change += status.total_count_change;
+    deadline_changes_.store(true, std::memory_order_relaxed);
 
-  deadline_changes_.store(true, std::memory_order_relaxed);
-
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
-
-  if (on_new_event_cb_) {
-    on_new_event_cb_(user_data_, 1);
-  } else {
-    unread_events_count_++;
-  }
+    if (on_new_event_cb_[RMW_EVENT_OFFERED_DEADLINE_MISSED])
+    {
+        on_new_event_cb_[RMW_EVENT_OFFERED_DEADLINE_MISSED](user_data_[RMW_EVENT_OFFERED_DEADLINE_MISSED], 1);
+    }
 }
 
 void PubListener::on_liveliness_lost(
-  eprosima::fastdds::dds::DataWriter * /* writer */,
-  const eprosima::fastdds::dds::LivelinessLostStatus & status)
+        eprosima::fastdds::dds::DataWriter* /* writer */,
+        const eprosima::fastdds::dds::LivelinessLostStatus& status)
 {
-  std::lock_guard<std::mutex> lock(internalMutex_);
+    std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
-  // the change to liveliness_lost_count_ needs to be mutually exclusive with
-  // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
-  ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
+    // Assign absolute values
+    liveliness_lost_status_.total_count = status.total_count;
+    // Accumulate deltas
+    liveliness_lost_status_.total_count_change += status.total_count_change;
 
-  // Assign absolute values
-  liveliness_lost_status_.total_count = status.total_count;
-  // Accumulate deltas
-  liveliness_lost_status_.total_count_change += status.total_count_change;
+    liveliness_changes_.store(true, std::memory_order_relaxed);
 
-  liveliness_changes_.store(true, std::memory_order_relaxed);
 
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
-
-  if (on_new_event_cb_) {
-    on_new_event_cb_(user_data_, 1);
-  } else {
-    unread_events_count_++;
-  }
+    if (on_new_event_cb_[RMW_EVENT_LIVELINESS_LOST])
+    {
+        on_new_event_cb_[RMW_EVENT_LIVELINESS_LOST](user_data_[RMW_EVENT_LIVELINESS_LOST], 1);
+    }
 }
 
 void PubListener::on_offered_incompatible_qos(
-  eprosima::fastdds::dds::DataWriter * /* writer */,
-  const eprosima::fastdds::dds::OfferedIncompatibleQosStatus & status)
+        eprosima::fastdds::dds::DataWriter* /* writer */,
+        const eprosima::fastdds::dds::OfferedIncompatibleQosStatus& status)
 {
-  std::lock_guard<std::mutex> lock(internalMutex_);
+    std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
-  // the change to incompatible_qos_status_ needs to be mutually exclusive with
-  // rmw_wait() which checks hasEvent() and decides if wait() needs to be called
-  ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
+    // Assign absolute values
+    incompatible_qos_status_.last_policy_id = status.last_policy_id;
+    incompatible_qos_status_.total_count = status.total_count;
+    // Accumulate deltas
+    incompatible_qos_status_.total_count_change += status.total_count_change;
 
-  // Assign absolute values
-  incompatible_qos_status_.last_policy_id = status.last_policy_id;
-  incompatible_qos_status_.total_count = status.total_count;
-  // Accumulate deltas
-  incompatible_qos_status_.total_count_change += status.total_count_change;
+    incompatible_qos_changes_.store(true, std::memory_order_relaxed);
 
-  incompatible_qos_changes_.store(true, std::memory_order_relaxed);
-}
-
-bool PubListener::hasEvent(rmw_event_type_t event_type) const
-{
-  assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
-  switch (event_type) {
-    case RMW_EVENT_LIVELINESS_LOST:
-      return liveliness_changes_.load(std::memory_order_relaxed);
-    case RMW_EVENT_OFFERED_DEADLINE_MISSED:
-      return deadline_changes_.load(std::memory_order_relaxed);
-    case RMW_EVENT_OFFERED_QOS_INCOMPATIBLE:
-      return incompatible_qos_changes_.load(std::memory_order_relaxed);
-    default:
-      break;
-  }
-  return false;
-}
-
-void PubListener::set_on_new_event_callback(
-  const void * user_data,
-  rmw_event_callback_t callback)
-{
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
-
-  if (callback) {
-    // Push events arrived before setting the executor's callback
-    if (unread_events_count_) {
-      callback(user_data, unread_events_count_);
-      unread_events_count_ = 0;
+    if (on_new_event_cb_[RMW_EVENT_OFFERED_QOS_INCOMPATIBLE])
+    {
+        on_new_event_cb_[RMW_EVENT_OFFERED_QOS_INCOMPATIBLE](user_data_[RMW_EVENT_OFFERED_QOS_INCOMPATIBLE], 1);
     }
-    user_data_ = user_data;
-    on_new_event_cb_ = callback;
-  } else {
-    user_data_ = nullptr;
-    on_new_event_cb_ = nullptr;
-  }
 }
 
-bool PubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)
+bool PubListener::has_event(
+        rmw_event_type_t event_type) const
 {
-  assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
-  std::lock_guard<std::mutex> lock(internalMutex_);
-  switch (event_type) {
-    case RMW_EVENT_LIVELINESS_LOST:
-      {
-        auto rmw_data = static_cast<rmw_liveliness_lost_status_t *>(event_info);
-        rmw_data->total_count = liveliness_lost_status_.total_count;
-        rmw_data->total_count_change = liveliness_lost_status_.total_count_change;
-        liveliness_lost_status_.total_count_change = 0;
-        liveliness_changes_.store(false, std::memory_order_relaxed);
-      }
-      break;
-    case RMW_EVENT_OFFERED_DEADLINE_MISSED:
-      {
-        auto rmw_data = static_cast<rmw_offered_deadline_missed_status_t *>(event_info);
-        rmw_data->total_count = offered_deadline_missed_status_.total_count;
-        rmw_data->total_count_change = offered_deadline_missed_status_.total_count_change;
-        offered_deadline_missed_status_.total_count_change = 0;
-        deadline_changes_.store(false, std::memory_order_relaxed);
-      }
-      break;
-    case RMW_EVENT_OFFERED_QOS_INCOMPATIBLE:
-      {
-        auto rmw_data = static_cast<rmw_requested_qos_incompatible_event_status_t *>(event_info);
-        rmw_data->total_count = incompatible_qos_status_.total_count;
-        rmw_data->total_count_change = incompatible_qos_status_.total_count_change;
-        rmw_data->last_policy_kind =
-          rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
-          incompatible_qos_status_.last_policy_id);
-        incompatible_qos_status_.total_count_change = 0;
-        incompatible_qos_changes_.store(false, std::memory_order_relaxed);
-      }
-      break;
-    default:
-      return false;
-  }
-  return true;
+    assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
+    switch (event_type){
+        case RMW_EVENT_LIVELINESS_LOST:
+            return liveliness_changes_.load(std::memory_order_relaxed);
+        case RMW_EVENT_OFFERED_DEADLINE_MISSED:
+            return deadline_changes_.load(std::memory_order_relaxed);
+        case RMW_EVENT_OFFERED_QOS_INCOMPATIBLE:
+            return incompatible_qos_changes_.load(std::memory_order_relaxed);
+        default:
+            break;
+    }
+    return false;
 }
