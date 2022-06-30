@@ -91,9 +91,9 @@ public:
     sample_lost_changes_(false),
     incompatible_qos_changes_(false),
     conditionMutex_(nullptr),
-    conditionVariable_(nullptr)
+    conditionVariable_(nullptr),
+    on_data_available_(qos_depth)
   {
-    qos_depth_ = (qos_depth > 0) ? qos_depth : std::numeric_limits<size_t>::max();
     // Field is not used right now
     (void)info;
   }
@@ -115,19 +115,13 @@ public:
     update_has_data(reader);
   }
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void
-  on_data_available(eprosima::fastdds::dds::DataReader * reader) final
-  {
-    update_has_data(reader);
+  on_data_available(eprosima::fastdds::dds::DataReader * reader) final;
 
-    std::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
-
-    if (on_new_message_cb_) {
-      on_new_message_cb_(user_data_, 1);
-    } else {
-      new_data_unread_count_++;
-    }
-  }
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void
+  set_on_data_available_callback(const void * user_data, rmw_event_callback_t callback);
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void
@@ -159,7 +153,9 @@ public:
   hasEvent(rmw_event_type_t event_type) const final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void set_on_new_event_callback(
+  rmw_ret_t
+  set_on_new_event_callback(
+    rmw_event_type_t event_type,
     const void * user_data,
     rmw_event_callback_t callback) final;
 
@@ -209,30 +205,6 @@ public:
     return publishers_.size();
   }
 
-  // Provide handlers to perform an action when a
-  // new event from this listener has ocurred
-  void
-  set_on_new_message_callback(
-    const void * user_data,
-    rmw_event_callback_t callback)
-  {
-    std::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
-
-    if (callback) {
-      // Push events arrived before setting the executor's callback
-      if (new_data_unread_count_) {
-        auto unread_count = std::min(new_data_unread_count_, qos_depth_);
-        callback(user_data, unread_count);
-        new_data_unread_count_ = 0;
-      }
-      user_data_ = user_data;
-      on_new_message_cb_ = callback;
-    } else {
-      user_data_ = nullptr;
-      on_new_message_cb_ = nullptr;
-    }
-  }
-
 private:
   mutable std::mutex internalMutex_;
 
@@ -259,10 +231,12 @@ private:
 
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
-  rmw_event_callback_t on_new_message_cb_{nullptr};
-  std::mutex on_new_message_m_;
-  size_t qos_depth_;
-  size_t new_data_unread_count_ = 0;
+  // The callbacks to call when the listener detects events
+  EventTypeCallback on_sample_lost_;
+  EventTypeCallback on_data_available_;
+  EventTypeCallback on_liveliness_changed_;
+  EventTypeCallback on_requested_deadline_missed_;
+  EventTypeCallback on_requested_incompatible_qos_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_

@@ -102,10 +102,11 @@ __rmw_event_set_callback(
   const void * user_data)
 {
   auto custom_event_info = static_cast<CustomEventInfo *>(rmw_event->data);
-  custom_event_info->getListener()->set_on_new_event_callback(
-    user_data,
-    callback);
-  return RMW_RET_OK;
+
+  auto listener = custom_event_info->getListener();
+
+  return listener->set_on_new_event_callback(
+    rmw_event->event_type, user_data, callback);
 }
 
 }  // namespace rmw_fastrtps_shared_cpp

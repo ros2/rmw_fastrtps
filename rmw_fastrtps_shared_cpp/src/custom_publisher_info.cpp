@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include "rmw/error_handling.h"
+
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 
 #include "fastdds/dds/core/status/BaseStatus.hpp"
@@ -44,13 +46,7 @@ PubListener::on_offered_deadline_missed(
 
   deadline_changes_.store(true, std::memory_order_relaxed);
 
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
-
-  if (on_new_event_cb_) {
-    on_new_event_cb_(user_data_, 1);
-  } else {
-    unread_events_count_++;
-  }
+  on_offered_deadline_missed_.call();
 }
 
 void PubListener::on_liveliness_lost(
@@ -70,13 +66,7 @@ void PubListener::on_liveliness_lost(
 
   liveliness_changes_.store(true, std::memory_order_relaxed);
 
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
-
-  if (on_new_event_cb_) {
-    on_new_event_cb_(user_data_, 1);
-  } else {
-    unread_events_count_++;
-  }
+  on_liveliness_lost_.call();
 }
 
 void PubListener::on_offered_incompatible_qos(
@@ -96,6 +86,8 @@ void PubListener::on_offered_incompatible_qos(
   incompatible_qos_status_.total_count_change += status.total_count_change;
 
   incompatible_qos_changes_.store(true, std::memory_order_relaxed);
+
+  on_offered_incompatible_qos_.call();
 }
 
 bool PubListener::hasEvent(rmw_event_type_t event_type) const
@@ -114,24 +106,28 @@ bool PubListener::hasEvent(rmw_event_type_t event_type) const
   return false;
 }
 
-void PubListener::set_on_new_event_callback(
+rmw_ret_t PubListener::set_on_new_event_callback(
+  rmw_event_type_t event_type,
   const void * user_data,
   rmw_event_callback_t callback)
 {
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
-
-  if (callback) {
-    // Push events arrived before setting the executor's callback
-    if (unread_events_count_) {
-      callback(user_data, unread_events_count_);
-      unread_events_count_ = 0;
-    }
-    user_data_ = user_data;
-    on_new_event_cb_ = callback;
-  } else {
-    user_data_ = nullptr;
-    on_new_event_cb_ = nullptr;
+  switch (event_type)
+  {
+    case RMW_EVENT_LIVELINESS_LOST:
+      on_liveliness_lost_.set_callback(user_data, callback);
+      break;
+    case RMW_EVENT_OFFERED_DEADLINE_MISSED:
+      on_offered_deadline_missed_.set_callback(user_data, callback);
+      break;
+    case RMW_EVENT_OFFERED_QOS_INCOMPATIBLE:
+      on_offered_incompatible_qos_.set_callback(user_data, callback);
+      break;
+    default:
+      RMW_SET_ERROR_MSG("provided event_type is not supported");
+      return RMW_RET_UNSUPPORTED;
+      break;
   }
+  return RMW_RET_OK;
 }
 
 bool PubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)

@@ -62,14 +62,10 @@ public:
 
   // Provide handlers to perform an action when a
   // new event from this listener has ocurred
-  virtual void set_on_new_event_callback(
+  virtual rmw_ret_t set_on_new_event_callback(
+    rmw_event_type_t event_type,
     const void * user_data,
     rmw_event_callback_t callback) = 0;
-
-  rmw_event_callback_t on_new_event_cb_{nullptr};
-  const void * user_data_{nullptr};
-  uint64_t unread_events_count_ = 0;
-  std::mutex on_new_event_m_;
 };
 
 class EventListenerInterface::ConditionalScopedLock
@@ -103,6 +99,53 @@ private:
 struct CustomEventInfo
 {
   virtual EventListenerInterface * getListener() const = 0;
+};
+
+class EventTypeCallback
+{
+public:
+  EventTypeCallback() = default;
+
+  EventTypeCallback(size_t depth)
+  {
+    history_depth_ = (depth > 0) ? depth : std::numeric_limits<size_t>::max();
+  }
+
+  void set_callback(const void * user_data, rmw_event_callback_t callback)
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (callback) {
+      if (unread_count_) {
+        size_t count = std::min(unread_count_, history_depth_);
+        callback(user_data, count);
+        unread_count_ = 0;
+      }
+      user_data_ = user_data;
+      callback_ = callback;
+    } else {
+      user_data_ = nullptr;
+      callback_ = nullptr;
+    }
+  }
+
+  void call()
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    if (callback_) {
+      callback_(user_data_, 1);
+    } else {
+      unread_count_++;
+    }
+  }
+
+private:
+  std::mutex mutex_;
+  rmw_event_callback_t callback_{nullptr};
+  const void * user_data_{nullptr};
+  size_t unread_count_{0};
+  size_t history_depth_ = std::numeric_limits<size_t>::max();
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_EVENT_INFO_HPP_

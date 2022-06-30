@@ -107,7 +107,9 @@ public:
   hasEvent(rmw_event_type_t event_type) const final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void set_on_new_event_callback(
+  rmw_ret_t
+  set_on_new_event_callback(
+    rmw_event_type_t event_type,
     const void * user_data,
     rmw_event_callback_t callback) final;
 
@@ -158,6 +160,11 @@ private:
 
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+
+  // The callbacks to call when the listener detects events
+  EventTypeCallback on_liveliness_lost_;
+  EventTypeCallback on_offered_deadline_missed_;
+  EventTypeCallback on_offered_incompatible_qos_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_

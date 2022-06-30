@@ -44,13 +44,7 @@ SubListener::on_requested_deadline_missed(
 
   deadline_changes_.store(true, std::memory_order_relaxed);
 
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
-
-  if (on_new_event_cb_) {
-    on_new_event_cb_(user_data_, 1);
-  } else {
-    unread_events_count_++;
-  }
+  on_requested_deadline_missed_.call();
 }
 
 void SubListener::on_liveliness_changed(
@@ -72,13 +66,7 @@ void SubListener::on_liveliness_changed(
 
   liveliness_changes_.store(true, std::memory_order_relaxed);
 
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
-
-  if (on_new_event_cb_) {
-    on_new_event_cb_(user_data_, 1);
-  } else {
-    unread_events_count_++;
-  }
+  on_liveliness_changed_.call();
 }
 
 void SubListener::on_sample_lost(
@@ -97,6 +85,8 @@ void SubListener::on_sample_lost(
   sample_lost_status_.total_count_change += status.total_count_change;
 
   sample_lost_changes_.store(true, std::memory_order_relaxed);
+
+  on_sample_lost_.call();
 }
 
 void SubListener::on_requested_incompatible_qos(
@@ -116,6 +106,15 @@ void SubListener::on_requested_incompatible_qos(
   incompatible_qos_status_.total_count_change += status.total_count_change;
 
   incompatible_qos_changes_.store(true, std::memory_order_relaxed);
+
+  on_requested_incompatible_qos_.call();
+}
+
+void SubListener::on_data_available(
+  eprosima::fastdds::dds::DataReader * reader)
+{
+  update_has_data(reader);
+  on_data_available_.call();
 }
 
 bool SubListener::hasEvent(rmw_event_type_t event_type) const
@@ -136,25 +135,38 @@ bool SubListener::hasEvent(rmw_event_type_t event_type) const
   return false;
 }
 
-void SubListener::set_on_new_event_callback(
+rmw_ret_t SubListener::set_on_new_event_callback(
+  rmw_event_type_t event_type,
   const void * user_data,
   rmw_event_callback_t callback)
 {
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
-
-  if (callback) {
-    // Push events arrived before setting the executor's callback
-    if (unread_events_count_) {
-      callback(user_data, unread_events_count_);
-      unread_events_count_ = 0;
-    }
-    user_data_ = user_data;
-    on_new_event_cb_ = callback;
-  } else {
-    user_data_ = nullptr;
-    on_new_event_cb_ = nullptr;
-    return;
+  switch (event_type)
+  {
+    case RMW_EVENT_MESSAGE_LOST:
+      on_sample_lost_.set_callback(user_data, callback);
+      break;
+    case RMW_EVENT_LIVELINESS_CHANGED:
+      on_liveliness_changed_.set_callback(user_data, callback);
+      break;
+    case RMW_EVENT_REQUESTED_DEADLINE_MISSED:
+      on_requested_deadline_missed_.set_callback(user_data, callback);
+      break;
+    case RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE:
+      on_requested_incompatible_qos_.set_callback(user_data, callback);
+      break;
+    default:
+      RMW_SET_ERROR_MSG("provided event_type is not supported");
+      return RMW_RET_UNSUPPORTED;
+      break;
   }
+  return RMW_RET_OK;
+}
+
+void SubListener::set_on_data_available_callback(
+  const void * user_data,
+  rmw_event_callback_t callback)
+{
+  on_data_available_.set_callback(user_data, callback);
 }
 
 bool SubListener::takeNextEvent(rmw_event_type_t event_type, void * event_info)

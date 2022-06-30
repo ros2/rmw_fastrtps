@@ -42,6 +42,7 @@
 
 #include "rmw/event_callback_type.h"
 
+#include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
@@ -249,13 +250,7 @@ public:
           list_has_data_.store(true);
         }
 
-        std::unique_lock<std::mutex> lock_mutex(on_new_request_m_);
-
-        if (on_new_request_cb_) {
-          on_new_request_cb_(user_data_, 1);
-        } else {
-          unread_count_++;
-        }
+        on_data_available_.call();
       }
     }
   }
@@ -313,20 +308,7 @@ public:
     const void * user_data,
     rmw_event_callback_t callback)
   {
-    std::unique_lock<std::mutex> lock_mutex(on_new_request_m_);
-
-    if (callback) {
-      // Push events arrived before setting the the executor callback
-      if (unread_count_) {
-        callback(user_data, unread_count_);
-        unread_count_ = 0;
-      }
-      user_data_ = user_data;
-      on_new_request_cb_ = callback;
-    } else {
-      user_data_ = nullptr;
-      on_new_request_cb_ = nullptr;
-    }
+    on_data_available_.set_callback(user_data, callback);
   }
 
 private:
@@ -337,10 +319,8 @@ private:
   std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
   std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
 
-  rmw_event_callback_t on_new_request_cb_{nullptr};
-  const void * user_data_{nullptr};
-  std::mutex on_new_request_m_;
-  uint64_t unread_count_ = 0;
+  // Callback to call when the listener detects events
+  EventTypeCallback on_data_available_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_
