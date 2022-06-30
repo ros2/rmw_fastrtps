@@ -15,8 +15,10 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_EVENT_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_EVENT_INFO_HPP_
 
+#include <algorithm>
 #include <atomic>
 #include <condition_variable>
+#include <limits>
 #include <list>
 #include <memory>
 #include <mutex>
@@ -106,7 +108,7 @@ class EventTypeCallback
 public:
   EventTypeCallback() = default;
 
-  EventTypeCallback(size_t depth)
+  explicit EventTypeCallback(size_t depth)
   {
     history_depth_ = (depth > 0) ? depth : std::numeric_limits<size_t>::max();
   }

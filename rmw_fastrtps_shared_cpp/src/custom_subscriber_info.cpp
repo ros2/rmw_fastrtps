@@ -140,8 +140,7 @@ rmw_ret_t SubListener::set_on_new_event_callback(
   const void * user_data,
   rmw_event_callback_t callback)
 {
-  switch (event_type)
-  {
+  switch (event_type) {
     case RMW_EVENT_MESSAGE_LOST:
       on_sample_lost_.set_callback(user_data, callback);
       break;

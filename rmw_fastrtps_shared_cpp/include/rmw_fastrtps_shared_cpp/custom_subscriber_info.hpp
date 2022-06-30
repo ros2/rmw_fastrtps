@@ -16,7 +16,6 @@
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
 
 #include <atomic>
-#include <algorithm>
 #include <condition_variable>
 #include <limits>
 #include <memory>

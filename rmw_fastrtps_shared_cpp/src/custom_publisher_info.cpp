@@ -111,8 +111,7 @@ rmw_ret_t PubListener::set_on_new_event_callback(
   const void * user_data,
   rmw_event_callback_t callback)
 {
-  switch (event_type)
-  {
+  switch (event_type) {
     case RMW_EVENT_LIVELINESS_LOST:
       on_liveliness_lost_.set_callback(user_data, callback);
       break;
