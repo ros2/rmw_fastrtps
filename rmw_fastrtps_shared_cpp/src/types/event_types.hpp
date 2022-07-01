@@ -27,7 +27,7 @@ namespace internal
 bool is_event_supported(rmw_event_type_t event_type);
 
 eprosima::fastdds::dds::StatusMask rmw_event_to_dds_statusmask(
-        const rmw_event_type_t event_type);
+  const rmw_event_type_t event_type);
 
 }  // namespace internal
 }  // namespace rmw_fastrtps_shared_cpp

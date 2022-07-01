@@ -205,7 +205,7 @@ create_datareader(
       des_topic,
       datareader_qos,
       listener,
-    eprosima::fastdds::dds::StatusMask::subscription_matched());
+      eprosima::fastdds::dds::StatusMask::subscription_matched());
   }
   return true;
 }

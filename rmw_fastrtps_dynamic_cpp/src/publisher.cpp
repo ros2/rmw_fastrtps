@@ -286,7 +286,8 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
     return nullptr;
   }
 
-  info->data_writer_->get_statuscondition().set_enabled_statuses(eprosima::fastdds::dds::StatusMask::none());
+  info->data_writer_->get_statuscondition().set_enabled_statuses(
+    eprosima::fastdds::dds::StatusMask::none());
 
   // lambda to delete datawriter
   auto cleanup_datawriter = rcpputils::make_scope_exit(

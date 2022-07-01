@@ -94,7 +94,8 @@ __rmw_destroy_wait_set(const char * identifier, rmw_wait_set_t * wait_set)
   if (wait_set->data) {
     if (fastdds_wait_set) {
       RMW_TRY_DESTRUCTOR(
-        fastdds_wait_set->eprosima::fastdds::dds::WaitSet::~WaitSet(), fastdds_wait_set, result = RMW_RET_ERROR)
+        fastdds_wait_set->eprosima::fastdds::dds::WaitSet::~WaitSet(), fastdds_wait_set,
+        result = RMW_RET_ERROR)
     }
     rmw_free(wait_set->data);
   }

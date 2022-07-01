@@ -367,7 +367,8 @@ rmw_create_service(
     return nullptr;
   }
 
-  info->request_reader_->get_statuscondition().set_enabled_statuses(eprosima::fastdds::dds::StatusMask::data_available());
+  info->request_reader_->get_statuscondition().set_enabled_statuses(
+    eprosima::fastdds::dds::StatusMask::data_available());
 
   // lambda to delete datareader
   auto cleanup_datareader = rcpputils::make_scope_exit(
@@ -424,7 +425,8 @@ rmw_create_service(
     return nullptr;
   }
 
-  info->response_writer_->get_statuscondition().set_enabled_statuses(eprosima::fastdds::dds::StatusMask::none());
+  info->response_writer_->get_statuscondition().set_enabled_statuses(
+    eprosima::fastdds::dds::StatusMask::none());
 
   // lambda to delete datawriter
   auto cleanup_datawriter = rcpputils::make_scope_exit(

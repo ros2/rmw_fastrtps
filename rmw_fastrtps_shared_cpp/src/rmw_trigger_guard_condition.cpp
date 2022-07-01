@@ -35,7 +35,8 @@ __rmw_trigger_guard_condition(
     return RMW_RET_ERROR;
   }
 
-  auto guard_condition = static_cast<eprosima::fastdds::dds::GuardCondition *>(guard_condition_handle->data);
+  auto guard_condition =
+    static_cast<eprosima::fastdds::dds::GuardCondition *>(guard_condition_handle->data);
   guard_condition->set_trigger_value(true);
   return RMW_RET_OK;
 }
