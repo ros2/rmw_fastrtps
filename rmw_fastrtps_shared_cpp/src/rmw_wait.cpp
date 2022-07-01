@@ -55,6 +55,7 @@ __rmw_wait(
     // - Heap is corrupt.
     // In all three cases, it's better if this crashes soon enough.
     auto fastdds_wait_set = static_cast<eprosima::fastdds::dds::WaitSet*>(wait_set->data);
+    bool no_has_wait = false;
 
     if (subscriptions)
     {
@@ -62,6 +63,7 @@ __rmw_wait(
         {
             void* data = subscriptions->subscribers[i];
             auto custom_subscriber_info = static_cast<CustomSubscriberInfo*>(data);
+            no_has_wait |= (0 < custom_subscriber_info->data_reader_->get_unread_count());
             fastdds_wait_set->attach_condition(custom_subscriber_info->data_reader_->get_statuscondition());
         }
     }
@@ -72,6 +74,7 @@ __rmw_wait(
         {
             void* data = clients->clients[i];
             auto custom_client_info = static_cast<CustomClientInfo*>(data);
+            no_has_wait |= (0 < custom_client_info->response_reader_->get_unread_count());
             fastdds_wait_set->attach_condition(custom_client_info->response_reader_->get_statuscondition());
         }
     }
@@ -82,6 +85,7 @@ __rmw_wait(
         {
             void* data = services->services[i];
             auto custom_service_info = static_cast<CustomServiceInfo*>(data);
+            no_has_wait |= (0 < custom_service_info->request_reader_->get_unread_count());
             fastdds_wait_set->attach_condition(custom_service_info->request_reader_->get_statuscondition());
         }
     }
@@ -108,9 +112,16 @@ __rmw_wait(
     }
 
     eprosima::fastdds::dds::ConditionSeq triggered_coditions;
+    Duration_t timeout{0, 0};
+    if (!no_has_wait)
+    {
+        timeout = (wait_timeout) ?
+                Duration_t{static_cast<int32_t>(wait_timeout->sec),
+                           static_cast<uint32_t>(wait_timeout->nsec)} : eprosima::fastrtps::c_TimeInfinite;
+    }
+
     ReturnCode_t ret_code = fastdds_wait_set->wait(triggered_coditions,
-                    (wait_timeout && (wait_timeout->sec > 0 || wait_timeout->nsec > 0)) ?
-                    Duration_t{static_cast<int32_t>(wait_timeout->sec), static_cast<uint32_t>(wait_timeout->nsec)} : eprosima::fastrtps::c_TimeInfinite
+                    timeout
                     );
 
     if (subscriptions)
@@ -137,7 +148,7 @@ __rmw_wait(
                     subscriptions->subscribers[i] = 0;
                 }
             }
-            else
+            else if (0 == custom_subscriber_info->data_reader_->get_unread_count())
             {
                 subscriptions->subscribers[i] = 0;
             }
@@ -168,7 +179,7 @@ __rmw_wait(
                     clients->clients[i] = 0;
                 }
             }
-            else
+            else if (0 == custom_client_info->response_reader_->get_unread_count())
             {
                 clients->clients[i] = 0;
             }
@@ -199,7 +210,7 @@ __rmw_wait(
                     services->services[i] = 0;
                 }
             }
-            else
+            else if (0 == custom_service_info->request_reader_->get_unread_count())
             {
                 services->services[i] = 0;
             }
@@ -262,13 +273,29 @@ __rmw_wait(
         for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i)
         {
             void* data = guard_conditions->guard_conditions[i];
-            auto guard_condition = static_cast<eprosima::fastdds::dds::GuardCondition*>(data);
-            fastdds_wait_set->detach_condition(*guard_condition);
-            guard_condition->set_trigger_value(false);
+            auto condition = static_cast<eprosima::fastdds::dds::GuardCondition*>(data);
+            fastdds_wait_set->detach_condition(*condition);
+            if (ReturnCode_t::RETCODE_OK == ret_code &&
+                    triggered_coditions.end() != std::find_if(triggered_coditions.begin(), triggered_coditions.end(),
+                    [condition](const eprosima::fastdds::dds::Condition* c)
+                    {
+                        return c == condition;
+                    }))
+            {
+                if (!condition->get_trigger_value())
+                {
+                    guard_conditions->guard_conditions[i] = 0;
+                }
+            }
+            else
+            {
+                guard_conditions->guard_conditions[i] = 0;
+            }
+            condition->set_trigger_value(false);
         }
     }
 
-    return ReturnCode_t::RETCODE_OK == ret_code ? RMW_RET_OK : RMW_RET_TIMEOUT;
+    return ((no_has_wait || ReturnCode_t::RETCODE_OK == ret_code) ? RMW_RET_OK : RMW_RET_TIMEOUT);
 }
 
 }  // namespace rmw_fastrtps_shared_cpp

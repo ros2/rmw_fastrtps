@@ -30,118 +30,124 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
-namespace rmw_fastrtps_shared_cpp
-{
+namespace rmw_fastrtps_shared_cpp {
 rmw_ret_t
 __rmw_send_request(
-  const char * identifier,
-  const rmw_client_t * client,
-  const void * ros_request,
-  int64_t * sequence_id)
+        const char* identifier,
+        const rmw_client_t* client,
+        const void* ros_request,
+        int64_t* sequence_id)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(client, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    client,
-    client->implementation_identifier, identifier,
-    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  RMW_CHECK_ARGUMENT_FOR_NULL(ros_request, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_ARGUMENT_FOR_NULL(sequence_id, RMW_RET_INVALID_ARGUMENT);
+    RMW_CHECK_ARGUMENT_FOR_NULL(client, RMW_RET_INVALID_ARGUMENT);
+    RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+        client,
+        client->implementation_identifier, identifier,
+        return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+    RMW_CHECK_ARGUMENT_FOR_NULL(ros_request, RMW_RET_INVALID_ARGUMENT);
+    RMW_CHECK_ARGUMENT_FOR_NULL(sequence_id, RMW_RET_INVALID_ARGUMENT);
 
-  rmw_ret_t returnedValue = RMW_RET_ERROR;
+    rmw_ret_t returnedValue = RMW_RET_ERROR;
 
-  auto info = static_cast<CustomClientInfo *>(client->data);
-  assert(info);
+    auto info = static_cast<CustomClientInfo*>(client->data);
+    assert(info);
 
-  eprosima::fastrtps::rtps::WriteParams wparams;
-  rmw_fastrtps_shared_cpp::SerializedData data;
-  data.is_cdr_buffer = false;
-  data.data = const_cast<void *>(ros_request);
-  data.impl = info->request_type_support_impl_;
-  wparams.related_sample_identity().writer_guid() = info->reader_guid_;
-  if (info->request_writer_->write(&data, wparams)) {
-    returnedValue = RMW_RET_OK;
-    *sequence_id = ((int64_t)wparams.sample_identity().sequence_number().high) << 32 |
-      wparams.sample_identity().sequence_number().low;
-  } else {
-    RMW_SET_ERROR_MSG("cannot publish data");
-  }
+    eprosima::fastrtps::rtps::WriteParams wparams;
+    rmw_fastrtps_shared_cpp::SerializedData data;
+    data.is_cdr_buffer = false;
+    data.data = const_cast<void*>(ros_request);
+    data.impl = info->request_type_support_impl_;
+    wparams.related_sample_identity().writer_guid() = info->reader_guid_;
+    if (info->request_writer_->write(&data, wparams))
+    {
+        returnedValue = RMW_RET_OK;
+        *sequence_id = ((int64_t)wparams.sample_identity().sequence_number().high) << 32 |
+                wparams.sample_identity().sequence_number().low;
+    }
+    else
+    {
+        RMW_SET_ERROR_MSG("cannot publish data");
+    }
 
-  return returnedValue;
+    return returnedValue;
 }
 
 rmw_ret_t
 __rmw_take_request(
-  const char * identifier,
-  const rmw_service_t * service,
-  rmw_service_info_t * request_header,
-  void * ros_request,
-  bool * taken)
+        const char* identifier,
+        const rmw_service_t* service,
+        rmw_service_info_t* request_header,
+        void* ros_request,
+        bool* taken)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(service, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
-    service,
-    service->implementation_identifier, identifier,
-    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
-  RMW_CHECK_ARGUMENT_FOR_NULL(request_header, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_ARGUMENT_FOR_NULL(ros_request, RMW_RET_INVALID_ARGUMENT);
-  RMW_CHECK_ARGUMENT_FOR_NULL(taken, RMW_RET_INVALID_ARGUMENT);
+    RMW_CHECK_ARGUMENT_FOR_NULL(service, RMW_RET_INVALID_ARGUMENT);
+    RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+        service,
+        service->implementation_identifier, identifier,
+        return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+    RMW_CHECK_ARGUMENT_FOR_NULL(request_header, RMW_RET_INVALID_ARGUMENT);
+    RMW_CHECK_ARGUMENT_FOR_NULL(ros_request, RMW_RET_INVALID_ARGUMENT);
+    RMW_CHECK_ARGUMENT_FOR_NULL(taken, RMW_RET_INVALID_ARGUMENT);
 
-  *taken = false;
+    *taken = false;
 
-  auto info = static_cast<CustomServiceInfo *>(service->data);
-  assert(info);
+    auto info = static_cast<CustomServiceInfo*>(service->data);
+    assert(info);
 
-  CustomServiceRequest request;
+    CustomServiceRequest request;
 
+    request.buffer_ = new eprosima::fastcdr::FastBuffer();
 
-  request.buffer_ = new eprosima::fastcdr::FastBuffer();
+    if (request.buffer_ != nullptr)
+    {
+        rmw_fastrtps_shared_cpp::SerializedData data;
+        data.is_cdr_buffer = true;
+        data.data = request.buffer_;
+        data.impl = nullptr; // not used when is_cdr_buffer is true
+        if (info->request_reader_->take_next_sample(&data, &request.sample_info_) == ReturnCode_t::RETCODE_OK)
+        {
+            if (request.sample_info_.valid_data)
+            {
+                request.sample_identity_ = request.sample_info_.sample_identity;
+                // Use response subscriber guid (on related_sample_identity) when present.
+                const eprosima::fastrtps::rtps::GUID_t& reader_guid =
+                        request.sample_info_.related_sample_identity.writer_guid();
+                if (reader_guid != eprosima::fastrtps::rtps::GUID_t::unknown())
+                {
+                    request.sample_identity_.writer_guid() = reader_guid;
+                }
 
-  if (request.buffer_ != nullptr) {
-    rmw_fastrtps_shared_cpp::SerializedData data;
-    data.is_cdr_buffer = true;
-    data.data = request.buffer_;
-    data.impl = nullptr;    // not used when is_cdr_buffer is true
-    if (info->request_reader_->take_next_sample(&data, &request.sample_info_) == ReturnCode_t::RETCODE_OK) {
-      if (request.sample_info_.valid_data) {
-        request.sample_identity_ = request.sample_info_.sample_identity;
-        // Use response subscriber guid (on related_sample_identity) when present.
-        const eprosima::fastrtps::rtps::GUID_t & reader_guid =
-          request.sample_info_.related_sample_identity.writer_guid();
-        if (reader_guid != eprosima::fastrtps::rtps::GUID_t::unknown() ) {
-          request.sample_identity_.writer_guid() = reader_guid;
+                // Save both guids in the clients_endpoints map
+                const eprosima::fastrtps::rtps::GUID_t& writer_guid =
+                        request.sample_info_.sample_identity.writer_guid();
+                info->pub_listener_->endpoint_add_reader_and_writer(reader_guid, writer_guid);
+
+                auto raw_type_support = dynamic_cast<rmw_fastrtps_shared_cpp::TypeSupport*>(
+                    info->response_type_support_.get());
+                eprosima::fastcdr::Cdr deser(*request.buffer_, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
+                        eprosima::fastcdr::Cdr::DDS_CDR);
+                if (raw_type_support->deserializeROSmessage(
+                            deser, ros_request, info->request_type_support_impl_))
+                {
+                    // Get header
+                    rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(
+                        request.sample_identity_.writer_guid(),
+                        request_header->request_id.writer_guid);
+                    request_header->request_id.sequence_number =
+                            ((int64_t)request.sample_identity_.sequence_number().high) <<
+                            32 | request.sample_identity_.sequence_number().low;
+                    request_header->source_timestamp = request.sample_info_.source_timestamp.to_ns();
+                    request_header->received_timestamp = request.sample_info_.source_timestamp.to_ns();
+                    *taken = true;
+                }
+
+            }
         }
 
-        // Save both guids in the clients_endpoints map
-        const eprosima::fastrtps::rtps::GUID_t & writer_guid =
-          request.sample_info_.sample_identity.writer_guid();
-        info->pub_listener_->endpoint_add_reader_and_writer(reader_guid, writer_guid);
-
-    auto raw_type_support = dynamic_cast<rmw_fastrtps_shared_cpp::TypeSupport *>(
-      info->response_type_support_.get());
-    eprosima::fastcdr::Cdr deser(*request.buffer_, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
-      eprosima::fastcdr::Cdr::DDS_CDR);
-    if (raw_type_support->deserializeROSmessage(
-        deser, ros_request, info->request_type_support_impl_))
-    {
-      // Get header
-      rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(
-        request.sample_identity_.writer_guid(),
-        request_header->request_id.writer_guid);
-      request_header->request_id.sequence_number =
-        ((int64_t)request.sample_identity_.sequence_number().high) <<
-        32 | request.sample_identity_.sequence_number().low;
-      request_header->source_timestamp = request.sample_info_.source_timestamp.to_ns();
-      request_header->received_timestamp = request.sample_info_.source_timestamp.to_ns();
-      *taken = true;
+        delete request.buffer_;
     }
 
-      }
-    }
 
-    delete request.buffer_;
-  }
-
-
-  return RMW_RET_OK;
+    return RMW_RET_OK;
 }
+
 }  // namespace rmw_fastrtps_shared_cpp

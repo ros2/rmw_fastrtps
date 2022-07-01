@@ -152,6 +152,8 @@ public:
             const void* user_data,
             rmw_event_callback_t callback);
 
+    size_t get_unread_messages();
+
     RMW_FASTRTPS_SHARED_CPP_PUBLIC
     eprosima::fastdds::dds::StatusCondition& get_statuscondition() const final;
 

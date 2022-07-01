@@ -210,11 +210,11 @@ SubListener::set_on_new_message_callback(
 
     if (callback)
     {
-        auto unread_count = subscriber_info_->data_reader_->get_unread_count();
-        // Push events arrived before setting the executor's callback
-        if (unread_count)
+        auto unread_messages = get_unread_messages();
+
+        if (0 < unread_messages)
         {
-            callback(user_data, unread_count);
+            callback(new_message_user_data_, unread_messages);
         }
 
         new_message_user_data_ = user_data;
@@ -235,6 +235,29 @@ SubListener::set_on_new_message_callback(
     }
 }
 
+size_t SubListener::get_unread_messages()
+{
+    size_t ret_value = 0;
+    eprosima::fastdds::dds::LoanableSequence <rmw_fastrtps_shared_cpp::SerializedData> data_seq;
+    eprosima::fastdds::dds::SampleInfoSeq info_seq;
+
+    if (ReturnCode_t::RETCODE_OK == subscriber_info_->data_reader_->read(data_seq, info_seq,
+            eprosima::fastdds::dds::LENGTH_UNLIMITED, eprosima::fastdds::dds::NOT_READ_SAMPLE_STATE))
+    {
+        for (eprosima::fastdds::dds::LoanableCollection::size_type count = 0; count < info_seq.length(); ++count)
+        {
+            if (info_seq[count].valid_data)
+            {
+                ++ret_value;
+            }
+        }
+
+        subscriber_info_->data_reader_->return_loan(data_seq, info_seq);
+    }
+
+    return ret_value;
+}
+
 void
 SubListener::on_data_available(
         eprosima::fastdds::dds::DataReader*)
@@ -243,7 +266,12 @@ SubListener::on_data_available(
 
     if (on_new_message_cb_)
     {
-        on_new_message_cb_(new_message_user_data_, 1);
+        auto unread_messages = get_unread_messages();
+
+        if (0 < unread_messages)
+        {
+            on_new_message_cb_(new_message_user_data_, unread_messages);
+        }
     }
 }
 

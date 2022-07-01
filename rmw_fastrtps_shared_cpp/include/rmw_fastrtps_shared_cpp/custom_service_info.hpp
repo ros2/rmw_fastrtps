@@ -218,15 +218,40 @@ public:
         }
     }
 
+    size_t get_unread_resquests()
+    {
+        size_t ret_value = 0;
+        eprosima::fastdds::dds::LoanableSequence <rmw_fastrtps_shared_cpp::SerializedData> data_seq;
+        eprosima::fastdds::dds::SampleInfoSeq info_seq;
+
+        if (ReturnCode_t::RETCODE_OK == info_->request_reader_->read(data_seq, info_seq,
+                eprosima::fastdds::dds::LENGTH_UNLIMITED, eprosima::fastdds::dds::NOT_READ_SAMPLE_STATE))
+        {
+            for (eprosima::fastdds::dds::LoanableCollection::size_type count = 0; count < info_seq.length(); ++count)
+            {
+                if (info_seq[count].valid_data)
+                {
+                    ++ret_value;
+                }
+            }
+
+            info_->request_reader_->return_loan(data_seq, info_seq);
+        }
+
+        return ret_value;
+    }
+
     void
     on_data_available(
             eprosima::fastdds::dds::DataReader*) final
     {
         std::unique_lock<std::mutex> lock_mutex(on_new_request_m_);
 
-        if (on_new_request_cb_)
+        auto unread_requests = get_unread_resquests();
+
+        if (0 < unread_requests)
         {
-            on_new_request_cb_(user_data_, 1);
+            on_new_request_cb_(user_data_, unread_requests);
         }
     }
 
@@ -241,11 +266,11 @@ public:
 
         if (callback)
         {
-            auto unread_count = info_->request_reader_->get_unread_count();
-            // Push events arrived before setting the the executor callback
-            if (unread_count)
+            auto unread_requests = get_unread_resquests();
+
+            if (0 < unread_requests)
             {
-                callback(user_data, unread_count);
+                callback(user_data_, unread_requests);
             }
 
             user_data_ = user_data;
