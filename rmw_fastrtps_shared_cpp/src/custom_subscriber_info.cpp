@@ -234,26 +234,7 @@ SubListener::set_on_new_message_callback(
 
 size_t SubListener::get_unread_messages()
 {
-  size_t ret_value = 0;
-  eprosima::fastdds::dds::LoanableSequence<rmw_fastrtps_shared_cpp::SerializedData> data_seq;
-  eprosima::fastdds::dds::SampleInfoSeq info_seq;
-
-  if (ReturnCode_t::RETCODE_OK == subscriber_info_->data_reader_->read(
-      data_seq, info_seq,
-      eprosima::fastdds::dds::LENGTH_UNLIMITED, eprosima::fastdds::dds::NOT_READ_SAMPLE_STATE))
-  {
-    for (eprosima::fastdds::dds::LoanableCollection::size_type count = 0; count < info_seq.length();
-      ++count)
-    {
-      if (info_seq[count].valid_data) {
-        ++ret_value;
-      }
-    }
-
-    subscriber_info_->data_reader_->return_loan(data_seq, info_seq);
-  }
-
-  return ret_value;
+  return subscriber_info_->data_reader_->get_unread_count();
 }
 
 void
