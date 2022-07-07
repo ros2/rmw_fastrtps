@@ -27,6 +27,7 @@
 #include "fastdds/dds/topic/qos/TopicQos.hpp"
 
 #include "fastdds/rtps/resources/ResourceManagement.h"
+#include <fastdds/rtps/common/Types.h>
 
 #include "rcpputils/scope_exit.hpp"
 #include "rcutils/error_handling.h"
@@ -430,6 +431,12 @@ rmw_create_client(
     return nullptr;
   }
   memcpy(const_cast<char *>(rmw_client->service_name), service_name, strlen(service_name) + 1);
+
+  std::copy(info->writer_guid_.entityId.value, 
+      info->writer_guid_.entityId.value + info->writer_guid_.entityId.size,
+      std::copy( info->writer_guid_.guidPrefix.value,
+        info->writer_guid_.guidPrefix.value + info->writer_guid_.guidPrefix.size,
+        rmw_client->writer_guid));
 
   {
     // Update graph
