@@ -56,13 +56,14 @@ __rmw_wait(
   // - Heap is corrupt.
   // In all three cases, it's better if this crashes soon enough.
   auto fastdds_wait_set = static_cast<eprosima::fastdds::dds::WaitSet *>(wait_set->data);
-  bool no_has_wait = false;
+  bool skip_wait = false;
 
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
       void * data = subscriptions->subscribers[i];
       auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
-      no_has_wait |= (0 < custom_subscriber_info->data_reader_->get_unread_count());
+      eprosima::fastdds::dds::SampleInfo sample_info;
+      skip_wait |= (ReturnCode_t::RETCODE_OK == custom_subscriber_info->data_reader_->get_first_untaken_info(&sample_info));
       fastdds_wait_set->attach_condition(
         custom_subscriber_info->data_reader_->get_statuscondition());
     }
@@ -72,7 +73,8 @@ __rmw_wait(
     for (size_t i = 0; i < clients->client_count; ++i) {
       void * data = clients->clients[i];
       auto custom_client_info = static_cast<CustomClientInfo *>(data);
-      no_has_wait |= (0 < custom_client_info->response_reader_->get_unread_count());
+      eprosima::fastdds::dds::SampleInfo sample_info;
+      skip_wait |= (ReturnCode_t::RETCODE_OK == custom_client_info->response_reader_->get_first_untaken_info(&sample_info));
       fastdds_wait_set->attach_condition(
         custom_client_info->response_reader_->get_statuscondition());
     }
@@ -82,7 +84,8 @@ __rmw_wait(
     for (size_t i = 0; i < services->service_count; ++i) {
       void * data = services->services[i];
       auto custom_service_info = static_cast<CustomServiceInfo *>(data);
-      no_has_wait |= (0 < custom_service_info->request_reader_->get_unread_count());
+      eprosima::fastdds::dds::SampleInfo sample_info;
+      skip_wait |= (ReturnCode_t::RETCODE_OK == custom_service_info->request_reader_->get_first_untaken_info(&sample_info));
       fastdds_wait_set->attach_condition(
         custom_service_info->request_reader_->get_statuscondition());
     }
@@ -110,7 +113,7 @@ __rmw_wait(
 
   eprosima::fastdds::dds::ConditionSeq triggered_coditions;
   Duration_t timeout{0, 0};
-  if (!no_has_wait) {
+  if (!skip_wait) {
     timeout = (wait_timeout) ?
       Duration_t{static_cast<int32_t>(wait_timeout->sec),
       static_cast<uint32_t>(wait_timeout->nsec)} : eprosima::fastrtps::c_TimeInfinite;
@@ -128,21 +131,15 @@ __rmw_wait(
       eprosima::fastdds::dds::StatusCondition & status_condition =
         custom_subscriber_info->data_reader_->get_statuscondition();
       fastdds_wait_set->detach_condition(status_condition);
-      eprosima::fastdds::dds::Condition * condition = &status_condition;
-      if (ReturnCode_t::RETCODE_OK == ret_code &&
-        triggered_coditions.end() != std::find_if(
-          triggered_coditions.begin(), triggered_coditions.end(),
-          [condition](const eprosima::fastdds::dds::Condition * c)
-          {
-            return c == condition;
-          }))
+      eprosima::fastdds::dds::SampleInfo sample_info;
+      if (ReturnCode_t::RETCODE_OK == ret_code)
       {
         eprosima::fastdds::dds::Entity * entity = status_condition.get_entity();
         eprosima::fastdds::dds::StatusMask changed_statuses = entity->get_status_changes();
         if (!changed_statuses.is_active(eprosima::fastdds::dds::StatusMask::data_available())) {
           subscriptions->subscribers[i] = 0;
         }
-      } else if (0 == custom_subscriber_info->data_reader_->get_unread_count()) {
+      } else if (ReturnCode_t::RETCODE_OK == custom_subscriber_info->data_reader_->get_first_untaken_info(&sample_info)) {
         subscriptions->subscribers[i] = 0;
       }
     }
@@ -155,21 +152,15 @@ __rmw_wait(
       eprosima::fastdds::dds::StatusCondition & status_condition =
         custom_client_info->response_reader_->get_statuscondition();
       fastdds_wait_set->detach_condition(status_condition);
-      eprosima::fastdds::dds::Condition * condition = &status_condition;
-      if (ReturnCode_t::RETCODE_OK == ret_code &&
-        triggered_coditions.end() != std::find_if(
-          triggered_coditions.begin(), triggered_coditions.end(),
-          [condition](const eprosima::fastdds::dds::Condition * c)
-          {
-            return c == condition;
-          }))
+      eprosima::fastdds::dds::SampleInfo sample_info;
+      if (ReturnCode_t::RETCODE_OK == ret_code)
       {
         eprosima::fastdds::dds::Entity * entity = status_condition.get_entity();
         eprosima::fastdds::dds::StatusMask changed_statuses = entity->get_status_changes();
         if (!changed_statuses.is_active(eprosima::fastdds::dds::StatusMask::data_available())) {
           clients->clients[i] = 0;
         }
-      } else if (0 == custom_client_info->response_reader_->get_unread_count()) {
+      } else if (ReturnCode_t::RETCODE_OK == custom_client_info->response_reader_->get_first_untaken_info(&sample_info)) {
         clients->clients[i] = 0;
       }
     }
@@ -182,21 +173,15 @@ __rmw_wait(
       eprosima::fastdds::dds::StatusCondition & status_condition =
         custom_service_info->request_reader_->get_statuscondition();
       fastdds_wait_set->detach_condition(status_condition);
-      eprosima::fastdds::dds::Condition * condition = &status_condition;
-      if (ReturnCode_t::RETCODE_OK == ret_code &&
-        triggered_coditions.end() != std::find_if(
-          triggered_coditions.begin(), triggered_coditions.end(),
-          [condition](const eprosima::fastdds::dds::Condition * c)
-          {
-            return c == condition;
-          }))
+      eprosima::fastdds::dds::SampleInfo sample_info;
+      if (ReturnCode_t::RETCODE_OK == ret_code)
       {
         eprosima::fastdds::dds::Entity * entity = status_condition.get_entity();
         eprosima::fastdds::dds::StatusMask changed_statuses = entity->get_status_changes();
         if (!changed_statuses.is_active(eprosima::fastdds::dds::StatusMask::data_available())) {
           services->services[i] = 0;
         }
-      } else if (0 == custom_service_info->request_reader_->get_unread_count()) {
+      } else if (ReturnCode_t::RETCODE_OK == custom_service_info->request_reader_->get_first_untaken_info(&sample_info)) {
         services->services[i] = 0;
       }
     }
@@ -210,17 +195,10 @@ __rmw_wait(
       eprosima::fastdds::dds::StatusCondition & status_condition =
         custom_event_info->get_listener()->get_statuscondition();
       fastdds_wait_set->detach_condition(status_condition);
-      eprosima::fastdds::dds::Condition * condition = &status_condition;
       eprosima::fastdds::dds::GuardCondition * guard_condition =
         &custom_event_info->get_listener()->event_guard[event->event_type];
       bool active = false;
-      if (ReturnCode_t::RETCODE_OK == ret_code &&
-        triggered_coditions.end() != std::find_if(
-          triggered_coditions.begin(), triggered_coditions.end(),
-          [condition](const eprosima::fastdds::dds::Condition * c)
-          {
-            return c == condition;
-          }))
+      if (ReturnCode_t::RETCODE_OK == ret_code)
       {
         eprosima::fastdds::dds::Entity * entity = status_condition.get_entity();
         eprosima::fastdds::dds::StatusMask changed_statuses = entity->get_status_changes();
@@ -231,13 +209,7 @@ __rmw_wait(
           active = true;
         }
       }
-      if (ReturnCode_t::RETCODE_OK == ret_code &&
-        triggered_coditions.end() != std::find_if(
-          triggered_coditions.begin(), triggered_coditions.end(),
-          [guard_condition](const eprosima::fastdds::dds::Condition * c)
-          {
-            return c == guard_condition;
-          }))
+      if (ReturnCode_t::RETCODE_OK == ret_code)
       {
         if (guard_condition->get_trigger_value()) {
           active = true;
@@ -265,9 +237,7 @@ __rmw_wait(
             return c == condition;
           }))
       {
-        if (!condition->get_trigger_value()) {
-          guard_conditions->guard_conditions[i] = 0;
-        }
+        guard_conditions->guard_conditions[i] = 0; 
       } else {
         guard_conditions->guard_conditions[i] = 0;
       }
@@ -275,7 +245,7 @@ __rmw_wait(
     }
   }
 
-  return (no_has_wait || ReturnCode_t::RETCODE_OK == ret_code) ? RMW_RET_OK : RMW_RET_TIMEOUT;
+  return (skip_wait || ReturnCode_t::RETCODE_OK == ret_code) ? RMW_RET_OK : RMW_RET_TIMEOUT;
 }
 
 }  // namespace rmw_fastrtps_shared_cpp
