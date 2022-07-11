@@ -177,10 +177,8 @@ public:
 
 private:
   std::mutex mutex_;
-  subscriptions_set_t subscriptions_ RCPPUTILS_TSA_GUARDED_BY(
-    mutex_);
-  clients_endpoints_map_t clients_endpoints_ RCPPUTILS_TSA_GUARDED_BY(
-    mutex_);
+  subscriptions_set_t subscriptions_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
+  clients_endpoints_map_t clients_endpoints_ RCPPUTILS_TSA_GUARDED_BY(mutex_);
   std::condition_variable cv_;
 };
 

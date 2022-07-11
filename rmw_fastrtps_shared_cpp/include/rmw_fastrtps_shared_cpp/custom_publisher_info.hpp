@@ -123,26 +123,22 @@ public:
 private:
   CustomPublisherInfo * publisher_info_ = nullptr;
 
-  std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_
-  RCPPUTILS_TSA_GUARDED_BY(
-    discovery_m_);
+  mutable std::mutex discovery_m_;
 
-  std::mutex discovery_m_;
+  std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_
+  RCPPUTILS_TSA_GUARDED_BY(discovery_m_);
 
   bool deadline_changes_;
   eprosima::fastdds::dds::OfferedDeadlineMissedStatus offered_deadline_missed_status_
-  RCPPUTILS_TSA_GUARDED_BY(
-    on_new_event_m_);
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
   bool liveliness_changes_;
   eprosima::fastdds::dds::LivelinessLostStatus liveliness_lost_status_
-  RCPPUTILS_TSA_GUARDED_BY(
-    on_new_event_m_);
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
   bool incompatible_qos_changes_;
   eprosima::fastdds::dds::OfferedIncompatibleQosStatus incompatible_qos_status_
-  RCPPUTILS_TSA_GUARDED_BY(
-    on_new_event_m_);
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_

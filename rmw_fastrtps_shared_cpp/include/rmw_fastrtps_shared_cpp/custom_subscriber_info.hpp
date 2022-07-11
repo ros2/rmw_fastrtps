@@ -171,26 +171,22 @@ private:
 
   bool deadline_changes_;
   eprosima::fastdds::dds::RequestedDeadlineMissedStatus requested_deadline_missed_status_
-  RCPPUTILS_TSA_GUARDED_BY(
-    on_new_event_m_);
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
   bool liveliness_changes_;
   eprosima::fastdds::dds::LivelinessChangedStatus liveliness_changed_status_
-  RCPPUTILS_TSA_GUARDED_BY(
-    on_new_event_m_);
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
   bool sample_lost_changes_;
   eprosima::fastdds::dds::SampleLostStatus sample_lost_status_
-  RCPPUTILS_TSA_GUARDED_BY(
-    on_new_event_m_);
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
   bool incompatible_qos_changes_;
   eprosima::fastdds::dds::RequestedIncompatibleQosStatus incompatible_qos_status_
-  RCPPUTILS_TSA_GUARDED_BY(
-    discovery_m_);
+  RCPPUTILS_TSA_GUARDED_BY(discovery_m_);
 
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(
-    internalMutex_);
+    discovery_m_);
 
   rmw_event_callback_t on_new_message_cb_{nullptr};
 

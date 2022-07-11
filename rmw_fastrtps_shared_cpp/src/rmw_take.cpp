@@ -438,8 +438,7 @@ struct LoanManager
 private:
   std::mutex mtx;
   using ItemVector = eprosima::fastrtps::ResourceLimitedVector<std::unique_ptr<Item>>;
-  ItemVector items RCPPUTILS_TSA_GUARDED_BY(
-    mtx);
+  ItemVector items RCPPUTILS_TSA_GUARDED_BY(mtx);
 };
 
 void
