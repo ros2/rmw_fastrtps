@@ -105,13 +105,12 @@ rmw_fastrtps_shared_cpp::join_listener_thread(
   return RMW_RET_OK;
 }
 
-#define TERMINATE_THREAD(msg) \
+#define LOG_THREAD_FATAL_ERROR(msg) \
   { \
     RCUTILS_SAFE_FWRITE_TO_STDERR( \
       RCUTILS_STRINGIFY(__FILE__) ":" RCUTILS_STRINGIFY(__function__) ":" \
       RCUTILS_STRINGIFY(__LINE__) RCUTILS_STRINGIFY(msg) \
       ": ros discovery info listener thread will shutdown ...\n"); \
-    break; \
   }
 
 void
@@ -124,12 +123,10 @@ node_listener(
   auto common_context = static_cast<rmw_dds_common::Context *>(context->impl->common);
   // number of conditions of a subscription is 2
   rmw_wait_set_t * wait_set = rmw_fastrtps_shared_cpp::__rmw_create_wait_set(
-  context->implementation_identifier, context, 2);
+    context->implementation_identifier, context, 2);
   if (nullptr == wait_set) {
-        RCUTILS_SAFE_FWRITE_TO_STDERR( \
-    RCUTILS_STRINGIFY(__FILE__) ":" RCUTILS_STRINGIFY(__function__) ":" \
-    RCUTILS_STRINGIFY(__LINE__) RCUTILS_STRINGIFY("failed to create waitset") \
-    ": ros discovery info listener thread will shutdown ...\n");
+    LOG_THREAD_FATAL_ERROR("failed to create waitset");
+    return;
   }
   while (common_context->thread_is_running.load()) {
     assert(nullptr != common_context->sub);
@@ -152,7 +149,8 @@ node_listener(
         wait_set,
         nullptr))
     {
-      TERMINATE_THREAD("rmw_wait failed");
+      LOG_THREAD_FATAL_ERROR("rmw_wait failed");
+      break;
     }
     if (subscriptions_buffer[0]) {
       rmw_dds_common::msg::ParticipantEntitiesInfo msg;
@@ -166,7 +164,8 @@ node_listener(
             &taken,
             nullptr))
         {
-          TERMINATE_THREAD("__rmw_take failed");
+          LOG_THREAD_FATAL_ERROR("__rmw_take failed");
+          break;
         }
         if (taken) {
           if (std::memcmp(
@@ -183,11 +182,8 @@ node_listener(
     }
   }
   if (RMW_RET_OK != rmw_fastrtps_shared_cpp::__rmw_destroy_wait_set(
-    context->implementation_identifier, wait_set))
+      context->implementation_identifier, wait_set))
   {
-    RCUTILS_SAFE_FWRITE_TO_STDERR( \
-    RCUTILS_STRINGIFY(__FILE__) ":" RCUTILS_STRINGIFY(__function__) ":" \
-    RCUTILS_STRINGIFY(__LINE__) RCUTILS_STRINGIFY("failed to destroy waitset") \
-    ": ros discovery info listener thread will shutdown ...\n");
+    LOG_THREAD_FATAL_ERROR("failed to destroy waitset");
   }
 }

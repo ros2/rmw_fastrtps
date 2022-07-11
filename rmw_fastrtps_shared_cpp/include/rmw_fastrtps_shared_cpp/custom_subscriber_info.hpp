@@ -191,7 +191,7 @@ private:
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
   eprosima::fastdds::dds::RequestedIncompatibleQosStatus incompatible_qos_status_
-  RCPPUTILS_TSA_GUARDED_BY(discovery_m_);
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(
     discovery_m_);

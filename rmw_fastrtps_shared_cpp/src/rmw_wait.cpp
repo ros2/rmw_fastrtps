@@ -63,7 +63,9 @@ __rmw_wait(
       void * data = subscriptions->subscribers[i];
       auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
       eprosima::fastdds::dds::SampleInfo sample_info;
-      skip_wait |= (ReturnCode_t::RETCODE_OK == custom_subscriber_info->data_reader_->get_first_untaken_info(&sample_info));
+      skip_wait |=
+        (ReturnCode_t::RETCODE_OK ==
+        custom_subscriber_info->data_reader_->get_first_untaken_info(&sample_info));
       fastdds_wait_set->attach_condition(
         custom_subscriber_info->data_reader_->get_statuscondition());
     }
@@ -74,7 +76,9 @@ __rmw_wait(
       void * data = clients->clients[i];
       auto custom_client_info = static_cast<CustomClientInfo *>(data);
       eprosima::fastdds::dds::SampleInfo sample_info;
-      skip_wait |= (ReturnCode_t::RETCODE_OK == custom_client_info->response_reader_->get_first_untaken_info(&sample_info));
+      skip_wait |=
+        (ReturnCode_t::RETCODE_OK ==
+        custom_client_info->response_reader_->get_first_untaken_info(&sample_info));
       fastdds_wait_set->attach_condition(
         custom_client_info->response_reader_->get_statuscondition());
     }
@@ -85,7 +89,9 @@ __rmw_wait(
       void * data = services->services[i];
       auto custom_service_info = static_cast<CustomServiceInfo *>(data);
       eprosima::fastdds::dds::SampleInfo sample_info;
-      skip_wait |= (ReturnCode_t::RETCODE_OK == custom_service_info->request_reader_->get_first_untaken_info(&sample_info));
+      skip_wait |=
+        (ReturnCode_t::RETCODE_OK ==
+        custom_service_info->request_reader_->get_first_untaken_info(&sample_info));
       fastdds_wait_set->attach_condition(
         custom_service_info->request_reader_->get_statuscondition());
     }
@@ -132,7 +138,9 @@ __rmw_wait(
         custom_subscriber_info->data_reader_->get_statuscondition();
       fastdds_wait_set->detach_condition(status_condition);
       eprosima::fastdds::dds::SampleInfo sample_info;
-      if (ReturnCode_t::RETCODE_OK != custom_subscriber_info->data_reader_->get_first_untaken_info(&sample_info)) {
+      if (ReturnCode_t::RETCODE_OK !=
+        custom_subscriber_info->data_reader_->get_first_untaken_info(&sample_info))
+      {
         subscriptions->subscribers[i] = 0;
       }
     }
@@ -146,7 +154,9 @@ __rmw_wait(
         custom_client_info->response_reader_->get_statuscondition();
       fastdds_wait_set->detach_condition(status_condition);
       eprosima::fastdds::dds::SampleInfo sample_info;
-      if (ReturnCode_t::RETCODE_OK != custom_client_info->response_reader_->get_first_untaken_info(&sample_info)) {
+      if (ReturnCode_t::RETCODE_OK !=
+        custom_client_info->response_reader_->get_first_untaken_info(&sample_info))
+      {
         clients->clients[i] = 0;
       }
     }
@@ -160,7 +170,9 @@ __rmw_wait(
         custom_service_info->request_reader_->get_statuscondition();
       fastdds_wait_set->detach_condition(status_condition);
       eprosima::fastdds::dds::SampleInfo sample_info;
-      if (ReturnCode_t::RETCODE_OK != custom_service_info->request_reader_->get_first_untaken_info(&sample_info)) {
+      if (ReturnCode_t::RETCODE_OK !=
+        custom_service_info->request_reader_->get_first_untaken_info(&sample_info))
+      {
         services->services[i] = 0;
       }
     }
@@ -178,8 +190,7 @@ __rmw_wait(
         &custom_event_info->get_listener()->event_guard[event->event_type];
       bool active = false;
 
-      if (ReturnCode_t::RETCODE_OK == ret_code)
-      {
+      if (ReturnCode_t::RETCODE_OK == ret_code) {
         if (guard_condition->get_trigger_value()) {
           active = true;
           guard_condition->set_trigger_value(false);
@@ -198,9 +209,8 @@ __rmw_wait(
       void * data = guard_conditions->guard_conditions[i];
       auto condition = static_cast<eprosima::fastdds::dds::GuardCondition *>(data);
       fastdds_wait_set->detach_condition(*condition);
-      if (!condition->get_trigger_value())
-      {
-        guard_conditions->guard_conditions[i] = 0; 
+      if (!condition->get_trigger_value()) {
+        guard_conditions->guard_conditions[i] = 0;
       }
       condition->set_trigger_value(false);
     }
