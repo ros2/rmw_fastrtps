@@ -132,14 +132,7 @@ __rmw_wait(
         custom_subscriber_info->data_reader_->get_statuscondition();
       fastdds_wait_set->detach_condition(status_condition);
       eprosima::fastdds::dds::SampleInfo sample_info;
-      if (ReturnCode_t::RETCODE_OK == ret_code)
-      {
-        eprosima::fastdds::dds::Entity * entity = status_condition.get_entity();
-        eprosima::fastdds::dds::StatusMask changed_statuses = entity->get_status_changes();
-        if (!changed_statuses.is_active(eprosima::fastdds::dds::StatusMask::data_available())) {
-          subscriptions->subscribers[i] = 0;
-        }
-      } else if (ReturnCode_t::RETCODE_OK == custom_subscriber_info->data_reader_->get_first_untaken_info(&sample_info)) {
+      if (ReturnCode_t::RETCODE_OK != custom_subscriber_info->data_reader_->get_first_untaken_info(&sample_info)) {
         subscriptions->subscribers[i] = 0;
       }
     }
@@ -153,14 +146,7 @@ __rmw_wait(
         custom_client_info->response_reader_->get_statuscondition();
       fastdds_wait_set->detach_condition(status_condition);
       eprosima::fastdds::dds::SampleInfo sample_info;
-      if (ReturnCode_t::RETCODE_OK == ret_code)
-      {
-        eprosima::fastdds::dds::Entity * entity = status_condition.get_entity();
-        eprosima::fastdds::dds::StatusMask changed_statuses = entity->get_status_changes();
-        if (!changed_statuses.is_active(eprosima::fastdds::dds::StatusMask::data_available())) {
-          clients->clients[i] = 0;
-        }
-      } else if (ReturnCode_t::RETCODE_OK == custom_client_info->response_reader_->get_first_untaken_info(&sample_info)) {
+      if (ReturnCode_t::RETCODE_OK != custom_client_info->response_reader_->get_first_untaken_info(&sample_info)) {
         clients->clients[i] = 0;
       }
     }
@@ -174,14 +160,7 @@ __rmw_wait(
         custom_service_info->request_reader_->get_statuscondition();
       fastdds_wait_set->detach_condition(status_condition);
       eprosima::fastdds::dds::SampleInfo sample_info;
-      if (ReturnCode_t::RETCODE_OK == ret_code)
-      {
-        eprosima::fastdds::dds::Entity * entity = status_condition.get_entity();
-        eprosima::fastdds::dds::StatusMask changed_statuses = entity->get_status_changes();
-        if (!changed_statuses.is_active(eprosima::fastdds::dds::StatusMask::data_available())) {
-          services->services[i] = 0;
-        }
-      } else if (ReturnCode_t::RETCODE_OK == custom_service_info->request_reader_->get_first_untaken_info(&sample_info)) {
+      if (ReturnCode_t::RETCODE_OK != custom_service_info->request_reader_->get_first_untaken_info(&sample_info)) {
         services->services[i] = 0;
       }
     }
@@ -198,17 +177,7 @@ __rmw_wait(
       eprosima::fastdds::dds::GuardCondition * guard_condition =
         &custom_event_info->get_listener()->event_guard[event->event_type];
       bool active = false;
-      if (ReturnCode_t::RETCODE_OK == ret_code)
-      {
-        eprosima::fastdds::dds::Entity * entity = status_condition.get_entity();
-        eprosima::fastdds::dds::StatusMask changed_statuses = entity->get_status_changes();
-        if (changed_statuses.is_active(
-            rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(
-              event->event_type)))
-        {
-          active = true;
-        }
-      }
+
       if (ReturnCode_t::RETCODE_OK == ret_code)
       {
         if (guard_condition->get_trigger_value()) {
@@ -229,17 +198,9 @@ __rmw_wait(
       void * data = guard_conditions->guard_conditions[i];
       auto condition = static_cast<eprosima::fastdds::dds::GuardCondition *>(data);
       fastdds_wait_set->detach_condition(*condition);
-      if (ReturnCode_t::RETCODE_OK == ret_code &&
-        triggered_coditions.end() != std::find_if(
-          triggered_coditions.begin(), triggered_coditions.end(),
-          [condition](const eprosima::fastdds::dds::Condition * c)
-          {
-            return c == condition;
-          }))
+      if (!condition->get_trigger_value())
       {
         guard_conditions->guard_conditions[i] = 0; 
-      } else {
-        guard_conditions->guard_conditions[i] = 0;
       }
       condition->set_trigger_value(false);
     }
