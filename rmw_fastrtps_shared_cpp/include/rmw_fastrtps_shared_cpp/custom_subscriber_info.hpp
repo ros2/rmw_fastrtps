@@ -169,19 +169,27 @@ public:
 private:
   CustomSubscriberInfo * subscriber_info_ = nullptr;
 
-  bool deadline_changes_;
+  bool deadline_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
   eprosima::fastdds::dds::RequestedDeadlineMissedStatus requested_deadline_missed_status_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  bool liveliness_changes_;
+  bool liveliness_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
   eprosima::fastdds::dds::LivelinessChangedStatus liveliness_changed_status_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  bool sample_lost_changes_;
+  bool sample_lost_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
   eprosima::fastdds::dds::SampleLostStatus sample_lost_status_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  bool incompatible_qos_changes_;
+  bool incompatible_qos_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
   eprosima::fastdds::dds::RequestedIncompatibleQosStatus incompatible_qos_status_
   RCPPUTILS_TSA_GUARDED_BY(discovery_m_);
 

@@ -128,15 +128,21 @@ private:
   std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_
   RCPPUTILS_TSA_GUARDED_BY(discovery_m_);
 
-  bool deadline_changes_;
+  bool deadline_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
   eprosima::fastdds::dds::OfferedDeadlineMissedStatus offered_deadline_missed_status_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  bool liveliness_changes_;
+  bool liveliness_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
   eprosima::fastdds::dds::LivelinessLostStatus liveliness_lost_status_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  bool incompatible_qos_changes_;
+  bool incompatible_qos_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
   eprosima::fastdds::dds::OfferedIncompatibleQosStatus incompatible_qos_status_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 };
