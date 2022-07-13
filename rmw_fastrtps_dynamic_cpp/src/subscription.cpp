@@ -314,7 +314,7 @@ create_subscription(
     return nullptr;
   }
 
-  // Initialize DataReader's StatusCondition to
+  // Initialize DataReader's StatusCondition to be notified when new data is available
   info->data_reader_->get_statuscondition().set_enabled_statuses(
     eprosima::fastdds::dds::StatusMask::data_available());
 

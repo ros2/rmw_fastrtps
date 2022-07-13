@@ -103,6 +103,12 @@ __rmw_destroy_service(
       show_previous_error();
       RMW_SET_ERROR_MSG("Fail in delete datareader");
       final_ret = RMW_RET_ERROR;
+      info->request_reader_->set_listener(nullptr);
+    }
+
+    // Delete DataReader listener
+    if (nullptr != info->listener_) {
+      delete info->listener_;
     }
 
     // Delete DataWriter

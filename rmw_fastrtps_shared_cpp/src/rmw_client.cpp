@@ -94,6 +94,11 @@ __rmw_destroy_client(
       info->response_reader_->set_listener(nullptr);
     }
 
+    // Delete DataReader listener
+    if (nullptr != info->listener_) {
+      delete info->listener_;
+    }
+
     // Delete DataWriter
     ret = participant_info->publisher_->delete_datawriter(info->request_writer_);
     if (ret != ReturnCode_t::RETCODE_OK) {
