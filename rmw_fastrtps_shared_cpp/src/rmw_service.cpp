@@ -109,6 +109,7 @@ __rmw_destroy_service(
     // Delete DataReader listener
     if (nullptr != info->listener_) {
       delete info->listener_;
+      info->listener_ = nullptr;
     }
 
     // Delete DataWriter
@@ -122,6 +123,7 @@ __rmw_destroy_service(
     // Delete DataWriter listener
     if (nullptr != info->pub_listener_) {
       delete info->pub_listener_;
+      info->pub_listener_ = nullptr;
     }
 
     // Delete topics and unregister types
