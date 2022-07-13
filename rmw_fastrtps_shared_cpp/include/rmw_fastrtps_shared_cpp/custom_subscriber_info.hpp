@@ -111,7 +111,18 @@ public:
 
   void
   on_data_available(
-    eprosima::fastdds::dds::DataReader * reader) final;
+    eprosima::fastdds::dds::DataReader *) final
+  {
+    std::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
+
+    if (on_new_message_cb_) {
+      auto unread_messages = get_unread_messages();
+
+      if (0 < unread_messages) {
+        on_new_message_cb_(new_message_user_data_, unread_messages);
+      }
+    }
+  }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void

@@ -238,21 +238,6 @@ size_t SubListener::get_unread_messages()
 }
 
 void
-SubListener::on_data_available(
-  eprosima::fastdds::dds::DataReader *)
-{
-  std::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
-
-  if (on_new_message_cb_) {
-    auto unread_messages = get_unread_messages();
-
-    if (0 < unread_messages) {
-      on_new_message_cb_(new_message_user_data_, unread_messages);
-    }
-  }
-}
-
-void
 SubListener::on_requested_deadline_missed(
   eprosima::fastdds::dds::DataReader *,
   const eprosima::fastdds::dds::RequestedDeadlineMissedStatus & status)
