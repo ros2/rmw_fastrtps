@@ -118,6 +118,7 @@ __rmw_destroy_service(
       show_previous_error();
       RMW_SET_ERROR_MSG("Fail in delete datawriter");
       final_ret = RMW_RET_ERROR;
+      info->response_writer_->set_listener(nullptr);
     }
 
     // Delete DataWriter listener
