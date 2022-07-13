@@ -209,7 +209,7 @@ SubListener::set_on_new_message_callback(
     auto unread_messages = get_unread_messages();
 
     if (0 < unread_messages) {
-      callback(new_message_user_data_, unread_messages);
+      callback(user_data, unread_messages);
     }
 
     new_message_user_data_ = user_data;

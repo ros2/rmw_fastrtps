@@ -233,7 +233,7 @@ public:
       auto unread_requests = get_unread_resquests();
 
       if (0 < unread_requests) {
-        callback(user_data_, unread_requests);
+        callback(user_data, unread_requests);
       }
 
       user_data_ = user_data;

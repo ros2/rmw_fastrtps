@@ -134,7 +134,7 @@ public:
       auto unread_responses = get_unread_responses();
 
       if (0 < unread_responses) {
-        callback(user_data_, unread_responses);
+        callback(user_data, unread_responses);
       }
 
       user_data_ = user_data;
