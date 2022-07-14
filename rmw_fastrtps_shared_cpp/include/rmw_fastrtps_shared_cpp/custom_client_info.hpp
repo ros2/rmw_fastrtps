@@ -118,7 +118,7 @@ public:
 
   size_t get_unread_responses()
   {
-    return info_->response_reader_->get_unread_count();
+    return info_->response_reader_->get_unread_count(true);
   }
 
   // Provide handlers to perform an action when a
