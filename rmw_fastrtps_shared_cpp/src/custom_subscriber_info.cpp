@@ -232,11 +232,6 @@ SubListener::set_on_new_message_callback(
   }
 }
 
-size_t SubListener::get_unread_messages()
-{
-  return subscriber_info_->data_reader_->get_unread_count(true);
-}
-
 void
 SubListener::on_requested_deadline_missed(
   eprosima::fastdds::dds::DataReader *,
