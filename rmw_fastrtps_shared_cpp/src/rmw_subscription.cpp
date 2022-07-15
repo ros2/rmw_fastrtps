@@ -189,6 +189,11 @@ __rmw_subscription_set_content_filter(
     RMW_SET_ERROR_MSG("create_datareader() could not create data reader");
     return RMW_RET_ERROR;
   }
+
+  // Initialize DataReader's StatusCondition to be notified when new data is available
+  info->data_reader_->get_statuscondition().set_enabled_statuses(
+    eprosima::fastdds::dds::StatusMask::data_available());
+
   // lambda to delete datareader
   auto cleanup_datareader = rcpputils::make_scope_exit(
     [subscriber, info]()
