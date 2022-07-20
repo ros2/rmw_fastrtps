@@ -73,7 +73,6 @@ typedef struct CustomServiceRequest
 {
   eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
   eprosima::fastcdr::FastBuffer * buffer_;
-  eprosima::fastdds::dds::SampleInfo sample_info_ {};
 
   CustomServiceRequest()
   : buffer_(nullptr)

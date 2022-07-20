@@ -21,6 +21,7 @@
 #include "rmw/rmw.h"
 
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
+#include "fastdds/dds/core/StackAllocatedSequence.hpp"
 
 #include "fastrtps/utils/collections/ResourceLimitedVector.hpp"
 
@@ -83,33 +84,50 @@ _take(
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
-  eprosima::fastdds::dds::SampleInfo sinfo;
-
   rmw_fastrtps_shared_cpp::SerializedData data;
-
   data.is_cdr_buffer = false;
   data.data = ros_message;
   data.impl = info->type_support_impl_;
 
-  while (0 < info->data_reader_->get_unread_count()) {
-    if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
-      if (subscription->options.ignore_local_publications) {
-        auto sample_writer_guid =
-          eprosima::fastrtps::rtps::iHandle2GUID(sinfo.publication_handle);
+  eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> data_values;
+  const_cast<void **>(data_values.buffer())[0] = &data;
+  eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
 
-        if (sample_writer_guid.guidPrefix == info->data_reader_->guid().guidPrefix) {
-          // This is a local publication. Ignore it
-          continue;
-        }
-      }
+  while (ReturnCode_t::RETCODE_OK == info->data_reader_->take(data_values, info_seq, 1)) {
+    class ReturnLoan
+    {
+public:
+      ReturnLoan(std::function<void()> functor)
+      : functor_(functor) {}
 
-      if (sinfo.valid_data) {
-        if (message_info) {
-          _assign_message_info(identifier, message_info, &sinfo);
-        }
-        *taken = true;
-        break;
+      ~ReturnLoan() {functor_();}
+
+private:
+      std::function<void()> functor_;
+    } return_loan(
+      [&]()
+      {
+        info->data_reader_->return_loan(data_values, info_seq);
+        data_values.length(0);
+        info_seq.length(0);
+      });
+
+    if (subscription->options.ignore_local_publications) {
+      auto sample_writer_guid =
+        eprosima::fastrtps::rtps::iHandle2GUID(info_seq[0].publication_handle);
+
+      if (sample_writer_guid.guidPrefix == info->data_reader_->guid().guidPrefix) {
+        // This is a local publication. Ignore it
+        continue;
       }
+    }
+
+    if (info_seq[0].valid_data) {
+      if (message_info) {
+        _assign_message_info(identifier, message_info, &info_seq[0]);
+      }
+      *taken = true;
+      break;
     }
   }
 
@@ -143,14 +161,6 @@ _take_sequence(
 
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
-
-  // Limit the upper bound of reads to the number unread at the beginning.
-  // This prevents any samples that are added after the beginning of the
-  // _take_sequence call from being read.
-  auto unread_count = info->data_reader_->get_unread_count();
-  if (unread_count < count) {
-    count = unread_count;
-  }
 
   for (size_t ii = 0; ii < count; ++ii) {
     taken_flag = false;
@@ -315,8 +325,30 @@ _take_serialized_message(
   data.data = &buffer;
   data.impl = nullptr;    // not used when is_cdr_buffer is true
 
-  if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
-    if (sinfo.valid_data) {
+  eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> data_values;
+  const_cast<void **>(data_values.buffer())[0] = &data;
+  eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
+
+  while (ReturnCode_t::RETCODE_OK == info->data_reader_->take(data_values, info_seq, 1)) {
+    class ReturnLoan
+    {
+public:
+      ReturnLoan(std::function<void()> functor)
+      : functor_(functor) {}
+
+      ~ReturnLoan() {functor_();}
+
+private:
+      std::function<void()> functor_;
+    } return_loan(
+      [&]()
+      {
+        info->data_reader_->return_loan(data_values, info_seq);
+        data_values.length(0);
+        info_seq.length(0);
+      });
+
+    if (info_seq[0].valid_data) {
       auto buffer_size = static_cast<size_t>(buffer.getBufferSize());
       if (serialized_message->buffer_capacity < buffer_size) {
         auto ret = rmw_serialized_message_resize(serialized_message, buffer_size);
@@ -328,7 +360,7 @@ _take_serialized_message(
       memcpy(serialized_message->buffer, buffer.getBuffer(), serialized_message->buffer_length);
 
       if (message_info) {
-        _assign_message_info(identifier, message_info, &sinfo);
+        _assign_message_info(identifier, message_info, &info_seq[0]);
       }
       *taken = true;
     }

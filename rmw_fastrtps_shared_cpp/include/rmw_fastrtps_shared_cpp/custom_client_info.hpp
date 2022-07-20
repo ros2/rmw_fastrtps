@@ -72,7 +72,6 @@ typedef struct CustomClientResponse
 {
   eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
   std::unique_ptr<eprosima::fastcdr::FastBuffer> buffer_;
-  eprosima::fastdds::dds::SampleInfo sample_info_ {};
 } CustomClientResponse;
 
 class ClientListener : public eprosima::fastdds::dds::DataReaderListener

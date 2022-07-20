@@ -17,6 +17,7 @@
 #include "fastcdr/Cdr.h"
 
 #include "fastdds/rtps/common/WriteParams.h"
+#include "fastdds/dds/core/StackAllocatedSequence.hpp"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -60,12 +61,14 @@ __rmw_take_response(
   data.is_cdr_buffer = true;
   data.data = response.buffer_.get();
   data.impl = nullptr;      // not used when is_cdr_buffer is true
-  if (info->response_reader_->take_next_sample(
-      &data,
-      &response.sample_info_) == ReturnCode_t::RETCODE_OK)
-  {
-    if (response.sample_info_.valid_data) {
-      response.sample_identity_ = response.sample_info_.related_sample_identity;
+
+  eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> data_values;
+  const_cast<void **>(data_values.buffer())[0] = &data;
+  eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
+
+  if (ReturnCode_t::RETCODE_OK == info->response_reader_->take(data_values, info_seq, 1)) {
+    if (info_seq[0].valid_data) {
+      response.sample_identity_ = info_seq[0].related_sample_identity;
 
       if (response.sample_identity_.writer_guid() == info->reader_guid_ ||
         response.sample_identity_.writer_guid() == info->writer_guid_)
@@ -79,8 +82,8 @@ __rmw_take_response(
         if (raw_type_support->deserializeROSmessage(
             deser, ros_response, info->response_type_support_impl_))
         {
-          request_header->source_timestamp = response.sample_info_.source_timestamp.to_ns();
-          request_header->received_timestamp = response.sample_info_.reception_timestamp.to_ns();
+          request_header->source_timestamp = info_seq[0].source_timestamp.to_ns();
+          request_header->received_timestamp = info_seq[0].reception_timestamp.to_ns();
           request_header->request_id.sequence_number =
             ((int64_t)response.sample_identity_.sequence_number().high) <<
             32 | response.sample_identity_.sequence_number().low;
@@ -89,6 +92,10 @@ __rmw_take_response(
         }
       }
     }
+
+    info->response_reader_->return_loan(data_values, info_seq);
+    data_values.length(0);
+    info_seq.length(0);
   }
 
   return RMW_RET_OK;
