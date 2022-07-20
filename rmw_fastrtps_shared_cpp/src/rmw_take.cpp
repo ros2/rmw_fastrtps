@@ -97,17 +97,23 @@ _take(
     class ReturnLoan
     {
 public:
-      ReturnLoan(std::function<void()> functor)
-      : functor_(functor) {}
+      ReturnLoan(
+        std::function<void()> functor)
+      : functor_(functor)
+      {
+      }
 
-      ~ReturnLoan() {functor_();}
+      ~ReturnLoan()
+      {
+        functor_();
+      }
 
 private:
       std::function<void()> functor_;
-    } return_loan(
+    }
+    return_loan(
       [&]()
       {
-        info->data_reader_->return_loan(data_values, info_seq);
         data_values.length(0);
         info_seq.length(0);
       });
@@ -333,17 +339,23 @@ _take_serialized_message(
     class ReturnLoan
     {
 public:
-      ReturnLoan(std::function<void()> functor)
-      : functor_(functor) {}
+      ReturnLoan(
+        std::function<void()> functor)
+      : functor_(functor)
+      {
+      }
 
-      ~ReturnLoan() {functor_();}
+      ~ReturnLoan()
+      {
+        functor_();
+      }
 
 private:
       std::function<void()> functor_;
-    } return_loan(
+    }
+    return_loan(
       [&]()
       {
-        info->data_reader_->return_loan(data_values, info_seq);
         data_values.length(0);
         info_seq.length(0);
       });
@@ -427,6 +439,7 @@ struct GenericSequence : public eprosima::fastdds::dds::LoanableCollection
     // This kind of collection should only be used with loans
     throw std::bad_alloc();
   }
+
 };
 
 struct LoanManager
@@ -470,7 +483,8 @@ struct LoanManager
 private:
   std::mutex mtx;
   using ItemVector = eprosima::fastrtps::ResourceLimitedVector<std::unique_ptr<Item>>;
-  ItemVector items RCPPUTILS_TSA_GUARDED_BY(mtx);
+  ItemVector items RCPPUTILS_TSA_GUARDED_BY(
+    mtx);
 };
 
 void

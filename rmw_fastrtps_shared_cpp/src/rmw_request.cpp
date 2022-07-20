@@ -140,10 +140,6 @@ __rmw_take_request(
           *taken = true;
         }
       }
-
-      info->request_reader_->return_loan(data_values, info_seq);
-      data_values.length(0);
-      info_seq.length(0);
     }
 
     delete request.buffer_;

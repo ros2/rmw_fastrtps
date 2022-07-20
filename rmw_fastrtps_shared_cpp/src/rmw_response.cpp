@@ -92,10 +92,6 @@ __rmw_take_response(
         }
       }
     }
-
-    info->response_reader_->return_loan(data_values, info_seq);
-    data_values.length(0);
-    info_seq.length(0);
   }
 
   return RMW_RET_OK;
