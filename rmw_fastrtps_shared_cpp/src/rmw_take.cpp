@@ -37,6 +37,8 @@
 
 #include "tracetools/tracetools.h"
 
+#include "rcpputils/scope_exit.hpp"
+
 namespace rmw_fastrtps_shared_cpp
 {
 
@@ -94,24 +96,7 @@ _take(
   eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
 
   while (ReturnCode_t::RETCODE_OK == info->data_reader_->take(data_values, info_seq, 1)) {
-    class ReturnLoan
-    {
-public:
-      ReturnLoan(
-        std::function<void()> functor)
-      : functor_(functor)
-      {
-      }
-
-      ~ReturnLoan()
-      {
-        functor_();
-      }
-
-private:
-      std::function<void()> functor_;
-    }
-    return_loan(
+    auto reset = rcpputils::make_scope_exit(
       [&]()
       {
         data_values.length(0);
@@ -336,24 +321,7 @@ _take_serialized_message(
   eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
 
   while (ReturnCode_t::RETCODE_OK == info->data_reader_->take(data_values, info_seq, 1)) {
-    class ReturnLoan
-    {
-public:
-      ReturnLoan(
-        std::function<void()> functor)
-      : functor_(functor)
-      {
-      }
-
-      ~ReturnLoan()
-      {
-        functor_();
-      }
-
-private:
-      std::function<void()> functor_;
-    }
-    return_loan(
+    auto reset = rcpputils::make_scope_exit(
       [&]()
       {
         data_values.length(0);
