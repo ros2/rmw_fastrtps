@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+1.3.1 (2022-07-25)
+------------------
+* Handle exception on deserializing ROS message (`#603 <https://github.com/ros2/rmw_fastrtps/issues/603>`_)
+* Contributors: Erki Suurjaak, Miguel Company
+
 1.3.0 (2022-02-03)
 ------------------
 
