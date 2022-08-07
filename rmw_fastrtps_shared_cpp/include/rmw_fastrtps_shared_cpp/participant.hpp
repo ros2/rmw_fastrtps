@@ -37,7 +37,7 @@ create_participant(
   const char * identifier,
   size_t domain_id,
   const rmw_security_options_t * security_options,
-  bool localhost_only,
+  const rmw_discovery_params_t * discovery_params,
   const char * enclave,
   rmw_dds_common::Context * common_context);
 

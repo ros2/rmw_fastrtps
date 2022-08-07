@@ -63,7 +63,7 @@ init_context_impl(
       eprosima_fastrtps_identifier,
       context->actual_domain_id,
       &context->options.security_options,
-      (context->options.localhost_only == RMW_LOCALHOST_ONLY_ENABLED) ? 1 : 0,
+      &context->options.discovery_params,
       context->options.enclave,
       common_context.get()),
     [&](CustomParticipantInfo * participant_info)

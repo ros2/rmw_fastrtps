@@ -28,9 +28,11 @@
 #include "fastdds/dds/subscriber/Subscriber.hpp"
 #include "fastdds/dds/subscriber/qos/SubscriberQos.hpp"
 #include "fastdds/rtps/attributes/PropertyPolicy.h"
+#include "fastdds/rtps/common/Locator.h"
 #include "fastdds/rtps/common/Property.h"
 #include "fastdds/rtps/transport/UDPv4TransportDescriptor.h"
 #include "fastdds/rtps/transport/shared_mem/SharedMemTransportDescriptor.h"
+#include "fastrtps/utils/IPLocator.h"
 
 #include "rcpputils/scope_exit.hpp"
 #include "rcutils/env.h"
@@ -145,7 +147,7 @@ rmw_fastrtps_shared_cpp::create_participant(
   const char * identifier,
   size_t domain_id,
   const rmw_security_options_t * security_options,
-  bool localhost_only,
+  const rmw_discovery_params_t * discovery_params,
   const char * enclave,
   rmw_dds_common::Context * common_context)
 {
@@ -161,19 +163,42 @@ rmw_fastrtps_shared_cpp::create_participant(
   eprosima::fastdds::dds::DomainParticipantQos domainParticipantQos =
     eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->get_default_participant_qos();
 
-
-  if (localhost_only) {
-    // In order to use the interface white list, we need to disable the default transport config
+  // Configure discovery
+  if (RMW_AUTOMATIC_DISCOVERY_RANGE_OFF == discovery_params->automatic_discovery_range) {
+    // Create a NULL unicast locator to make FastDDS listen on all network interfaces
+    // Don't add a multicast locator so that multicast is disabled
+    eprosima::fastrtps::rtps::Locator_t default_unicast_locator;
+    domainParticipantQos.wire_protocol().builtin.metatrafficUnicastLocatorList.push_back(
+      default_unicast_locator);
+  } else if (RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET == discovery_params->automatic_discovery_range) {
+    // Nothing to do; use the default inbuilt transports(?)
+    // TODO(gbiggs): Probably we should choose and set our own sane defaults here in case the
+    // FastDDS defaults change.
+  } else {  // RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST and RMW_AUTOMATIC_DISCOVERY_RANGE_DEFAULT
+    // Disable the inbuilt transports
     domainParticipantQos.transport().use_builtin_transports = false;
-
-    // Add a UDPv4 transport with only localhost enabled
+    // Create a UDPv4 transport limited to localhost
     auto udp_transport = std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
     udp_transport->interfaceWhiteList.emplace_back("127.0.0.1");
     domainParticipantQos.transport().user_transports.push_back(udp_transport);
 
     // Add SHM transport if available
-    auto shm_transport = std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
+    auto shm_transport =
+      std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
     domainParticipantQos.transport().user_transports.push_back(shm_transport);
+  }
+
+  if (discovery_params->static_peers_count > 0) {
+    for (size_t ii = 0; ii < discovery_params->static_peers_count; ++ii) {
+      eprosima::fastrtps::rtps::Locator_t peer;
+      eprosima::fastrtps::rtps::IPLocator::setIPv4(
+        peer,
+        discovery_params->static_peers[ii]);
+      // Not specifying the port of the peer means FastDDS will try all possible participant ports
+      // according to the port calculation equation in the RTPS spec section 9.6.1.1, up to the
+      // number of peers specified in maxInitialPeersRange.
+      domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(peer);
+    }
   }
 
   size_t length = snprintf(nullptr, 0, "enclave=%s;", enclave) + 1;
