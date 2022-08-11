@@ -343,6 +343,7 @@ _take_serialized_message(
         _assign_message_info(identifier, message_info, &info_seq[0]);
       }
       *taken = true;
+      break;
     }
   }
 
