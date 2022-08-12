@@ -104,8 +104,7 @@ __rmw_wait(
       fastdds_wait_set->attach_condition(
         custom_event_info->get_listener()->get_statuscondition());
       fastdds_wait_set->attach_condition(
-        custom_event_info->get_listener()->event_guard[event->
-        event_type]);
+        custom_event_info->get_listener()->get_event_guard(event->event_type));
     }
   }
 
@@ -186,8 +185,8 @@ __rmw_wait(
       eprosima::fastdds::dds::StatusCondition & status_condition =
         custom_event_info->get_listener()->get_statuscondition();
       fastdds_wait_set->detach_condition(status_condition);
-      eprosima::fastdds::dds::GuardCondition * guard_condition =
-        &custom_event_info->get_listener()->event_guard[event->event_type];
+      eprosima::fastdds::dds::GuardCondition & guard_condition =
+        custom_event_info->get_listener()->get_event_guard(event->event_type);
       bool active = false;
 
       if (ReturnCode_t::RETCODE_OK == ret_code) {
@@ -200,9 +199,9 @@ __rmw_wait(
           active = true;
         }
 
-        if (guard_condition->get_trigger_value()) {
+        if (guard_condition.get_trigger_value()) {
           active = true;
-          guard_condition->set_trigger_value(false);
+          guard_condition.set_trigger_value(false);
         }
       }
 

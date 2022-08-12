@@ -51,10 +51,14 @@ public:
     const void * user_data,
     rmw_event_callback_t callback) = 0;
 
-
-  eprosima::fastdds::dds::GuardCondition event_guard[RMW_EVENT_INVALID];
+  eprosima::fastdds::dds::GuardCondition & get_event_guard(rmw_event_type_t event_type)
+  {
+    return event_guard[event_type];
+  }
 
 protected:
+  eprosima::fastdds::dds::GuardCondition event_guard[RMW_EVENT_INVALID];
+
   rmw_event_callback_t on_new_event_cb_[RMW_EVENT_INVALID] = {nullptr};
 
   const void * user_data_[RMW_EVENT_INVALID] = {nullptr};
