@@ -120,6 +120,8 @@ public:
     rmw_event_callback_t callback) final;
 
 private:
+  void trigger_event(rmw_event_type_t event_type);
+
   CustomPublisherInfo * publisher_info_ = nullptr;
 
   mutable std::mutex discovery_m_;

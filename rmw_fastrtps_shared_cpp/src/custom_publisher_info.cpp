@@ -171,12 +171,7 @@ PubListener::on_offered_deadline_missed(
 
   deadline_changes_ = true;
 
-  if (on_new_event_cb_[RMW_EVENT_OFFERED_DEADLINE_MISSED]) {
-    on_new_event_cb_[RMW_EVENT_OFFERED_DEADLINE_MISSED](user_data_[RMW_EVENT_OFFERED_DEADLINE_MISSED
-      ], 1);
-  }
-
-  event_guard[RMW_EVENT_OFFERED_DEADLINE_MISSED].set_trigger_value(true);
+  trigger_event(RMW_EVENT_OFFERED_DEADLINE_MISSED);
 }
 
 void PubListener::on_liveliness_lost(
@@ -192,11 +187,7 @@ void PubListener::on_liveliness_lost(
 
   liveliness_changes_ = true;
 
-  if (on_new_event_cb_[RMW_EVENT_LIVELINESS_LOST]) {
-    on_new_event_cb_[RMW_EVENT_LIVELINESS_LOST](user_data_[RMW_EVENT_LIVELINESS_LOST], 1);
-  }
-
-  event_guard[RMW_EVENT_LIVELINESS_LOST].set_trigger_value(true);
+  trigger_event(RMW_EVENT_LIVELINESS_LOST);
 }
 
 void PubListener::on_offered_incompatible_qos(
@@ -213,10 +204,14 @@ void PubListener::on_offered_incompatible_qos(
 
   incompatible_qos_changes_ = true;
 
-  if (on_new_event_cb_[RMW_EVENT_OFFERED_QOS_INCOMPATIBLE]) {
-    on_new_event_cb_[RMW_EVENT_OFFERED_QOS_INCOMPATIBLE](user_data_[
-        RMW_EVENT_OFFERED_QOS_INCOMPATIBLE], 1);
+  trigger_event(RMW_EVENT_OFFERED_QOS_INCOMPATIBLE);
+}
+
+void PubListener::trigger_event(rmw_event_type_t event_type)
+{
+  if (on_new_event_cb_[event_type]) {
+    on_new_event_cb_[event_type](user_data_[event_type], 1);
   }
 
-  event_guard[RMW_EVENT_OFFERED_QOS_INCOMPATIBLE].set_trigger_value(true);
+  event_guard[event_type].set_trigger_value(true);
 }
