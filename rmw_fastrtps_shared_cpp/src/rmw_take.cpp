@@ -408,7 +408,6 @@ struct GenericSequence : public eprosima::fastdds::dds::LoanableCollection
     // This kind of collection should only be used with loans
     throw std::bad_alloc();
   }
-
 };
 
 struct LoanManager

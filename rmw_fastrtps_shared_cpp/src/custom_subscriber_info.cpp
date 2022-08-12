@@ -183,15 +183,13 @@ void SubListener::set_on_new_event_callback(
 
     eprosima::fastdds::dds::StatusMask status_mask =
       subscriber_info_->data_reader_->get_status_mask();
-    subscriber_info_->data_reader_->set_listener(
-      this, status_mask << rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(
-        event_type));
+    status_mask |= rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
+    subscriber_info_->data_reader_->set_listener(this, status_mask);
   } else {
     eprosima::fastdds::dds::StatusMask status_mask =
       subscriber_info_->data_reader_->get_status_mask();
-    subscriber_info_->data_reader_->set_listener(
-      this, status_mask >> rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(
-        event_type));
+    status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
+    subscriber_info_->data_reader_->set_listener(this, status_mask);
 
     user_data_[event_type] = nullptr;
     on_new_event_cb_[event_type] = nullptr;
@@ -217,15 +215,13 @@ SubListener::set_on_new_message_callback(
 
     eprosima::fastdds::dds::StatusMask status_mask =
       subscriber_info_->data_reader_->get_status_mask();
-    subscriber_info_->data_reader_->set_listener(
-      this,
-      status_mask << eprosima::fastdds::dds::StatusMask::data_available());
+    status_mask |= eprosima::fastdds::dds::StatusMask::data_available();
+    subscriber_info_->data_reader_->set_listener(this, status_mask);
   } else {
     eprosima::fastdds::dds::StatusMask status_mask =
       subscriber_info_->data_reader_->get_status_mask();
-    subscriber_info_->data_reader_->set_listener(
-      this,
-      status_mask >> eprosima::fastdds::dds::StatusMask::data_available());
+    status_mask &= ~eprosima::fastdds::dds::StatusMask::data_available();
+    subscriber_info_->data_reader_->set_listener(this, status_mask);
 
     new_message_user_data_ = nullptr;
     on_new_message_cb_ = nullptr;

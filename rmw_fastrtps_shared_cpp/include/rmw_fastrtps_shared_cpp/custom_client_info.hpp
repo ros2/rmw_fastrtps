@@ -140,14 +140,12 @@ public:
       on_new_response_cb_ = callback;
 
       eprosima::fastdds::dds::StatusMask status_mask = info_->response_reader_->get_status_mask();
-      info_->response_reader_->set_listener(
-        this,
-        status_mask << eprosima::fastdds::dds::StatusMask::data_available());
+      status_mask |= eprosima::fastdds::dds::StatusMask::data_available();
+      info_->response_reader_->set_listener(this, status_mask);
     } else {
       eprosima::fastdds::dds::StatusMask status_mask = info_->response_reader_->get_status_mask();
-      info_->response_reader_->set_listener(
-        this,
-        status_mask >> eprosima::fastdds::dds::StatusMask::data_available());
+      status_mask &= ~eprosima::fastdds::dds::StatusMask::data_available();
+      info_->response_reader_->set_listener(this, status_mask);
 
       user_data_ = nullptr;
       on_new_response_cb_ = nullptr;

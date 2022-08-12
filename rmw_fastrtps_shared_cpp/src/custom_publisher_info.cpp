@@ -142,15 +142,13 @@ void PubListener::set_on_new_event_callback(
 
     eprosima::fastdds::dds::StatusMask status_mask =
       publisher_info_->data_writer_->get_status_mask();
-    publisher_info_->data_writer_->set_listener(
-      this, status_mask << rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(
-        event_type));
+    status_mask |= rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
+    publisher_info_->data_writer_->set_listener(this, status_mask);
   } else {
     eprosima::fastdds::dds::StatusMask status_mask =
       publisher_info_->data_writer_->get_status_mask();
-    publisher_info_->data_writer_->set_listener(
-      this, status_mask >> rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(
-        event_type));
+    status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
+    publisher_info_->data_writer_->set_listener(this, status_mask);
 
     user_data_[event_type] = nullptr;
     on_new_event_cb_[event_type] = nullptr;
