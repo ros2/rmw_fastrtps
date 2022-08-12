@@ -15,8 +15,8 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_
 
-#include <mutex>
 #include <condition_variable>
+#include <mutex>
 #include <unordered_set>
 #include <unordered_map>
 
@@ -214,7 +214,7 @@ public:
 
     auto unread_requests = get_unread_resquests();
 
-    if (0 < unread_requests) {
+    if (0u < unread_requests) {
       on_new_request_cb_(user_data_, unread_requests);
     }
   }
