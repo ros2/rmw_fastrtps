@@ -21,7 +21,7 @@
 
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
-#include "types/custom_wait_set_info.hpp"
+#include "fastdds/dds/core/condition/WaitSet.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -40,26 +40,26 @@ __rmw_create_wait_set(const char * identifier, rmw_context_t * context, size_t m
   (void)max_conditions;
 
   // From here onward, error results in unrolling in the goto fail block.
-  CustomWaitsetInfo * wait_set_info = nullptr;
+  eprosima::fastdds::dds::WaitSet * fastdds_wait_set = nullptr;
   rmw_wait_set_t * wait_set = rmw_wait_set_allocate();
   if (!wait_set) {
     RMW_SET_ERROR_MSG("failed to allocate wait set");
     goto fail;
   }
   wait_set->implementation_identifier = identifier;
-  wait_set->data = rmw_allocate(sizeof(CustomWaitsetInfo));
+  wait_set->data = rmw_allocate(sizeof(eprosima::fastdds::dds::WaitSet));
   if (!wait_set->data) {
     RMW_SET_ERROR_MSG("failed to allocate wait set info");
     goto fail;
   }
   // This should default-construct the fields of CustomWaitsetInfo
   RMW_TRY_PLACEMENT_NEW(
-    wait_set_info,
+    fastdds_wait_set,
     wait_set->data,
     goto fail,
     // cppcheck-suppress syntaxError
-    CustomWaitsetInfo, );
-  (void) wait_set_info;
+    eprosima::fastdds::dds::WaitSet, );
+  (void) fastdds_wait_set;
 
   return wait_set;
 
@@ -89,12 +89,13 @@ __rmw_destroy_wait_set(const char * identifier, rmw_wait_set_t * wait_set)
   // error.
   // - Heap is corrupt.
   // In all three cases, it's better if this crashes soon enough.
-  auto wait_set_info = static_cast<CustomWaitsetInfo *>(wait_set->data);
+  auto fastdds_wait_set = static_cast<eprosima::fastdds::dds::WaitSet *>(wait_set->data);
 
   if (wait_set->data) {
-    if (wait_set_info) {
+    if (fastdds_wait_set) {
       RMW_TRY_DESTRUCTOR(
-        wait_set_info->~CustomWaitsetInfo(), wait_set_info, result = RMW_RET_ERROR)
+        fastdds_wait_set->eprosima::fastdds::dds::WaitSet::~WaitSet(), fastdds_wait_set,
+        result = RMW_RET_ERROR)
     }
     rmw_free(wait_set->data);
   }

@@ -92,8 +92,7 @@ rmw_create_subscription(
     topic_name,
     &adapted_qos_policies,
     subscription_options,
-    false,
-    true);
+    false);
   if (!subscription) {
     return nullptr;
   }

@@ -79,7 +79,8 @@ __rmw_destroy_service(
   }
 
   auto show_previous_error =
-    [&final_ret]() {
+    [&final_ret]()
+    {
       if (RMW_RET_OK != final_ret) {
         RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
         RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "'\n");
@@ -108,6 +109,7 @@ __rmw_destroy_service(
     // Delete DataReader listener
     if (nullptr != info->listener_) {
       delete info->listener_;
+      info->listener_ = nullptr;
     }
 
     // Delete DataWriter
@@ -122,6 +124,7 @@ __rmw_destroy_service(
     // Delete DataWriter listener
     if (nullptr != info->pub_listener_) {
       delete info->pub_listener_;
+      info->pub_listener_ = nullptr;
     }
 
     // Delete topics and unregister types
@@ -135,7 +138,7 @@ __rmw_destroy_service(
   rmw_free(const_cast<char *>(service->service_name));
   rmw_service_free(service);
 
-  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
+  RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);   // on completion
   return final_ret;
 }
 
@@ -173,4 +176,5 @@ __rmw_service_set_on_new_request_callback(
     callback);
   return RMW_RET_OK;
 }
+
 }  // namespace rmw_fastrtps_shared_cpp

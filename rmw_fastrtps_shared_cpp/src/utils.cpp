@@ -195,7 +195,8 @@ create_datareader(
   *data_reader = subscriber->create_datareader(
     des_topic,
     updated_qos,
-    listener);
+    listener,
+    eprosima::fastdds::dds::StatusMask::subscription_matched());
   if (!data_reader &&
     (RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED ==
     subscription_options->require_unique_network_flow_endpoints))
@@ -203,7 +204,8 @@ create_datareader(
     *data_reader = subscriber->create_datareader(
       des_topic,
       datareader_qos,
-      listener);
+      listener,
+      eprosima::fastdds::dds::StatusMask::subscription_matched());
   }
   return true;
 }

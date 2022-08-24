@@ -42,7 +42,8 @@ using rmw_dds_common::msg::ParticipantEntitiesInfo;
 
 static
 rmw_ret_t
-init_context_impl(rmw_context_t * context)
+init_context_impl(
+  rmw_context_t * context)
 {
   rmw_publisher_options_t publisher_options = rmw_get_default_publisher_options();
   rmw_subscription_options_t subscription_options = rmw_get_default_subscription_options();
@@ -65,7 +66,8 @@ init_context_impl(rmw_context_t * context)
       (context->options.localhost_only == RMW_LOCALHOST_ONLY_ENABLED) ? 1 : 0,
       context->options.enclave,
       common_context.get()),
-    [&](CustomParticipantInfo * participant_info) {
+    [&](CustomParticipantInfo * participant_info)
+    {
       if (RMW_RET_OK != rmw_fastrtps_shared_cpp::destroy_participant(participant_info)) {
         RCUTILS_SAFE_FWRITE_TO_STDERR(
           "Failed to destroy participant after function: '"
@@ -92,9 +94,10 @@ init_context_impl(rmw_context_t * context)
       "ros_discovery_info",
       &qos,
       &publisher_options,
-      false,  // our fastrtps typesupport doesn't support keyed topics
+      false,       // our fastrtps typesupport doesn't support keyed topics
       true),
-    [&](rmw_publisher_t * pub) {
+    [&](rmw_publisher_t * pub)
+    {
       if (RMW_RET_OK != rmw_fastrtps_shared_cpp::destroy_publisher(
         eprosima_fastrtps_identifier,
         participant_info.get(),
@@ -119,9 +122,9 @@ init_context_impl(rmw_context_t * context)
       "ros_discovery_info",
       &qos,
       &subscription_options,
-      false,  // our fastrtps typesupport doesn't support keyed topics
-      true),
-    [&](rmw_subscription_t * sub) {
+      false),       // our fastrtps typesupport doesn't support keyed topics
+    [&](rmw_subscription_t * sub)
+    {
       if (RMW_RET_OK != rmw_fastrtps_shared_cpp::destroy_subscription(
         eprosima_fastrtps_identifier,
         participant_info.get(),
@@ -139,7 +142,8 @@ init_context_impl(rmw_context_t * context)
   std::unique_ptr<rmw_guard_condition_t, std::function<void(rmw_guard_condition_t *)>>
   graph_guard_condition(
     rmw_fastrtps_shared_cpp::__rmw_create_guard_condition(eprosima_fastrtps_identifier),
-    [&](rmw_guard_condition_t * p) {
+    [&](rmw_guard_condition_t * p)
+    {
       rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_destroy_guard_condition(p);
       if (ret != RMW_RET_OK) {
         RMW_SAFE_FWRITE_TO_STDERR(
@@ -166,7 +170,8 @@ init_context_impl(rmw_context_t * context)
   }
 
   common_context->graph_cache.set_on_change_callback(
-    [guard_condition = graph_guard_condition.get()]() {
+    [guard_condition = graph_guard_condition.get()]()
+    {
       rmw_fastrtps_shared_cpp::__rmw_trigger_guard_condition(
         eprosima_fastrtps_identifier,
         guard_condition);
@@ -185,7 +190,8 @@ init_context_impl(rmw_context_t * context)
 }
 
 rmw_ret_t
-rmw_fastrtps_dynamic_cpp::increment_context_impl_ref_count(rmw_context_t * context)
+rmw_fastrtps_dynamic_cpp::increment_context_impl_ref_count(
+  rmw_context_t * context)
 {
   assert(context);
   assert(context->impl);
