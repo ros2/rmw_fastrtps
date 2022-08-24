@@ -21,6 +21,7 @@
 #include "rmw/rmw.h"
 
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
+#include "fastdds/dds/core/StackAllocatedSequence.hpp"
 
 #include "fastrtps/utils/collections/ResourceLimitedVector.hpp"
 
@@ -35,6 +36,8 @@
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 #include "tracetools/tracetools.h"
+
+#include "rcpputils/scope_exit.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -83,36 +86,39 @@ _take(
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
-  eprosima::fastdds::dds::SampleInfo sinfo;
-
   rmw_fastrtps_shared_cpp::SerializedData data;
-
   data.is_cdr_buffer = false;
   data.data = ros_message;
   data.impl = info->type_support_impl_;
 
-  while (0 < info->data_reader_->get_unread_count()) {
-    if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
-      // Update hasData from listener
-      info->listener_->update_has_data(info->data_reader_);
+  eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> data_values;
+  const_cast<void **>(data_values.buffer())[0] = &data;
+  eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
 
-      if (subscription->options.ignore_local_publications) {
-        auto sample_writer_guid =
-          eprosima::fastrtps::rtps::iHandle2GUID(sinfo.publication_handle);
+  while (ReturnCode_t::RETCODE_OK == info->data_reader_->take(data_values, info_seq, 1)) {
+    auto reset = rcpputils::make_scope_exit(
+      [&]()
+      {
+        data_values.length(0);
+        info_seq.length(0);
+      });
 
-        if (sample_writer_guid.guidPrefix == info->data_reader_->guid().guidPrefix) {
-          // This is a local publication. Ignore it
-          continue;
-        }
+    if (subscription->options.ignore_local_publications) {
+      auto sample_writer_guid =
+        eprosima::fastrtps::rtps::iHandle2GUID(info_seq[0].publication_handle);
+
+      if (sample_writer_guid.guidPrefix == info->data_reader_->guid().guidPrefix) {
+        // This is a local publication. Ignore it
+        continue;
       }
+    }
 
-      if (sinfo.valid_data) {
-        if (message_info) {
-          _assign_message_info(identifier, message_info, &sinfo);
-        }
-        *taken = true;
-        break;
+    if (info_seq[0].valid_data) {
+      if (message_info) {
+        _assign_message_info(identifier, message_info, &info_seq[0]);
       }
+      *taken = true;
+      break;
     }
   }
 
@@ -146,14 +152,6 @@ _take_sequence(
 
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
-
-  // Limit the upper bound of reads to the number unread at the beginning.
-  // This prevents any samples that are added after the beginning of the
-  // _take_sequence call from being read.
-  auto unread_count = info->data_reader_->get_unread_count();
-  if (unread_count < count) {
-    count = unread_count;
-  }
 
   for (size_t ii = 0; ii < count; ++ii) {
     taken_flag = false;
@@ -196,7 +194,7 @@ __rmw_take_event(
     return RMW_RET_ERROR);
 
   auto event = static_cast<CustomEventInfo *>(event_handle->data);
-  if (event->getListener()->takeNextEvent(event_handle->event_type, event_info)) {
+  if (event->get_listener()->take_event(event_handle->event_type, event_info)) {
     *taken = true;
     return RMW_RET_OK;
   }
@@ -318,25 +316,34 @@ _take_serialized_message(
   data.data = &buffer;
   data.impl = nullptr;    // not used when is_cdr_buffer is true
 
-  if (info->data_reader_->take_next_sample(&data, &sinfo) == ReturnCode_t::RETCODE_OK) {
-    // Update hasData from listener
-    info->listener_->update_has_data(info->data_reader_);
+  eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> data_values;
+  const_cast<void **>(data_values.buffer())[0] = &data;
+  eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
 
-    if (sinfo.valid_data) {
+  while (ReturnCode_t::RETCODE_OK == info->data_reader_->take(data_values, info_seq, 1)) {
+    auto reset = rcpputils::make_scope_exit(
+      [&]()
+      {
+        data_values.length(0);
+        info_seq.length(0);
+      });
+
+    if (info_seq[0].valid_data) {
       auto buffer_size = static_cast<size_t>(buffer.getBufferSize());
       if (serialized_message->buffer_capacity < buffer_size) {
         auto ret = rmw_serialized_message_resize(serialized_message, buffer_size);
         if (ret != RMW_RET_OK) {
-          return ret;  // Error message already set
+          return ret;           // Error message already set
         }
       }
       serialized_message->buffer_length = buffer_size;
       memcpy(serialized_message->buffer, buffer.getBuffer(), serialized_message->buffer_length);
 
       if (message_info) {
-        _assign_message_info(identifier, message_info, &sinfo);
+        _assign_message_info(identifier, message_info, &info_seq[0]);
       }
       *taken = true;
+      break;
     }
   }
 
@@ -395,7 +402,8 @@ struct GenericSequence : public eprosima::fastdds::dds::LoanableCollection
 {
   GenericSequence() = default;
 
-  void resize(size_type /*new_length*/) override
+  void resize(
+    size_type /*new_length*/) override
   {
     // This kind of collection should only be used with loans
     throw std::bad_alloc();
@@ -410,18 +418,21 @@ struct LoanManager
     eprosima::fastdds::dds::SampleInfoSeq info_seq{};
   };
 
-  explicit LoanManager(const eprosima::fastrtps::ResourceLimitedContainerConfig & items_cfg)
+  explicit LoanManager(
+    const eprosima::fastrtps::ResourceLimitedContainerConfig & items_cfg)
   : items(items_cfg)
   {
   }
 
-  void add_item(std::unique_ptr<Item> item)
+  void add_item(
+    std::unique_ptr<Item> item)
   {
     std::lock_guard<std::mutex> guard(mtx);
     items.push_back(std::move(item));
   }
 
-  std::unique_ptr<Item> erase_item(void * loaned_message)
+  std::unique_ptr<Item> erase_item(
+    void * loaned_message)
   {
     std::unique_ptr<Item> ret{nullptr};
 
@@ -488,7 +499,6 @@ __rmw_take_loaned_message_internal(
       }
       *loaned_message = item->data_seq.buffer()[0];
       *taken = true;
-      info->listener_->update_has_data(info->data_reader_);
 
       info->loan_manager_->add_item(std::move(item));
 
@@ -501,7 +511,6 @@ __rmw_take_loaned_message_internal(
 
   // No data available, return loan information.
   *taken = false;
-  info->listener_->update_has_data(info->data_reader_);
   return RMW_RET_OK;
 }
 
@@ -536,4 +545,5 @@ __rmw_return_loaned_message_from_subscription(
   RMW_SET_ERROR_MSG("Trying to return message not loaned by this subscription");
   return RMW_RET_ERROR;
 }
+
 }  // namespace rmw_fastrtps_shared_cpp

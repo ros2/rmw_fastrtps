@@ -65,8 +65,7 @@ create_subscription(
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
   const rmw_subscription_options_t * subscription_options,
-  bool keyed,
-  bool create_subscription_listener)
+  bool keyed)
 {
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(nullptr);
 
@@ -164,7 +163,8 @@ create_subscription(
   }
 
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info, dds_participant]() {
+    [info, dds_participant]()
+    {
       delete info->listener_;
       if (info->type_support_) {
         dds_participant->unregister_type(info->type_support_.get_type_name());
@@ -181,7 +181,8 @@ create_subscription(
     return nullptr;
   }
   auto return_type_support = rcpputils::make_scope_exit(
-    [&type_registry, type_support]() {
+    [&type_registry, type_support]()
+    {
       type_registry.return_message_type_support(type_support);
     });
 
@@ -213,13 +214,11 @@ create_subscription(
 
   /////
   // Create Listener
-  if (create_subscription_listener) {
-    info->listener_ = new (std::nothrow) SubListener(info, qos_policies->depth);
+  info->listener_ = new (std::nothrow) SubListener(info);
 
-    if (!info->listener_) {
-      RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
-      return nullptr;
-    }
+  if (!info->listener_) {
+    RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
+    return nullptr;
   }
 
   /////
@@ -266,7 +265,7 @@ create_subscription(
     return nullptr;
   }
 
-  info->listener_ = new (std::nothrow) SubListener(info, qos_policies->depth);
+  info->listener_ = new (std::nothrow) SubListener(info);
   if (!info->listener_) {
     RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber listener");
     return nullptr;
@@ -297,7 +296,8 @@ create_subscription(
   info->data_reader_ = subscriber->create_datareader(
     des_topic,
     reader_qos,
-    info->listener_);
+    info->listener_,
+    eprosima::fastdds::dds::StatusMask::subscription_matched());
   if (!info->data_reader_ &&
     (RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED ==
     subscription_options->require_unique_network_flow_endpoints))
@@ -305,7 +305,8 @@ create_subscription(
     info->data_reader_ = subscriber->create_datareader(
       des_topic,
       original_qos,
-      info->listener_);
+      info->listener_,
+      eprosima::fastdds::dds::StatusMask::subscription_matched());
   }
 
   if (!info->data_reader_) {
@@ -313,9 +314,14 @@ create_subscription(
     return nullptr;
   }
 
+  // Initialize DataReader's StatusCondition to be notified when new data is available
+  info->data_reader_->get_statuscondition().set_enabled_statuses(
+    eprosima::fastdds::dds::StatusMask::data_available());
+
   // lambda to delete datareader
   auto cleanup_datareader = rcpputils::make_scope_exit(
-    [subscriber, info]() {
+    [subscriber, info]()
+    {
       subscriber->delete_datareader(info->data_reader_);
     });
 
@@ -330,7 +336,8 @@ create_subscription(
     return nullptr;
   }
   auto cleanup_rmw_subscription = rcpputils::make_scope_exit(
-    [rmw_subscription]() {
+    [rmw_subscription]()
+    {
       rmw_free(const_cast<char *>(rmw_subscription->topic_name));
       rmw_subscription_free(rmw_subscription);
     });
@@ -358,4 +365,5 @@ create_subscription(
   cleanup_info.cancel();
   return rmw_subscription;
 }
+
 }  // namespace rmw_fastrtps_dynamic_cpp

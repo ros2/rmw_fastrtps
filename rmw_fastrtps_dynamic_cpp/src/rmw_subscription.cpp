@@ -80,8 +80,7 @@ rmw_create_subscription(
     topic_name,
     qos_policies,
     subscription_options,
-    false,
-    true);
+    false);
   if (!subscription) {
     return nullptr;
   }

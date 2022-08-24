@@ -278,12 +278,16 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   info->data_writer_ = publisher->create_datawriter(
     topic.topic,
     writer_qos,
-    info->listener_);
+    info->listener_,
+    eprosima::fastdds::dds::StatusMask::publication_matched());
 
   if (!info->data_writer_) {
     RMW_SET_ERROR_MSG("create_publisher() could not create data writer");
     return nullptr;
   }
+
+  info->data_writer_->get_statuscondition().set_enabled_statuses(
+    eprosima::fastdds::dds::StatusMask::none());
 
   // lambda to delete datawriter
   auto cleanup_datawriter = rcpputils::make_scope_exit(

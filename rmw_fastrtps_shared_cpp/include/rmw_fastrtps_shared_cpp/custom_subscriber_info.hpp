@@ -15,9 +15,7 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
 
-#include <atomic>
 #include <algorithm>
-#include <condition_variable>
 #include <limits>
 #include <memory>
 #include <mutex>
@@ -78,54 +76,51 @@ struct CustomSubscriberInfo : public CustomEventInfo
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *
-  getListener() const final;
+  get_listener() const final;
 };
+
 
 class SubListener : public EventListenerInterface, public eprosima::fastdds::dds::DataReaderListener
 {
 public:
-  explicit SubListener(CustomSubscriberInfo * info, size_t qos_depth)
-  : data_(false),
-    deadline_changes_(false),
-    liveliness_changes_(false),
-    sample_lost_changes_(false),
-    incompatible_qos_changes_(false),
-    conditionMutex_(nullptr),
-    conditionVariable_(nullptr)
+  explicit SubListener(
+    CustomSubscriberInfo * info)
+  : subscriber_info_(info)
+    , deadline_changes_(false)
+    , liveliness_changes_(false)
+    , sample_lost_changes_(false)
+    , incompatible_qos_changes_(false)
   {
-    qos_depth_ = (qos_depth > 0) ? qos_depth : std::numeric_limits<size_t>::max();
-    // Field is not used right now
-    (void)info;
   }
 
   // DataReaderListener implementation
   void
   on_subscription_matched(
-    eprosima::fastdds::dds::DataReader * reader,
+    eprosima::fastdds::dds::DataReader *,
     const eprosima::fastdds::dds::SubscriptionMatchedStatus & info) final
   {
     {
-      std::lock_guard<std::mutex> lock(internalMutex_);
+      std::lock_guard<std::mutex> lock(discovery_m_);
       if (info.current_count_change == 1) {
         publishers_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
       } else if (info.current_count_change == -1) {
         publishers_.erase(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
       }
     }
-    update_has_data(reader);
   }
 
   void
-  on_data_available(eprosima::fastdds::dds::DataReader * reader) final
+  on_data_available(
+    eprosima::fastdds::dds::DataReader *) final
   {
-    update_has_data(reader);
-
     std::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
 
     if (on_new_message_cb_) {
-      on_new_message_cb_(user_data_, 1);
-    } else {
-      new_data_unread_count_++;
+      auto unread_messages = get_unread_messages();
+
+      if (0 < unread_messages) {
+        on_new_message_cb_(new_message_user_data_, unread_messages);
+      }
     }
   }
 
@@ -153,59 +148,9 @@ public:
     eprosima::fastdds::dds::DataReader *,
     const eprosima::fastdds::dds::RequestedIncompatibleQosStatus &) final;
 
-  // EventListenerInterface implementation
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  bool
-  hasEvent(rmw_event_type_t event_type) const final;
-
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void set_on_new_event_callback(
-    const void * user_data,
-    rmw_event_callback_t callback) final;
-
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  bool
-  takeNextEvent(rmw_event_type_t event_type, void * event_info) final;
-
-  // SubListener API
-  void
-  attachCondition(std::mutex * conditionMutex, std::condition_variable * conditionVariable)
-  {
-    std::lock_guard<std::mutex> lock(internalMutex_);
-    conditionMutex_ = conditionMutex;
-    conditionVariable_ = conditionVariable;
-  }
-
-  void
-  detachCondition()
-  {
-    std::lock_guard<std::mutex> lock(internalMutex_);
-    conditionMutex_ = nullptr;
-    conditionVariable_ = nullptr;
-  }
-
-  bool
-  hasData() const
-  {
-    return data_.load(std::memory_order_relaxed);
-  }
-
-  void
-  update_has_data(eprosima::fastdds::dds::DataReader * reader)
-  {
-    // Make sure to call into Fast DDS before taking the lock to avoid an
-    // ABBA deadlock between internalMutex_ and mutexes inside of Fast DDS.
-    auto unread_count = reader->get_unread_count();
-    bool has_data = unread_count > 0;
-
-    std::lock_guard<std::mutex> lock(internalMutex_);
-    ConditionalScopedLock clock(conditionMutex_, conditionVariable_);
-    data_.store(has_data, std::memory_order_relaxed);
-  }
-
   size_t publisherCount()
   {
-    std::lock_guard<std::mutex> lock(internalMutex_);
+    std::lock_guard<std::mutex> lock(discovery_m_);
     return publishers_.size();
   }
 
@@ -214,55 +159,64 @@ public:
   void
   set_on_new_message_callback(
     const void * user_data,
-    rmw_event_callback_t callback)
-  {
-    std::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
+    rmw_event_callback_t callback);
 
-    if (callback) {
-      // Push events arrived before setting the executor's callback
-      if (new_data_unread_count_) {
-        auto unread_count = std::min(new_data_unread_count_, qos_depth_);
-        callback(user_data, unread_count);
-        new_data_unread_count_ = 0;
-      }
-      user_data_ = user_data;
-      on_new_message_cb_ = callback;
-    } else {
-      user_data_ = nullptr;
-      on_new_message_cb_ = nullptr;
-    }
+  size_t get_unread_messages()
+  {
+    return subscriber_info_->data_reader_->get_unread_count(true);
   }
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  eprosima::fastdds::dds::StatusCondition & get_statuscondition() const final;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  bool take_event(
+    rmw_event_type_t event_type,
+    void * event_info) final;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void set_on_new_event_callback(
+    rmw_event_type_t event_type,
+    const void * user_data,
+    rmw_event_callback_t callback) final;
+
 private:
-  mutable std::mutex internalMutex_;
+  CustomSubscriberInfo * subscriber_info_ = nullptr;
 
-  std::atomic_bool data_;
+  bool deadline_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  std::atomic_bool deadline_changes_;
   eprosima::fastdds::dds::RequestedDeadlineMissedStatus requested_deadline_missed_status_
-  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  std::atomic_bool liveliness_changes_;
+  bool liveliness_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
   eprosima::fastdds::dds::LivelinessChangedStatus liveliness_changed_status_
-  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  std::atomic_bool sample_lost_changes_;
+  bool sample_lost_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
   eprosima::fastdds::dds::SampleLostStatus sample_lost_status_
-  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  std::atomic_bool incompatible_qos_changes_;
+  bool incompatible_qos_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
   eprosima::fastdds::dds::RequestedIncompatibleQosStatus incompatible_qos_status_
-  RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  std::mutex * conditionMutex_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
-  std::condition_variable * conditionVariable_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
-
-  std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(internalMutex_);
+  std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(
+    discovery_m_);
 
   rmw_event_callback_t on_new_message_cb_{nullptr};
+
+  const void * new_message_user_data_{nullptr};
+
   std::mutex on_new_message_m_;
-  size_t qos_depth_;
-  size_t new_data_unread_count_ = 0;
+
+  std::mutex discovery_m_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
