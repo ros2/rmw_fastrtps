@@ -67,7 +67,8 @@ __rmw_destroy_client(
   }
 
   auto show_previous_error =
-    [&final_ret]() {
+    [&final_ret]()
+    {
       if (RMW_RET_OK != final_ret) {
         RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
         RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "'\n");
@@ -161,4 +162,5 @@ __rmw_client_set_on_new_response_callback(
     callback);
   return RMW_RET_OK;
 }
+
 }  // namespace rmw_fastrtps_shared_cpp

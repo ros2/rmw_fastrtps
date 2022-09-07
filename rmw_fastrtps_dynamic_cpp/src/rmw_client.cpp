@@ -355,12 +355,16 @@ rmw_create_client(
   info->response_reader_ = subscriber->create_datareader(
     response_topic_desc,
     reader_qos,
-    info->listener_);
+    info->listener_,
+    eprosima::fastdds::dds::StatusMask::subscription_matched());
 
   if (!info->response_reader_) {
     RMW_SET_ERROR_MSG("create_client() failed to create response DataReader");
     return nullptr;
   }
+
+  info->response_reader_->get_statuscondition().set_enabled_statuses(
+    eprosima::fastdds::dds::StatusMask::data_available());
 
   // lambda to delete datareader
   auto cleanup_datareader = rcpputils::make_scope_exit(
@@ -405,12 +409,16 @@ rmw_create_client(
   info->request_writer_ = publisher->create_datawriter(
     request_topic.topic,
     writer_qos,
-    info->pub_listener_);
+    info->pub_listener_,
+    eprosima::fastdds::dds::StatusMask::publication_matched());
 
   if (!info->request_writer_) {
     RMW_SET_ERROR_MSG("create_client() failed to create request DataWriter");
     return nullptr;
   }
+
+  info->request_writer_->get_statuscondition().set_enabled_statuses(
+    eprosima::fastdds::dds::StatusMask::none());
 
   // lambda to delete datawriter
   auto cleanup_datawriter = rcpputils::make_scope_exit(

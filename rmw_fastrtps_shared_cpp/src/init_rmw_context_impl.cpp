@@ -31,7 +31,8 @@
 #include "rmw_fastrtps_shared_cpp/listener_thread.hpp"
 
 rmw_ret_t
-rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(rmw_context_t * context)
+rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(
+  rmw_context_t * context)
 {
   std::lock_guard<std::mutex> guard(context->impl->mutex);
 

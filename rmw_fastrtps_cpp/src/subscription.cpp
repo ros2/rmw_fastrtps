@@ -65,8 +65,7 @@ create_subscription(
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
   const rmw_subscription_options_t * subscription_options,
-  bool keyed,
-  bool create_subscription_listener)
+  bool keyed)
 {
   /////
   // Check input parameters
@@ -164,7 +163,8 @@ create_subscription(
   }
 
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info, dds_participant]() {
+    [info, dds_participant]()
+    {
       delete info->listener_;
       if (info->type_support_) {
         dds_participant->unregister_type(info->type_support_.get_type_name());
@@ -208,12 +208,10 @@ create_subscription(
 
   /////
   // Create Listener
-  if (create_subscription_listener) {
-    info->listener_ = new (std::nothrow) SubListener(info, qos_policies->depth);
-    if (!info->listener_) {
-      RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
-      return nullptr;
-    }
+  info->listener_ = new (std::nothrow) SubListener(info);
+  if (!info->listener_) {
+    RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
+    return nullptr;
   }
 
   /////
@@ -297,9 +295,14 @@ create_subscription(
     return nullptr;
   }
 
+  // Initialize DataReader's StatusCondition to be notified when new data is available
+  info->data_reader_->get_statuscondition().set_enabled_statuses(
+    eprosima::fastdds::dds::StatusMask::data_available());
+
   // lambda to delete datareader
   auto cleanup_datareader = rcpputils::make_scope_exit(
-    [subscriber, info]() {
+    [subscriber, info]()
+    {
       subscriber->delete_datareader(info->data_reader_);
     });
 
@@ -316,7 +319,8 @@ create_subscription(
     return nullptr;
   }
   auto cleanup_rmw_subscription = rcpputils::make_scope_exit(
-    [rmw_subscription]() {
+    [rmw_subscription]()
+    {
       rmw_free(const_cast<char *>(rmw_subscription->topic_name));
       rmw_subscription_free(rmw_subscription);
     });
@@ -345,4 +349,5 @@ create_subscription(
     info->subscription_gid_.data);
   return rmw_subscription;
 }
+
 }  // namespace rmw_fastrtps_cpp

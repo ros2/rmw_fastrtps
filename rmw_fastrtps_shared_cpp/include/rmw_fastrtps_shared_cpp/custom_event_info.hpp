@@ -15,14 +15,12 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_EVENT_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_EVENT_INFO_HPP_
 
-#include <atomic>
-#include <condition_variable>
-#include <list>
-#include <memory>
 #include <mutex>
 #include <utility>
 
 #include "fastcdr/FastBuffer.h"
+#include "fastdds/dds/core/condition/StatusCondition.hpp"
+#include "fastdds/dds/core/condition/GuardCondition.hpp"
 
 #include "rmw/event.h"
 #include "rmw/event_callback_type.h"
@@ -32,77 +30,45 @@
 
 class EventListenerInterface
 {
-protected:
-  class ConditionalScopedLock;
-
 public:
-  /// Connect a condition variable so a waiter can be notified of new data.
-  virtual void attachCondition(
-    std::mutex * conditionMutex,
-    std::condition_variable * conditionVariable) = 0;
-
-  /// Unset the information from attachCondition.
-  virtual void detachCondition() = 0;
-
-  /// Check if there is new data available for a specific event type.
-  /**
-    * \param event_type The event type to check on.
-    * \return `true` if new data is available.
-    */
-  virtual bool hasEvent(rmw_event_type_t event_type) const = 0;
+  virtual eprosima::fastdds::dds::StatusCondition & get_statuscondition() const = 0;
 
   /// Take ready data for an event type.
   /**
-    * \param event_type The event type to get data for.
-    * \param event_info A preallocated event information (from rmw/types.h) to fill with data
-    * \return `true` if data was successfully taken.
-    * \return `false` if data was not available, in this case nothing was written to event_info.
-    */
-  virtual bool takeNextEvent(rmw_event_type_t event_type, void * event_info) = 0;
+   * \param event_type The event type to get data for.
+   * \param event_info A preallocated event information (from rmw/types.h) to fill with data
+   * \return `true` if data was successfully taken.
+   * \return `false` if data was not available, in this case nothing was written to event_info.
+   */
+  virtual bool take_event(
+    rmw_event_type_t event_type,
+    void * event_info) = 0;
 
   // Provide handlers to perform an action when a
   // new event from this listener has ocurred
   virtual void set_on_new_event_callback(
+    rmw_event_type_t event_type,
     const void * user_data,
     rmw_event_callback_t callback) = 0;
 
-  rmw_event_callback_t on_new_event_cb_{nullptr};
-  const void * user_data_{nullptr};
-  uint64_t unread_events_count_ = 0;
+  eprosima::fastdds::dds::GuardCondition & get_event_guard(rmw_event_type_t event_type)
+  {
+    return event_guard[event_type];
+  }
+
+protected:
+  eprosima::fastdds::dds::GuardCondition event_guard[RMW_EVENT_INVALID];
+
+  rmw_event_callback_t on_new_event_cb_[RMW_EVENT_INVALID] = {nullptr};
+
+  const void * user_data_[RMW_EVENT_INVALID] = {nullptr};
+
   std::mutex on_new_event_m_;
-};
-
-class EventListenerInterface::ConditionalScopedLock
-{
-public:
-  ConditionalScopedLock(
-    std::mutex * mutex,
-    std::condition_variable * condition_variable = nullptr)
-  : mutex_(mutex), cv_(condition_variable)
-  {
-    if (nullptr != mutex_) {
-      mutex_->lock();
-    }
-  }
-
-  ~ConditionalScopedLock()
-  {
-    if (nullptr != mutex_) {
-      mutex_->unlock();
-      if (nullptr != cv_) {
-        cv_->notify_all();
-      }
-    }
-  }
-
-private:
-  std::mutex * mutex_;
-  std::condition_variable * cv_;
 };
 
 struct CustomEventInfo
 {
-  virtual EventListenerInterface * getListener() const = 0;
+  virtual EventListenerInterface * get_listener() const = 0;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_EVENT_INFO_HPP_

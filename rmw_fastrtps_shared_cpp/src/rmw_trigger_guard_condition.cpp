@@ -18,7 +18,8 @@
 #include "rmw/rmw.h"
 
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
-#include "types/guard_condition.hpp"
+
+#include "fastdds/dds/core/condition/GuardCondition.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -34,8 +35,9 @@ __rmw_trigger_guard_condition(
     return RMW_RET_ERROR;
   }
 
-  auto guard_condition = static_cast<GuardCondition *>(guard_condition_handle->data);
-  guard_condition->trigger();
+  auto guard_condition =
+    static_cast<eprosima::fastdds::dds::GuardCondition *>(guard_condition_handle->data);
+  guard_condition->set_trigger_value(true);
   return RMW_RET_OK;
 }
 }  // namespace rmw_fastrtps_shared_cpp

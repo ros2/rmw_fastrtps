@@ -77,8 +77,7 @@ rmw_create_subscription(
     topic_name,
     qos_policies,
     subscription_options,
-    false,  // use no keyed topic
-    true);  // create subscription listener
+    false);  // use no keyed topic
   if (!subscription) {
     return nullptr;
   }
