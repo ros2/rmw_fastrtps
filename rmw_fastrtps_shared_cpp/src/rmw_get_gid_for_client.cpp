@@ -36,12 +36,14 @@ __rmw_get_gid_for_client(
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   RMW_CHECK_ARGUMENT_FOR_NULL(gid, RMW_RET_INVALID_ARGUMENT);
 
-  const auto *info = static_cast<const CustomClientInfo *>(client->data);
-  std::copy(info->writer_guid_.entityId.value, 
-      info->writer_guid_.entityId.value + eprosima::fastrtps::rtps::EntityId_t::size,
-      std::copy( info->writer_guid_.guidPrefix.value,
-        info->writer_guid_.guidPrefix.value + eprosima::fastrtps::rtps::GuidPrefix_t::size,
-        gid->data));
+  const auto * info = static_cast<const CustomClientInfo *>(client->data);
+  std::copy(
+    info->writer_guid_.entityId.value,
+    info->writer_guid_.entityId.value + eprosima::fastrtps::rtps::EntityId_t::size,
+    std::copy(
+      info->writer_guid_.guidPrefix.value,
+      info->writer_guid_.guidPrefix.value + eprosima::fastrtps::rtps::GuidPrefix_t::size,
+      gid->data));
   return RMW_RET_OK;
 }
 }  // namespace rmw_fastrtps_shared_cpp

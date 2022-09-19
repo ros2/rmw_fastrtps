@@ -23,9 +23,9 @@
 extern "C"
 {
 rmw_ret_t
-rmw_get_gid_for_client(const rmw_client_t *client, rmw_gid_t *gid)
+rmw_get_gid_for_client(const rmw_client_t * client, rmw_gid_t * gid)
 {
-return rmw_fastrtps_shared_cpp::__rmw_get_gid_for_client(
-  eprosima_fastrtps_identifier, client, gid);
+  return rmw_fastrtps_shared_cpp::__rmw_get_gid_for_client(
+    eprosima_fastrtps_identifier, client, gid);
 }
 }  // extern "C"
