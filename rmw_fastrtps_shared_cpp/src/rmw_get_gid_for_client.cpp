@@ -44,6 +44,7 @@ __rmw_get_gid_for_client(
       info->writer_guid_.guidPrefix.value,
       info->writer_guid_.guidPrefix.value + eprosima::fastrtps::rtps::GuidPrefix_t::size,
       gid->data));
+  gid->implementation_identifier = identifier;
   return RMW_RET_OK;
 }
 }  // namespace rmw_fastrtps_shared_cpp
