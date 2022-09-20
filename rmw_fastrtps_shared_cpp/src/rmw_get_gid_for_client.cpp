@@ -18,6 +18,7 @@
 #include "rmw/types.h"
 
 #include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
 namespace rmw_fastrtps_shared_cpp
@@ -37,13 +38,7 @@ __rmw_get_gid_for_client(
   RMW_CHECK_ARGUMENT_FOR_NULL(gid, RMW_RET_INVALID_ARGUMENT);
 
   const auto * info = static_cast<const CustomClientInfo *>(client->data);
-  std::copy(
-    info->writer_guid_.entityId.value,
-    info->writer_guid_.entityId.value + eprosima::fastrtps::rtps::EntityId_t::size,
-    std::copy(
-      info->writer_guid_.guidPrefix.value,
-      info->writer_guid_.guidPrefix.value + eprosima::fastrtps::rtps::GuidPrefix_t::size,
-      gid->data));
+  copy_from_fastrtps_guid_to_byte_array(info->writer_guid_, gid->data);
   gid->implementation_identifier = identifier;
   return RMW_RET_OK;
 }
