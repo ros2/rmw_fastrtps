@@ -66,6 +66,7 @@ add_library(rmw_fastrtps_shared_cpp
   src/rmw_event.cpp
   src/rmw_features.cpp
   src/rmw_get_endpoint_network_flow.cpp
+  src/rmw_get_gid_for_client.cpp
   src/rmw_get_gid_for_publisher.cpp
   src/rmw_get_topic_endpoint_info.cpp
   src/rmw_guard_condition.cpp
