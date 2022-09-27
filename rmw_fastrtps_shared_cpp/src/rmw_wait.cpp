@@ -181,7 +181,6 @@ __rmw_wait(
     for (size_t i = 0; i < events->event_count; ++i) {
       auto event = static_cast<rmw_event_t *>(events->events[i]);
       auto custom_event_info = static_cast<CustomEventInfo *>(event->data);
-      fastdds_wait_set->detach_condition(custom_event_info->get_listener()->get_statuscondition());
       eprosima::fastdds::dds::StatusCondition & status_condition =
         custom_event_info->get_listener()->get_statuscondition();
       fastdds_wait_set->detach_condition(status_condition);
