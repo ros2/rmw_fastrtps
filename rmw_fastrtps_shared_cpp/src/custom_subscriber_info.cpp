@@ -138,40 +138,49 @@ void SubListener::set_on_new_event_callback(
       case RMW_EVENT_LIVELINESS_CHANGED:
         {
           subscriber_info_->data_reader_->get_liveliness_changed_status(liveliness_changed_status_);
-          callback(
-            user_data, liveliness_changed_status_.alive_count_change +
-            liveliness_changed_status_.not_alive_count_change);
-          liveliness_changed_status_.alive_count_change = 0;
-          liveliness_changed_status_.not_alive_count_change = 0;
+
+          if ((liveliness_changed_status_.alive_count_change > 0) ||
+            (liveliness_changed_status_.not_alive_count_change > 0))
+          {
+            callback(
+              user_data, liveliness_changed_status_.alive_count_change +
+              liveliness_changed_status_.not_alive_count_change);
+
+            liveliness_changed_status_.alive_count_change = 0;
+            liveliness_changed_status_.not_alive_count_change = 0;
+          }
         }
         break;
       case RMW_EVENT_REQUESTED_DEADLINE_MISSED:
         {
           subscriber_info_->data_reader_->get_requested_deadline_missed_status(
             requested_deadline_missed_status_);
-          callback(
-            user_data,
-            requested_deadline_missed_status_.total_count_change);
-          requested_deadline_missed_status_.total_count_change = 0;
+
+          if (requested_deadline_missed_status_.total_count_change > 0) {
+            callback(user_data, requested_deadline_missed_status_.total_count_change);
+            requested_deadline_missed_status_.total_count_change = 0;
+          }
         }
         break;
       case RMW_EVENT_MESSAGE_LOST:
         {
           subscriber_info_->data_reader_->get_sample_lost_status(sample_lost_status_);
-          callback(
-            user_data,
-            sample_lost_status_.total_count_change);
-          sample_lost_status_.total_count_change = 0;
+
+          if (sample_lost_status_.total_count_change > 0) {
+            callback(user_data, sample_lost_status_.total_count_change);
+            sample_lost_status_.total_count_change = 0;
+          }
         }
         break;
       case RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE:
         {
           subscriber_info_->data_reader_->get_requested_incompatible_qos_status(
             incompatible_qos_status_);
-          callback(
-            user_data,
-            incompatible_qos_status_.total_count_change);
-          incompatible_qos_status_.total_count_change = 0;
+
+          if (incompatible_qos_status_.total_count_change > 0) {
+            callback(user_data, incompatible_qos_status_.total_count_change);
+            incompatible_qos_status_.total_count_change = 0;
+          }
         }
         break;
       default:
