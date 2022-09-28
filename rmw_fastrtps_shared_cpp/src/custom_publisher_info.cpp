@@ -114,24 +114,29 @@ void PubListener::set_on_new_event_callback(
     switch (event_type) {
       case RMW_EVENT_LIVELINESS_LOST:
         publisher_info_->data_writer_->get_liveliness_lost_status(liveliness_lost_status_);
-        callback(user_data, liveliness_lost_status_.total_count_change);
-        liveliness_lost_status_.total_count_change = 0;
+
+        if (liveliness_lost_status_.total_count_change > 0) {
+          callback(user_data, liveliness_lost_status_.total_count_change);
+          liveliness_lost_status_.total_count_change = 0;
+        }
         break;
       case RMW_EVENT_OFFERED_DEADLINE_MISSED:
         publisher_info_->data_writer_->get_offered_deadline_missed_status(
           offered_deadline_missed_status_);
-        callback(
-          user_data,
-          offered_deadline_missed_status_.total_count_change);
-        offered_deadline_missed_status_.total_count_change = 0;
+
+        if (offered_deadline_missed_status_.total_count_change > 0) {
+          callback(user_data, offered_deadline_missed_status_.total_count_change);
+          offered_deadline_missed_status_.total_count_change = 0;
+        }
         break;
       case RMW_EVENT_OFFERED_QOS_INCOMPATIBLE:
         publisher_info_->data_writer_->get_offered_incompatible_qos_status(
           incompatible_qos_status_);
-        callback(
-          user_data,
-          incompatible_qos_status_.total_count_change);
-        incompatible_qos_status_.total_count_change = 0;
+
+        if (incompatible_qos_status_.total_count_change > 0) {
+          callback(user_data, incompatible_qos_status_.total_count_change);
+          incompatible_qos_status_.total_count_change = 0;
+        }
         break;
       default:
         break;
