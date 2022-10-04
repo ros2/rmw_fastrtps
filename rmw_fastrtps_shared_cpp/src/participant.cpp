@@ -165,39 +165,70 @@ rmw_fastrtps_shared_cpp::create_participant(
 
   // Configure discovery
   if (RMW_AUTOMATIC_DISCOVERY_RANGE_OFF == discovery_params->automatic_discovery_range) {
-    // Create a NULL unicast locator to make FastDDS listen on all network interfaces
-    // Don't add a multicast locator so that multicast is disabled
-    eprosima::fastrtps::rtps::Locator_t default_unicast_locator;
-    domainParticipantQos.wire_protocol().builtin.metatrafficUnicastLocatorList.push_back(
-      default_unicast_locator);
+    // Clear the list of multicast listening locators
+    domainParticipantQos.wire_protocol().builtin.metatrafficMulticastLocatorList.clear();
+
+    // Clear unicast listening locators and add UDPv4 any
+    domainParticipantQos.wire_protocol().builtin.metatrafficUnicastLocatorList.clear();
+    eprosima::fastrtps::rtps::Locator_t unicast_locator;
+    std::istringstream("UDPv4:[0.0.0.0]:0") >> unicast_locator;
+    domainParticipantQos.wire_protocol().builtin.metatrafficUnicastLocatorList.push_back(unicast_locator);
+
+    // Add any initial peers
+    domainParticipantQos.wire_protocol().builtin.initialPeersList.clear();
+    if (discovery_params->static_peers_count > 0) {
+      for (size_t ii = 0; ii < discovery_params->static_peers_count; ++ii) {
+        eprosima::fastrtps::rtps::Locator_t peer;
+        eprosima::fastrtps::rtps::IPLocator::setIPv4(peer, discovery_params->static_peers[ii]);
+        // Not specifying the port of the peer means FastDDS will try all possible participant ports
+        // according to the port calculation equation in the RTPS spec section 9.6.1.1, up to the
+        // number of peers specified in maxInitialPeersRange.
+        domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(peer);
+      }
+    }
   } else if (RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET == discovery_params->automatic_discovery_range) {
-    // Nothing to do; use the default inbuilt transports(?)
-    // TODO(gbiggs): Probably we should choose and set our own sane defaults here in case the
-    // FastDDS defaults change.
+    // Add multicast as an initial peer
+    eprosima::fastrtps::rtps::Locator_t multicast_locator;
+    std::istringstream("UDPv4:[239.255.0.1]:0") >> multicast_locator;
+    domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(multicast_locator);
+
+    // Add any initial peers
+    if (discovery_params->static_peers_count > 0) {
+      for (size_t ii = 0; ii < discovery_params->static_peers_count; ++ii) {
+        eprosima::fastrtps::rtps::Locator_t peer;
+        eprosima::fastrtps::rtps::IPLocator::setIPv4(peer, discovery_params->static_peers[ii]);
+        // Not specifying the port of the peer means FastDDS will try all possible participant ports
+        // according to the port calculation equation in the RTPS spec section 9.6.1.1, up to the
+        // number of peers specified in maxInitialPeersRange.
+        domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(peer);
+      }
+    }
   } else {  // RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST and RMW_AUTOMATIC_DISCOVERY_RANGE_DEFAULT
-    // Disable the inbuilt transports
-    domainParticipantQos.transport().use_builtin_transports = false;
-    // Create a UDPv4 transport limited to localhost
-    auto udp_transport = std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
-    udp_transport->interfaceWhiteList.emplace_back("127.0.0.1");
-    domainParticipantQos.transport().user_transports.push_back(udp_transport);
+    // Clear the list of multicast listening locators
+    domainParticipantQos.wire_protocol().builtin.metatrafficMulticastLocatorList.clear();
 
-    // Add SHM transport if available
-    auto shm_transport =
-      std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
-    domainParticipantQos.transport().user_transports.push_back(shm_transport);
-  }
+    // Clear unicast listening locators and add UDPv4 any
+    domainParticipantQos.wire_protocol().builtin.metatrafficUnicastLocatorList.clear();
+    eprosima::fastrtps::rtps::Locator_t unicast_locator;
+    std::istringstream("UDPv4:[0.0.0.0]:0") >> unicast_locator;
+    domainParticipantQos.wire_protocol().builtin.metatrafficUnicastLocatorList.push_back(unicast_locator);
 
-  if (discovery_params->static_peers_count > 0) {
-    for (size_t ii = 0; ii < discovery_params->static_peers_count; ++ii) {
-      eprosima::fastrtps::rtps::Locator_t peer;
-      eprosima::fastrtps::rtps::IPLocator::setIPv4(
-        peer,
-        discovery_params->static_peers[ii]);
-      // Not specifying the port of the peer means FastDDS will try all possible participant ports
-      // according to the port calculation equation in the RTPS spec section 9.6.1.1, up to the
-      // number of peers specified in maxInitialPeersRange.
-      domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(peer);
+    // Add localhost as an initial peer
+    domainParticipantQos.wire_protocol().builtin.initialPeersList.clear();
+    eprosima::fastrtps::rtps::Locator_t localhost_locator;
+    std::istringstream("UDPv4:[127.0.0.1]:0") >> localhost_locator;
+    domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(localhost_locator);
+
+    // Add any initial peers
+    if (discovery_params->static_peers_count > 0) {
+      for (size_t ii = 0; ii < discovery_params->static_peers_count; ++ii) {
+        eprosima::fastrtps::rtps::Locator_t peer;
+        eprosima::fastrtps::rtps::IPLocator::setIPv4(peer, discovery_params->static_peers[ii]);
+        // Not specifying the port of the peer means FastDDS will try all possible participant ports
+        // according to the port calculation equation in the RTPS spec section 9.6.1.1, up to the
+        // number of peers specified in maxInitialPeersRange.
+        domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(peer);
+      }
     }
   }
 
