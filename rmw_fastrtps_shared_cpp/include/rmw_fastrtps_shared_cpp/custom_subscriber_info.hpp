@@ -37,82 +37,69 @@
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
-#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/event_callback_type.h"
+#include "rmw/impl/cpp/macros.hpp"
 
 #include "rmw_dds_common/context.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
 
-
 class SubListener;
 
-namespace rmw_fastrtps_shared_cpp
-{
+namespace rmw_fastrtps_shared_cpp {
 struct LoanManager;
-}  // namespace rmw_fastrtps_shared_cpp
+} // namespace rmw_fastrtps_shared_cpp
 
-struct CustomSubscriberInfo : public CustomEventInfo
-{
+struct CustomSubscriberInfo : public CustomEventInfo {
   virtual ~CustomSubscriberInfo() = default;
 
-  eprosima::fastdds::dds::DataReader * data_reader_ {nullptr};
-  SubListener * listener_{nullptr};
+  eprosima::fastdds::dds::DataReader *data_reader_{nullptr};
+  SubListener *listener_{nullptr};
   eprosima::fastdds::dds::TypeSupport type_support_;
-  const void * type_support_impl_{nullptr};
+  const void *type_support_impl_{nullptr};
   rmw_gid_t subscription_gid_{};
-  const char * typesupport_identifier_{nullptr};
+  const char *typesupport_identifier_{nullptr};
   std::shared_ptr<rmw_fastrtps_shared_cpp::LoanManager> loan_manager_;
 
   // for re-create or delete content filtered topic
-  const rmw_node_t * node_ {nullptr};
-  rmw_dds_common::Context * common_context_ {nullptr};
-  eprosima::fastdds::dds::DomainParticipant * dds_participant_ {nullptr};
-  eprosima::fastdds::dds::Subscriber * subscriber_ {nullptr};
+  const rmw_node_t *node_{nullptr};
+  rmw_dds_common::Context *common_context_{nullptr};
+  eprosima::fastdds::dds::DomainParticipant *dds_participant_{nullptr};
+  eprosima::fastdds::dds::Subscriber *subscriber_{nullptr};
   std::string topic_name_mangled_;
-  eprosima::fastdds::dds::TopicDescription * topic_ {nullptr};
-  eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic_ {nullptr};
+  eprosima::fastdds::dds::TopicDescription *topic_{nullptr};
+  eprosima::fastdds::dds::ContentFilteredTopic *filtered_topic_{nullptr};
   eprosima::fastdds::dds::DataReaderQos datareader_qos_;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  EventListenerInterface *
-  get_listener() const final;
+  EventListenerInterface *get_listener() const final;
 };
 
-
-class SubListener : public EventListenerInterface, public eprosima::fastdds::dds::DataReaderListener
-{
+class SubListener : public EventListenerInterface,
+                    public eprosima::fastdds::dds::DataReaderListener {
 public:
-  explicit SubListener(
-    CustomSubscriberInfo * info)
-  : subscriber_info_(info)
-    , deadline_changes_(false)
-    , liveliness_changes_(false)
-    , sample_lost_changes_(false)
-    , incompatible_qos_changes_(false)
-  {
-  }
+  explicit SubListener(CustomSubscriberInfo *info)
+      : subscriber_info_(info), deadline_changes_(false),
+        liveliness_changes_(false), sample_lost_changes_(false),
+        incompatible_qos_changes_(false) {}
 
   // DataReaderListener implementation
-  void
-  on_subscription_matched(
-    eprosima::fastdds::dds::DataReader *,
-    const eprosima::fastdds::dds::SubscriptionMatchedStatus & info) final
-  {
+  void on_subscription_matched(
+      eprosima::fastdds::dds::DataReader *,
+      const eprosima::fastdds::dds::SubscriptionMatchedStatus &info) final {
     {
       std::lock_guard<std::mutex> lock(discovery_m_);
       if (info.current_count_change == 1) {
-        publishers_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
+        publishers_.insert(eprosima::fastrtps::rtps::iHandle2GUID(
+            info.last_publication_handle));
       } else if (info.current_count_change == -1) {
-        publishers_.erase(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
+        publishers_.erase(eprosima::fastrtps::rtps::iHandle2GUID(
+            info.last_publication_handle));
       }
     }
   }
 
-  void
-  on_data_available(
-    eprosima::fastdds::dds::DataReader *) final
-  {
+  void on_data_available(eprosima::fastdds::dds::DataReader *) final {
     std::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
 
     if (on_new_message_cb_) {
@@ -125,98 +112,84 @@ public:
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void
-  on_requested_deadline_missed(
-    eprosima::fastdds::dds::DataReader *,
-    const eprosima::fastrtps::RequestedDeadlineMissedStatus &) final;
+  void on_requested_deadline_missed(
+      eprosima::fastdds::dds::DataReader *,
+      const eprosima::fastrtps::RequestedDeadlineMissedStatus &) final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void
-  on_liveliness_changed(
-    eprosima::fastdds::dds::DataReader *,
-    const eprosima::fastrtps::LivelinessChangedStatus &) final;
+  void on_liveliness_changed(
+      eprosima::fastdds::dds::DataReader *,
+      const eprosima::fastrtps::LivelinessChangedStatus &) final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void
-  on_sample_lost(
-    eprosima::fastdds::dds::DataReader *,
-    const eprosima::fastdds::dds::SampleLostStatus &) final;
+  void on_sample_lost(eprosima::fastdds::dds::DataReader *,
+                      const eprosima::fastdds::dds::SampleLostStatus &) final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void
-  on_requested_incompatible_qos(
-    eprosima::fastdds::dds::DataReader *,
-    const eprosima::fastdds::dds::RequestedIncompatibleQosStatus &) final;
+  void on_requested_incompatible_qos(
+      eprosima::fastdds::dds::DataReader *,
+      const eprosima::fastdds::dds::RequestedIncompatibleQosStatus &) final;
 
-  size_t publisherCount()
-  {
+  size_t publisherCount() {
     std::lock_guard<std::mutex> lock(discovery_m_);
     return publishers_.size();
   }
 
   // Provide handlers to perform an action when a
   // new event from this listener has ocurred
-  void
-  set_on_new_message_callback(
-    const void * user_data,
-    rmw_event_callback_t callback);
+  void set_on_new_message_callback(const void *user_data,
+                                   rmw_event_callback_t callback);
 
-  size_t get_unread_messages()
-  {
-    return subscriber_info_->data_reader_->get_unread_count(true);
+  size_t get_unread_messages() {
+    // return subscriber_info_->data_reader_->get_unread_count(true);
+    return subscriber_info_->data_reader_->get_unread_count();
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  eprosima::fastdds::dds::StatusCondition & get_statuscondition() const final;
+  eprosima::fastdds::dds::StatusCondition &get_statuscondition() const final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  bool take_event(
-    rmw_event_type_t event_type,
-    void * event_info) final;
+  bool take_event(rmw_event_type_t event_type, void *event_info) final;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void set_on_new_event_callback(
-    rmw_event_type_t event_type,
-    const void * user_data,
-    rmw_event_callback_t callback) final;
+  void set_on_new_event_callback(rmw_event_type_t event_type,
+                                 const void *user_data,
+                                 rmw_event_callback_t callback) final;
 
 private:
-  CustomSubscriberInfo * subscriber_info_ = nullptr;
+  CustomSubscriberInfo *subscriber_info_ = nullptr;
 
-  bool deadline_changes_
-  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+  bool deadline_changes_ RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  eprosima::fastdds::dds::RequestedDeadlineMissedStatus requested_deadline_missed_status_
-  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+  eprosima::fastdds::dds::RequestedDeadlineMissedStatus
+      requested_deadline_missed_status_
+          RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  bool liveliness_changes_
-  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+  bool liveliness_changes_ RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  eprosima::fastdds::dds::LivelinessChangedStatus liveliness_changed_status_
-  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+  eprosima::fastdds::dds::LivelinessChangedStatus
+      liveliness_changed_status_ RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  bool sample_lost_changes_
-  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+  bool sample_lost_changes_ RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  eprosima::fastdds::dds::SampleLostStatus sample_lost_status_
-  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+  eprosima::fastdds::dds::SampleLostStatus
+      sample_lost_status_ RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  bool incompatible_qos_changes_
-  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+  bool incompatible_qos_changes_ RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  eprosima::fastdds::dds::RequestedIncompatibleQosStatus incompatible_qos_status_
-  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+  eprosima::fastdds::dds::RequestedIncompatibleQosStatus
+      incompatible_qos_status_ RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(
-    discovery_m_);
+  std::set<eprosima::fastrtps::rtps::GUID_t>
+      publishers_ RCPPUTILS_TSA_GUARDED_BY(discovery_m_);
 
   rmw_event_callback_t on_new_message_cb_{nullptr};
 
-  const void * new_message_user_data_{nullptr};
+  const void *new_message_user_data_{nullptr};
 
   std::mutex on_new_message_m_;
 
   std::mutex discovery_m_;
 };
 
-#endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
+#endif // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_

@@ -17,8 +17,8 @@
 
 #include <condition_variable>
 #include <mutex>
-#include <unordered_set>
 #include <unordered_map>
+#include <unordered_set>
 
 #include "fastcdr/FastBuffer.h"
 
@@ -40,74 +40,62 @@
 
 #include "rmw/event_callback_type.h"
 
-#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 
 class ServiceListener;
 class ServicePubListener;
 
-enum class client_present_t
-{
-  FAILURE,   // an error occurred when checking
-  MAYBE,    // reader not matched, writer still present
-  YES,      // reader matched
-  GONE      // neither reader nor writer
+enum class client_present_t {
+  FAILURE, // an error occurred when checking
+  MAYBE,   // reader not matched, writer still present
+  YES,     // reader matched
+  GONE     // neither reader nor writer
 };
 
-typedef struct CustomServiceInfo
-{
+typedef struct CustomServiceInfo {
   eprosima::fastdds::dds::TypeSupport request_type_support_{nullptr};
-  const void * request_type_support_impl_{nullptr};
+  const void *request_type_support_impl_{nullptr};
   eprosima::fastdds::dds::TypeSupport response_type_support_{nullptr};
-  const void * response_type_support_impl_{nullptr};
-  eprosima::fastdds::dds::DataReader * request_reader_{nullptr};
-  eprosima::fastdds::dds::DataWriter * response_writer_{nullptr};
+  const void *response_type_support_impl_{nullptr};
+  eprosima::fastdds::dds::DataReader *request_reader_{nullptr};
+  eprosima::fastdds::dds::DataWriter *response_writer_{nullptr};
 
-  ServiceListener * listener_{nullptr};
-  ServicePubListener * pub_listener_{nullptr};
+  ServiceListener *listener_{nullptr};
+  ServicePubListener *pub_listener_{nullptr};
 
-  const char * typesupport_identifier_{nullptr};
+  const char *typesupport_identifier_{nullptr};
 } CustomServiceInfo;
 
-typedef struct CustomServiceRequest
-{
+typedef struct CustomServiceRequest {
   eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
-  eprosima::fastcdr::FastBuffer * buffer_;
+  eprosima::fastcdr::FastBuffer *buffer_;
 
-  CustomServiceRequest()
-  : buffer_(nullptr)
-  {
-  }
+  CustomServiceRequest() : buffer_(nullptr) {}
 } CustomServiceRequest;
 
-class ServicePubListener : public eprosima::fastdds::dds::DataWriterListener
-{
+class ServicePubListener : public eprosima::fastdds::dds::DataWriterListener {
   using subscriptions_set_t =
-    std::unordered_set<eprosima::fastrtps::rtps::GUID_t,
-      rmw_fastrtps_shared_cpp::hash_fastrtps_guid>;
+      std::unordered_set<eprosima::fastrtps::rtps::GUID_t,
+                         rmw_fastrtps_shared_cpp::hash_fastrtps_guid>;
   using clients_endpoints_map_t =
-    std::unordered_map<eprosima::fastrtps::rtps::GUID_t,
-      eprosima::fastrtps::rtps::GUID_t,
-      rmw_fastrtps_shared_cpp::hash_fastrtps_guid>;
+      std::unordered_map<eprosima::fastrtps::rtps::GUID_t,
+                         eprosima::fastrtps::rtps::GUID_t,
+                         rmw_fastrtps_shared_cpp::hash_fastrtps_guid>;
 
 public:
-  explicit ServicePubListener(
-    CustomServiceInfo * info)
-  {
-    (void) info;
-  }
+  explicit ServicePubListener(CustomServiceInfo *info) { (void)info; }
 
-  void
-  on_publication_matched(
-    eprosima::fastdds::dds::DataWriter * /* writer */,
-    const eprosima::fastdds::dds::PublicationMatchedStatus & info) final
-  {
+  void on_publication_matched(
+      eprosima::fastdds::dds::DataWriter * /* writer */,
+      const eprosima::fastdds::dds::PublicationMatchedStatus &info) final {
     std::lock_guard<std::mutex> lock(mutex_);
     if (info.current_count_change == 1) {
-      subscriptions_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
+      subscriptions_.insert(eprosima::fastrtps::rtps::iHandle2GUID(
+          info.last_subscription_handle));
     } else if (info.current_count_change == -1) {
       eprosima::fastrtps::rtps::GUID_t erase_endpoint_guid =
-        eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle);
+          eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle);
       subscriptions_.erase(erase_endpoint_guid);
       auto endpoint = clients_endpoints_.find(erase_endpoint_guid);
       if (endpoint != clients_endpoints_.end()) {
@@ -120,14 +108,12 @@ public:
     cv_.notify_all();
   }
 
-  template<class Rep, class Period>
+  template <class Rep, class Period>
   bool
-  wait_for_subscription(
-    const eprosima::fastrtps::rtps::GUID_t & guid,
-    const std::chrono::duration<Rep, Period> & rel_time)
-  {
-    auto guid_is_present = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_)->bool
-    {
+  wait_for_subscription(const eprosima::fastrtps::rtps::GUID_t &guid,
+                        const std::chrono::duration<Rep, Period> &rel_time) {
+    auto guid_is_present = [this, guid]()
+                               RCPPUTILS_TSA_REQUIRES(mutex_) -> bool {
       return subscriptions_.find(guid) != subscriptions_.end();
     };
 
@@ -136,9 +122,7 @@ public:
   }
 
   client_present_t
-  check_for_subscription(
-    const eprosima::fastrtps::rtps::GUID_t & guid)
-  {
+  check_for_subscription(const eprosima::fastrtps::rtps::GUID_t &guid) {
     {
       std::lock_guard<std::mutex> lock(mutex_);
       // Check if the guid is still in the map
@@ -155,8 +139,7 @@ public:
   }
 
   void endpoint_erase_if_exists(
-    const eprosima::fastrtps::rtps::GUID_t & endpointGuid)
-  {
+      const eprosima::fastrtps::rtps::GUID_t &endpointGuid) {
     std::lock_guard<std::mutex> lock(mutex_);
     auto endpoint = clients_endpoints_.find(endpointGuid);
     if (endpoint != clients_endpoints_.end()) {
@@ -166,9 +149,8 @@ public:
   }
 
   void endpoint_add_reader_and_writer(
-    const eprosima::fastrtps::rtps::GUID_t & readerGuid,
-    const eprosima::fastrtps::rtps::GUID_t & writerGuid)
-  {
+      const eprosima::fastrtps::rtps::GUID_t &readerGuid,
+      const eprosima::fastrtps::rtps::GUID_t &writerGuid) {
     std::lock_guard<std::mutex> lock(mutex_);
     clients_endpoints_.emplace(readerGuid, writerGuid);
     clients_endpoints_.emplace(writerGuid, readerGuid);
@@ -181,35 +163,25 @@ private:
   std::condition_variable cv_;
 };
 
-class ServiceListener : public eprosima::fastdds::dds::DataReaderListener
-{
+class ServiceListener : public eprosima::fastdds::dds::DataReaderListener {
 public:
-  explicit ServiceListener(
-    CustomServiceInfo * info)
-  : info_(info)
-  {
-  }
+  explicit ServiceListener(CustomServiceInfo *info) : info_(info) {}
 
-  void
-  on_subscription_matched(
-    eprosima::fastdds::dds::DataReader *,
-    const eprosima::fastdds::dds::SubscriptionMatchedStatus & info) final
-  {
+  void on_subscription_matched(
+      eprosima::fastdds::dds::DataReader *,
+      const eprosima::fastdds::dds::SubscriptionMatchedStatus &info) final {
     if (info.current_count_change == -1) {
       info_->pub_listener_->endpoint_erase_if_exists(
-        eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
+          eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
     }
   }
 
-  size_t get_unread_resquests()
-  {
-    return info_->request_reader_->get_unread_count(true);
+  size_t get_unread_resquests() {
+    // return info_->request_reader_->get_unread_count(true);
+    return info_->request_reader_->get_unread_count();
   }
 
-  void
-  on_data_available(
-    eprosima::fastdds::dds::DataReader *) final
-  {
+  void on_data_available(eprosima::fastdds::dds::DataReader *) final {
     std::unique_lock<std::mutex> lock_mutex(on_new_request_m_);
 
     auto unread_requests = get_unread_resquests();
@@ -221,11 +193,8 @@ public:
 
   // Provide handlers to perform an action when a
   // new event from this listener has ocurred
-  void
-  set_on_new_request_callback(
-    const void * user_data,
-    rmw_event_callback_t callback)
-  {
+  void set_on_new_request_callback(const void *user_data,
+                                   rmw_event_callback_t callback) {
     std::unique_lock<std::mutex> lock_mutex(on_new_request_m_);
 
     if (callback) {
@@ -238,11 +207,13 @@ public:
       user_data_ = user_data;
       on_new_request_cb_ = callback;
 
-      eprosima::fastdds::dds::StatusMask status_mask = info_->request_reader_->get_status_mask();
+      eprosima::fastdds::dds::StatusMask status_mask =
+          info_->request_reader_->get_status_mask();
       status_mask |= eprosima::fastdds::dds::StatusMask::data_available();
       info_->request_reader_->set_listener(this, status_mask);
     } else {
-      eprosima::fastdds::dds::StatusMask status_mask = info_->request_reader_->get_status_mask();
+      eprosima::fastdds::dds::StatusMask status_mask =
+          info_->request_reader_->get_status_mask();
       status_mask &= ~eprosima::fastdds::dds::StatusMask::data_available();
       info_->request_reader_->set_listener(this, status_mask);
 
@@ -252,13 +223,13 @@ public:
   }
 
 private:
-  CustomServiceInfo * info_;
+  CustomServiceInfo *info_;
 
   rmw_event_callback_t on_new_request_cb_{nullptr};
 
-  const void * user_data_{nullptr};
+  const void *user_data_{nullptr};
 
   std::mutex on_new_request_m_;
 };
 
-#endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_
+#endif // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_
