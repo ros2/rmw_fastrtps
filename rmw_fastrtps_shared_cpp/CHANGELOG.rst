@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Remove duplicated code (`#637 <https://github.com/ros2/rmw_fastrtps/issues/637>`_)
+* Call callbacks only if unread count > 0 (`#634 <https://github.com/ros2/rmw_fastrtps/issues/634>`_)
+* Add rmw_get_gid_for_client impl (`#631 <https://github.com/ros2/rmw_fastrtps/issues/631>`_)
+* Contributors: Barry Xu, Brian, mauropasse
+
 6.4.0 (2022-09-13)
 ------------------
 * Use Fast-DDS Waitsets instead of listeners (`#619 <https://github.com/ros2/rmw_fastrtps/issues/619>`_)
