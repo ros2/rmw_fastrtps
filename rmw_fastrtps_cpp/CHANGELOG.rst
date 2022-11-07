@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.2 (2022-11-07)
+------------------
+* Use Fast-DDS Waitsets instead of listeners (backport `#619 <https://github.com/ros2/rmw_fastrtps/issues/619>`_) (`#633 <https://github.com/ros2/rmw_fastrtps/issues/633>`_)
+* Allow null arguments in the EventsExecutor parameters (`#605 <https://github.com/ros2/rmw_fastrtps/issues/605>`_)
+* Contributors: Jose Luis Rivero, Miguel Company
+
 6.2.1 (2022-03-28)
 ------------------
 * Add pub/sub init, publish and take instrumentation using tracetools (`#591 <https://github.com/ros2/rmw_fastrtps/issues/591>`_)
