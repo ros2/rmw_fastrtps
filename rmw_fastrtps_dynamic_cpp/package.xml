@@ -4,11 +4,16 @@
   <name>rmw_fastrtps_dynamic_cpp</name>
   <version>6.5.0</version>
   <description>Implement the ROS middleware interface using introspection type support.</description>
-  <maintainer email="michel@ekumenlabs.com">Michel Hidalgo</maintainer>
-  <maintainer email="michael.jeronimo@openrobotics.org">Michael Jeronimo</maintainer>
+
+  <maintainer email="geoff@openrobotics.org">Geoffrey Biggs</maintainer>
+  <maintainer email="sloretz@openrobotics.org">Shane Loretz</maintainer>
+
   <license>Apache License 2.0</license>
-  <author>Ricardo González</author>
+
   <author email="dthomas@osrfoundation.org">Dirk Thomas</author>
+  <author email="michael.jeronimo@openrobotics.org">Michael Jeronimo</author>
+  <author email="michel@ekumenlabs.com">Michel Hidalgo</author>
+  <author>Ricardo González</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
   <buildtool_depend>fastrtps_cmake_module</buildtool_depend>
