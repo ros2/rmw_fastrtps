@@ -124,28 +124,8 @@ __rmw_count_clients(
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(count, RMW_RET_INVALID_ARGUMENT);
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
-  const std::string mangled_rq_service_name =
-    _mangle_topic_name(ros_service_requester_prefix, service_name, "Request").to_string();
   const std::string mangled_rp_service_name =
     _mangle_topic_name(ros_service_response_prefix, service_name, "Reply").to_string();
-
-  size_t number_of_request_publishers = 0;
-  ret = common_context->graph_cache.get_writer_count(
-    mangled_rq_service_name,
-    &number_of_request_publishers);
-  if (ret != RMW_RET_OK) {
-    return ret;
-  }
-  size_t number_of_response_subscribers = 0;
-  ret = common_context->graph_cache.get_reader_count(
-    mangled_rp_service_name,
-    &number_of_response_subscribers);
-  if (ret != RMW_RET_OK) {
-    return ret;
-  }
-  if (number_of_request_publishers != number_of_response_subscribers) {
-    return RMW_RET_ERROR;
-  }
   return common_context->graph_cache.get_reader_count(mangled_rp_service_name, count);
 }
 
@@ -175,28 +155,8 @@ __rmw_count_services(
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(count, RMW_RET_INVALID_ARGUMENT);
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
-  const std::string mangled_rq_service_name =
-    _mangle_topic_name(ros_service_requester_prefix, service_name, "Request").to_string();
   const std::string mangled_rp_service_name =
     _mangle_topic_name(ros_service_response_prefix, service_name, "Reply").to_string();
-
-  size_t number_of_request_subscribers = 0;
-  ret = common_context->graph_cache.get_writer_count(
-    mangled_rq_service_name,
-    &number_of_request_subscribers);
-  if (ret != RMW_RET_OK) {
-    return ret;
-  }
-  size_t number_of_response_publishers = 0;
-  ret = common_context->graph_cache.get_reader_count(
-    mangled_rp_service_name,
-    &number_of_response_publishers);
-  if (ret != RMW_RET_OK) {
-    return ret;
-  }
-  if (number_of_request_subscribers != number_of_response_publishers) {
-    return RMW_RET_ERROR;
-  }
   return common_context->graph_cache.get_writer_count(mangled_rp_service_name, count);
 }
 }  // namespace rmw_fastrtps_shared_cpp
