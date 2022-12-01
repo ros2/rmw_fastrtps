@@ -44,15 +44,12 @@ bool PubListener::take_event(
       {
         auto rmw_data = static_cast<rmw_liveliness_lost_status_t *>(event_info);
         if (liveliness_changes_) {
-          rmw_data->total_count = liveliness_lost_status_.total_count;
-          rmw_data->total_count_change = liveliness_lost_status_.total_count_change;
           liveliness_changes_ = false;
         } else {
-          eprosima::fastdds::dds::LivelinessLostStatus liveliness_lost_status;
-          publisher_info_->data_writer_->get_liveliness_lost_status(liveliness_lost_status);
-          rmw_data->total_count = liveliness_lost_status.total_count;
-          rmw_data->total_count_change = liveliness_lost_status.total_count_change;
+          publisher_info_->data_writer_->get_liveliness_lost_status(liveliness_lost_status_);
         }
+        rmw_data->total_count = liveliness_lost_status_.total_count;
+        rmw_data->total_count_change = liveliness_lost_status_.total_count_change;
         liveliness_lost_status_.total_count_change = 0;
       }
       break;
@@ -60,16 +57,13 @@ bool PubListener::take_event(
       {
         auto rmw_data = static_cast<rmw_offered_deadline_missed_status_t *>(event_info);
         if (deadline_changes_) {
-          rmw_data->total_count = offered_deadline_missed_status_.total_count;
-          rmw_data->total_count_change = offered_deadline_missed_status_.total_count_change;
           deadline_changes_ = false;
         } else {
-          eprosima::fastdds::dds::OfferedDeadlineMissedStatus offered_deadline_missed_status;
           publisher_info_->data_writer_->get_offered_deadline_missed_status(
-            offered_deadline_missed_status);
-          rmw_data->total_count = offered_deadline_missed_status.total_count;
-          rmw_data->total_count_change = offered_deadline_missed_status.total_count_change;
+            offered_deadline_missed_status_);
         }
+        rmw_data->total_count = offered_deadline_missed_status_.total_count;
+        rmw_data->total_count_change = offered_deadline_missed_status_.total_count_change;
         offered_deadline_missed_status_.total_count_change = 0;
       }
       break;
@@ -77,22 +71,16 @@ bool PubListener::take_event(
       {
         auto rmw_data = static_cast<rmw_offered_qos_incompatible_event_status_t *>(event_info);
         if (incompatible_qos_changes_) {
-          rmw_data->total_count = incompatible_qos_status_.total_count;
-          rmw_data->total_count_change = incompatible_qos_status_.total_count_change;
-          rmw_data->last_policy_kind =
-            rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
-            incompatible_qos_status_.last_policy_id);
           incompatible_qos_changes_ = false;
         } else {
-          eprosima::fastdds::dds::OfferedIncompatibleQosStatus offered_incompatible_qos_status;
           publisher_info_->data_writer_->get_offered_incompatible_qos_status(
-            offered_incompatible_qos_status);
-          rmw_data->total_count = offered_incompatible_qos_status.total_count;
-          rmw_data->total_count_change = offered_incompatible_qos_status.total_count_change;
-          rmw_data->last_policy_kind =
-            rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
-            offered_incompatible_qos_status.last_policy_id);
+            incompatible_qos_status_);
         }
+        rmw_data->total_count = incompatible_qos_status_.total_count;
+        rmw_data->total_count_change = incompatible_qos_status_.total_count_change;
+        rmw_data->last_policy_kind =
+          rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
+          incompatible_qos_status_.last_policy_id);
         incompatible_qos_status_.total_count_change = 0;
       }
       break;
