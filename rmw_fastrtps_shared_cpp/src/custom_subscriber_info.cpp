@@ -115,6 +115,9 @@ void SubListener::set_on_new_event_callback(
 {
   std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
+  eprosima::fastdds::dds::StatusMask status_mask =
+    subscriber_info_->data_reader_->get_status_mask();
+
   if (callback) {
     switch (event_type) {
       case RMW_EVENT_LIVELINESS_CHANGED:
@@ -172,19 +175,15 @@ void SubListener::set_on_new_event_callback(
     user_data_[event_type] = user_data;
     on_new_event_cb_[event_type] = callback;
 
-    eprosima::fastdds::dds::StatusMask status_mask =
-      subscriber_info_->data_reader_->get_status_mask();
     status_mask |= rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
-    subscriber_info_->data_reader_->set_listener(this, status_mask);
   } else {
-    eprosima::fastdds::dds::StatusMask status_mask =
-      subscriber_info_->data_reader_->get_status_mask();
-    status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
-    subscriber_info_->data_reader_->set_listener(this, status_mask);
-
     user_data_[event_type] = nullptr;
     on_new_event_cb_[event_type] = nullptr;
+
+    status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
   }
+
+  subscriber_info_->data_reader_->set_listener(this, status_mask);
 }
 
 void
