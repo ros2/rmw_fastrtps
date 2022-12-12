@@ -221,7 +221,7 @@ __rmw_subscription_set_content_filter(
       static_cast<void *>(&msg),
       nullptr);
     if (RMW_RET_OK != rmw_ret) {
-      static_cast<void>(common_context->graph_cache.dissociate_writer(
+      static_cast<void>(common_context->graph_cache.dissociate_reader(
         info->subscription_gid_, common_context->gid, node->name, node->namespace_));
       return RMW_RET_ERROR;
     }

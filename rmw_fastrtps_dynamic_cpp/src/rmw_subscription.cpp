@@ -101,7 +101,7 @@ rmw_create_subscription(
     if (RMW_RET_OK != rmw_ret) {
       rmw_error_state_t error_state = *rmw_get_error_state();
       rmw_reset_error();
-      static_cast<void>(common_context->graph_cache.dissociate_writer(
+      static_cast<void>(common_context->graph_cache.dissociate_reader(
         info->subscription_gid_, common_context->gid, node->name, node->namespace_));
       rmw_ret = rmw_fastrtps_shared_cpp::destroy_subscription(
         eprosima_fastrtps_identifier, participant_info, subscription);
