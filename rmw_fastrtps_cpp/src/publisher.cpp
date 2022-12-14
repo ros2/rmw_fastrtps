@@ -57,9 +57,7 @@ rmw_fastrtps_cpp::create_publisher(
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
-  const rmw_publisher_options_t * publisher_options,
-  bool keyed,
-  bool create_publisher_listener)
+  const rmw_publisher_options_t * publisher_options)
 {
   /////
   // Check input parameters
@@ -187,11 +185,6 @@ rmw_fastrtps_cpp::create_publisher(
     fastdds_type.reset(tsupport);
   }
 
-  if (keyed && !fastdds_type->m_isGetKeyDefined) {
-    RMW_SET_ERROR_MSG("create_publisher() requested a keyed topic with a non-keyed type");
-    return nullptr;
-  }
-
   if (ReturnCode_t::RETCODE_OK != fastdds_type.register_type(dds_participant)) {
     RMW_SET_ERROR_MSG("create_publisher() failed to register type");
     return nullptr;
@@ -207,13 +200,11 @@ rmw_fastrtps_cpp::create_publisher(
 
   /////
   // Create Listener
-  if (create_publisher_listener) {
-    info->listener_ = new (std::nothrow) PubListener(info);
+  info->listener_ = new (std::nothrow) PubListener(info);
 
-    if (!info->listener_) {
-      RMW_SET_ERROR_MSG("create_publisher() could not create publisher listener");
-      return nullptr;
-    }
+  if (!info->listener_) {
+    RMW_SET_ERROR_MSG("create_publisher() could not create publisher listener");
+    return nullptr;
   }
 
   /////
