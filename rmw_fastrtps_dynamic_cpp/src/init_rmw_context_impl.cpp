@@ -93,9 +93,7 @@ init_context_impl(
       rosidl_typesupport_cpp::get_message_type_support_handle<ParticipantEntitiesInfo>(),
       "ros_discovery_info",
       &qos,
-      &publisher_options,
-      false,       // our fastrtps typesupport doesn't support keyed topics
-      true),
+      &publisher_options),
     [&](rmw_publisher_t * pub)
     {
       if (RMW_RET_OK != rmw_fastrtps_shared_cpp::destroy_publisher(

@@ -27,9 +27,7 @@ create_publisher(
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
-  const rmw_publisher_options_t * publisher_options,
-  bool keyed,
-  bool create_publisher_listener);
+  const rmw_publisher_options_t * publisher_options);
 
 }  // namespace rmw_fastrtps_dynamic_cpp
 
