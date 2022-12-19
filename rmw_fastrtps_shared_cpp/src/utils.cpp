@@ -128,7 +128,7 @@ create_datareader(
   const rmw_subscription_options_t * subscription_options,
   eprosima::fastdds::dds::Subscriber * subscriber,
   eprosima::fastdds::dds::TopicDescription * des_topic,
-  SubListener * listener,
+  CustomDataReaderListener * listener,
   eprosima::fastdds::dds::DataReader ** data_reader
 )
 {

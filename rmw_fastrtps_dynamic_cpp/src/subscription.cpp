@@ -165,7 +165,8 @@ create_subscription(
   auto cleanup_info = rcpputils::make_scope_exit(
     [info, participant_info]()
     {
-      delete info->listener_;
+      delete info->subscription_event_;
+      delete info->data_reader_listener_;
       rmw_fastrtps_shared_cpp::remove_topic_and_type(
         participant_info, info->topic_, info->type_support_);
       delete info;
@@ -213,10 +214,16 @@ create_subscription(
 
   /////
   // Create Listener
-  info->listener_ = new (std::nothrow) SubListener(info);
+  info->subscription_event_ = new (std::nothrow) RMWSubscriptionEvent(info);
+  if (!info->subscription_event_) {
+    RMW_SET_ERROR_MSG("create_subscription() could not create subscription event");
+    return nullptr;
+  }
 
-  if (!info->listener_) {
-    RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
+  info->data_reader_listener_ =
+    new (std::nothrow) CustomDataReaderListener(info->subscription_event_);
+  if (!info->data_reader_listener_) {
+    RMW_SET_ERROR_MSG("create_subscription() could not create subscription data reader listener");
     return nullptr;
   }
 
@@ -261,12 +268,6 @@ create_subscription(
     return nullptr;
   }
 
-  info->listener_ = new (std::nothrow) SubListener(info);
-  if (!info->listener_) {
-    RMW_SET_ERROR_MSG("create_subscriber() could not create subscriber listener");
-    return nullptr;
-  }
-
   eprosima::fastdds::dds::DataReaderQos original_qos = reader_qos;
   switch (subscription_options->require_unique_network_flow_endpoints) {
     default:
@@ -292,7 +293,7 @@ create_subscription(
   info->data_reader_ = subscriber->create_datareader(
     des_topic,
     reader_qos,
-    info->listener_,
+    info->data_reader_listener_,
     eprosima::fastdds::dds::StatusMask::subscription_matched());
   if (!info->data_reader_ &&
     (RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED ==
@@ -301,7 +302,7 @@ create_subscription(
     info->data_reader_ = subscriber->create_datareader(
       des_topic,
       original_qos,
-      info->listener_,
+      info->data_reader_listener_,
       eprosima::fastdds::dds::StatusMask::subscription_matched());
   }
 
