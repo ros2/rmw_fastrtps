@@ -20,6 +20,8 @@
 
   <buildtool_export_depend>ament_cmake</buildtool_export_depend>
 
+  <build_depend>serialization_support_fastrtps_c</build_depend>
+  <build_depend>serialization_support_lib</build_depend>
   <build_depend>fastcdr</build_depend>
   <build_depend>fastrtps</build_depend>
   <build_depend>fastrtps_cmake_module</build_depend>
@@ -32,6 +34,8 @@
   <build_depend>rosidl_typesupport_introspection_cpp</build_depend>
   <build_depend>tracetools</build_depend>
 
+  <build_export_depend>serialization_support_fastrtps_c</build_export_depend>
+  <build_export_depend>serialization_support_lib</build_export_depend>
   <build_export_depend>fastcdr</build_export_depend>
   <build_export_depend>fastrtps</build_export_depend>
   <build_export_depend>fastrtps_cmake_module</build_export_depend>

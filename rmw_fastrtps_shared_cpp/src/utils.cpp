@@ -69,6 +69,7 @@ find_and_check_topic_and_type(
     }
   }
 
+  // NOTE(methylDragon): This only finds a type that's been previously registered to the participant
   *returned_type = participant_info->participant_->find_type(type_name);
   return true;
 }

@@ -19,8 +19,25 @@
 bool
 rmw_fastrtps_shared_cpp::__rmw_feature_supported(rmw_feature_t feature)
 {
-  if (feature == RMW_FEATURE_MESSAGE_INFO_PUBLICATION_SEQUENCE_NUMBER) {
-    return true;
+  switch (feature) {
+    case RMW_FEATURE_MESSAGE_INFO_PUBLICATION_SEQUENCE_NUMBER:
+      return true;
+
+    // NOTE(methylDragon): The dynamic type deferred case is !! NOT SUPPORTED !!
+    //                     This is because it's difficult as-is to create a subscription without
+    //                     already having the type. Too much restructuring is needed elsewhere to
+    //                     support deferral...
+    //
+    //                     This is noting that type discovery IS a thing that FastRTPS supports,
+    //                     but the structure of the create_subscription implementations don't lend
+    //                     themselves currently to integrating that type discovery support yet.
+    case RMW_MIDDLEWARE_SUPPORTS_TYPE_DISCOVERY:
+      return false;
+
+    case RMW_MIDDLEWARE_CAN_TAKE_DYNAMIC_DATA:
+      return true;
+
+    default:
+      return false;
   }
-  return false;
 }

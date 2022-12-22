@@ -147,6 +147,22 @@ public:
     const void * user_data,
     rmw_event_callback_t callback) override;
 
+  // void
+  // on_type_discovery(
+  //   DomainParticipant *,
+  //   const eprosima::fastrtps::rtps::SampleIdentity &,
+  //   const eprosima::fastrtps::string_255 & topic_name,
+  //   const eprosima::fastrtps::types::TypeIdentifier *,
+  //   const eprosima::fastrtps::types::TypeObject *,
+  //   eprosima::fastrtps::types::DynamicType_ptr dyn_type)) final
+  // {
+  // NOTE(methylDragon): The dynamic type deferred case is !! NOT SUPPORTED !!
+  //                     This is because currently subscriptions are required to have the type at
+  //                     construction to create the listener. Deferring it means that the listener
+  //                     construction will have to be deferred, and that would require logic changes
+  //                     elsewhere (e.g. to check for listener initialization status), which is
+  // }
+
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void update_inconsistent_topic(uint32_t total_count, uint32_t total_count_change) override;
 

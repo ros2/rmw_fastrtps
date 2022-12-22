@@ -25,6 +25,9 @@
 
 #include "fastdds/rtps/resources/ResourceManagement.h"
 
+#include <fastrtps/types/DynamicType.h>
+#include <fastrtps/types/DynamicTypePtr.h>
+
 #include "rcutils/allocator.h"
 #include "rcutils/error_handling.h"
 #include "rcutils/macros.h"
@@ -58,6 +61,27 @@ using PropertyPolicyHelper = eprosima::fastrtps::rtps::PropertyPolicyHelper;
 namespace rmw_fastrtps_cpp
 {
 
+// Forward decls ===================================================================================
+rmw_subscription_t *
+__create_runtime_type_subscription(
+  const CustomParticipantInfo * participant_info,
+  const rosidl_message_type_support_t * type_support,
+  const char * topic_name,
+  const rmw_qos_profile_t * qos_policies,
+  const rmw_subscription_options_t * subscription_options,
+  bool keyed);
+
+rmw_subscription_t *
+__create_subscription(
+  const CustomParticipantInfo * participant_info,
+  const rosidl_message_type_support_t * type_supports,
+  const char * topic_name,
+  const rmw_qos_profile_t * qos_policies,
+  const rmw_subscription_options_t * subscription_options,
+  bool keyed);
+
+
+// =================================================================================================
 rmw_subscription_t *
 create_subscription(
   CustomParticipantInfo * participant_info,
@@ -103,6 +127,339 @@ create_subscription(
 
   /////
   // Get RMW Type Support
+
+  // Short-circuit for runtime-type subscriptions
+  const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
+    type_supports, rmw_typesupport_runtime_type_introspection_c__identifier);
+  if (type_support) {
+    return __create_runtime_type_subscription(
+      participant_info, type_support, topic_name, qos_policies, subscription_options, keyed);
+  }
+
+  return __create_subscription(
+    participant_info, type_supports,
+    topic_name, qos_policies, subscription_options, keyed);
+}
+
+// =================================================================================================
+// CREATE RUNTIME SUBSCRIPTION
+// =================================================================================================
+rmw_subscription_t *
+__create_runtime_type_subscription(
+  const CustomParticipantInfo * participant_info,
+  const rosidl_message_type_support_t * type_support,
+  const char * topic_name,
+  const rmw_qos_profile_t * qos_policies,
+  const rmw_subscription_options_t * subscription_options,
+  bool keyed)
+{
+  // NOTE(methylDragon): The dynamic type deferred case is !! NOT SUPPORTED !!
+  //                     This is because it's difficult as-is to create a subscription without
+  //                     already having the type. Too much restructuring is needed elsewhere to
+  //                     support deferral...
+
+  if (type_support->typesupport_identifier
+      != rmw_typesupport_runtime_type_introspection_c__identifier) {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "Type support not from this implementation. Got:\n"
+      "    %s, but expected\n"
+      "    %s\n"
+      "while fetching it",
+      type_support->typesupport_identifier,
+      rmw_typesupport_runtime_type_introspection_c__identifier);
+    return nullptr;
+  }
+
+  // NOTE(methylDragon): This is a cast from const void * (so it's technically not const correct)
+  runtime_type_ts_impl_t * ts_impl = (runtime_type_ts_impl_t *)type_support->data;
+
+  std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
+
+  /////
+  // Find and check existing topic and type
+
+  // Create Topic and Type names
+  auto dyn_type_ptr = eprosima::fastrtps::types::DynamicType_ptr(
+    *static_cast<eprosima::fastrtps::types::DynamicType_ptr *>(ts_impl->dynamic_type->impl));
+
+  // Check if we need to split the name into namespace and type name
+  std::string type_name = dyn_type_ptr->get_name();
+
+  int occurrences = 0;
+  std::string::size_type pos = 0;
+  std::string::size_type last_pos = 0;
+  while ((pos = type_name.find("::", pos)) != std::string::npos) {
+     ++occurrences;
+     pos += 2;  // Length of "::"
+     last_pos = pos;
+  }
+
+  if (occurrences != 2) {  // Name is not namespaced: <package_name>::<msg/srv>::<type_name>
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "create_subscription() called for runtime subscription for invalid message type name %s. "
+      "Type name should be <package_name>::<msg/srv>::<type_name>",
+      type_name.c_str());
+    return nullptr;
+  }
+
+  type_name = _create_type_name(type_name.substr(0, last_pos - 2),  // ns
+                                type_name.substr(last_pos, type_name.length() - last_pos));  // name
+
+  auto topic_name_mangled =
+    _create_topic_name(qos_policies, ros_topic_prefix, topic_name).to_string();
+
+  eprosima::fastdds::dds::TypeSupport fastdds_type;
+  eprosima::fastdds::dds::TopicDescription * des_topic = nullptr;
+  // NOTE(methyldragon): By right this isn't necessary, and is just for verification purposes
+  //                     But let's try to verify anyway
+  //
+  // Substitutable with ============================================================================
+  // des_topic = participant_info->participant_->lookup_topicdescription(topic_name_mangled);
+  // fastdds_type = participant_info->participant_->find_type(type_name);
+  // ===============================================================================================
+  if (!rmw_fastrtps_shared_cpp::find_and_check_topic_and_type(
+      participant_info,
+      topic_name_mangled,
+      type_name,  // Should be <msg_package>::msg::dds_::<msg_name>_
+      &des_topic,
+      &fastdds_type))
+  {
+    RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+      "create_subscription() called for existing topic name %s with incompatible type %s",
+      topic_name_mangled.c_str(), type_name.c_str());
+    return nullptr;
+  }
+
+  /////
+  // Get Participant and Subscriber
+  eprosima::fastdds::dds::DomainParticipant * dds_participant = participant_info->participant_;
+  eprosima::fastdds::dds::Subscriber * subscriber = participant_info->subscriber_;
+
+  /////
+  // Create the custom Subscriber struct (info)
+  auto info = new (std::nothrow) CustomSubscriberInfo();
+  if (!info) {
+    RMW_SET_ERROR_MSG("create_subscription() failed to allocate CustomSubscriberInfo");
+    return nullptr;
+  }
+
+  auto cleanup_info = rcpputils::make_scope_exit(
+    [info, dds_participant]()
+    {
+      delete info->listener_;
+      if (info->type_support_) {
+        dds_participant->unregister_type(info->type_support_.get_type_name());
+      }
+      delete info;
+    });
+
+  info->typesupport_identifier_ = type_support->typesupport_identifier;
+  info->type_support_impl_ = ts_impl;
+
+  /////
+  // Create the Type Support struct
+  if (!fastdds_type) {
+    // Transfer ownership to fastdds_type
+    // NOTE(methylDragon): We cannot just use a DynamicType_ptr (which converts to a
+    //                     DynamicPubSubType)!!
+    //
+    //                     The reason being, the DynamicPubSubType only supports serialization and
+    //                     deserialization to and from DynamicData.
+    //                     But we want to be able to first get a serialized message directly,
+    //                     THEN convert it. Otherwise we can't let a non-runtime type subscription
+    //                     handle runtime types.
+    //
+    //                     We will still need a DynamicPubSubType later on (constructed from a
+    //                     DynamicType_ptr) to convert the CDR buffer to a DynamicData, however...
+    // fastdds_type.reset(dyn_type_ptr);
+    auto tsupport = new (std::nothrow) TypeSupport_cpp();  // NOT MessageTypeSupport_cpp!!!
+    if (!tsupport) {
+      RMW_SET_ERROR_MSG("create_subscription() failed to allocate TypeSupport");
+      return nullptr;
+    }
+
+    // Because we're using TypeSupport_cpp, we need to do this
+    tsupport->setName(type_name.c_str());
+    fastdds_type.reset(tsupport);
+  }
+
+  if (keyed && !fastdds_type->m_isGetKeyDefined) {
+    RMW_SET_ERROR_MSG("create_subscription() requested a keyed topic with a non-keyed type");
+    return nullptr;
+  }
+
+  if (ReturnCode_t::RETCODE_OK != fastdds_type.register_type(dds_participant)) {
+    RMW_SET_ERROR_MSG("create_subscription() failed to register type");
+    return nullptr;
+  }
+  info->type_support_ = fastdds_type;
+
+  // NOTE(methylDragon): I'm not sure if this is essential or not...
+  //                     It doesn't appear in the dynamic type example for FastDDS though
+  // if (!rmw_fastrtps_shared_cpp::register_type_object(type_support, type_name)) {
+  //   RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+  //     "failed to register type object with incompatible type %s",
+  //     type_name.c_str());
+  //   return nullptr;
+  // }
+
+  /////
+  // Create Listener
+  info->listener_ = new (std::nothrow) SubListener(info);
+  if (!info->listener_) {
+    RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
+    return nullptr;
+  }
+
+  /////
+  // Create and register Topic
+  eprosima::fastdds::dds::TopicQos topic_qos = dds_participant->get_default_topic_qos();
+  if (!get_topic_qos(*qos_policies, topic_qos)) {
+    RMW_SET_ERROR_MSG("create_publisher() failed setting topic QoS");
+    return nullptr;
+  }
+
+  rmw_fastrtps_shared_cpp::TopicHolder topic;
+  if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
+      dds_participant, des_topic,
+      topic_name_mangled, type_name, topic_qos, false, &topic))
+  {
+    RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
+    return nullptr;
+  }
+
+  info->dds_participant_ = dds_participant;
+  info->subscriber_ = subscriber;
+  info->topic_name_mangled_ = topic_name_mangled;
+  info->topic_ = topic.desc;
+  des_topic = topic.desc;
+
+  // Create ContentFilteredTopic
+  if (subscription_options->content_filter_options) {
+    rmw_subscription_content_filter_options_t * options =
+      subscription_options->content_filter_options;
+    if (nullptr != options->filter_expression) {
+      eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic = nullptr;
+      if (!rmw_fastrtps_shared_cpp::create_content_filtered_topic(
+          dds_participant, des_topic,
+          topic_name_mangled, options, &filtered_topic))
+      {
+        RMW_SET_ERROR_MSG("create_contentfilteredtopic() failed to create contentfilteredtopic");
+        return nullptr;
+      }
+      info->filtered_topic_ = filtered_topic;
+      des_topic = filtered_topic;
+    }
+  }
+
+  /////
+  // Create DataReader
+
+  // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
+  // datareader which profile name matches with topic_name. If such profile does not exist,
+  // then use the default Fast DDS QoS.
+  eprosima::fastdds::dds::DataReaderQos reader_qos = subscriber->get_default_datareader_qos();
+
+  // Try to load the profile with the topic name
+  // It does not need to check the return code, as if the profile does not exist,
+  // the QoS is already the default
+  subscriber->get_datareader_qos_from_profile(topic_name, reader_qos);
+
+  if (!participant_info->leave_middleware_default_qos) {
+    reader_qos.endpoint().history_memory_policy =
+      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
+    reader_qos.data_sharing().off();
+  }
+
+  if (!get_datareader_qos(*qos_policies, reader_qos)) {
+    RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
+    return nullptr;
+  }
+
+  info->datareader_qos_ = reader_qos;
+
+  // create_datareader
+  if (!rmw_fastrtps_shared_cpp::create_datareader(
+      info->datareader_qos_,
+      subscription_options,
+      subscriber,
+      des_topic,
+      info->listener_,
+      &info->data_reader_))
+  {
+    RMW_SET_ERROR_MSG("create_datareader() could not create data reader");
+    return nullptr;
+  }
+
+  // Initialize DataReader's StatusCondition to be notified when new data is available
+  info->data_reader_->get_statuscondition().set_enabled_statuses(
+    eprosima::fastdds::dds::StatusMask::data_available());
+
+  // lambda to delete datareader
+  auto cleanup_datareader = rcpputils::make_scope_exit(
+    [subscriber, info]()
+    {
+      subscriber->delete_datareader(info->data_reader_);
+    });
+
+  /////
+  // Create RMW GID
+  info->subscription_gid_ = rmw_fastrtps_shared_cpp::create_rmw_gid(
+    eprosima_fastrtps_identifier, info->data_reader_->guid());
+
+  /////
+  // Allocate subscription
+  rmw_subscription_t * rmw_subscription = rmw_subscription_allocate();
+  if (!rmw_subscription) {
+    RMW_SET_ERROR_MSG("create_subscription() failed to allocate subscription");
+    return nullptr;
+  }
+  auto cleanup_rmw_subscription = rcpputils::make_scope_exit(
+    [rmw_subscription]()
+    {
+      rmw_free(const_cast<char *>(rmw_subscription->topic_name));
+      rmw_subscription_free(rmw_subscription);
+    });
+
+  rmw_subscription->implementation_identifier = eprosima_fastrtps_identifier;
+  rmw_subscription->data = info;
+
+  rmw_subscription->topic_name = rcutils_strdup(topic_name, rcutils_get_default_allocator());
+  if (!rmw_subscription->topic_name) {
+    RMW_SET_ERROR_MSG(
+      "create_subscription() failed to allocate memory for subscription topic name");
+    return nullptr;
+  }
+  rmw_subscription->options = *subscription_options;
+  rmw_fastrtps_shared_cpp::__init_subscription_for_loans(rmw_subscription);
+  rmw_subscription->is_cft_enabled = info->filtered_topic_ != nullptr;
+
+  topic.should_be_deleted = false;
+  cleanup_rmw_subscription.cancel();
+  cleanup_datareader.cancel();
+  cleanup_info.cancel();
+
+  TRACEPOINT(
+    rmw_subscription_init,
+    static_cast<const void *>(rmw_subscription),
+    info->subscription_gid_.data);
+  return rmw_subscription;
+}
+
+
+// =================================================================================================
+// CREATE SUBSCRIPTION
+// =================================================================================================
+rmw_subscription_t *
+__create_subscription(
+  const CustomParticipantInfo * participant_info,
+  const rosidl_message_type_support_t * type_supports,
+  const char * topic_name,
+  const rmw_qos_profile_t * qos_policies,
+  const rmw_subscription_options_t * subscription_options,
+  bool keyed)
+{
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
     type_supports, RMW_FASTRTPS_CPP_TYPESUPPORT_C);
   if (!type_support) {
