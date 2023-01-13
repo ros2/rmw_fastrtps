@@ -80,7 +80,7 @@ __rmw_destroy_wait_set(const char * identifier, rmw_wait_set_t * wait_set)
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     wait set handle,
     wait_set->implementation_identifier, identifier,
-    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   auto result = RMW_RET_OK;
   // If wait_set_info is ever nullptr, it can only mean one of three things:
