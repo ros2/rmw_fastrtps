@@ -127,10 +127,10 @@ public:
     const void * user_data,
     rmw_event_callback_t callback)
   {
-    std::unique_lock<std::mutex> lock_mutex(on_new_response_m_);
-
     if (callback) {
       auto unread_responses = get_unread_responses();
+
+      std::lock_guard<std::mutex> lock_mutex(on_new_response_m_);
 
       if (0 < unread_responses) {
         callback(user_data, unread_responses);
@@ -143,6 +143,8 @@ public:
       status_mask |= eprosima::fastdds::dds::StatusMask::data_available();
       info_->response_reader_->set_listener(this, status_mask);
     } else {
+      std::lock_guard<std::mutex> lock_mutex(on_new_response_m_);
+
       eprosima::fastdds::dds::StatusMask status_mask = info_->response_reader_->get_status_mask();
       status_mask &= ~eprosima::fastdds::dds::StatusMask::data_available();
       info_->response_reader_->set_listener(this, status_mask);
