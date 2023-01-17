@@ -47,7 +47,7 @@ __rmw_wait(
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     wait set handle,
     wait_set->implementation_identifier, identifier,
-    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION)
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
 
   // If wait_set_info is ever nullptr, it can only mean one of three things:
   // - Wait set is invalid. Caller did not respect preconditions.
