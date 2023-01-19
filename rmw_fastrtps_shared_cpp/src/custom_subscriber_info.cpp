@@ -210,10 +210,10 @@ SubListener::set_on_new_message_callback(
   const void * user_data,
   rmw_event_callback_t callback)
 {
-  std::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
-
   if (callback) {
     auto unread_messages = get_unread_messages();
+
+    std::lock_guard<std::mutex> lock_mutex(on_new_message_m_);
 
     if (0 < unread_messages) {
       callback(user_data, unread_messages);
@@ -227,6 +227,8 @@ SubListener::set_on_new_message_callback(
     status_mask |= eprosima::fastdds::dds::StatusMask::data_available();
     subscriber_info_->data_reader_->set_listener(this, status_mask);
   } else {
+    std::lock_guard<std::mutex> lock_mutex(on_new_message_m_);
+
     eprosima::fastdds::dds::StatusMask status_mask =
       subscriber_info_->data_reader_->get_status_mask();
     status_mask &= ~eprosima::fastdds::dds::StatusMask::data_available();
