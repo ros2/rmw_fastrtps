@@ -128,6 +128,12 @@ rmw_ret_t
 rmw_notify_participant_dynamic_network_interface(rmw_context_t * context)
 {
   auto impl = static_cast<CustomParticipantInfo *>(context->impl->participant_info);
+
+  if (nullptr == impl)
+  {
+    return RMW_RET_ERROR;
+  }
+
   eprosima::fastdds::dds::DomainParticipant * participant = impl->participant_;
 
   if (nullptr == participant)
