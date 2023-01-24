@@ -327,19 +327,19 @@ RMWSubscriptionEvent::set_on_new_message_callback(
 
 size_t RMWSubscriptionEvent::publisher_count() const
 {
-  std::lock_guard<std::mutex> lock(discovery_m_);
+  std::lock_guard<std::mutex> lock(publishers_mutex_);
   return publishers_.size();
 }
 
 void RMWSubscriptionEvent::add_publisher(eprosima::fastrtps::rtps::GUID_t guid)
 {
-  std::lock_guard<std::mutex> lock(discovery_m_);
+  std::lock_guard<std::mutex> lock(publishers_mutex_);
   publishers_.insert(guid);
 }
 
 void RMWSubscriptionEvent::remove_publisher(eprosima::fastrtps::rtps::GUID_t guid)
 {
-  std::lock_guard<std::mutex> lock(discovery_m_);
+  std::lock_guard<std::mutex> lock(publishers_mutex_);
   publishers_.erase(guid);
 }
 

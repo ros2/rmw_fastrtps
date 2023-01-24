@@ -198,7 +198,7 @@ private:
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(
-    discovery_m_);
+    publishers_mutex_);
 
   rmw_event_callback_t on_new_message_cb_{nullptr};
 
@@ -206,7 +206,7 @@ private:
 
   std::mutex on_new_message_m_;
 
-  mutable std::mutex discovery_m_;
+  mutable std::mutex publishers_mutex_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_

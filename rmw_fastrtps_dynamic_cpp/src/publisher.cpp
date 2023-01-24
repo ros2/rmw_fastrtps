@@ -227,7 +227,8 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
     return nullptr;
   }
 
-  info->topic_ = participant_info->find_or_create_topic(topic_name_mangled, type_name, topic_qos, info->publisher_event_);
+  info->topic_ = participant_info->find_or_create_topic(
+    topic_name_mangled, type_name, topic_qos, info->publisher_event_);
   if (!info->topic_) {
     RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
     return nullptr;
