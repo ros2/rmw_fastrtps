@@ -171,6 +171,11 @@ The following example configures Fast DDS to publish synchronously, and to have 
                 <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
             </publisher>
 
+            <!-- Default subscriber profile -->
+            <subscriber profile_name="default subscriber profile" is_default_profile="true">
+                <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
+            </subscriber>
+
             <!-- Publisher profile for topic helloworld -->
             <publisher profile_name="helloworld">
                 <qos>
