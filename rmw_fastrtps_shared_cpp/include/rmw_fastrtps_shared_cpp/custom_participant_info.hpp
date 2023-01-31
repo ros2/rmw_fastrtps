@@ -53,6 +53,7 @@
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/utils/net_utils.hpp"
 
 using rmw_dds_common::operator<<;
 
@@ -325,27 +326,16 @@ private:
         }
       }
     }
+    std::cout << "Got " << hostname << "Should ignore: " << should_ignore << "\n";
 
     return should_ignore;
   }
 
-  std::string get_fqdn_for_host(std::string hostname) {
-    struct addrinfo hints, *addresses = nullptr;
-
-    memset(&hints, 0, sizeof(hints));
-    hints.ai_family = AF_UNSPEC;
-    hints.ai_flags = AI_CANONNAME;
-
-    if (getaddrinfo(hostname.c_str(), nullptr, &hints, &addresses) != 0) {
-      RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_shared_cpp", "Failed to look up fully-qualified domain name for host %s", hostname.c_str());
-      return hostname;
-    }
-
-    return std::string(addresses->ai_canonname);
-  }
 
   bool is_static_peer(const std::string &hostname,
                       const std::vector<std::string> &other_static_peers) {
+
+    using namespace rmw_fastrtps_shared_cpp;
     // Check if the host is a static peer of us or we're a static peer of them
     for (size_t ii = 0; ii < discovery_params_.static_peers_count; ++ii) {
       if (hostname == discovery_params_.static_peers[ii]) {
@@ -353,9 +343,17 @@ private:
                                 "Matching host in our static peer list");
         return true;
       }
+
+      auto aliases = utils::get_peer_aliases(hostname);
+      if (aliases.count(hostname) > 0)
+      {
+        RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
+                              "Matching host in our static peer list");
+        return true;
+      }
     }
 
-    if (std::find(other_static_peers.begin(), other_static_peers.end(), get_fqdn_for_host(my_hostname_)) != other_static_peers.end()) {
+    if (std::find(other_static_peers.begin(), other_static_peers.end(), utils::get_fqdn_for_host(my_hostname_)) != other_static_peers.end()) {
       RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
                               "Matched us in their static peer list");
       return true;
