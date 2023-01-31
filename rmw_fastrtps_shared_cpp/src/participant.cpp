@@ -54,6 +54,7 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_security_logging.hpp"
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
+#include "rmw_fastrtps_shared_cpp/utils/net_utils.hpp"
 
 #include "rmw_dds_common/security.hpp"
 
@@ -156,98 +157,34 @@ static CustomParticipantInfo *__create_participant(
   return participant_info;
 }
 
-std::string get_fqdn_for_host(std::string hostname) {
-  struct addrinfo hints, *addresses = nullptr;
 
-  memset(&hints, 0, sizeof(hints));
-  hints.ai_family = AF_UNSPEC;
-  hints.ai_flags = AI_CANONNAME;
-
-  if (getaddrinfo(hostname.c_str(), nullptr, &hints, &addresses) != 0) {
-    RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_shared_cpp", "Failed to look up fully-qualified domain name for host %s", hostname.c_str());
-    return hostname;
-  }
-
-  return std::string(addresses->ai_canonname);
-}
-
-std::vector<std::string> get_peer_aliases(std::string peer) {
-  std::vector<std::string> aliases;
-
+/// \brief Get the ip version of a host
+/// \param peer - The string with the IP address.
+/// \return 4 or 6 depending on IP version. -1 if indeterminate.
+int ip_version(const std::string& peer) {
   struct sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
   auto result = inet_pton(addr.sin_family, peer.c_str(), &addr.sin_addr);
-  if (result != 1) {
-    // Could not interpret the string as an IPv4 address, so try IPv6
 
+  if (result != 1)
+  {
+    // Try checking IPv6
     struct sockaddr_in6 addr6;
     memset(&addr6, 0, sizeof(addr6));
     addr6.sin6_family = AF_INET6;
     result = inet_pton(addr6.sin6_family, peer.c_str(), &addr6.sin6_addr);
-    if (result != 1) {
-      // Failure to convert the string to a binary IP address means we treat it
-      // as a hostname, and find all its IP addresses
-      std::string ip_addr;
 
-      struct addrinfo *addresses = nullptr;
-      if (getaddrinfo(peer.c_str(), nullptr, nullptr, &addresses) != 0) {
-        // Failed to look up the hostname
-        RCUTILS_LOG_WARN_NAMED("rmw_fastrtps_shared_cpp",
-                               "Could not look up hostname %s", peer.c_str());
-      } else {
-        for (struct addrinfo *address_entry = addresses;
-             address_entry != nullptr; address_entry = address_entry->ai_next) {
-          void * address_data = nullptr;
-          char address_string[INET6_ADDRSTRLEN];
-          if (address_entry->ai_family == AF_INET) { // IPv4
-            address_data = &reinterpret_cast<struct sockaddr_in *>(address_entry->ai_addr)->sin_addr;
-          } else { // IPv6
-            address_data = &reinterpret_cast<struct sockaddr_in6 *>(address_entry->ai_addr)->sin6_addr;
-          }
-          inet_ntop(address_entry->ai_family, address_data, address_string, sizeof(address_string));
-          if (std::find(aliases.begin(), aliases.end(), address_string) == aliases.end()) {
-            // Avoid duplicate aliases (e.g. when two identical IPs are returned for SOCK_STREAM and SOCK_DGRAM)
-            aliases.push_back(address_string);
-            RCUTILS_LOG_DEBUG_NAMED(
-                "rmw_fastrtps_shared_cpp",
-                "Added IP address %s for host %s to static peers", address_string,
-                peer.c_str());
-          }
-        }
-
-        freeaddrinfo(addresses);
-      }
-
-      // Also add the fully-qualified domain name for the host as an alias
-      std::string fqdn = get_fqdn_for_host(peer);
-      if (std::find(aliases.begin(), aliases.end(), fqdn) == aliases.end()) {
-        RCUTILS_LOG_DEBUG_NAMED(
-            "rmw_fastrtps_shared_cpp",
-            "Added fully-qualified domain name %s as alias for host %s to static peers", fqdn.c_str(),
-            peer.c_str());
-        aliases.push_back(fqdn);
-      }
-    } else {
-      // Success converting the string to a binary IPv6 address, so find the hostname for that address
-      char hostname[NI_MAXHOST];
-
-      if (getnameinfo(reinterpret_cast<struct sockaddr *>(&addr6), sizeof(addr6), hostname, sizeof(hostname), nullptr, 0, NI_NAMEREQD) == 0) {
-        aliases.push_back(hostname);
-        RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Added host %s as alias for IPv6 address %s", hostname, peer.c_str());
-      }
+    if (result != 1)
+    {
+      // TODO: Deal with hostnames
     }
-  } else {
-    // Success converting the string to a binary IPv4 address, so find the hostname for that address
-    char hostname[NI_MAXHOST];
-
-    if (getnameinfo(reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr), hostname, sizeof(hostname), nullptr, 0, NI_NAMEREQD) == 0) {
-      aliases.push_back(hostname);
-      RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Added host %s as alias for IPv4 address %s", hostname, peer.c_str());
+    else {
+      return 6;
     }
   }
 
-  return aliases;
+  return 4;
 }
 
 CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
@@ -275,7 +212,6 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
     // Clear the list of multicast listening locators
     domainParticipantQos.wire_protocol()
         .builtin.metatrafficMulticastLocatorList.clear();
-
     // Clear unicast listening locators and add UDPv4 any
     domainParticipantQos.wire_protocol()
         .builtin.metatrafficUnicastLocatorList.clear();
@@ -283,6 +219,7 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
     std::istringstream("UDPv4:[0.0.0.0]:0") >> unicast_locator;
     domainParticipantQos.wire_protocol()
         .builtin.metatrafficUnicastLocatorList.push_back(unicast_locator);
+    std::cout << "Automatic discovery disabled\n";
     break;
   }
   case RMW_AUTOMATIC_DISCOVERY_RANGE_DEFAULT:
@@ -295,6 +232,7 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
     domainParticipantQos.transport().clear();
     domainParticipantQos.transport().user_transports.push_back(udp_transport);
     domainParticipantQos.transport().use_builtin_transports = false;
+    std::cout << "Automatic discovery localhost\n";
     break;
   }
   case RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET:
@@ -309,8 +247,14 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
     user_data << "staticpeers=";
     for (size_t ii = 0; ii < discovery_params->static_peers_count; ++ii) {
       eprosima::fastrtps::rtps::Locator_t peer;
-      eprosima::fastrtps::rtps::IPLocator::setIPv4(
-          peer, discovery_params->static_peers[ii]);
+      if (ip_version(discovery_params->static_peers[ii]) == 4) {
+        eprosima::fastrtps::rtps::IPLocator::setIPv4(
+            peer, discovery_params->static_peers[ii]);
+      }
+      else if (ip_version(discovery_params->static_peers[ii]) == 6) {
+        eprosima::fastrtps::rtps::IPLocator::setIPv6(
+            peer, discovery_params->static_peers[ii]);
+      }
       // Not specifying the port of the peer means FastDDS will try all
       // possible participant ports according to the port calculation equation
       // in the RTPS spec section 9.6.1.1, up to the number of peers specified
@@ -321,7 +265,7 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
       user_data << discovery_params->static_peers[ii] << ',';
 
       // Add any aliases (IPs for hostnames, hostnames for IPs)
-      auto aliases = get_peer_aliases(discovery_params->static_peers[ii]);
+      auto aliases = utils::get_peer_aliases(discovery_params->static_peers[ii]);
       for (const auto &alias : aliases) {
         user_data << alias << ',';
       }
@@ -334,7 +278,7 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
     RMW_SET_ERROR_MSG("failed to get host name");
     return nullptr;
   }
-  user_data << "hostname=" << get_fqdn_for_host(hostname) << ';';
+  user_data << "hostname=" << utils::get_fqdn_for_host(hostname) << ';';
 
   user_data << "enclave=" << enclave << ';';
 
