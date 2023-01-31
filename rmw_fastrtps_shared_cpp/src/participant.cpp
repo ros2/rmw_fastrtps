@@ -219,7 +219,6 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
     std::istringstream("UDPv4:[0.0.0.0]:0") >> unicast_locator;
     domainParticipantQos.wire_protocol()
         .builtin.metatrafficUnicastLocatorList.push_back(unicast_locator);
-    std::cout << "Automatic discovery disabled\n";
     break;
   }
   case RMW_AUTOMATIC_DISCOVERY_RANGE_DEFAULT:
@@ -232,7 +231,6 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
     domainParticipantQos.transport().clear();
     domainParticipantQos.transport().user_transports.push_back(udp_transport);
     domainParticipantQos.transport().use_builtin_transports = false;
-    std::cout << "Automatic discovery localhost\n";
     break;
   }
   case RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET:

@@ -326,7 +326,6 @@ private:
         }
       }
     }
-    std::cout << "Got " << hostname << "Should ignore: " << should_ignore << "\n";
 
     return should_ignore;
   }
