@@ -81,10 +81,6 @@ __rmw_destroy_client(
   {
     std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
 
-    // Keep pointers to topics, so we can remove them later
-    auto response_topic = info->response_reader_->get_topicdescription();
-    auto request_topic = info->request_writer_->get_topic();
-
     // Delete DataReader
     ReturnCode_t ret = participant_info->subscriber_->delete_datareader(info->response_reader_);
     if (ret != ReturnCode_t::RETCODE_OK) {
@@ -114,8 +110,8 @@ __rmw_destroy_client(
     }
 
     // Delete topics and unregister types
-    remove_topic_and_type(participant_info, request_topic, info->request_type_support_);
-    remove_topic_and_type(participant_info, response_topic, info->response_type_support_);
+    remove_topic_and_type(participant_info, info->request_topic_, info->request_type_support_);
+    remove_topic_and_type(participant_info, info->response_topic_, info->response_type_support_);
 
     // Delete CustomClientInfo structure
     delete info;

@@ -200,15 +200,13 @@ rmw_create_client(
   }
 
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info, dds_participant]() {
+    [info, participant_info]() {
       delete info->pub_listener_;
       delete info->listener_;
-      if (info->response_type_support_) {
-        dds_participant->unregister_type(info->response_type_support_.get_type_name());
-      }
-      if (info->request_type_support_) {
-        dds_participant->unregister_type(info->request_type_support_.get_type_name());
-      }
+      rmw_fastrtps_shared_cpp::remove_topic_and_type(
+        participant_info, info->response_topic_, info->response_type_support_);
+      rmw_fastrtps_shared_cpp::remove_topic_and_type(
+        participant_info, info->request_topic_, info->request_type_support_);
       delete info;
     });
 
@@ -300,29 +298,25 @@ rmw_create_client(
   }
 
   // Create response topic
-  rmw_fastrtps_shared_cpp::TopicHolder response_topic;
-  if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
-      dds_participant, response_topic_desc,
-      response_topic_name, response_type_name, topic_qos, false, &response_topic))
-  {
+  info->response_topic_ = participant_info->find_or_create_topic(
+    response_topic_name, response_type_name, topic_qos);
+  if (!info->response_topic_) {
     RMW_SET_ERROR_MSG("create_client() failed to create response topic");
     return nullptr;
   }
 
-  response_topic_desc = response_topic.desc;
+  response_topic_desc = info->response_topic_;
 
   // Create request topic
-  rmw_fastrtps_shared_cpp::TopicHolder request_topic;
-  if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
-      dds_participant, request_topic_desc,
-      request_topic_name, request_type_name, topic_qos, true, &request_topic))
-  {
+  info->request_topic_ = participant_info->find_or_create_topic(
+    request_topic_name, request_type_name, topic_qos);
+  if (!info->request_topic_) {
     RMW_SET_ERROR_MSG("create_client() failed to create request topic");
     return nullptr;
   }
 
-  info->request_topic_ = request_topic_name;
-  info->response_topic_ = response_topic_name;
+  info->request_topic_name_ = request_topic_name;
+  info->response_topic_name_ = response_topic_name;
 
   // Keyword to find DataWrtier and DataReader QoS
   const std::string topic_name_fallback = "client";
@@ -412,7 +406,7 @@ rmw_create_client(
 
   // Creates DataWriter
   info->request_writer_ = publisher->create_datawriter(
-    request_topic.topic,
+    info->request_topic_,
     writer_qos,
     info->pub_listener_,
     eprosima::fastdds::dds::StatusMask::publication_matched());
@@ -505,8 +499,6 @@ rmw_create_client(
     }
   }
 
-  request_topic.should_be_deleted = false;
-  response_topic.should_be_deleted = false;
   cleanup_rmw_client.cancel();
   cleanup_datawriter.cancel();
   cleanup_datareader.cancel();

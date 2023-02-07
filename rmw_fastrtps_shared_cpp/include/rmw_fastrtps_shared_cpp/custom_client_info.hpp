@@ -55,8 +55,11 @@ typedef struct CustomClientInfo
   eprosima::fastdds::dds::DataReader * response_reader_{nullptr};
   eprosima::fastdds::dds::DataWriter * request_writer_{nullptr};
 
-  std::string request_topic_;
-  std::string response_topic_;
+  std::string request_topic_name_;
+  std::string response_topic_name_;
+
+  eprosima::fastdds::dds::Topic * request_topic_{nullptr};
+  eprosima::fastdds::dds::Topic * response_topic_{nullptr};
 
   ClientListener * listener_{nullptr};
   eprosima::fastrtps::rtps::GUID_t writer_guid_;

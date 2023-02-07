@@ -63,6 +63,9 @@ typedef struct CustomServiceInfo
   eprosima::fastdds::dds::DataReader * request_reader_{nullptr};
   eprosima::fastdds::dds::DataWriter * response_writer_{nullptr};
 
+  eprosima::fastdds::dds::Topic * request_topic_{nullptr};
+  eprosima::fastdds::dds::Topic * response_topic_{nullptr};
+
   ServiceListener * listener_{nullptr};
   ServicePubListener * pub_listener_{nullptr};
 

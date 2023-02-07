@@ -70,7 +70,7 @@ struct CustomSubscriberInfo : public CustomEventInfo
   eprosima::fastdds::dds::DomainParticipant * dds_participant_ {nullptr};
   eprosima::fastdds::dds::Subscriber * subscriber_ {nullptr};
   std::string topic_name_mangled_;
-  eprosima::fastdds::dds::TopicDescription * topic_ {nullptr};
+  eprosima::fastdds::dds::Topic * topic_ {nullptr};
   eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic_ {nullptr};
   eprosima::fastdds::dds::DataReaderQos datareader_qos_;
 

@@ -60,7 +60,7 @@ namespace rmw_fastrtps_cpp
 
 rmw_subscription_t *
 create_subscription(
-  const CustomParticipantInfo * participant_info,
+  CustomParticipantInfo * participant_info,
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
@@ -163,12 +163,11 @@ create_subscription(
   }
 
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info, dds_participant]()
+    [info, participant_info]()
     {
       delete info->listener_;
-      if (info->type_support_) {
-        dds_participant->unregister_type(info->type_support_.get_type_name());
-      }
+      rmw_fastrtps_shared_cpp::remove_topic_and_type(
+        participant_info, info->topic_, info->type_support_);
       delete info;
     });
 
@@ -222,20 +221,13 @@ create_subscription(
     return nullptr;
   }
 
-  rmw_fastrtps_shared_cpp::TopicHolder topic;
-  if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
-      dds_participant, des_topic,
-      topic_name_mangled, type_name, topic_qos, false, &topic))
-  {
+  info->topic_ = participant_info->find_or_create_topic(topic_name_mangled, type_name, topic_qos);
+  if (!info->topic_) {
     RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
     return nullptr;
   }
 
-  info->dds_participant_ = dds_participant;
-  info->subscriber_ = subscriber;
-  info->topic_name_mangled_ = topic_name_mangled;
-  info->topic_ = topic.desc;
-  des_topic = topic.desc;
+  des_topic = info->topic_;
 
   // Create ContentFilteredTopic
   if (subscription_options->content_filter_options) {
@@ -338,7 +330,6 @@ create_subscription(
   rmw_fastrtps_shared_cpp::__init_subscription_for_loans(rmw_subscription);
   rmw_subscription->is_cft_enabled = info->filtered_topic_ != nullptr;
 
-  topic.should_be_deleted = false;
   cleanup_rmw_subscription.cancel();
   cleanup_datareader.cancel();
   cleanup_info.cancel();
