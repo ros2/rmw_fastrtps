@@ -227,6 +227,10 @@ create_subscription(
     return nullptr;
   }
 
+  info->dds_participant_ = dds_participant;
+  info->subscriber_ = subscriber;
+  info->topic_name_mangled_ = topic_name_mangled;
+
   des_topic = info->topic_;
 
   // Create ContentFilteredTopic
