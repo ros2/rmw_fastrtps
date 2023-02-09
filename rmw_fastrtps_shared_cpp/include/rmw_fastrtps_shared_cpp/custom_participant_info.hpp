@@ -134,6 +134,11 @@ typedef struct CustomParticipantInfo
 
         topic_name_to_topic_.erase(it);
       }
+    } else {
+      RCUTILS_LOG_WARN_NAMED(
+        "rmw_fastrtps_shared_cpp",
+        "Attempted to delete topic '%s', but it was never created.  Ignoring",
+        topic->get_name().c_str());
     }
   }
 } CustomParticipantInfo;
