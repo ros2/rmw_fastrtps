@@ -147,6 +147,9 @@ public:
     const void * user_data,
     rmw_event_callback_t callback) override;
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void update_inconsistent_topic(uint32_t total_count, uint32_t total_count_change) override;
+
   void add_publisher(eprosima::fastrtps::rtps::GUID_t guid);
 
   void remove_publisher(eprosima::fastrtps::rtps::GUID_t guid);

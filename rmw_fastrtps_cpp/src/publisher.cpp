@@ -163,10 +163,10 @@ rmw_fastrtps_cpp::create_publisher(
 
   auto cleanup_info = rcpputils::make_scope_exit(
     [info, participant_info]() {
+      rmw_fastrtps_shared_cpp::remove_topic_and_type(
+        participant_info, info->publisher_event_, info->topic_, info->type_support_);
       delete info->data_writer_listener_;
       delete info->publisher_event_;
-      rmw_fastrtps_shared_cpp::remove_topic_and_type(
-        participant_info, info->topic_, info->type_support_);
       delete info;
     });
 
@@ -221,7 +221,8 @@ rmw_fastrtps_cpp::create_publisher(
     return nullptr;
   }
 
-  info->topic_ = participant_info->find_or_create_topic(topic_name_mangled, type_name, topic_qos);
+  info->topic_ = participant_info->find_or_create_topic(
+    topic_name_mangled, type_name, topic_qos, info->publisher_event_);
   if (!info->topic_) {
     RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
     return nullptr;

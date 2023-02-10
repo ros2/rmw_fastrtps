@@ -124,8 +124,10 @@ __rmw_destroy_service(
     }
 
     // Delete topics and unregister types
-    remove_topic_and_type(participant_info, info->request_topic_, info->request_type_support_);
-    remove_topic_and_type(participant_info, info->response_topic_, info->response_type_support_);
+    remove_topic_and_type(
+      participant_info, nullptr, info->request_topic_, info->request_type_support_);
+    remove_topic_and_type(
+      participant_info, nullptr, info->response_topic_, info->response_type_support_);
 
     // Delete CustomServiceInfo structure
     delete info;

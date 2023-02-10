@@ -112,6 +112,9 @@ public:
     rmw_event_callback_t callback) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void update_inconsistent_topic(uint32_t total_count, uint32_t total_count_change) override;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void add_subscription(eprosima::fastrtps::rtps::GUID_t guid);
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC

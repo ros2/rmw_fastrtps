@@ -180,6 +180,19 @@ bool RMWSubscriptionEvent::take_event(
         incompatible_qos_status_.total_count_change = 0;
       }
       break;
+    case RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE:
+      {
+        auto rmw_data = static_cast<rmw_incompatible_type_status_t *>(event_info);
+        if (inconsistent_topic_changed_) {
+          inconsistent_topic_changed_ = false;
+        } else {
+          subscriber_info_->topic_->get_inconsistent_topic_status(inconsistent_topic_status_);
+        }
+        rmw_data->total_count = inconsistent_topic_status_.total_count;
+        rmw_data->total_count_change = inconsistent_topic_status_.total_count_change;
+        inconsistent_topic_status_.total_count_change = 0;
+      }
+      break;
     default:
       return false;
   }
@@ -245,6 +258,15 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
           if (incompatible_qos_status_.total_count_change > 0) {
             callback(user_data, incompatible_qos_status_.total_count_change);
             incompatible_qos_status_.total_count_change = 0;
+          }
+        }
+        break;
+      case RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE:
+        {
+          subscriber_info_->topic_->get_inconsistent_topic_status(inconsistent_topic_status_);
+          if (inconsistent_topic_status_.total_count_change > 0) {
+            callback(user_data, inconsistent_topic_status_.total_count_change);
+            inconsistent_topic_status_.total_count_change = 0;
           }
         }
         break;
@@ -414,4 +436,24 @@ void RMWSubscriptionEvent::update_requested_incompatible_qos(
   }
 
   event_guard[RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE].set_trigger_value(true);
+}
+
+void RMWSubscriptionEvent::update_inconsistent_topic(
+  uint32_t total_count, uint32_t total_count_change)
+{
+  std::lock_guard<std::mutex> lock_mutex(on_new_event_m_);
+
+  // Assign absolute values
+  inconsistent_topic_status_.total_count = total_count;
+  // Accumulate deltas
+  inconsistent_topic_status_.total_count_change += total_count_change;
+
+  inconsistent_topic_changed_ = true;
+
+  if (on_new_event_cb_[RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE]) {
+    on_new_event_cb_[RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE](
+      user_data_[RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE], 1);
+  }
+
+  event_guard[RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE].set_trigger_value(true);
 }

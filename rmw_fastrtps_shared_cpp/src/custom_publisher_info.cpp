@@ -144,6 +144,20 @@ bool RMWPublisherEvent::take_event(
         incompatible_qos_status_.total_count_change = 0;
       }
       break;
+    case RMW_EVENT_PUBLISHER_INCOMPATIBLE_TYPE:
+      {
+        auto rmw_data = static_cast<rmw_incompatible_type_status_t *>(event_info);
+        if (inconsistent_topic_changed_) {
+          inconsistent_topic_changed_ = false;
+        } else {
+          publisher_info_->data_writer_->get_topic()->get_inconsistent_topic_status(
+            inconsistent_topic_status_);
+        }
+        rmw_data->total_count = inconsistent_topic_status_.total_count;
+        rmw_data->total_count_change = inconsistent_topic_status_.total_count_change;
+        inconsistent_topic_status_.total_count_change = 0;
+      }
+      break;
     default:
       return false;
   }
@@ -188,6 +202,14 @@ void RMWPublisherEvent::set_on_new_event_callback(
         if (incompatible_qos_status_.total_count_change > 0) {
           callback(user_data, incompatible_qos_status_.total_count_change);
           incompatible_qos_status_.total_count_change = 0;
+        }
+        break;
+      case RMW_EVENT_PUBLISHER_INCOMPATIBLE_TYPE:
+        publisher_info_->data_writer_->get_topic()->get_inconsistent_topic_status(
+          inconsistent_topic_status_);
+        if (inconsistent_topic_status_.total_count_change > 0) {
+          callback(user_data, inconsistent_topic_status_.total_count_change);
+          inconsistent_topic_status_.total_count_change = 0;
         }
         break;
       default:
@@ -269,6 +291,20 @@ void RMWPublisherEvent::update_offered_incompatible_qos(
   incompatible_qos_changed_ = true;
 
   trigger_event(RMW_EVENT_OFFERED_QOS_INCOMPATIBLE);
+}
+
+void RMWPublisherEvent::update_inconsistent_topic(uint32_t total_count, uint32_t total_count_change)
+{
+  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+
+  // Assign absolute values
+  inconsistent_topic_status_.total_count = total_count;
+  // Accumulate deltas
+  inconsistent_topic_status_.total_count_change += total_count_change;
+
+  inconsistent_topic_changed_ = true;
+
+  trigger_event(RMW_EVENT_PUBLISHER_INCOMPATIBLE_TYPE);
 }
 
 void RMWPublisherEvent::trigger_event(rmw_event_type_t event_type)

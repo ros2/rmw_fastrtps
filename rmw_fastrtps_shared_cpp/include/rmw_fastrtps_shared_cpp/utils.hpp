@@ -75,6 +75,7 @@ RMW_FASTRTPS_SHARED_CPP_PUBLIC
 void
 remove_topic_and_type(
   CustomParticipantInfo * participant_info,
+  EventListenerInterface * event_listener,
   const eprosima::fastdds::dds::TopicDescription * topic,
   const eprosima::fastdds::dds::TypeSupport & type);
 

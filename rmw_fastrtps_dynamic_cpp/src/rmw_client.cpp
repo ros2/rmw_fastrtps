@@ -204,9 +204,9 @@ rmw_create_client(
       delete info->pub_listener_;
       delete info->listener_;
       rmw_fastrtps_shared_cpp::remove_topic_and_type(
-        participant_info, info->response_topic_, info->response_type_support_);
+        participant_info, nullptr, info->response_topic_, info->response_type_support_);
       rmw_fastrtps_shared_cpp::remove_topic_and_type(
-        participant_info, info->request_topic_, info->request_type_support_);
+        participant_info, nullptr, info->request_topic_, info->request_type_support_);
       delete info;
     });
 
@@ -299,7 +299,7 @@ rmw_create_client(
 
   // Create response topic
   info->response_topic_ = participant_info->find_or_create_topic(
-    response_topic_name, response_type_name, topic_qos);
+    response_topic_name, response_type_name, topic_qos, nullptr);
   if (!info->response_topic_) {
     RMW_SET_ERROR_MSG("create_client() failed to create response topic");
     return nullptr;
@@ -309,7 +309,7 @@ rmw_create_client(
 
   // Create request topic
   info->request_topic_ = participant_info->find_or_create_topic(
-    request_topic_name, request_type_name, topic_qos);
+    request_topic_name, request_type_name, topic_qos, nullptr);
   if (!info->request_topic_) {
     RMW_SET_ERROR_MSG("create_client() failed to create request topic");
     return nullptr;

@@ -51,6 +51,7 @@ find_package(FastRTPS 2.3 REQUIRED MODULE)
 find_package(rmw REQUIRED)
 
 add_library(rmw_fastrtps_shared_cpp
+  src/custom_participant_info.cpp
   src/custom_publisher_info.cpp
   src/custom_subscriber_info.cpp
   src/create_rmw_gid.cpp
