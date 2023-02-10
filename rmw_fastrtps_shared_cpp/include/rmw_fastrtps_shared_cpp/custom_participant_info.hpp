@@ -16,8 +16,10 @@
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
 
 #include <map>
+#include <memory>
 #include <mutex>
 #include <string>
+#include <utility>
 #include <vector>
 
 #include "fastdds/dds/domain/DomainParticipant.hpp"
@@ -53,10 +55,25 @@ enum class publishing_mode_t
   AUTO           // Use publishing mode set in XML file or Fast DDS default
 };
 
+typedef struct UseCountTopic
+{
+  eprosima::fastdds::dds::Topic * topic{nullptr};
+  size_t use_count{0};
+} UseCountTopic;
+
 typedef struct CustomParticipantInfo
 {
   eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
   ParticipantListener * listener_{nullptr};
+
+  std::mutex topic_name_to_topic_mutex_;
+  // As of 2023-02-07, Fast-DDS only allows one create_topic() with the same
+  // topic name per DomainParticipant.  Thus, we need to check if the topic
+  // was already created.  If it did, then we just increase the use_count
+  // that we are tracking, and return the existing topic.  If it
+  // didn't, then we create a new one and start tracking it.  Once all
+  // users of the topic are removed, we will delete the topic.
+  std::map<std::string, std::unique_ptr<UseCountTopic>> topic_name_to_topic_;
 
   eprosima::fastdds::dds::Publisher * publisher_{nullptr};
   eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
@@ -71,6 +88,59 @@ typedef struct CustomParticipantInfo
   // with the default configuration.
   bool leave_middleware_default_qos;
   publishing_mode_t publishing_mode;
+
+  eprosima::fastdds::dds::Topic * find_or_create_topic(
+    const std::string & topic_name,
+    const std::string & type_name,
+    const eprosima::fastdds::dds::TopicQos & topic_qos)
+  {
+    eprosima::fastdds::dds::Topic * topic = nullptr;
+
+    std::lock_guard<std::mutex> lck(topic_name_to_topic_mutex_);
+    std::map<std::string,
+      std::unique_ptr<UseCountTopic>>::const_iterator it = topic_name_to_topic_.find(topic_name);
+    if (it == topic_name_to_topic_.end()) {
+      // Not already in the map, we need to add it
+      topic = participant_->create_topic(topic_name, type_name, topic_qos);
+
+      auto uct = std::make_unique<UseCountTopic>();
+      uct->topic = topic;
+      uct->use_count = 1;
+
+      topic_name_to_topic_[topic_name] = std::move(uct);
+    } else {
+      // Already in the map, just increase the use count
+      it->second->use_count++;
+      topic = it->second->topic;
+    }
+
+    return topic;
+  }
+
+  void delete_topic(const eprosima::fastdds::dds::Topic * topic)
+  {
+    if (topic == nullptr) {
+      return;
+    }
+
+    std::lock_guard<std::mutex> lck(topic_name_to_topic_mutex_);
+    std::map<std::string, std::unique_ptr<UseCountTopic>>::const_iterator it =
+      topic_name_to_topic_.find(topic->get_name());
+
+    if (it != topic_name_to_topic_.end()) {
+      it->second->use_count--;
+      if (it->second->use_count <= 0) {
+        participant_->delete_topic(it->second->topic);
+
+        topic_name_to_topic_.erase(it);
+      }
+    } else {
+      RCUTILS_LOG_WARN_NAMED(
+        "rmw_fastrtps_shared_cpp",
+        "Attempted to delete topic '%s', but it was never created.  Ignoring",
+        topic->get_name().c_str());
+    }
+  }
 } CustomParticipantInfo;
 
 class ParticipantListener : public eprosima::fastdds::dds::DomainParticipantListener

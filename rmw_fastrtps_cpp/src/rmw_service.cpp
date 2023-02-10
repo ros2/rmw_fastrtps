@@ -197,15 +197,13 @@ rmw_create_service(
     return nullptr;
   }
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info, dds_participant]() {
+    [info, participant_info]() {
       delete info->pub_listener_;
       delete info->listener_;
-      if (info->response_type_support_) {
-        dds_participant->unregister_type(info->response_type_support_.get_type_name());
-      }
-      if (info->request_type_support_) {
-        dds_participant->unregister_type(info->request_type_support_.get_type_name());
-      }
+      rmw_fastrtps_shared_cpp::remove_topic_and_type(
+        participant_info, info->response_topic_, info->response_type_support_);
+      rmw_fastrtps_shared_cpp::remove_topic_and_type(
+        participant_info, info->request_topic_, info->request_type_support_);
       delete info;
     });
 
@@ -271,23 +269,19 @@ rmw_create_service(
   }
 
   // Create request topic
-  rmw_fastrtps_shared_cpp::TopicHolder request_topic;
-  if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
-      dds_participant, request_topic_desc,
-      request_topic_name, request_type_name, topic_qos, false, &request_topic))
-  {
+  info->request_topic_ = participant_info->find_or_create_topic(
+    request_topic_name, request_type_name, topic_qos);
+  if (!info->request_topic_) {
     RMW_SET_ERROR_MSG("create_service() failed to create request topic");
     return nullptr;
   }
 
-  request_topic_desc = request_topic.desc;
+  request_topic_desc = info->request_topic_;
 
   // Create response topic
-  rmw_fastrtps_shared_cpp::TopicHolder response_topic;
-  if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
-      dds_participant, response_topic_desc,
-      response_topic_name, response_type_name, topic_qos, true, &response_topic))
-  {
+  info->response_topic_ = participant_info->find_or_create_topic(
+    response_topic_name, response_type_name, topic_qos);
+  if (!info->response_topic_) {
     RMW_SET_ERROR_MSG("create_service() failed to create response topic");
     return nullptr;
   }
@@ -384,7 +378,7 @@ rmw_create_service(
 
   // Creates DataWriter with a mask enabling publication_matched calls for the listener
   info->response_writer_ = publisher->create_datawriter(
-    response_topic.topic,
+    info->response_topic_,
     writer_qos,
     info->pub_listener_,
     eprosima::fastdds::dds::StatusMask::publication_matched());
@@ -478,8 +472,6 @@ rmw_create_service(
     }
   }
 
-  request_topic.should_be_deleted = false;
-  response_topic.should_be_deleted = false;
   cleanup_rmw_service.cancel();
   cleanup_datawriter.cancel();
   cleanup_datareader.cancel();

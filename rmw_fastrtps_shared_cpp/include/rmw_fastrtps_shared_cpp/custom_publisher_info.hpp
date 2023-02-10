@@ -48,6 +48,8 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   rmw_gid_t publisher_gid{};
   const char * typesupport_identifier_{nullptr};
 
+  eprosima::fastdds::dds::Topic * topic_{nullptr};
+
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *
   get_listener() const final;

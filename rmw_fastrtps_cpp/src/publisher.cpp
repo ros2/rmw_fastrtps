@@ -53,7 +53,7 @@
 
 rmw_publisher_t *
 rmw_fastrtps_cpp::create_publisher(
-  const CustomParticipantInfo * participant_info,
+  CustomParticipantInfo * participant_info,
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
@@ -164,11 +164,10 @@ rmw_fastrtps_cpp::create_publisher(
   }
 
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info, dds_participant]() {
+    [info, participant_info]() {
       delete info->listener_;
-      if (info->type_support_) {
-        dds_participant->unregister_type(info->type_support_.get_type_name());
-      }
+      rmw_fastrtps_shared_cpp::remove_topic_and_type(
+        participant_info, info->topic_, info->type_support_);
       delete info;
     });
 
@@ -225,11 +224,8 @@ rmw_fastrtps_cpp::create_publisher(
     return nullptr;
   }
 
-  rmw_fastrtps_shared_cpp::TopicHolder topic;
-  if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
-      dds_participant, des_topic,
-      topic_name_mangled, type_name, topic_qos, true, &topic))
-  {
+  info->topic_ = participant_info->find_or_create_topic(topic_name_mangled, type_name, topic_qos);
+  if (!info->topic_) {
     RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
     return nullptr;
   }
@@ -269,7 +265,7 @@ rmw_fastrtps_cpp::create_publisher(
 
   // Creates DataWriter with a mask enabling publication_matched calls for the listener
   info->data_writer_ = publisher->create_datawriter(
-    topic.topic,
+    info->topic_,
     writer_qos,
     info->listener_,
     eprosima::fastdds::dds::StatusMask::publication_matched());
@@ -320,7 +316,6 @@ rmw_fastrtps_cpp::create_publisher(
 
   rmw_publisher->options = *publisher_options;
 
-  topic.should_be_deleted = false;
   cleanup_rmw_publisher.cancel();
   cleanup_datawriter.cancel();
   cleanup_info.cancel();

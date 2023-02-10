@@ -25,7 +25,7 @@ namespace rmw_fastrtps_dynamic_cpp
 
 rmw_subscription_t *
 create_subscription(
-  const CustomParticipantInfo * participant_info,
+  CustomParticipantInfo * participant_info,
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,

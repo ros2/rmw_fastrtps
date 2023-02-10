@@ -34,35 +34,6 @@ namespace rmw_fastrtps_shared_cpp
 {
 
 /**
-* Auxiliary struct to cleanup a topic created during entity creation.
-* It is similar to a unique_ptr and its custom deleter at the same time.
-*
-* The creation process of an entity should be as follows:
-* - find_and_check_topic_and_type is called
-* - If the type is not found, it is created and registered
-* - cast_or_create_topic is called on a stack-allocated TopicHolder
-* - An early return will delete the topic if necessary
-* - create_datawriter or create_datareader is called
-* - Rest of the initialization process is performed
-* - Before correctly returning the created entity, field should_be_deleted is set to false
-*   to avoid deletion of the topic
-*/
-struct TopicHolder
-{
-  ~TopicHolder()
-  {
-    if (should_be_deleted) {
-      participant->delete_topic(topic);
-    }
-  }
-
-  eprosima::fastdds::dds::DomainParticipant * participant = nullptr;
-  eprosima::fastdds::dds::TopicDescription * desc = nullptr;
-  eprosima::fastdds::dds::Topic * topic = nullptr;
-  bool should_be_deleted = false;
-};
-
-/**
 * Convert a Fast DDS return code into the corresponding rmw_ret_t
 * \param[in] code The Fast DDS return code to be translated
 * \return the corresponding rmw_ret_t value
@@ -70,37 +41,6 @@ struct TopicHolder
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 cast_error_dds_to_rmw(eprosima::fastrtps::types::ReturnCode_t code);
-
-/**
-* Auxiliary method to reuse or create a topic during the creation of an entity.
-*
-* \param[in]  participant     DomainParticipant where the topic will be created.
-* \param[in]  desc            TopicDescription returned by find_and_check_topic_and_type.
-* \param[in]  topic_name      Name of the topic.
-* \param[in]  type_name       Name of the type.
-* \param[in]  topic_qos       QoS with which to create the topic.
-* \param[in]  is_writer_topic Whether the resulting topic will be used on a DataWriter.
-* \param[out] topic_holder    Will hold the pointer to the topic along with the necessary
-*                             information for its deletion.
-*                             When is_writer_topic is true, topic_holder->topic can be
-*                             directly used on a create_datawriter call.
-*                             When is_writer_topic is false, topic_holder->desc can be
-*                             directly used on a create_datareader call.
-*
-* \return true when the topic was reused (topic_holder->should_be_deleted will be false)
-* \return true when the topic was created (topic_holder->should_be_deleted will be true)
-* \return false when the topic could not be created
-*/
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
-bool
-cast_or_create_topic(
-  eprosima::fastdds::dds::DomainParticipant * participant,
-  eprosima::fastdds::dds::TopicDescription * desc,
-  const std::string & topic_name,
-  const std::string & type_name,
-  const eprosima::fastdds::dds::TopicQos & topic_qos,
-  bool is_writer_topic,
-  TopicHolder * topic_holder);
 
 /**
 * Tries to find already registered topic and type.
@@ -134,7 +74,7 @@ find_and_check_topic_and_type(
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 void
 remove_topic_and_type(
-  const CustomParticipantInfo * participant_info,
+  CustomParticipantInfo * participant_info,
   const eprosima::fastdds::dds::TopicDescription * topic,
   const eprosima::fastdds::dds::TypeSupport & type);
 
