@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+7.0.0 (2023-02-14)
+------------------
 * Rewrite how Topics are tracked in rmw_fastrtps_cpp. (`#669 <https://github.com/ros2/rmw_fastrtps/issues/669>`_)
 * Delay lock on message callback setters (`#657 <https://github.com/ros2/rmw_fastrtps/issues/657>`_)
 * Make sure to add semicolons to the CHECK_TYPE_IDENTIFIER_MATCH. (`#658 <https://github.com/ros2/rmw_fastrtps/issues/658>`_)
