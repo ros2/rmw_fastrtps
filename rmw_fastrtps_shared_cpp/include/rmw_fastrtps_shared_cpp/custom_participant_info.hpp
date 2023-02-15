@@ -257,15 +257,15 @@ private:
     }
   }
 
-  std::vector<std::string>
-  get_other_static_peers(std::map<std::string, std::vector<uint8_t>> map) {
-    std::vector<std::string> result;
+  std::unordered_set<std::string>
+  get_other_static_peers(
+    const std::unordered_map<std::string, std::vector<uint8_t>> &map) {
+    std::unordered_set<std::string> result;
 
     auto static_peers_entry = map.find("staticpeers");
     if (static_peers_entry != map.end()) {
       auto static_peers_string = std::string(static_peers_entry->second.begin(),
                                              static_peers_entry->second.end());
-
       std::string delimiter(",");
       size_t start = 0;
       size_t end = 0;
@@ -277,14 +277,20 @@ private:
               "rmw_fastrtps_shared_cpp",
               "Empty entry found in static peers list from new participant");
         } else {
-          result.push_back(static_peers_string.substr(start, end));
-          RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Got static peer: %s", result.back().c_str());
+          auto hostname = static_peers_string.substr(start, end - start);
+          result.insert(hostname);
+          auto peer_aliases = rmw_fastrtps_shared_cpp::utils::get_peer_aliases(hostname);
+          for (const auto &a : peer_aliases) {
+            result.insert(a);
+          }
+          RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Got static peer: %s", hostname);
         }
         start = end + delimiter.length();
       }
       if (start < static_peers_string.length() - 1) {
-        result.push_back(static_peers_string.substr(start));
-        RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Got last static peer: %s", result.back().c_str());
+        auto peer = static_peers_string.substr(start);
+        result.insert(peer);
+        RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Got last static peer: %s", peer);
       }
     }
 
@@ -292,11 +298,8 @@ private:
   }
 
   bool should_ignore_host(const std::string &hostname,
-                          const std::vector<std::string> &other_static_peers) {
+                          const std::unordered_set<std::string> &other_static_peers) {
     bool should_ignore = false;
-
-    // TODO(gbiggs): This also needs to handle IP addresses
-
     if (hostname == my_hostname_) {
       if (RMW_AUTOMATIC_DISCOVERY_RANGE_OFF ==
           discovery_params_.automatic_discovery_range) {
@@ -332,19 +335,19 @@ private:
 
 
   bool is_static_peer(const std::string &hostname,
-                      const std::vector<std::string> &other_static_peers) {
+                      const std::unordered_set<std::string> &other_static_peers) {
 
     using namespace rmw_fastrtps_shared_cpp;
-    // Check if the host is a static peer of us or we're a static peer of them
+    // Check if the host is a static peer on our list
+    auto aliases = utils::get_peer_aliases(hostname);
     for (size_t ii = 0; ii < discovery_params_.static_peers_count; ++ii) {
       if (hostname == discovery_params_.static_peers[ii]) {
         RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
                                 "Matching host in our static peer list");
         return true;
       }
-
-      auto aliases = utils::get_peer_aliases(hostname);
-      if (aliases.count(hostname) > 0)
+    
+      if (aliases.count(discovery_params_.static_peers[ii]) > 0)
       {
         RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
                               "Matching host in our static peer list");
@@ -352,12 +355,16 @@ private:
       }
     }
 
-    if (std::find(other_static_peers.begin(), other_static_peers.end(), utils::get_fqdn_for_host(my_hostname_)) != other_static_peers.end()) {
-      RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                              "Matched us in their static peer list");
-      return true;
-    }
+    auto peer_aliases = utils::get_peer_aliases(my_hostname_);
 
+    for (const auto &alias: peer_aliases)
+    {
+      if (std::find(other_static_peers.begin(), other_static_peers.end(), alias) != other_static_peers.end()) {
+        RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
+                                "Matched us in their static peer list");
+        return true;
+      }
+    }
     return false;
   }
 
