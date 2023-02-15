@@ -205,6 +205,7 @@ private:
         rmw_qos_profile_t qos_profile = rmw_qos_profile_unknown;
         rtps_qos_to_rmw_qos(proxyData.m_qos, &qos_profile);
 
+        // TODO(emersonknapp) this is the place!
         context->graph_cache.add_entity(
           rmw_fastrtps_shared_cpp::create_rmw_gid(
             identifier_,

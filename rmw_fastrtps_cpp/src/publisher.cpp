@@ -261,6 +261,8 @@ rmw_fastrtps_cpp::create_publisher(
     return nullptr;
   }
 
+  // TODO(emersonknapp) before this create_datawriter is where i must use USER_DATA
+
   // Creates DataWriter with a mask enabling publication_matched calls for the listener
   info->data_writer_ = publisher->create_datawriter(
     info->topic_,
