@@ -206,12 +206,23 @@ private:
         rtps_qos_to_rmw_qos(proxyData.m_qos, &qos_profile);
 
         // TODO(emersonknapp) this is the place!
+        const auto & userDataValue = proxyData.m_qos.m_userData.getValue();
+        std::string user_data(userDataValue.begin(), userDataValue.end());
+        RCUTILS_LOG_ERROR("Discovery: %s @ %s --- %s",
+          proxyData.topicName().to_string().c_str(),
+          proxyData.typeName().to_string().c_str(),
+          user_data.c_str());
+
+        uint8_t type_hash[RCUTILS_SHA256_BLOCK_SIZE];
+        memset(type_hash, 0x2c, RCUTILS_SHA256_BLOCK_SIZE);
+
         context->graph_cache.add_entity(
           rmw_fastrtps_shared_cpp::create_rmw_gid(
             identifier_,
             proxyData.guid()),
           proxyData.topicName().to_string(),
           proxyData.typeName().to_string(),
+          type_hash,
           rmw_fastrtps_shared_cpp::create_rmw_gid(
             identifier_,
             iHandle2GUID(proxyData.RTPSParticipantKey())),
