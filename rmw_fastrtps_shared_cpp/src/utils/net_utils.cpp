@@ -33,7 +33,7 @@ std::string get_fqdn_for_host(const std::string& hostname) {
 
 std::unordered_set<std::string> get_peer_aliases(const std::string& peer) {
   std::unordered_set<std::string> aliases;
-
+  aliases.insert(peer);
   struct sockaddr_in addr;
   memset(&addr, 0, sizeof(addr));
   addr.sin_family = AF_INET;
@@ -60,6 +60,7 @@ std::unordered_set<std::string> get_peer_aliases(const std::string& peer) {
              address_entry != nullptr; address_entry = address_entry->ai_next) {
           void * address_data = nullptr;
           char address_string[INET6_ADDRSTRLEN];
+          memset(address_string, 0, NI_MAXHOST);
           if (address_entry->ai_family == AF_INET) { // IPv4
             address_data = &reinterpret_cast<struct sockaddr_in *>(address_entry->ai_addr)->sin_addr;
           } else { // IPv6
@@ -90,6 +91,7 @@ std::unordered_set<std::string> get_peer_aliases(const std::string& peer) {
     } else {
       // Success converting the string to a binary IPv6 address, so find the hostname for that address
       char hostname[NI_MAXHOST];
+      memset(hostname, 0, NI_MAXHOST);
 
       aliases.insert(hostname);
       RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Added host %s as alias for IPv6 address %s", hostname, peer.c_str());
@@ -98,7 +100,7 @@ std::unordered_set<std::string> get_peer_aliases(const std::string& peer) {
   } else {
     // Success converting the string to a binary IPv4 address, so find the hostname for that address
     char hostname[NI_MAXHOST];
-
+    memset(hostname, 0, NI_MAXHOST);
     if (getnameinfo(reinterpret_cast<struct sockaddr *>(&addr), sizeof(addr), hostname, sizeof(hostname), nullptr, 0, NI_NAMEREQD) == 0) {
       aliases.insert(hostname);
       RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Added host %s as alias for IPv4 address %s", hostname, peer.c_str());
