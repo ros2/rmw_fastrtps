@@ -142,20 +142,42 @@ bool fill_entity_qos_from_profile(
   return true;
 }
 
+template<typename DDSEntityQos>
+bool fill_data_entity_qos_from_profile(
+  const rmw_qos_profile_t & qos_policies,
+  const uint8_t * type_hash,
+  DDSEntityQos & entity_qos)
+{
+  if (!fill_entity_qos_from_profile(qos_policies, entity_qos)) {
+    return false;
+  }
+
+  std::string prefix = "type_hash=";
+  std::vector<uint8_t> user_data(prefix.begin(), prefix.end());
+  user_data.insert(user_data.end(), type_hash, type_hash + 32);
+  user_data.push_back(';');
+  entity_qos.user_data().resize(user_data.size());
+  entity_qos.user_data().setValue(user_data);
+
+  return true;
+}
+
 bool
 get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
+  const uint8_t * type_hash,
   eprosima::fastdds::dds::DataReaderQos & datareader_qos)
 {
-  return fill_entity_qos_from_profile(qos_policies, datareader_qos);
+  return fill_data_entity_qos_from_profile(qos_policies, type_hash, datareader_qos);
 }
 
 bool
 get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
+  const uint8_t * type_hash,
   eprosima::fastdds::dds::DataWriterQos & datawriter_qos)
 {
-  return fill_entity_qos_from_profile(qos_policies, datawriter_qos);
+  return fill_data_entity_qos_from_profile(qos_policies, type_hash, datawriter_qos);
 }
 
 bool

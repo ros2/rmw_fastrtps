@@ -255,16 +255,8 @@ rmw_fastrtps_cpp::create_publisher(
     writer_qos.data_sharing().off();
   }
 
-  // Add type hash information to USER_DATA QoS
-  // TODO(emersonknapp) how to get this value?
-  std::string type_hash = "1f2f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f1f";
-  std::string user_data_str = "type_hash=" + type_hash + ";";
-  std::vector<uint8_t> user_data(user_data_str.begin(), user_data_str.end());
-  writer_qos.user_data().set_max_size(user_data.size());
-  writer_qos.user_data().setValue(user_data);
-
   // Get QoS from RMW
-  if (!get_datawriter_qos(*qos_policies, writer_qos)) {
+  if (!get_datawriter_qos(*qos_policies, callbacks->type_hash_, writer_qos)) {
     RMW_SET_ERROR_MSG("create_publisher() failed setting data writer QoS");
     return nullptr;
   }
