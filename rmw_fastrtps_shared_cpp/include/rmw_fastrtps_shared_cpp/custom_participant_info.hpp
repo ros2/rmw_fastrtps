@@ -40,6 +40,7 @@
 #include "rmw/rmw.h"
 
 #include "rmw_dds_common/context.hpp"
+#include "rmw_dds_common/qos.hpp"
 
 #include "rmw_fastrtps_shared_cpp/create_rmw_gid.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
@@ -206,35 +207,13 @@ private:
         rtps_qos_to_rmw_qos(proxyData.m_qos, &qos_profile);
 
         uint8_t type_hash[RCUTILS_SHA256_BLOCK_SIZE];
-        memset(type_hash, 0x2c, RCUTILS_SHA256_BLOCK_SIZE);
-
         const auto & userDataValue = proxyData.m_qos.m_userData.getValue();
-        const std::string prefix = "type_hash=";
-        const size_t expected_size = prefix.size() + RCUTILS_SHA256_BLOCK_SIZE + 1;  // final ;
-        if (userDataValue.size() >= expected_size) {
-          if (memcmp(prefix.data(), userDataValue.data(), prefix.size()) == 0) {
-            memcpy(type_hash, &userDataValue[prefix.size()], RCUTILS_SHA256_BLOCK_SIZE);
-            assert(userDataValue[prefix.size() + RCUTILS_SHA256_BLOCK_SIZE] == ';');
-          } else {
-            // TODO(emersonknapp) some other key??
-            throw std::runtime_error("Received unexpected USER_DATA key.");
-          }
-        } else {
-          // TODO(emersonknapp) no hash received.
-            throw std::runtime_error("No hash received in USER_DATA.");
-        }
-
+        RCUTILS_LOG_ERROR("Discovery: %s", proxyData.typeName().to_string().c_str());
+        if (RMW_RET_OK != rmw_dds_common::parse_type_hash_from_user_data_qos(
+          userDataValue.data(), userDataValue.size(), type_hash))
         {
-          // Just debugging output
-          std::stringstream ss;
-          ss << std::setw(2) << std::setfill('0');
-          for (size_t i = 0; i < RCUTILS_SHA256_BLOCK_SIZE; i++) {
-            ss << std::hex << static_cast<int>(type_hash[i]);
-          }
-          std::string type_hash_str = ss.str();
-          RCUTILS_LOG_ERROR("Discovery: %s --- %s",
-            proxyData.typeName().to_string().c_str(),
-            type_hash_str.c_str());
+          // TODO(emersonknapp) this should be handled OK because we won't always receive it
+          throw std::runtime_error("Type hash not received.");
         }
 
         context->graph_cache.add_entity(

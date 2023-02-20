@@ -21,6 +21,7 @@
 #include "fastdds/dds/topic/qos/TopicQos.hpp"
 
 #include "rmw/error_handling.h"
+#include "rmw_dds_common/qos.hpp"
 
 #include "time_utils.hpp"
 
@@ -151,14 +152,10 @@ bool fill_data_entity_qos_from_profile(
   if (!fill_entity_qos_from_profile(qos_policies, entity_qos)) {
     return false;
   }
-
-  std::string prefix = "type_hash=";
-  std::vector<uint8_t> user_data(prefix.begin(), prefix.end());
-  user_data.insert(user_data.end(), type_hash, type_hash + 32);
-  user_data.push_back(';');
+  std::vector<uint8_t> user_data;
+  rmw_dds_common::encode_type_hash_for_user_data_qos(type_hash, user_data);
   entity_qos.user_data().resize(user_data.size());
   entity_qos.user_data().setValue(user_data);
-
   return true;
 }
 
