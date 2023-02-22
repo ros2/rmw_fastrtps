@@ -344,7 +344,9 @@ rmw_create_service(
     reader_qos.data_sharing().off();
   }
 
-  if (!get_datareader_qos(adapted_qos_policies, nullptr, reader_qos)) {
+  auto type_hash = rosidl_get_zero_initialized_type_hash();
+  // TODO(emersonknapp) not zero-init typehash
+  if (!get_datareader_qos(adapted_qos_policies, type_hash, reader_qos)) {
     RMW_SET_ERROR_MSG("create_service() failed setting request DataReader QoS");
     return nullptr;
   }
@@ -402,7 +404,8 @@ rmw_create_service(
     writer_qos.data_sharing().off();
   }
 
-  if (!get_datawriter_qos(adapted_qos_policies, nullptr, writer_qos)) {
+  // TODO(emersonknapp) not zero-init typehash
+  if (!get_datawriter_qos(adapted_qos_policies, type_hash, writer_qos)) {
     RMW_SET_ERROR_MSG("create_service() failed setting response DataWriter QoS");
     return nullptr;
   }

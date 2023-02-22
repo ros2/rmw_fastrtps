@@ -345,7 +345,9 @@ rmw_create_client(
     reader_qos.data_sharing().off();
   }
 
-  if (!get_datareader_qos(adapted_qos_policies, nullptr, reader_qos)) {
+  const auto type_hash = rosidl_get_zero_initialized_type_hash();
+  // TODO(emersonknapp) not zero-init typehash
+  if (!get_datareader_qos(adapted_qos_policies, type_hash, reader_qos)) {
     RMW_SET_ERROR_MSG("create_client() failed setting response DataReader QoS");
     return nullptr;
   }
@@ -399,7 +401,8 @@ rmw_create_client(
     writer_qos.data_sharing().off();
   }
 
-  if (!get_datawriter_qos(adapted_qos_policies, nullptr, writer_qos)) {
+  // TODO(emersonknapp) not zero-init typehash
+  if (!get_datawriter_qos(adapted_qos_policies, type_hash, writer_qos)) {
     RMW_SET_ERROR_MSG("create_client() failed setting request DataWriter QoS");
     return nullptr;
   }

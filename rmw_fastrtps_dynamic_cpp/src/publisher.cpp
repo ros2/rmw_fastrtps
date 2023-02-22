@@ -262,7 +262,9 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   }
 
   // Get QoS from RMW
-  if (!get_datawriter_qos(*qos_policies, nullptr, writer_qos)) {
+  // TODO(emersonknapp)
+  const auto type_hash = rosidl_get_zero_initialized_type_hash();
+  if (!get_datawriter_qos(*qos_policies, type_hash, writer_qos)) {
     RMW_SET_ERROR_MSG("create_publisher() failed setting data writer QoS");
     return nullptr;
   }

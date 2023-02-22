@@ -264,7 +264,9 @@ create_subscription(
     reader_qos.data_sharing().off();
   }
 
-  if (!get_datareader_qos(*qos_policies, nullptr, reader_qos)) {
+  // TODO(emersonknapp)
+  const auto type_hash = rosidl_get_zero_initialized_type_hash();
+  if (!get_datareader_qos(*qos_policies, type_hash, reader_qos)) {
     RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
     return nullptr;
   }

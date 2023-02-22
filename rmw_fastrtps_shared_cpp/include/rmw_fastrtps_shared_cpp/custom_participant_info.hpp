@@ -206,15 +206,10 @@ private:
         rmw_qos_profile_t qos_profile = rmw_qos_profile_unknown;
         rtps_qos_to_rmw_qos(proxyData.m_qos, &qos_profile);
 
-        uint8_t type_hash[RCUTILS_SHA256_BLOCK_SIZE];
         const auto & userDataValue = proxyData.m_qos.m_userData.getValue();
         RCUTILS_LOG_ERROR("Discovery: %s", proxyData.typeName().to_string().c_str());
-        if (RMW_RET_OK != rmw_dds_common::parse_type_hash_from_user_data_qos(
-          userDataValue.data(), userDataValue.size(), type_hash))
-        {
-          // TODO(emersonknapp) this should be handled OK because we won't always receive it
-          throw std::runtime_error("Type hash not received.");
-        }
+        const auto type_hash = rmw_dds_common::parse_type_hash_from_user_data_qos(
+          userDataValue.data(), userDataValue.size());
 
         context->graph_cache.add_entity(
           rmw_fastrtps_shared_cpp::create_rmw_gid(
