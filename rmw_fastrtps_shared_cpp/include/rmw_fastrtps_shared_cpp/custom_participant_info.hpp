@@ -208,6 +208,7 @@ private:
 
         const auto & userDataValue = proxyData.m_qos.m_userData.getValue();
         RCUTILS_LOG_ERROR("Discovery: %s", proxyData.typeName().to_string().c_str());
+        RCUTILS_LOG_ERROR("  -- %*s", int(userDataValue.size()), userDataValue.data());
         const auto type_hash = rmw_dds_common::parse_type_hash_from_user_data_qos(
           userDataValue.data(), userDataValue.size());
 
