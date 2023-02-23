@@ -209,16 +209,29 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
   // Configure discovery
   switch (discovery_params->automatic_discovery_range) {
   case RMW_AUTOMATIC_DISCOVERY_RANGE_OFF: {
-    // Clear the list of multicast listening locators
-    domainParticipantQos.wire_protocol()
-        .builtin.metatrafficMulticastLocatorList.clear();
-    // Clear unicast listening locators and add UDPv4 any
-    domainParticipantQos.wire_protocol()
-        .builtin.metatrafficUnicastLocatorList.clear();
-    eprosima::fastrtps::rtps::Locator_t unicast_locator;
-    std::istringstream("UDPv4:[0.0.0.0]:0") >> unicast_locator;
-    domainParticipantQos.wire_protocol()
-        .builtin.metatrafficUnicastLocatorList.push_back(unicast_locator);
+    if (discovery_params->static_peers_count == 0) {
+      // Clear the list of multicast listening locators
+      domainParticipantQos.wire_protocol()
+          .builtin.metatrafficMulticastLocatorList.clear();
+      // Clear unicast listening locators and add UDPv4 any
+      domainParticipantQos.wire_protocol()
+          .builtin.metatrafficUnicastLocatorList.clear();
+      eprosima::fastrtps::rtps::Locator_t unicast_locator;
+      std::istringstream("UDPv4:[0.0.0.0]:0") >> unicast_locator;
+      domainParticipantQos.wire_protocol()
+          .builtin.metatrafficUnicastLocatorList.push_back(unicast_locator);
+    }
+    else
+    {
+      // If static peers are set we have to send discovery packets over
+      // the network. Disabling all locators is not feasible.
+      auto udp_transport =
+        std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
+      udp_transport->TTL = 0;
+      domainParticipantQos.transport().clear();
+      domainParticipantQos.transport().user_transports.push_back(udp_transport);
+      domainParticipantQos.transport().use_builtin_transports = false;
+    }
     break;
   }
   case RMW_AUTOMATIC_DISCOVERY_RANGE_DEFAULT:
