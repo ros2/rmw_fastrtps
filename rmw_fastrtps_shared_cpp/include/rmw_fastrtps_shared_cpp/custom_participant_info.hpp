@@ -259,7 +259,7 @@ private:
 
   std::unordered_set<std::string>
   get_other_static_peers(
-    const std::unordered_map<std::string, std::vector<uint8_t>> &map) {
+    const std::map<std::string, std::vector<uint8_t>> &map) {
     std::unordered_set<std::string> result;
 
     auto static_peers_entry = map.find("staticpeers");
