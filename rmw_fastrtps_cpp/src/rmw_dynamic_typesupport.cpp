@@ -23,7 +23,7 @@
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
 
-#include "serialization_support_fastrtps_c/serialization_support.h"
+#include "rosidl_dynamic_typesupport_fastrtps/serialization_support.h"
 
 #include <fastcdr/Cdr.h>
 #include <fastdds/rtps/common/SerializedPayload.h>
@@ -32,9 +32,9 @@
 extern "C"
 {
 rmw_ret_t
-rmw_take_dynamic_data_message_with_info(
+rmw_take_dynamic_message_with_info(
   const rmw_subscription_t * subscription,
-  ser_dynamic_data_t * dynamic_data,
+  rosidl_dynamic_typesupport_dynamic_data_t * dynamic_data,
   bool * taken,
   rmw_message_info_t * message_info,
   rmw_subscription_allocation_t * allocation)
@@ -67,20 +67,20 @@ rmw_take_dynamic_data_message_with_info(
 //
 //   eprosima::fastdds::dds::SampleInfo sinfo;
 //   auto ts = static_cast<rosidl_message_type_support_t *>(info->type_support_impl_);
-//   auto ts_impl = static_cast<runtime_type_ts_impl_t *>(ts->data);
-//   auto ser = ts_impl->ser;  // Serialization support
+//   auto ts_impl = static_cast<rmw_dynamic_typesupport_impl_t *>(ts->data);
+//   auto serialization_support = ts_impl->serialization_support;  // Serialization support
 //   auto type = ts_impl->dynamic_type;
 //
 //   // TODO(methylDragon): Check EvolvingSubscription for implementation hints
 //   // WIP ===========================================================================================
-//   ser_dynamic_data_t * data = ser_data_init_from_type(ser, ts_impl->dynamic_type);
+//   rosidl_dynamic_typesupport_dynamic_data_t * data = rosidl_dynamic_typesupport_dynamic_data_init_from_dynamic_type(serialization_support, ts_impl->dynamic_type);
 //
 //   SampleInfo info;
 //   if (reader->take_next_sample(static_cast<DynamicData *>(data->impl), &info) == ReturnCode_t::RETCODE_OK) {
 //     if (info.instance_state == ALIVE_INSTANCE_STATE) {
 //       std::cout << "\nReceived data of type " << type->get_name() << std::endl;
-//       ser_print_dynamic_data(ser, data);
-//       ser_data_fini(ser, data);
+//       rosidl_dynamic_typesupport_dynamic_data_print(serialization_support, data);
+//       rosidl_dynamic_typesupport_dynamic_data_fini(serialization_support, data);
 //     }
 //   }
 //   // WIP ===========================================================================================
@@ -124,29 +124,30 @@ rmw_take_dynamic_data_message_with_info(
 // }
 
 
-serialization_support_t *
+rosidl_dynamic_typesupport_serialization_support_t *
 rmw_get_serialization_support(  // Fallback to rcl if the rmw doesn't implement it
   const char * /*serialization_lib_name*/)
 {
-  return ser_support_init(create_fastrtps_ser_impl(), create_fastrtps_ser_interface());
+  return rosidl_dynamic_typesupport_serialization_support_init(
+    rosidl_dynamic_typesupport_fastrtps_create_serialization_support_impl(),
+    rosidl_dynamic_typesupport_fastrtps_create_serialization_support_interface());
 }
 
 
 rmw_ret_t
 rmw_serialized_to_dynamic_data(
-  rmw_serialized_message_t * serialized_message, ser_dynamic_data_t * dyn_data)
+  rmw_serialized_message_t * serialized_message, rosidl_dynamic_typesupport_dynamic_data_t * dyn_data)
 {
   auto payload = std::make_shared<eprosima::fastrtps::rtps::SerializedPayload_t>(
     serialized_message->buffer_length);
 
-  // NOTE(methylDragon): This is an inefficient copy. Avoid it where possible by using
-  //                     take_runtime_type_message with use_take_runtime_type_message
-  memcpy(payload->data, serialized_message->buffer, serialized_message->buffer_length);
+  // NOTE(methylDragon): Deserialize should copy at this point, so this copy is not needed, I think
+  // memcpy(payload->data, serialized_message->buffer, serialized_message->buffer_length);
   payload->length = serialized_message->buffer_length;
 
   auto m_type = std::make_shared<eprosima::fastrtps::types::DynamicPubSubType>();
 
-  if (m_type->deserialize(payload.get(), dyn_data->impl)) {  // Deserializes payload into dyn_data
+  if (m_type->deserialize(payload.get(), dyn_data->impl->handle)) {  // Deserializes payload into dyn_data
     return RMW_RET_OK;
   } else {
     RMW_SET_ERROR_MSG("could not deserialize serialized message to dynamic data: "
@@ -161,7 +162,7 @@ rmw_serialized_to_dynamic_data(
 //   const rmw_node_t * /*node*/,
 //   const char * /*topic_name*/,
 //   const char * /*type_name*/,  // I don't know if this should be the hashed one...? Might be unused
-//   ser_dynamic_type_t * /*dynamic_type*/)
+//   rosidl_dynamic_typesupport_dynamic_type_t * /*dynamic_type*/)
 // {
 //   // NOTE(methylDragon): !! CAN'T BE IMPLEMENTED EASILY !!
 //   // NOTE(methylDragon): For anyone interested in implementing, use the TypeLookup Service
@@ -185,7 +186,7 @@ rmw_serialized_to_dynamic_data(
 //   const rmw_node_t * /*node*/,
 //   const char * /*topic_name*/,
 //   const char * /*type_name*/,  // I don't know if this should be the hashed one...? Might be unused
-//   ser_dynamic_data_t * /*dynamic_data*/)
+//   rosidl_dynamic_typesupport_dynamic_data_t * /*dynamic_data*/)
 // {
 //   // NOTE(methylDragon): I don't think FastRTPS has a "dynamic data cache" available
 //   //                     So I'm marking this unsupported

@@ -63,7 +63,7 @@ namespace rmw_fastrtps_cpp
 
 // Forward decls ===================================================================================
 rmw_subscription_t *
-__create_runtime_type_subscription(
+__create_dynamic_subscription(
   const CustomParticipantInfo * participant_info,
   const rosidl_message_type_support_t * type_support,
   const char * topic_name,
@@ -130,9 +130,9 @@ create_subscription(
 
   // Short-circuit for runtime-type subscriptions
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
-    type_supports, rmw_typesupport_runtime_type_introspection_c__identifier);
+    type_supports, rmw_dynamic_typesupport_c__identifier);
   if (type_support) {
-    return __create_runtime_type_subscription(
+    return __create_dynamic_subscription(
       participant_info, type_support, topic_name, qos_policies, subscription_options, keyed);
   }
 
@@ -145,7 +145,7 @@ create_subscription(
 // CREATE RUNTIME SUBSCRIPTION
 // =================================================================================================
 rmw_subscription_t *
-__create_runtime_type_subscription(
+__create_dynamic_subscription(
   const CustomParticipantInfo * participant_info,
   const rosidl_message_type_support_t * type_support,
   const char * topic_name,
@@ -159,19 +159,19 @@ __create_runtime_type_subscription(
   //                     support deferral...
 
   if (type_support->typesupport_identifier
-      != rmw_typesupport_runtime_type_introspection_c__identifier) {
+      != rmw_dynamic_typesupport_c__identifier) {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "Type support not from this implementation. Got:\n"
       "    %s, but expected\n"
       "    %s\n"
       "while fetching it",
       type_support->typesupport_identifier,
-      rmw_typesupport_runtime_type_introspection_c__identifier);
+      rmw_dynamic_typesupport_c__identifier);
     return nullptr;
   }
 
   // NOTE(methylDragon): This is a cast from const void * (so it's technically not const correct)
-  runtime_type_ts_impl_t * ts_impl = (runtime_type_ts_impl_t *)type_support->data;
+  rmw_dynamic_typesupport_impl_t * ts_impl = (rmw_dynamic_typesupport_impl_t *)type_support->data;
 
   std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
 
@@ -180,7 +180,7 @@ __create_runtime_type_subscription(
 
   // Create Topic and Type names
   auto dyn_type_ptr = eprosima::fastrtps::types::DynamicType_ptr(
-    *static_cast<eprosima::fastrtps::types::DynamicType_ptr *>(ts_impl->dynamic_type->impl));
+    *static_cast<eprosima::fastrtps::types::DynamicType_ptr *>(ts_impl->dynamic_type->impl->handle));
 
   // Check if we need to split the name into namespace and type name
   std::string type_name = dyn_type_ptr->get_name();

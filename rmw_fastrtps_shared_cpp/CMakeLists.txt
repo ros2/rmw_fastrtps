@@ -35,8 +35,8 @@ if(SECURITY)
 endif()
 
 find_package(ament_cmake_ros REQUIRED)
-find_package(serialization_support_lib REQUIRED)
-find_package(serialization_support_fastrtps_c REQUIRED)
+find_package(rosidl_dynamic_typesupport REQUIRED)
+find_package(rosidl_dynamic_typesupport_fastrtps REQUIRED)
 
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
@@ -106,8 +106,8 @@ target_include_directories(rmw_fastrtps_shared_cpp
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 target_link_libraries(rmw_fastrtps_shared_cpp
   fastcdr fastrtps
-  serialization_support_lib::serialization_support_lib
-  serialization_support_fastrtps_c::serialization_support_fastrtps_c
+  rosidl_dynamic_typesupport::rosidl_dynamic_typesupport
+  rosidl_dynamic_typesupport_fastrtps::rosidl_dynamic_typesupport_fastrtps
 )
 
 # specific order: dependents before dependencies
@@ -142,8 +142,8 @@ ament_export_dependencies(rosidl_typesupport_introspection_c)
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 ament_export_dependencies(tracetools)
 
-ament_export_dependencies(serialization_support_fastrtps_c)
-ament_export_dependencies(serialization_support_lib)
+ament_export_dependencies(rosidl_dynamic_typesupport_fastrtps)
+ament_export_dependencies(rosidl_dynamic_typesupport)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
