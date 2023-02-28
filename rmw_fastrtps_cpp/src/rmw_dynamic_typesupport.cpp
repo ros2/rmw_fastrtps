@@ -136,7 +136,8 @@ rmw_get_serialization_support(  // Fallback to rcl if the rmw doesn't implement 
 
 rmw_ret_t
 rmw_serialized_to_dynamic_data(
-  rmw_serialized_message_t * serialized_message, rosidl_dynamic_typesupport_dynamic_data_t * dyn_data)
+  rmw_serialized_message_t * serialized_message,
+  rosidl_dynamic_typesupport_dynamic_data_t * dyn_data)
 {
   auto payload = std::make_shared<eprosima::fastrtps::rtps::SerializedPayload_t>(
     serialized_message->buffer_length);
