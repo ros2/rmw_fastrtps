@@ -69,8 +69,10 @@ public:
     eprosima::fastdds::dds::Topic * topic,
     eprosima::fastdds::dds::InconsistentTopicStatus status) override;
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void add_event_listener(EventListenerInterface * event_listener);
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void remove_event_listener(EventListenerInterface * event_listener);
 
 private:
@@ -112,12 +114,14 @@ typedef struct CustomParticipantInfo
   bool leave_middleware_default_qos;
   publishing_mode_t publishing_mode;
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   eprosima::fastdds::dds::Topic * find_or_create_topic(
     const std::string & topic_name,
     const std::string & type_name,
     const eprosima::fastdds::dds::TopicQos & topic_qos,
     EventListenerInterface * event_listener);
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void delete_topic(
     const eprosima::fastdds::dds::Topic * topic,
     EventListenerInterface * event_listener);
