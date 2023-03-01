@@ -79,8 +79,8 @@ rmw_take_dynamic_message_with_info(
 //   if (reader->take_next_sample(static_cast<DynamicData *>(data->impl), &info) == ReturnCode_t::RETCODE_OK) {
 //     if (info.instance_state == ALIVE_INSTANCE_STATE) {
 //       std::cout << "\nReceived data of type " << type->get_name() << std::endl;
-//       rosidl_dynamic_typesupport_dynamic_data_print(serialization_support, data);
-//       rosidl_dynamic_typesupport_dynamic_data_fini(serialization_support, data);
+//       rosidl_dynamic_typesupport_dynamic_data_print(data);
+//       rosidl_dynamic_typesupport_dynamic_data_fini(data);
 //     }
 //   }
 //   // WIP ===========================================================================================
@@ -144,13 +144,16 @@ rmw_serialized_to_dynamic_data(
 
   // NOTE(methylDragon): Deserialize should copy at this point, so this copy is not needed, I think
   // memcpy(payload->data, serialized_message->buffer, serialized_message->buffer_length);
+  payload->data = serialized_message->buffer;  // Use the buffer directly without copying yet again
   payload->length = serialized_message->buffer_length;
 
   auto m_type = std::make_shared<eprosima::fastrtps::types::DynamicPubSubType>();
 
   if (m_type->deserialize(payload.get(), dyn_data->impl->handle)) {  // Deserializes payload into dyn_data
+    payload->data = nullptr;  // Data gets freed on serialized_message fini outside
     return RMW_RET_OK;
   } else {
+    payload->data = nullptr;  // Data gets freed on serialized_message fini outside
     RMW_SET_ERROR_MSG("could not deserialize serialized message to dynamic data: "
                       "dynamic data not enough memory");
     return RMW_RET_ERROR;
