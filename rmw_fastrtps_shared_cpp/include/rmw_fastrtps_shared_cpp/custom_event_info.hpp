@@ -46,8 +46,12 @@ public:
     rmw_event_type_t event_type,
     void * event_info) = 0;
 
-  // Provide handlers to perform an action when a
-  // new event from this listener has ocurred
+  /// Provide handlers to perform an action when a new event from this listener has occurred
+  /**
+   * \param event_type The event type to set a new callback for.
+   * \param user_data User data to associated with the event.
+   * \param callback The callback to call when the event occurs.
+   */
   virtual void set_on_new_event_callback(
     rmw_event_type_t event_type,
     const void * user_data,
@@ -58,6 +62,11 @@ public:
     return event_guard[event_type];
   }
 
+  /// Callback to update the internal inconsistent topic data
+  /**
+   * \param total_count The total number of inconsistent topic events for all time.
+   * \param total_count_change The number of inconsistent topic events being reported right now.
+   */
   virtual void update_inconsistent_topic(uint32_t total_count, uint32_t total_count_change) = 0;
 
 protected:

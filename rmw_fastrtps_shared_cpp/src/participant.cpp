@@ -340,7 +340,7 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
     // Passing nullptr as the EventListenerInterface isn't ideal here;
     // it means that for each individual topic we remove, we won't remove
     // the corresponding TopicListener callback (if any).  However, this
-    // shouldn't matter as we are going to shortly deleting the entire
+    // shouldn't matter as we are going to shortly delete the entire
     // object, and these are just pointers.
     remove_topic_and_type(participant_info, nullptr, topic, dummy_type);
   }

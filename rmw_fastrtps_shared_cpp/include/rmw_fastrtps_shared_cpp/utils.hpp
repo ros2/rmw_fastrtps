@@ -68,6 +68,7 @@ find_and_check_topic_and_type(
 * Performs removal of associated topic and type.
 *
 * \param[in] participant_info CustomParticipantInfo associated to the context.
+* \param[in] event_listener   The EventListenerInterface associated with the topic.
 * \param[in] topic            Topic of the entity being deleted.
 * \param[in] type             TypeSupport of the entity being deleted.
 */
