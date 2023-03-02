@@ -69,7 +69,6 @@ rmw_init_options_copy(
   }
   const rcutils_allocator_t * allocator = &src->allocator;
   RCUTILS_CHECK_ALLOCATOR(allocator, return RMW_RET_INVALID_ARGUMENT);
-
   rmw_init_options_t tmp = *src;
   tmp.enclave = rcutils_strdup(tmp.enclave, *allocator);
   if (NULL != src->enclave && NULL == tmp.enclave) {
@@ -82,6 +81,11 @@ rmw_init_options_copy(
     allocator->deallocate(tmp.enclave, allocator->state);
     return ret;
   }
+  tmp.discovery_params = rmw_get_zero_initialized_discovery_params();
+  ret = rmw_discovery_params_copy(
+    &src->discovery_params,
+    allocator,
+    &tmp.discovery_params);
   *dst = tmp;
   return RMW_RET_OK;
 }
@@ -105,6 +109,10 @@ rmw_init_options_fini(const char * identifier, rmw_init_options_t * init_options
 
   allocator->deallocate(init_options->enclave, allocator->state);
   rmw_ret_t ret = rmw_security_options_fini(&init_options->security_options, allocator);
+  if (ret != RMW_RET_OK)
+    return ret;
+  
+  ret = rmw_discovery_params_fini(&init_options->discovery_params, allocator);
   *init_options = rmw_get_zero_initialized_init_options();
   return ret;
 }
