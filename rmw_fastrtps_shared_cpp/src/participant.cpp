@@ -258,13 +258,13 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
     user_data << "staticpeers=";
     for (size_t ii = 0; ii < discovery_params->static_peers_count; ++ii) {
       eprosima::fastrtps::rtps::Locator_t peer;
-      if (ip_version(discovery_params->static_peers[ii]) == 4) {
+      if (ip_version(discovery_params->static_peers[ii].peer_address) == 4) {
         eprosima::fastrtps::rtps::IPLocator::setIPv4(
-            peer, discovery_params->static_peers[ii]);
+            peer, discovery_params->static_peers[ii].peer_address);
       }
-      else if (ip_version(discovery_params->static_peers[ii]) == 6) {
+      else if (ip_version(discovery_params->static_peers[ii].peer_address) == 6) {
         eprosima::fastrtps::rtps::IPLocator::setIPv6(
-            peer, discovery_params->static_peers[ii]);
+            peer, discovery_params->static_peers[ii].peer_address);
       }
       // Not specifying the port of the peer means FastDDS will try all
       // possible participant ports according to the port calculation equation
@@ -273,10 +273,11 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
       domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(
           peer);
 
-      user_data << discovery_params->static_peers[ii] << ',';
+      user_data << discovery_params->static_peers[ii].peer_address << ',';
 
       // Add any aliases (IPs for hostnames, hostnames for IPs)
-      auto aliases = utils::get_peer_aliases(discovery_params->static_peers[ii]);
+      auto aliases = utils::get_peer_aliases(
+        discovery_params->static_peers[ii].peer_address);
       for (const auto &alias : aliases) {
         user_data << alias << ',';
       }
