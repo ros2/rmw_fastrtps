@@ -300,26 +300,13 @@ private:
   bool should_ignore_host(const std::string &hostname,
                           const std::unordered_set<std::string> &other_static_peers) {
     bool should_ignore = false;
-    if (hostname == my_hostname_) {
-      if (RMW_AUTOMATIC_DISCOVERY_RANGE_OFF ==
+
+    if (RMW_AUTOMATIC_DISCOVERY_RANGE_OFF ==
           discovery_params_.automatic_discovery_range) {
-        RCUTILS_LOG_DEBUG_NAMED(
-            "rmw_fastrtps_shared_cpp",
-            "Found new participant on same host and discovery range is off");
-        if (!is_static_peer(hostname, other_static_peers)) {
-          should_ignore = true;
-        }
-      } else {
-        RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                                "Found new participant on same host and "
-                                "discovery range is not off");
-      }
-    } else {
-      RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                              "Found new participant on different host");
-      if (RMW_AUTOMATIC_DISCOVERY_RANGE_OFF ==
-              discovery_params_.automatic_discovery_range ||
-          RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST ==
+      return true;
+    }
+    if (hostname != my_hostname_) {
+      if (RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST ==
               discovery_params_.automatic_discovery_range ||
           RMW_AUTOMATIC_DISCOVERY_RANGE_DEFAULT ==
               discovery_params_.automatic_discovery_range) {
