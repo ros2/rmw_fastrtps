@@ -76,6 +76,7 @@ public:
   void remove_event_listener(EventListenerInterface * event_listener);
 
 private:
+  std::mutex event_listeners_mutex_;
   std::set<EventListenerInterface *> event_listeners_;
 };
 

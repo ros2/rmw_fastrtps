@@ -205,12 +205,12 @@ rmw_create_service(
   }
   auto cleanup_info = rcpputils::make_scope_exit(
     [info, participant_info]() {
-      delete info->pub_listener_;
-      delete info->listener_;
       rmw_fastrtps_shared_cpp::remove_topic_and_type(
         participant_info, nullptr, info->response_topic_, info->response_type_support_);
       rmw_fastrtps_shared_cpp::remove_topic_and_type(
         participant_info, nullptr, info->request_topic_, info->request_type_support_);
+      delete info->pub_listener_;
+      delete info->listener_;
       delete info;
     });
 

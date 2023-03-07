@@ -38,6 +38,7 @@ void CustomTopicListener::on_inconsistent_topic(
     return;
   }
 
+  std::lock_guard<std::mutex> lck(event_listeners_mutex_);
   for (EventListenerInterface * listener : event_listeners_) {
     listener->update_inconsistent_topic(status.total_count, status.total_count_change);
   }
@@ -50,6 +51,7 @@ void CustomTopicListener::add_event_listener(EventListenerInterface * event_list
     return;
   }
 
+  std::lock_guard<std::mutex> lck(event_listeners_mutex_);
   event_listeners_.insert(event_listener);
 }
 
@@ -59,6 +61,7 @@ void CustomTopicListener::remove_event_listener(EventListenerInterface * event_l
     return;
   }
 
+  std::lock_guard<std::mutex> lck(event_listeners_mutex_);
   event_listeners_.erase(event_listener);
 }
 
@@ -81,7 +84,7 @@ eprosima::fastdds::dds::Topic * CustomParticipantInfo::find_or_create_topic(
     uct->topic = topic;
     uct->topic_listener = new CustomTopicListener(event_listener);
     uct->use_count = 1;
-
+    topic->set_listener(uct->topic_listener);
     topic_name_to_topic_[topic_name] = std::move(uct);
   } else {
     // Already in the map, just increase the use count
@@ -109,9 +112,9 @@ void CustomParticipantInfo::delete_topic(
     it->second->use_count--;
     it->second->topic_listener->remove_event_listener(event_listener);
     if (it->second->use_count <= 0) {
-      delete it->second->topic_listener;
-
       participant_->delete_topic(it->second->topic);
+
+      delete it->second->topic_listener;
 
       topic_name_to_topic_.erase(it);
     }
