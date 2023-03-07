@@ -39,10 +39,10 @@ CustomDataReaderListener::on_subscription_matched(
   (void)reader;
 
   if (info.current_count_change == 1) {
-    subscription_event_->add_publisher(
+    subscription_event_->track_unique_publisher(
       eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
   } else if (info.current_count_change == -1) {
-    subscription_event_->remove_publisher(
+    subscription_event_->untrack_unique_publisher(
       eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
   }
 }
@@ -331,13 +331,13 @@ size_t RMWSubscriptionEvent::publisher_count() const
   return publishers_.size();
 }
 
-void RMWSubscriptionEvent::add_publisher(eprosima::fastrtps::rtps::GUID_t guid)
+void RMWSubscriptionEvent::track_unique_publisher(eprosima::fastrtps::rtps::GUID_t guid)
 {
   std::lock_guard<std::mutex> lock(publishers_mutex_);
   publishers_.insert(guid);
 }
 
-void RMWSubscriptionEvent::remove_publisher(eprosima::fastrtps::rtps::GUID_t guid)
+void RMWSubscriptionEvent::untrack_unique_publisher(eprosima::fastrtps::rtps::GUID_t guid)
 {
   std::lock_guard<std::mutex> lock(publishers_mutex_);
   publishers_.erase(guid);

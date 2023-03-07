@@ -114,12 +114,30 @@ public:
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void update_inconsistent_topic(uint32_t total_count, uint32_t total_count_change) override;
 
+  /// Add a GUID to the internal set of unique subscriptions matched to this publisher.
+  /**
+   * This is so we can provide the RMW layer with an accurate count of matched subscriptions if the
+   * user calls rmw_count_subscribers().
+   *
+   * \param[in] guid The GUID of the newly-matched subscription to track.
+   */
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void add_subscription(eprosima::fastrtps::rtps::GUID_t guid);
+  void track_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid);
 
+  /// Remove a GUID from the internal set of unique subscriptions matched to this publisher.
+  /**
+   * This is so we can provide the RMW layer with an accurate count of matched subscriptions if the
+   * user calls rmw_count_subscribers().
+   *
+   * \param[in] guid The GUID of the newly-unmatched subscription to track.
+   */
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void remove_subscription(eprosima::fastrtps::rtps::GUID_t guid);
+  void untrack_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid);
 
+  /// Return the number of unique subscriptions matched to this publisher.
+  /**
+   * \return Number of unique subscriptions matched to this publisher.
+   */
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   size_t subscription_count() const;
 
