@@ -111,6 +111,7 @@ void CustomParticipantInfo::delete_topic(
   if (it != topic_name_to_topic_.end()) {
     it->second->use_count--;
     it->second->topic_listener->remove_event_listener(event_listener);
+    // Really we only need to check if use_count == 0, but just be cautious and do a <= check.
     if (it->second->use_count <= 0) {
       participant_->delete_topic(it->second->topic);
 
