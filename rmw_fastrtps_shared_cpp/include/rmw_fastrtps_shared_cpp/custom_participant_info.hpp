@@ -77,7 +77,8 @@ public:
 
 private:
   std::mutex event_listeners_mutex_;
-  std::set<EventListenerInterface *> event_listeners_;
+  std::set<EventListenerInterface *> event_listeners_
+  RCPPUTILS_TSA_GUARDED_BY(event_listeners_mutex_);
 };
 
 typedef struct UseCountTopic
