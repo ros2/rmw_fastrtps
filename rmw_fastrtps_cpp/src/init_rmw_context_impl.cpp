@@ -63,7 +63,7 @@ init_context_impl(
       eprosima_fastrtps_identifier,
       context->actual_domain_id,
       &context->options.security_options,
-      &context->options.discovery_params,
+      &context->options.discovery_options,
       context->options.enclave,
       common_context.get()),
     [&](CustomParticipantInfo * participant_info)

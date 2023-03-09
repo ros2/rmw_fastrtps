@@ -143,9 +143,9 @@ public:
   explicit ParticipantListener(const char *identifier,
                                rmw_dds_common::Context *context,
                                const std::string &hostname,
-                               const rmw_discovery_params_t *discovery_params)
+                               const rmw_discovery_options_t *discovery_options)
       : context(context), identifier_(identifier), my_hostname_(hostname),
-        discovery_params_(*discovery_params) {}
+        discovery_options_(*discovery_options) {}
 
   void on_participant_discovery(
       eprosima::fastdds::dds::DomainParticipant *participant,
@@ -302,14 +302,14 @@ private:
     bool should_ignore = false;
 
     if (RMW_AUTOMATIC_DISCOVERY_RANGE_OFF ==
-          discovery_params_.automatic_discovery_range) {
+          discovery_options_.automatic_discovery_range) {
       return true;
     }
     if (hostname != my_hostname_) {
       if (RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST ==
-              discovery_params_.automatic_discovery_range ||
+              discovery_options_.automatic_discovery_range ||
           RMW_AUTOMATIC_DISCOVERY_RANGE_DEFAULT ==
-              discovery_params_.automatic_discovery_range) {
+              discovery_options_.automatic_discovery_range) {
 
         if (!is_static_peer(hostname, other_static_peers)) {
           should_ignore = true;
@@ -327,14 +327,14 @@ private:
     using namespace rmw_fastrtps_shared_cpp;
     // Check if the host is a static peer on our list
     auto aliases = utils::get_peer_aliases(hostname);
-    for (size_t ii = 0; ii < discovery_params_.static_peers_count; ++ii) {
-      if (hostname == discovery_params_.static_peers[ii].peer_address) {
+    for (size_t ii = 0; ii < discovery_options_.static_peers_count; ++ii) {
+      if (hostname == discovery_options_.static_peers[ii].peer_address) {
         RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
                                 "Matching host in our static peer list");
         return true;
       }
-    
-      if (aliases.count(discovery_params_.static_peers[ii].peer_address) > 0)
+
+      if (aliases.count(discovery_options_.static_peers[ii].peer_address) > 0)
       {
         RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
                               "Matching host in our static peer list");
@@ -358,7 +358,7 @@ private:
   rmw_dds_common::Context *context;
   const char *const identifier_;
   std::string my_hostname_;
-  rmw_discovery_params_t discovery_params_;
+  rmw_discovery_options_t discovery_options_;
 };
 
 #endif // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
