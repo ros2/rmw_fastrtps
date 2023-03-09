@@ -64,7 +64,7 @@ static CustomParticipantInfo *__create_participant(
     const eprosima::fastdds::dds::DomainParticipantQos &domainParticipantQos,
     bool leave_middleware_default_qos, publishing_mode_t publishing_mode,
     rmw_dds_common::Context *common_context, size_t domain_id,
-    const rmw_discovery_params_t *discovery_params, const char *hostname) {
+    const rmw_discovery_options_t *discovery_options, const char *hostname) {
   CustomParticipantInfo *participant_info = nullptr;
 
   /////
@@ -93,7 +93,7 @@ static CustomParticipantInfo *__create_participant(
   // Create Participant listener
   try {
     participant_info->listener_ = new ParticipantListener(
-        identifier, common_context, hostname, discovery_params);
+        identifier, common_context, hostname, discovery_options);
   } catch (std::bad_alloc &) {
     RMW_SET_ERROR_MSG(
         "__create_participant failed to allocate participant listener");
@@ -190,7 +190,7 @@ int ip_version(const std::string& peer) {
 CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
     const char *identifier, size_t domain_id,
     const rmw_security_options_t *security_options,
-    const rmw_discovery_params_t *discovery_params, const char *enclave,
+    const rmw_discovery_options_t *discovery_options, const char *enclave,
     rmw_dds_common::Context *common_context) {
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(nullptr);
 
@@ -207,7 +207,7 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
           ->get_default_participant_qos();
 
   // Configure discovery
-  switch (discovery_params->automatic_discovery_range) {
+  switch (discovery_options->automatic_discovery_range) {
   case RMW_AUTOMATIC_DISCOVERY_RANGE_OFF: {
     // Clear the list of multicast listening locators
     domainParticipantQos.wire_protocol()
@@ -241,18 +241,18 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
   std::stringstream user_data;
 
   // Add any initial peers
-  if (discovery_params->static_peers_count > 0 &&
-    discovery_params->automatic_discovery_range != RMW_AUTOMATIC_DISCOVERY_RANGE_OFF) {
+  if (discovery_options->static_peers_count > 0 &&
+    discovery_options->automatic_discovery_range != RMW_AUTOMATIC_DISCOVERY_RANGE_OFF) {
     user_data << "staticpeers=";
-    for (size_t ii = 0; ii < discovery_params->static_peers_count; ++ii) {
+    for (size_t ii = 0; ii < discovery_options->static_peers_count; ++ii) {
       eprosima::fastrtps::rtps::Locator_t peer;
-      if (ip_version(discovery_params->static_peers[ii].peer_address) == 4) {
+      if (ip_version(discovery_options->static_peers[ii].peer_address) == 4) {
         eprosima::fastrtps::rtps::IPLocator::setIPv4(
-            peer, discovery_params->static_peers[ii].peer_address);
+            peer, discovery_options->static_peers[ii].peer_address);
       }
-      else if (ip_version(discovery_params->static_peers[ii].peer_address) == 6) {
+      else if (ip_version(discovery_options->static_peers[ii].peer_address) == 6) {
         eprosima::fastrtps::rtps::IPLocator::setIPv6(
-            peer, discovery_params->static_peers[ii].peer_address);
+            peer, discovery_options->static_peers[ii].peer_address);
       }
       // Not specifying the port of the peer means FastDDS will try all
       // possible participant ports according to the port calculation equation
@@ -261,11 +261,11 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
       domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(
           peer);
 
-      user_data << discovery_params->static_peers[ii].peer_address << ',';
+      user_data << discovery_options->static_peers[ii].peer_address << ',';
 
       // Add any aliases (IPs for hostnames, hostnames for IPs)
       auto aliases = utils::get_peer_aliases(
-        discovery_params->static_peers[ii].peer_address);
+        discovery_options->static_peers[ii].peer_address);
       for (const auto &alias : aliases) {
         user_data << alias << ',';
       }
@@ -396,7 +396,7 @@ CustomParticipantInfo *rmw_fastrtps_shared_cpp::create_participant(
   }
   return __create_participant(
       identifier, domainParticipantQos, leave_middleware_default_qos,
-      publishing_mode, common_context, domain_id, discovery_params, hostname);
+      publishing_mode, common_context, domain_id, discovery_options, hostname);
 }
 
 rmw_ret_t rmw_fastrtps_shared_cpp::destroy_participant(

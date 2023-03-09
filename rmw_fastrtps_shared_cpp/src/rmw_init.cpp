@@ -81,11 +81,11 @@ rmw_init_options_copy(
     allocator->deallocate(tmp.enclave, allocator->state);
     return ret;
   }
-  tmp.discovery_params = rmw_get_zero_initialized_discovery_params();
-  ret = rmw_discovery_params_copy(
-    &src->discovery_params,
-    allocator,
-    &tmp.discovery_params);
+  tmp.discovery_options = rmw_get_zero_initialized_discovery_options();
+  ret = rmw_discovery_options_copy(
+    &src->discovery_options,
+    *allocator,
+    &tmp.discovery_options);
   *dst = tmp;
   return RMW_RET_OK;
 }
@@ -111,8 +111,8 @@ rmw_init_options_fini(const char * identifier, rmw_init_options_t * init_options
   rmw_ret_t ret = rmw_security_options_fini(&init_options->security_options, allocator);
   if (ret != RMW_RET_OK)
     return ret;
-  
-  ret = rmw_discovery_params_fini(&init_options->discovery_params, allocator);
+
+  ret = rmw_discovery_options_fini(&init_options->discovery_options, *allocator);
   *init_options = rmw_get_zero_initialized_init_options();
   return ret;
 }
