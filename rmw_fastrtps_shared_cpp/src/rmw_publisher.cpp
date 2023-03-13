@@ -94,7 +94,7 @@ __rmw_publisher_count_matched_subscriptions(
 {
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
 
-  *subscription_count = info->listener_->subscriptionCount();
+  *subscription_count = info->publisher_event_->subscription_count();
 
   return RMW_RET_OK;
 }

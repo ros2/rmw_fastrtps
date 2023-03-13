@@ -337,7 +337,12 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
   // Remove topics
   eprosima::fastdds::dds::TypeSupport dummy_type;
   for (auto topic : topics_to_remove) {
-    remove_topic_and_type(participant_info, topic, dummy_type);
+    // Passing nullptr as the EventListenerInterface argument means that
+    // remove_topic_and_type() -> participant_info->delete_topic() will not remove an
+    // the EventListenerInterface from the CustomTopicListener::event_listeners_ set.  That would
+    // constitute a memory leak, except for the fact that the participant is going to be deleted
+    // right below.  At that point, the entire set will be destroyed and all memory freed.
+    remove_topic_and_type(participant_info, nullptr, topic, dummy_type);
   }
 
   // Delete Domain Participant

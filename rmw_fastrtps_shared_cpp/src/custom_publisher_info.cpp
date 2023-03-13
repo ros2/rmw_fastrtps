@@ -14,6 +14,7 @@
 
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 
+#include "fastdds/dds/core/policy/QosPolicies.hpp"
 #include "fastdds/dds/core/status/BaseStatus.hpp"
 #include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
 
@@ -23,15 +24,74 @@
 EventListenerInterface *
 CustomPublisherInfo::get_listener() const
 {
-  return listener_;
+  return publisher_event_;
 }
 
-eprosima::fastdds::dds::StatusCondition & PubListener::get_statuscondition() const
+CustomDataWriterListener::CustomDataWriterListener(RMWPublisherEvent * pub_event)
+: publisher_event_(pub_event)
+{
+}
+
+void CustomDataWriterListener::on_publication_matched(
+  eprosima::fastdds::dds::DataWriter * writer,
+  const eprosima::fastdds::dds::PublicationMatchedStatus & status)
+{
+  (void)writer;
+
+  if (status.current_count_change == 1) {
+    publisher_event_->track_unique_subscription(
+      eprosima::fastrtps::rtps::iHandle2GUID(status.last_subscription_handle));
+  } else if (status.current_count_change == -1) {
+    publisher_event_->untrack_unique_subscription(
+      eprosima::fastrtps::rtps::iHandle2GUID(status.last_subscription_handle));
+  }
+}
+
+
+void
+CustomDataWriterListener::on_offered_deadline_missed(
+  eprosima::fastdds::dds::DataWriter * writer,
+  const eprosima::fastdds::dds::OfferedDeadlineMissedStatus & status)
+{
+  (void)writer;
+
+  publisher_event_->update_deadline(status.total_count, status.total_count_change);
+}
+
+void CustomDataWriterListener::on_liveliness_lost(
+  eprosima::fastdds::dds::DataWriter * writer,
+  const eprosima::fastdds::dds::LivelinessLostStatus & status)
+{
+  (void)writer;
+
+  publisher_event_->update_liveliness_lost(status.total_count, status.total_count_change);
+}
+
+void CustomDataWriterListener::on_offered_incompatible_qos(
+  eprosima::fastdds::dds::DataWriter * writer,
+  const eprosima::fastdds::dds::OfferedIncompatibleQosStatus & status)
+{
+  (void)writer;
+
+  publisher_event_->update_offered_incompatible_qos(
+    status.last_policy_id, status.total_count,
+    status.total_count_change);
+}
+
+RMWPublisherEvent::RMWPublisherEvent(CustomPublisherInfo * info)
+: publisher_info_(info),
+  deadline_changed_(false),
+  liveliness_changed_(false),
+  incompatible_qos_changed_(false)
+{
+}
+
+eprosima::fastdds::dds::StatusCondition & RMWPublisherEvent::get_statuscondition() const
 {
   return publisher_info_->data_writer_->get_statuscondition();
 }
 
-bool PubListener::take_event(
+bool RMWPublisherEvent::take_event(
   rmw_event_type_t event_type,
   void * event_info)
 {
@@ -43,72 +103,78 @@ bool PubListener::take_event(
     case RMW_EVENT_LIVELINESS_LOST:
       {
         auto rmw_data = static_cast<rmw_liveliness_lost_status_t *>(event_info);
-        if (liveliness_changes_) {
-          rmw_data->total_count = liveliness_lost_status_.total_count;
-          rmw_data->total_count_change = liveliness_lost_status_.total_count_change;
-          liveliness_changes_ = false;
+        if (liveliness_changed_) {
+          liveliness_changed_ = false;
         } else {
-          eprosima::fastdds::dds::LivelinessLostStatus liveliness_lost_status;
-          publisher_info_->data_writer_->get_liveliness_lost_status(liveliness_lost_status);
-          rmw_data->total_count = liveliness_lost_status.total_count;
-          rmw_data->total_count_change = liveliness_lost_status.total_count_change;
+          publisher_info_->data_writer_->get_liveliness_lost_status(liveliness_lost_status_);
         }
+        rmw_data->total_count = liveliness_lost_status_.total_count;
+        rmw_data->total_count_change = liveliness_lost_status_.total_count_change;
         liveliness_lost_status_.total_count_change = 0;
       }
       break;
     case RMW_EVENT_OFFERED_DEADLINE_MISSED:
       {
         auto rmw_data = static_cast<rmw_offered_deadline_missed_status_t *>(event_info);
-        if (deadline_changes_) {
-          rmw_data->total_count = offered_deadline_missed_status_.total_count;
-          rmw_data->total_count_change = offered_deadline_missed_status_.total_count_change;
-          deadline_changes_ = false;
+        if (deadline_changed_) {
+          deadline_changed_ = false;
         } else {
-          eprosima::fastdds::dds::OfferedDeadlineMissedStatus offered_deadline_missed_status;
           publisher_info_->data_writer_->get_offered_deadline_missed_status(
-            offered_deadline_missed_status);
-          rmw_data->total_count = offered_deadline_missed_status.total_count;
-          rmw_data->total_count_change = offered_deadline_missed_status.total_count_change;
+            offered_deadline_missed_status_);
         }
+        rmw_data->total_count = offered_deadline_missed_status_.total_count;
+        rmw_data->total_count_change = offered_deadline_missed_status_.total_count_change;
         offered_deadline_missed_status_.total_count_change = 0;
       }
       break;
     case RMW_EVENT_OFFERED_QOS_INCOMPATIBLE:
       {
         auto rmw_data = static_cast<rmw_offered_qos_incompatible_event_status_t *>(event_info);
-        if (incompatible_qos_changes_) {
-          rmw_data->total_count = incompatible_qos_status_.total_count;
-          rmw_data->total_count_change = incompatible_qos_status_.total_count_change;
-          rmw_data->last_policy_kind =
-            rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
-            incompatible_qos_status_.last_policy_id);
-          incompatible_qos_changes_ = false;
+        if (incompatible_qos_changed_) {
+          incompatible_qos_changed_ = false;
         } else {
-          eprosima::fastdds::dds::OfferedIncompatibleQosStatus offered_incompatible_qos_status;
           publisher_info_->data_writer_->get_offered_incompatible_qos_status(
-            offered_incompatible_qos_status);
-          rmw_data->total_count = offered_incompatible_qos_status.total_count;
-          rmw_data->total_count_change = offered_incompatible_qos_status.total_count_change;
-          rmw_data->last_policy_kind =
-            rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
-            offered_incompatible_qos_status.last_policy_id);
+            incompatible_qos_status_);
         }
+        rmw_data->total_count = incompatible_qos_status_.total_count;
+        rmw_data->total_count_change = incompatible_qos_status_.total_count_change;
+        rmw_data->last_policy_kind =
+          rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
+          incompatible_qos_status_.last_policy_id);
         incompatible_qos_status_.total_count_change = 0;
+      }
+      break;
+    case RMW_EVENT_PUBLISHER_INCOMPATIBLE_TYPE:
+      {
+        auto rmw_data = static_cast<rmw_incompatible_type_status_t *>(event_info);
+        if (inconsistent_topic_changed_) {
+          inconsistent_topic_changed_ = false;
+        } else {
+          publisher_info_->data_writer_->get_topic()->get_inconsistent_topic_status(
+            inconsistent_topic_status_);
+        }
+        rmw_data->total_count = inconsistent_topic_status_.total_count;
+        rmw_data->total_count_change = inconsistent_topic_status_.total_count_change;
+        inconsistent_topic_status_.total_count_change = 0;
       }
       break;
     default:
       return false;
   }
   event_guard[event_type].set_trigger_value(false);
+
   return true;
 }
 
-void PubListener::set_on_new_event_callback(
+void RMWPublisherEvent::set_on_new_event_callback(
   rmw_event_type_t event_type,
   const void * user_data,
   rmw_event_callback_t callback)
 {
   std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+
+  eprosima::fastdds::dds::StatusMask status_mask =
+    publisher_info_->data_writer_->get_status_mask();
 
   if (callback) {
     switch (event_type) {
@@ -138,6 +204,14 @@ void PubListener::set_on_new_event_callback(
           incompatible_qos_status_.total_count_change = 0;
         }
         break;
+      case RMW_EVENT_PUBLISHER_INCOMPATIBLE_TYPE:
+        publisher_info_->data_writer_->get_topic()->get_inconsistent_topic_status(
+          inconsistent_topic_status_);
+        if (inconsistent_topic_status_.total_count_change > 0) {
+          callback(user_data, inconsistent_topic_status_.total_count_change);
+          inconsistent_topic_status_.total_count_change = 0;
+        }
+        break;
       default:
         break;
     }
@@ -145,72 +219,95 @@ void PubListener::set_on_new_event_callback(
     user_data_[event_type] = user_data;
     on_new_event_cb_[event_type] = callback;
 
-    eprosima::fastdds::dds::StatusMask status_mask =
-      publisher_info_->data_writer_->get_status_mask();
     status_mask |= rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
-    publisher_info_->data_writer_->set_listener(this, status_mask);
   } else {
-    eprosima::fastdds::dds::StatusMask status_mask =
-      publisher_info_->data_writer_->get_status_mask();
-    status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
-    publisher_info_->data_writer_->set_listener(this, status_mask);
-
     user_data_[event_type] = nullptr;
     on_new_event_cb_[event_type] = nullptr;
+
+    status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
   }
+
+  publisher_info_->data_writer_->set_listener(publisher_info_->data_writer_listener_, status_mask);
 }
 
-void
-PubListener::on_offered_deadline_missed(
-  eprosima::fastdds::dds::DataWriter * /* writer */,
-  const eprosima::fastdds::dds::OfferedDeadlineMissedStatus & status)
+void RMWPublisherEvent::track_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid)
+{
+  std::lock_guard<std::mutex> lock(subscriptions_mutex_);
+  subscriptions_.insert(guid);
+}
+
+void RMWPublisherEvent::untrack_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid)
+{
+  std::lock_guard<std::mutex> lock(subscriptions_mutex_);
+  subscriptions_.erase(guid);
+}
+
+size_t RMWPublisherEvent::subscription_count() const
+{
+  std::lock_guard<std::mutex> lock(subscriptions_mutex_);
+  return subscriptions_.size();
+}
+
+void RMWPublisherEvent::update_deadline(uint32_t total_count, uint32_t total_count_change)
 {
   std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
-  offered_deadline_missed_status_.total_count = status.total_count;
+  offered_deadline_missed_status_.total_count = total_count;
   // Accumulate deltas
-  offered_deadline_missed_status_.total_count_change += status.total_count_change;
+  offered_deadline_missed_status_.total_count_change += total_count_change;
 
-  deadline_changes_ = true;
+  deadline_changed_ = true;
 
   trigger_event(RMW_EVENT_OFFERED_DEADLINE_MISSED);
 }
 
-void PubListener::on_liveliness_lost(
-  eprosima::fastdds::dds::DataWriter * /* writer */,
-  const eprosima::fastdds::dds::LivelinessLostStatus & status)
+void RMWPublisherEvent::update_liveliness_lost(uint32_t total_count, uint32_t total_count_change)
 {
   std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
-  liveliness_lost_status_.total_count = status.total_count;
+  liveliness_lost_status_.total_count = total_count;
   // Accumulate deltas
-  liveliness_lost_status_.total_count_change += status.total_count_change;
+  liveliness_lost_status_.total_count_change += total_count_change;
 
-  liveliness_changes_ = true;
+  liveliness_changed_ = true;
 
   trigger_event(RMW_EVENT_LIVELINESS_LOST);
 }
 
-void PubListener::on_offered_incompatible_qos(
-  eprosima::fastdds::dds::DataWriter * /* writer */,
-  const eprosima::fastdds::dds::OfferedIncompatibleQosStatus & status)
+void RMWPublisherEvent::update_offered_incompatible_qos(
+  eprosima::fastdds::dds::QosPolicyId_t last_policy_id, uint32_t total_count,
+  uint32_t total_count_change)
 {
   std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
-  incompatible_qos_status_.last_policy_id = status.last_policy_id;
-  incompatible_qos_status_.total_count = status.total_count;
+  incompatible_qos_status_.last_policy_id = last_policy_id;
+  incompatible_qos_status_.total_count = total_count;
   // Accumulate deltas
-  incompatible_qos_status_.total_count_change += status.total_count_change;
+  incompatible_qos_status_.total_count_change += total_count_change;
 
-  incompatible_qos_changes_ = true;
+  incompatible_qos_changed_ = true;
 
   trigger_event(RMW_EVENT_OFFERED_QOS_INCOMPATIBLE);
 }
 
-void PubListener::trigger_event(rmw_event_type_t event_type)
+void RMWPublisherEvent::update_inconsistent_topic(uint32_t total_count, uint32_t total_count_change)
+{
+  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+
+  // Assign absolute values
+  inconsistent_topic_status_.total_count = total_count;
+  // Accumulate deltas
+  inconsistent_topic_status_.total_count_change += total_count_change;
+
+  inconsistent_topic_changed_ = true;
+
+  trigger_event(RMW_EVENT_PUBLISHER_INCOMPATIBLE_TYPE);
+}
+
+void RMWPublisherEvent::trigger_event(rmw_event_type_t event_type)
 {
   if (on_new_event_cb_[event_type]) {
     on_new_event_cb_[event_type](user_data_[event_type], 1);

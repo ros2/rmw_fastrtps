@@ -68,6 +68,7 @@ find_and_check_topic_and_type(
 * Performs removal of associated topic and type.
 *
 * \param[in] participant_info CustomParticipantInfo associated to the context.
+* \param[in] event_listener   The EventListenerInterface associated with the topic.
 * \param[in] topic            Topic of the entity being deleted.
 * \param[in] type             TypeSupport of the entity being deleted.
 */
@@ -75,6 +76,7 @@ RMW_FASTRTPS_SHARED_CPP_PUBLIC
 void
 remove_topic_and_type(
   CustomParticipantInfo * participant_info,
+  EventListenerInterface * event_listener,
   const eprosima::fastdds::dds::TopicDescription * topic,
   const eprosima::fastdds::dds::TypeSupport & type);
 
@@ -121,7 +123,7 @@ create_datareader(
   const rmw_subscription_options_t * subscription_options,
   eprosima::fastdds::dds::Subscriber * subscriber,
   eprosima::fastdds::dds::TopicDescription * des_topic,
-  SubListener * listener,
+  CustomDataReaderListener * listener,
   eprosima::fastdds::dds::DataReader ** data_reader);
 
 }  // namespace rmw_fastrtps_shared_cpp

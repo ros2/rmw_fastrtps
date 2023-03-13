@@ -23,15 +23,95 @@
 EventListenerInterface *
 CustomSubscriberInfo::get_listener() const
 {
-  return listener_;
+  return subscription_event_;
 }
 
-eprosima::fastdds::dds::StatusCondition & SubListener::get_statuscondition() const
+CustomDataReaderListener::CustomDataReaderListener(RMWSubscriptionEvent * sub_event)
+: subscription_event_(sub_event)
+{
+}
+
+void
+CustomDataReaderListener::on_subscription_matched(
+  eprosima::fastdds::dds::DataReader * reader,
+  const eprosima::fastdds::dds::SubscriptionMatchedStatus & info)
+{
+  (void)reader;
+
+  if (info.current_count_change == 1) {
+    subscription_event_->track_unique_publisher(
+      eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
+  } else if (info.current_count_change == -1) {
+    subscription_event_->untrack_unique_publisher(
+      eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
+  }
+}
+
+void
+CustomDataReaderListener::on_data_available(
+  eprosima::fastdds::dds::DataReader * reader)
+{
+  (void)reader;
+
+  subscription_event_->update_data_available();
+}
+
+void
+CustomDataReaderListener::on_requested_deadline_missed(
+  eprosima::fastdds::dds::DataReader * reader,
+  const eprosima::fastdds::dds::RequestedDeadlineMissedStatus & status)
+{
+  (void)reader;
+
+  subscription_event_->update_requested_deadline_missed(
+    status.total_count, status.total_count_change);
+}
+
+void CustomDataReaderListener::on_liveliness_changed(
+  eprosima::fastdds::dds::DataReader * reader,
+  const eprosima::fastdds::dds::LivelinessChangedStatus & status)
+{
+  (void)reader;
+
+  subscription_event_->update_liveliness_changed(
+    status.alive_count, status.not_alive_count,
+    status.alive_count_change, status.not_alive_count_change);
+}
+
+void CustomDataReaderListener::on_sample_lost(
+  eprosima::fastdds::dds::DataReader * reader,
+  const eprosima::fastdds::dds::SampleLostStatus & status)
+{
+  (void)reader;
+
+  subscription_event_->update_sample_lost(status.total_count, status.total_count_change);
+}
+
+void CustomDataReaderListener::on_requested_incompatible_qos(
+  eprosima::fastdds::dds::DataReader * reader,
+  const eprosima::fastdds::dds::RequestedIncompatibleQosStatus & status)
+{
+  (void)reader;
+
+  subscription_event_->update_requested_incompatible_qos(
+    status.last_policy_id, status.total_count, status.total_count_change);
+}
+
+RMWSubscriptionEvent::RMWSubscriptionEvent(CustomSubscriberInfo * info)
+: subscriber_info_(info),
+  deadline_changed_(false),
+  liveliness_changed_(false),
+  sample_lost_changed_(false),
+  incompatible_qos_changed_(false)
+{
+}
+
+eprosima::fastdds::dds::StatusCondition & RMWSubscriptionEvent::get_statuscondition() const
 {
   return subscriber_info_->data_reader_->get_statuscondition();
 }
 
-bool SubListener::take_event(
+bool RMWSubscriptionEvent::take_event(
   rmw_event_type_t event_type,
   void * event_info)
 {
@@ -43,20 +123,15 @@ bool SubListener::take_event(
     case RMW_EVENT_LIVELINESS_CHANGED:
       {
         auto rmw_data = static_cast<rmw_liveliness_changed_status_t *>(event_info);
-        if (liveliness_changes_) {
-          rmw_data->alive_count = liveliness_changed_status_.alive_count;
-          rmw_data->not_alive_count = liveliness_changed_status_.not_alive_count;
-          rmw_data->alive_count_change = liveliness_changed_status_.alive_count_change;
-          rmw_data->not_alive_count_change = liveliness_changed_status_.not_alive_count_change;
-          liveliness_changes_ = false;
+        if (liveliness_changed_) {
+          liveliness_changed_ = false;
         } else {
-          eprosima::fastdds::dds::LivelinessChangedStatus liveliness_changed_status;
-          subscriber_info_->data_reader_->get_liveliness_changed_status(liveliness_changed_status);
-          rmw_data->alive_count = liveliness_changed_status.alive_count;
-          rmw_data->not_alive_count = liveliness_changed_status.not_alive_count;
-          rmw_data->alive_count_change = liveliness_changed_status.alive_count_change;
-          rmw_data->not_alive_count_change = liveliness_changed_status.not_alive_count_change;
+          subscriber_info_->data_reader_->get_liveliness_changed_status(liveliness_changed_status_);
         }
+        rmw_data->alive_count = liveliness_changed_status_.alive_count;
+        rmw_data->not_alive_count = liveliness_changed_status_.not_alive_count;
+        rmw_data->alive_count_change = liveliness_changed_status_.alive_count_change;
+        rmw_data->not_alive_count_change = liveliness_changed_status_.not_alive_count_change;
         liveliness_changed_status_.alive_count_change = 0;
         liveliness_changed_status_.not_alive_count_change = 0;
       }
@@ -64,58 +139,58 @@ bool SubListener::take_event(
     case RMW_EVENT_REQUESTED_DEADLINE_MISSED:
       {
         auto rmw_data = static_cast<rmw_requested_deadline_missed_status_t *>(event_info);
-        if (deadline_changes_) {
-          rmw_data->total_count = requested_deadline_missed_status_.total_count;
-          rmw_data->total_count_change = requested_deadline_missed_status_.total_count_change;
-          deadline_changes_ = false;
+        if (deadline_changed_) {
+          deadline_changed_ = false;
         } else {
-          eprosima::fastdds::dds::RequestedDeadlineMissedStatus requested_deadline_missed_status;
           subscriber_info_->data_reader_->get_requested_deadline_missed_status(
-            requested_deadline_missed_status);
-          rmw_data->total_count = requested_deadline_missed_status.total_count;
-          rmw_data->total_count_change = requested_deadline_missed_status.total_count_change;
+            requested_deadline_missed_status_);
         }
+        rmw_data->total_count = requested_deadline_missed_status_.total_count;
+        rmw_data->total_count_change = requested_deadline_missed_status_.total_count_change;
         requested_deadline_missed_status_.total_count_change = 0;
       }
       break;
     case RMW_EVENT_MESSAGE_LOST:
       {
         auto rmw_data = static_cast<rmw_message_lost_status_t *>(event_info);
-        if (sample_lost_changes_) {
-          rmw_data->total_count = sample_lost_status_.total_count;
-          rmw_data->total_count_change = sample_lost_status_.total_count_change;
-          sample_lost_changes_ = false;
+        if (sample_lost_changed_) {
+          sample_lost_changed_ = false;
         } else {
-          eprosima::fastdds::dds::SampleLostStatus sample_lost_status;
-          subscriber_info_->data_reader_->get_sample_lost_status(sample_lost_status);
-          rmw_data->total_count = sample_lost_status.total_count;
-          rmw_data->total_count_change = sample_lost_status.total_count_change;
+          subscriber_info_->data_reader_->get_sample_lost_status(sample_lost_status_);
         }
+        rmw_data->total_count = sample_lost_status_.total_count;
+        rmw_data->total_count_change = sample_lost_status_.total_count_change;
         sample_lost_status_.total_count_change = 0;
       }
       break;
     case RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE:
       {
         auto rmw_data = static_cast<rmw_requested_qos_incompatible_event_status_t *>(event_info);
-        if (incompatible_qos_changes_) {
-          rmw_data->total_count = incompatible_qos_status_.total_count;
-          rmw_data->total_count_change = incompatible_qos_status_.total_count_change;
-          rmw_data->last_policy_kind =
-            rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
-            incompatible_qos_status_.last_policy_id);
-          incompatible_qos_changes_ = false;
+        if (incompatible_qos_changed_) {
+          incompatible_qos_changed_ = false;
         } else {
-          eprosima::fastdds::dds::RequestedIncompatibleQosStatus
-            requested_qos_incompatible_qos_status;
           subscriber_info_->data_reader_->get_requested_incompatible_qos_status(
-            requested_qos_incompatible_qos_status);
-          rmw_data->total_count = requested_qos_incompatible_qos_status.total_count;
-          rmw_data->total_count_change = requested_qos_incompatible_qos_status.total_count_change;
-          rmw_data->last_policy_kind =
-            rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
-            requested_qos_incompatible_qos_status.last_policy_id);
+            incompatible_qos_status_);
         }
+        rmw_data->total_count = incompatible_qos_status_.total_count;
+        rmw_data->total_count_change = incompatible_qos_status_.total_count_change;
+        rmw_data->last_policy_kind =
+          rmw_fastrtps_shared_cpp::internal::dds_qos_policy_to_rmw_qos_policy(
+          incompatible_qos_status_.last_policy_id);
         incompatible_qos_status_.total_count_change = 0;
+      }
+      break;
+    case RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE:
+      {
+        auto rmw_data = static_cast<rmw_incompatible_type_status_t *>(event_info);
+        if (inconsistent_topic_changed_) {
+          inconsistent_topic_changed_ = false;
+        } else {
+          subscriber_info_->topic_->get_inconsistent_topic_status(inconsistent_topic_status_);
+        }
+        rmw_data->total_count = inconsistent_topic_status_.total_count;
+        rmw_data->total_count_change = inconsistent_topic_status_.total_count_change;
+        inconsistent_topic_status_.total_count_change = 0;
       }
       break;
     default:
@@ -126,12 +201,15 @@ bool SubListener::take_event(
   return true;
 }
 
-void SubListener::set_on_new_event_callback(
+void RMWSubscriptionEvent::set_on_new_event_callback(
   rmw_event_type_t event_type,
   const void * user_data,
   rmw_event_callback_t callback)
 {
   std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+
+  eprosima::fastdds::dds::StatusMask status_mask =
+    subscriber_info_->data_reader_->get_status_mask();
 
   if (callback) {
     switch (event_type) {
@@ -183,6 +261,15 @@ void SubListener::set_on_new_event_callback(
           }
         }
         break;
+      case RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE:
+        {
+          subscriber_info_->topic_->get_inconsistent_topic_status(inconsistent_topic_status_);
+          if (inconsistent_topic_status_.total_count_change > 0) {
+            callback(user_data, inconsistent_topic_status_.total_count_change);
+            inconsistent_topic_status_.total_count_change = 0;
+          }
+        }
+        break;
       default:
         break;
     }
@@ -190,28 +277,25 @@ void SubListener::set_on_new_event_callback(
     user_data_[event_type] = user_data;
     on_new_event_cb_[event_type] = callback;
 
-    eprosima::fastdds::dds::StatusMask status_mask =
-      subscriber_info_->data_reader_->get_status_mask();
     status_mask |= rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
-    subscriber_info_->data_reader_->set_listener(this, status_mask);
   } else {
-    eprosima::fastdds::dds::StatusMask status_mask =
-      subscriber_info_->data_reader_->get_status_mask();
-    status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
-    subscriber_info_->data_reader_->set_listener(this, status_mask);
-
     user_data_[event_type] = nullptr;
     on_new_event_cb_[event_type] = nullptr;
+
+    status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
   }
+
+  subscriber_info_->data_reader_->set_listener(
+    subscriber_info_->data_reader_listener_, status_mask);
 }
 
 void
-SubListener::set_on_new_message_callback(
+RMWSubscriptionEvent::set_on_new_message_callback(
   const void * user_data,
   rmw_event_callback_t callback)
 {
   if (callback) {
-    auto unread_messages = get_unread_messages();
+    auto unread_messages = subscriber_info_->data_reader_->get_unread_count(true);
 
     std::lock_guard<std::mutex> lock_mutex(on_new_message_m_);
 
@@ -225,33 +309,64 @@ SubListener::set_on_new_message_callback(
     eprosima::fastdds::dds::StatusMask status_mask =
       subscriber_info_->data_reader_->get_status_mask();
     status_mask |= eprosima::fastdds::dds::StatusMask::data_available();
-    subscriber_info_->data_reader_->set_listener(this, status_mask);
+    subscriber_info_->data_reader_->set_listener(
+      subscriber_info_->data_reader_listener_, status_mask);
   } else {
     std::lock_guard<std::mutex> lock_mutex(on_new_message_m_);
 
     eprosima::fastdds::dds::StatusMask status_mask =
       subscriber_info_->data_reader_->get_status_mask();
     status_mask &= ~eprosima::fastdds::dds::StatusMask::data_available();
-    subscriber_info_->data_reader_->set_listener(this, status_mask);
+    subscriber_info_->data_reader_->set_listener(
+      subscriber_info_->data_reader_listener_, status_mask);
 
     new_message_user_data_ = nullptr;
     on_new_message_cb_ = nullptr;
   }
 }
 
-void
-SubListener::on_requested_deadline_missed(
-  eprosima::fastdds::dds::DataReader *,
-  const eprosima::fastdds::dds::RequestedDeadlineMissedStatus & status)
+size_t RMWSubscriptionEvent::publisher_count() const
+{
+  std::lock_guard<std::mutex> lock(publishers_mutex_);
+  return publishers_.size();
+}
+
+void RMWSubscriptionEvent::track_unique_publisher(eprosima::fastrtps::rtps::GUID_t guid)
+{
+  std::lock_guard<std::mutex> lock(publishers_mutex_);
+  publishers_.insert(guid);
+}
+
+void RMWSubscriptionEvent::untrack_unique_publisher(eprosima::fastrtps::rtps::GUID_t guid)
+{
+  std::lock_guard<std::mutex> lock(publishers_mutex_);
+  publishers_.erase(guid);
+}
+
+void RMWSubscriptionEvent::update_data_available()
+{
+  std::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
+
+  if (on_new_message_cb_) {
+    auto unread_messages = subscriber_info_->data_reader_->get_unread_count(true);
+
+    if (0 < unread_messages) {
+      on_new_message_cb_(new_message_user_data_, unread_messages);
+    }
+  }
+}
+
+void RMWSubscriptionEvent::update_requested_deadline_missed(
+  uint32_t total_count, uint32_t total_count_change)
 {
   std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
-  requested_deadline_missed_status_.total_count = status.total_count;
+  requested_deadline_missed_status_.total_count = total_count;
   // Accumulate deltas
-  requested_deadline_missed_status_.total_count_change += status.total_count_change;
+  requested_deadline_missed_status_.total_count_change += total_count_change;
 
-  deadline_changes_ = true;
+  deadline_changed_ = true;
 
   if (on_new_event_cb_[RMW_EVENT_REQUESTED_DEADLINE_MISSED]) {
     on_new_event_cb_[RMW_EVENT_REQUESTED_DEADLINE_MISSED](user_data_[
@@ -261,20 +376,20 @@ SubListener::on_requested_deadline_missed(
   event_guard[RMW_EVENT_REQUESTED_DEADLINE_MISSED].set_trigger_value(true);
 }
 
-void SubListener::on_liveliness_changed(
-  eprosima::fastdds::dds::DataReader *,
-  const eprosima::fastdds::dds::LivelinessChangedStatus & status)
+void RMWSubscriptionEvent::update_liveliness_changed(
+  uint32_t alive_count, uint32_t not_alive_count,
+  uint32_t alive_count_change, uint32_t not_alive_count_change)
 {
   std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
-  liveliness_changed_status_.alive_count = status.alive_count;
-  liveliness_changed_status_.not_alive_count = status.not_alive_count;
+  liveliness_changed_status_.alive_count = alive_count;
+  liveliness_changed_status_.not_alive_count = not_alive_count;
   // Accumulate deltas
-  liveliness_changed_status_.alive_count_change += status.alive_count_change;
-  liveliness_changed_status_.not_alive_count_change += status.not_alive_count_change;
+  liveliness_changed_status_.alive_count_change += alive_count_change;
+  liveliness_changed_status_.not_alive_count_change += not_alive_count_change;
 
-  liveliness_changes_ = true;
+  liveliness_changed_ = true;
 
   if (on_new_event_cb_[RMW_EVENT_LIVELINESS_CHANGED]) {
     on_new_event_cb_[RMW_EVENT_LIVELINESS_CHANGED](user_data_[RMW_EVENT_LIVELINESS_CHANGED], 1);
@@ -283,18 +398,16 @@ void SubListener::on_liveliness_changed(
   event_guard[RMW_EVENT_LIVELINESS_CHANGED].set_trigger_value(true);
 }
 
-void SubListener::on_sample_lost(
-  eprosima::fastdds::dds::DataReader *,
-  const eprosima::fastdds::dds::SampleLostStatus & status)
+void RMWSubscriptionEvent::update_sample_lost(uint32_t total_count, uint32_t total_count_change)
 {
   std::lock_guard<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
-  sample_lost_status_.total_count = status.total_count;
+  sample_lost_status_.total_count = total_count;
   // Accumulate deltas
-  sample_lost_status_.total_count_change += status.total_count_change;
+  sample_lost_status_.total_count_change += total_count_change;
 
-  sample_lost_changes_ = true;
+  sample_lost_changed_ = true;
 
   if (on_new_event_cb_[RMW_EVENT_MESSAGE_LOST]) {
     on_new_event_cb_[RMW_EVENT_MESSAGE_LOST](user_data_[RMW_EVENT_MESSAGE_LOST], 1);
@@ -303,19 +416,19 @@ void SubListener::on_sample_lost(
   event_guard[RMW_EVENT_MESSAGE_LOST].set_trigger_value(true);
 }
 
-void SubListener::on_requested_incompatible_qos(
-  eprosima::fastdds::dds::DataReader *,
-  const eprosima::fastdds::dds::RequestedIncompatibleQosStatus & status)
+void RMWSubscriptionEvent::update_requested_incompatible_qos(
+  eprosima::fastdds::dds::QosPolicyId_t last_policy_id, uint32_t total_count,
+  uint32_t total_count_change)
 {
   std::lock_guard<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
-  incompatible_qos_status_.last_policy_id = status.last_policy_id;
-  incompatible_qos_status_.total_count = status.total_count;
+  incompatible_qos_status_.last_policy_id = last_policy_id;
+  incompatible_qos_status_.total_count = total_count;
   // Accumulate deltas
-  incompatible_qos_status_.total_count_change += status.total_count_change;
+  incompatible_qos_status_.total_count_change += total_count_change;
 
-  incompatible_qos_changes_ = true;
+  incompatible_qos_changed_ = true;
 
   if (on_new_event_cb_[RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE]) {
     on_new_event_cb_[RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE](user_data_[
@@ -323,4 +436,24 @@ void SubListener::on_requested_incompatible_qos(
   }
 
   event_guard[RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE].set_trigger_value(true);
+}
+
+void RMWSubscriptionEvent::update_inconsistent_topic(
+  uint32_t total_count, uint32_t total_count_change)
+{
+  std::lock_guard<std::mutex> lock_mutex(on_new_event_m_);
+
+  // Assign absolute values
+  inconsistent_topic_status_.total_count = total_count;
+  // Accumulate deltas
+  inconsistent_topic_status_.total_count_change += total_count_change;
+
+  inconsistent_topic_changed_ = true;
+
+  if (on_new_event_cb_[RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE]) {
+    on_new_event_cb_[RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE](
+      user_data_[RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE], 1);
+  }
+
+  event_guard[RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE].set_trigger_value(true);
 }

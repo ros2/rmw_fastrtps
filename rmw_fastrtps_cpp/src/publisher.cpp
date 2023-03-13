@@ -57,9 +57,7 @@ rmw_fastrtps_cpp::create_publisher(
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
-  const rmw_publisher_options_t * publisher_options,
-  bool keyed,
-  bool create_publisher_listener)
+  const rmw_publisher_options_t * publisher_options)
 {
   /////
   // Check input parameters
@@ -165,9 +163,10 @@ rmw_fastrtps_cpp::create_publisher(
 
   auto cleanup_info = rcpputils::make_scope_exit(
     [info, participant_info]() {
-      delete info->listener_;
       rmw_fastrtps_shared_cpp::remove_topic_and_type(
-        participant_info, info->topic_, info->type_support_);
+        participant_info, info->publisher_event_, info->topic_, info->type_support_);
+      delete info->data_writer_listener_;
+      delete info->publisher_event_;
       delete info;
     });
 
@@ -187,11 +186,6 @@ rmw_fastrtps_cpp::create_publisher(
     fastdds_type.reset(tsupport);
   }
 
-  if (keyed && !fastdds_type->m_isGetKeyDefined) {
-    RMW_SET_ERROR_MSG("create_publisher() requested a keyed topic with a non-keyed type");
-    return nullptr;
-  }
-
   if (ReturnCode_t::RETCODE_OK != fastdds_type.register_type(dds_participant)) {
     RMW_SET_ERROR_MSG("create_publisher() failed to register type");
     return nullptr;
@@ -207,13 +201,16 @@ rmw_fastrtps_cpp::create_publisher(
 
   /////
   // Create Listener
-  if (create_publisher_listener) {
-    info->listener_ = new (std::nothrow) PubListener(info);
+  info->publisher_event_ = new (std::nothrow) RMWPublisherEvent(info);
+  if (!info->publisher_event_) {
+    RMW_SET_ERROR_MSG("create_publisher() could not create publisher event");
+    return nullptr;
+  }
 
-    if (!info->listener_) {
-      RMW_SET_ERROR_MSG("create_publisher() could not create publisher listener");
-      return nullptr;
-    }
+  info->data_writer_listener_ = new (std::nothrow) CustomDataWriterListener(info->publisher_event_);
+  if (!info->data_writer_listener_) {
+    RMW_SET_ERROR_MSG("create_publisher() could not create publisher data writer listener");
+    return nullptr;
   }
 
   /////
@@ -224,7 +221,8 @@ rmw_fastrtps_cpp::create_publisher(
     return nullptr;
   }
 
-  info->topic_ = participant_info->find_or_create_topic(topic_name_mangled, type_name, topic_qos);
+  info->topic_ = participant_info->find_or_create_topic(
+    topic_name_mangled, type_name, topic_qos, info->publisher_event_);
   if (!info->topic_) {
     RMW_SET_ERROR_MSG("create_publisher() failed to create topic");
     return nullptr;
@@ -267,7 +265,7 @@ rmw_fastrtps_cpp::create_publisher(
   info->data_writer_ = publisher->create_datawriter(
     info->topic_,
     writer_qos,
-    info->listener_,
+    info->data_writer_listener_,
     eprosima::fastdds::dds::StatusMask::publication_matched());
 
   if (!info->data_writer_) {

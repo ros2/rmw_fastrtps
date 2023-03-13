@@ -49,10 +49,13 @@ destroy_publisher(
     }
 
     // Delete DataWriter listener
-    delete info->listener_;
+    delete info->data_writer_listener_;
 
     // Delete topic and unregister type
-    remove_topic_and_type(participant_info, info->topic_, info->type_support_);
+    remove_topic_and_type(
+      participant_info, info->publisher_event_, info->topic_, info->type_support_);
+
+    delete info->publisher_event_;
 
     // Delete CustomPublisherInfo structure
     delete info;

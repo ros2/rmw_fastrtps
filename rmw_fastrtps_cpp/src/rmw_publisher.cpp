@@ -94,9 +94,7 @@ rmw_create_publisher(
     type_supports,
     topic_name,
     &adapted_qos_policies,
-    publisher_options,
-    false,
-    true);
+    publisher_options);
 
   if (!publisher) {
     return nullptr;
