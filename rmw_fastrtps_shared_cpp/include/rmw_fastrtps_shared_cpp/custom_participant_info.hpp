@@ -207,7 +207,7 @@ private:
         rtps_qos_to_rmw_qos(proxyData.m_qos, &qos_profile);
 
         const auto & userDataValue = proxyData.m_qos.m_userData.getValue();
-        const auto type_hash = rmw_dds_common::parse_type_hash_from_user_data_qos(
+        const auto type_hash = rmw_dds_common::parse_type_hash_from_user_data(
           userDataValue.data(), userDataValue.size());
 
         context->graph_cache.add_entity(
