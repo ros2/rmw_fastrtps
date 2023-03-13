@@ -41,28 +41,28 @@ protected:
 
 TEST_F(GetDataReaderQoSTest, test_unknown_history_policy_conversion_fails) {
   qos_profile_.history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
-  EXPECT_FALSE(get_datareader_qos(qos_profile_, ZeroTypeHash,  subscriber_qos_));
+  EXPECT_FALSE(get_datareader_qos(qos_profile_, ZeroTypeHash, subscriber_qos_));
   EXPECT_TRUE(rmw_error_is_set());
   rmw_reset_error();
 }
 
 TEST_F(GetDataReaderQoSTest, unknown_reliability_policy_conversion_fails) {
   qos_profile_.reliability = RMW_QOS_POLICY_RELIABILITY_UNKNOWN;
-  EXPECT_FALSE(get_datareader_qos(qos_profile_, ZeroTypeHash,  subscriber_qos_));
+  EXPECT_FALSE(get_datareader_qos(qos_profile_, ZeroTypeHash, subscriber_qos_));
   EXPECT_TRUE(rmw_error_is_set());
   rmw_reset_error();
 }
 
 TEST_F(GetDataReaderQoSTest, unknown_durability_policy_conversion_fails) {
   qos_profile_.durability = RMW_QOS_POLICY_DURABILITY_UNKNOWN;
-  EXPECT_FALSE(get_datareader_qos(qos_profile_, ZeroTypeHash,  subscriber_qos_));
+  EXPECT_FALSE(get_datareader_qos(qos_profile_, ZeroTypeHash, subscriber_qos_));
   EXPECT_TRUE(rmw_error_is_set());
   rmw_reset_error();
 }
 
 TEST_F(GetDataReaderQoSTest, unknown_liveliness_policy_conversion_fails) {
   qos_profile_.liveliness = RMW_QOS_POLICY_LIVELINESS_UNKNOWN;
-  EXPECT_FALSE(get_datareader_qos(qos_profile_, ZeroTypeHash,  subscriber_qos_));
+  EXPECT_FALSE(get_datareader_qos(qos_profile_, ZeroTypeHash, subscriber_qos_));
   EXPECT_TRUE(rmw_error_is_set());
   rmw_reset_error();
 }
@@ -80,7 +80,7 @@ TEST_F(GetDataReaderQoSTest, nominal_conversion) {
   qos_profile_.liveliness_lease_duration.sec = 10u;
   qos_profile_.liveliness_lease_duration.nsec = 0u;
 
-  EXPECT_TRUE(get_datareader_qos(qos_profile_, ZeroTypeHash,  subscriber_qos_));
+  EXPECT_TRUE(get_datareader_qos(qos_profile_, ZeroTypeHash, subscriber_qos_));
 
   EXPECT_EQ(
     eprosima::fastdds::dds::BEST_EFFORT_RELIABILITY_QOS,
@@ -108,7 +108,7 @@ TEST_F(GetDataReaderQoSTest, large_depth_conversion) {
   qos_profile_.depth = depth;
   qos_profile_.history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
 
-  EXPECT_TRUE(get_datareader_qos(qos_profile_, ZeroTypeHash,  subscriber_qos_));
+  EXPECT_TRUE(get_datareader_qos(qos_profile_, ZeroTypeHash, subscriber_qos_));
 
   EXPECT_EQ(
     eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS,
@@ -119,7 +119,7 @@ TEST_F(GetDataReaderQoSTest, large_depth_conversion) {
   constexpr size_t max_depth = static_cast<size_t>(std::numeric_limits<depth_type>::max());
 
   qos_profile_.depth = max_depth;
-  EXPECT_TRUE(get_datareader_qos(qos_profile_, ZeroTypeHash,  subscriber_qos_));
+  EXPECT_TRUE(get_datareader_qos(qos_profile_, ZeroTypeHash, subscriber_qos_));
   EXPECT_LE(depth, static_cast<size_t>(subscriber_qos_.history().depth));
 
   if (max_depth < std::numeric_limits<size_t>::max()) {
@@ -231,7 +231,7 @@ TEST_F(GetDataReaderQoSTest, infinite_duration_conversions)
   qos_profile_.lifespan = RMW_DURATION_INFINITE;
   qos_profile_.deadline = RMW_DURATION_INFINITE;
   qos_profile_.liveliness_lease_duration = RMW_DURATION_INFINITE;
-  EXPECT_TRUE(get_datareader_qos(qos_profile_, ZeroTypeHash,  subscriber_qos_));
+  EXPECT_TRUE(get_datareader_qos(qos_profile_, ZeroTypeHash, subscriber_qos_));
   EXPECT_EQ(subscriber_qos_.lifespan().duration, InfiniteDuration);
   EXPECT_EQ(subscriber_qos_.deadline().period, InfiniteDuration);
   EXPECT_EQ(subscriber_qos_.liveliness().lease_duration, InfiniteDuration);

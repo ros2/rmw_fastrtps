@@ -130,20 +130,20 @@ rmw_create_service(
   const rosidl_service_type_support_t * type_support = get_service_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
   if (type_support) {
-      auto service_members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(
-        type_support->data);
-      request_type_hash = service_members->request_members_->type_hash_;
-      response_type_hash = service_members->response_members_->type_hash_;
-      untyped_request_members = service_members->request_members_;
-      untyped_response_members = service_members->response_members_;
+    auto service_members = static_cast<
+      const rosidl_typesupport_introspection_c__ServiceMembers *>(type_support->data);
+    request_type_hash = service_members->request_members_->type_hash_;
+    response_type_hash = service_members->response_members_->type_hash_;
+    untyped_request_members = service_members->request_members_;
+    untyped_response_members = service_members->response_members_;
   } else {
     rcutils_error_string_t prev_error_string = rcutils_get_error_string();
     rcutils_reset_error();
     type_support = get_service_typesupport_handle(
       type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
     if (type_support) {
-      auto service_members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers *>(
-        type_support->data);
+      auto service_members = static_cast<
+        const rosidl_typesupport_introspection_cpp::ServiceMembers *>(type_support->data);
       request_type_hash = service_members->request_members_->type_hash_;
       response_type_hash = service_members->response_members_->type_hash_;
       untyped_request_members = service_members->request_members_;
