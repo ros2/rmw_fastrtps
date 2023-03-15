@@ -17,17 +17,14 @@
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
-#include "rcutils/logging_macros.h"
-
-#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include <rcutils/logging_macros.h>
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
+#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
-#include "rosidl_dynamic_typesupport_fastrtps/serialization_support.h"
+#include <rosidl_dynamic_typesupport_fastrtps/serialization_support.h>
 
 #include <fastcdr/Cdr.h>
-#include <fastdds/rtps/common/SerializedPayload.h>
-#include <fastrtps/types/DynamicPubSubType.h>
 
 extern "C"
 {
@@ -131,33 +128,6 @@ rmw_get_serialization_support(  // Fallback to rcl if the rmw doesn't implement 
   return rosidl_dynamic_typesupport_serialization_support_init(
     rosidl_dynamic_typesupport_fastrtps_create_serialization_support_impl(),
     rosidl_dynamic_typesupport_fastrtps_create_serialization_support_interface());
-}
-
-
-rmw_ret_t
-rmw_serialized_to_dynamic_data(
-  rmw_serialized_message_t * serialized_message,
-  rosidl_dynamic_typesupport_dynamic_data_t * dyn_data)
-{
-  auto payload = std::make_shared<eprosima::fastrtps::rtps::SerializedPayload_t>(
-    serialized_message->buffer_length);
-
-  // NOTE(methylDragon): Deserialize should copy at this point, so this copy is not needed, I think
-  // memcpy(payload->data, serialized_message->buffer, serialized_message->buffer_length);
-  payload->data = serialized_message->buffer;  // Use the buffer directly without copying yet again
-  payload->length = serialized_message->buffer_length;
-
-  auto m_type = std::make_shared<eprosima::fastrtps::types::DynamicPubSubType>();
-
-  if (m_type->deserialize(payload.get(), dyn_data->impl->handle)) {  // Deserializes payload into dyn_data
-    payload->data = nullptr;  // Data gets freed on serialized_message fini outside
-    return RMW_RET_OK;
-  } else {
-    payload->data = nullptr;  // Data gets freed on serialized_message fini outside
-    RMW_SET_ERROR_MSG("could not deserialize serialized message to dynamic data: "
-                      "dynamic data not enough memory");
-    return RMW_RET_ERROR;
-  }
 }
 
 
