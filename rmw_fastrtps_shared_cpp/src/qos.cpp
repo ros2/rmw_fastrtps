@@ -152,7 +152,11 @@ bool fill_data_entity_qos_from_profile(
   if (!fill_entity_qos_from_profile(qos_policies, entity_qos)) {
     return false;
   }
-  auto user_data_str = rmw_dds_common::encode_type_hash_for_user_data_qos(type_hash);
+  std::string user_data_str;
+  rmw_ret_t ret = rmw_dds_common::encode_type_hash_for_user_data_qos(type_hash, user_data_str);
+  if (ret != RMW_RET_OK) {
+    user_data_str.clear();
+  }
   std::vector<uint8_t> user_data(user_data_str.begin(), user_data_str.end());
   entity_qos.user_data().resize(user_data.size());
   entity_qos.user_data().setValue(user_data);
