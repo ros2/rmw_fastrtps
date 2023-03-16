@@ -32,6 +32,8 @@
 #include "rmw/rmw.h"
 #include "rmw/validate_full_topic_name.h"
 
+#include "rosidl_runtime_c/type_hash.h"
+
 #include "rcpputils/scope_exit.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
@@ -103,7 +105,7 @@ create_subscription(
 
   /////
   // Get RMW Type Support
-  auto type_hash = rosidl_get_zero_initialized_type_hash();
+  rosidl_type_hash_t type_hash = rosidl_get_zero_initialized_type_hash();
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
   if (type_support) {

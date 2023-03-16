@@ -208,9 +208,9 @@ private:
 
         const auto & userDataValue = proxyData.m_qos.m_userData.getValue();
         rosidl_type_hash_t type_hash;
-        rmw_ret_t ret = rmw_dds_common::parse_type_hash_from_user_data(
-          userDataValue.data(), userDataValue.size(), type_hash);
-        if (ret != RMW_RET_OK) {
+        if (RMW_RET_OK != rmw_dds_common::parse_type_hash_from_user_data(
+            userDataValue.data(), userDataValue.size(), type_hash))
+        {
           type_hash = rosidl_get_zero_initialized_type_hash();
         }
 

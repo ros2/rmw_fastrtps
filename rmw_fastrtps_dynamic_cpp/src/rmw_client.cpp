@@ -38,6 +38,8 @@
 
 #include "rmw_dds_common/qos.hpp"
 
+#include "rosidl_runtime_c/type_hash.h"
+
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
 
 #include "rosidl_typesupport_introspection_c/identifier.h"

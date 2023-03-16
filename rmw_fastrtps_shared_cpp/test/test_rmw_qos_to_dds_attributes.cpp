@@ -25,6 +25,8 @@
 
 #include "rmw/error_handling.h"
 
+#include "rosidl_runtime_c/type_hash.h"
+
 
 using eprosima::fastdds::dds::DataReaderQos;
 static const eprosima::fastrtps::Duration_t InfiniteDuration =

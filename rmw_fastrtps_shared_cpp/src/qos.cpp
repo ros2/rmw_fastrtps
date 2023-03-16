@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <limits>
+#include <vector>
 
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 
@@ -21,7 +22,10 @@
 #include "fastdds/dds/topic/qos/TopicQos.hpp"
 
 #include "rmw/error_handling.h"
+
 #include "rmw_dds_common/qos.hpp"
+
+#include "rosidl_runtime_c/type_hash.h"
 
 #include "time_utils.hpp"
 
@@ -153,8 +157,7 @@ bool fill_data_entity_qos_from_profile(
     return false;
   }
   std::string user_data_str;
-  rmw_ret_t ret = rmw_dds_common::encode_type_hash_for_user_data_qos(type_hash, user_data_str);
-  if (ret != RMW_RET_OK) {
+  if (RMW_RET_OK != rmw_dds_common::encode_type_hash_for_user_data_qos(type_hash, user_data_str)) {
     user_data_str.clear();
   }
   std::vector<uint8_t> user_data(user_data_str.begin(), user_data_str.end());
