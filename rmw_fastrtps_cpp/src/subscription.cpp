@@ -64,7 +64,7 @@ namespace rmw_fastrtps_cpp
 // Forward decls ===================================================================================
 rmw_subscription_t *
 __create_dynamic_subscription(
-  const CustomParticipantInfo * participant_info,
+  CustomParticipantInfo * participant_info,
   const rosidl_message_type_support_t * type_support,
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
@@ -73,7 +73,7 @@ __create_dynamic_subscription(
 
 rmw_subscription_t *
 __create_subscription(
-  const CustomParticipantInfo * participant_info,
+  CustomParticipantInfo * participant_info,
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
@@ -146,7 +146,7 @@ create_subscription(
 // =================================================================================================
 rmw_subscription_t *
 __create_dynamic_subscription(
-  const CustomParticipantInfo * participant_info,
+  CustomParticipantInfo * participant_info,
   const rosidl_message_type_support_t * type_support,
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
@@ -202,7 +202,7 @@ __create_dynamic_subscription(
     return nullptr;
   }
 
-  type_name = _create_type_name(type_name.substr(0, last_pos - 2),  // ns
+  type_name = _create_type_name(type_name.substr(0, last_pos - 2),  // package
                                 type_name.substr(last_pos, type_name.length() - last_pos));  // name
 
   auto topic_name_mangled =
@@ -244,12 +244,12 @@ __create_dynamic_subscription(
   }
 
   auto cleanup_info = rcpputils::make_scope_exit(
-    [info, dds_participant]()
+    [info, participant_info]()
     {
-      delete info->listener_;
-      if (info->type_support_) {
-        dds_participant->unregister_type(info->type_support_.get_type_name());
-      }
+      rmw_fastrtps_shared_cpp::remove_topic_and_type(
+        participant_info, info->subscription_event_, info->topic_, info->type_support_);
+      delete info->subscription_event_;
+      delete info->data_reader_listener_;
       delete info;
     });
 
@@ -266,8 +266,8 @@ __create_dynamic_subscription(
     //                     The reason being, the DynamicPubSubType only supports serialization and
     //                     deserialization to and from DynamicData.
     //                     But we want to be able to first get a serialized message directly,
-    //                     THEN convert it. Otherwise we can't let a non-runtime type subscription
-    //                     handle runtime types.
+    //                     THEN convert it. Otherwise we can't let a non-dynamic type subscription
+    //                     handle dynamic types.
     //
     //                     We will still need a DynamicPubSubType later on (constructed from a
     //                     DynamicType_ptr) to convert the CDR buffer to a DynamicData, however...
@@ -305,9 +305,16 @@ __create_dynamic_subscription(
 
   /////
   // Create Listener
-  info->listener_ = new (std::nothrow) SubListener(info);
-  if (!info->listener_) {
-    RMW_SET_ERROR_MSG("create_subscription() could not create subscription listener");
+  info->subscription_event_ = new (std::nothrow) RMWSubscriptionEvent(info);
+  if (!info->subscription_event_) {
+    RMW_SET_ERROR_MSG("create_subscription() could not create subscription event");
+    return nullptr;
+  }
+
+  info->data_reader_listener_ =
+    new (std::nothrow) CustomDataReaderListener(info->subscription_event_);
+  if (!info->data_reader_listener_) {
+    RMW_SET_ERROR_MSG("create_subscription() could not create subscription data reader listener");
     return nullptr;
   }
 
@@ -319,11 +326,9 @@ __create_dynamic_subscription(
     return nullptr;
   }
 
-  rmw_fastrtps_shared_cpp::TopicHolder topic;
-  if (!rmw_fastrtps_shared_cpp::cast_or_create_topic(
-      dds_participant, des_topic,
-      topic_name_mangled, type_name, topic_qos, false, &topic))
-  {
+  info->topic_ = participant_info->find_or_create_topic(
+    topic_name_mangled, type_name, topic_qos, info->subscription_event_);
+  if (!info->topic_) {
     RMW_SET_ERROR_MSG("create_subscription() failed to create topic");
     return nullptr;
   }
@@ -331,8 +336,7 @@ __create_dynamic_subscription(
   info->dds_participant_ = dds_participant;
   info->subscriber_ = subscriber;
   info->topic_name_mangled_ = topic_name_mangled;
-  info->topic_ = topic.desc;
-  des_topic = topic.desc;
+  des_topic = info->topic_;
 
   // Create ContentFilteredTopic
   if (subscription_options->content_filter_options) {
@@ -385,7 +389,7 @@ __create_dynamic_subscription(
       subscription_options,
       subscriber,
       des_topic,
-      info->listener_,
+      info->data_reader_listener_,
       &info->data_reader_))
   {
     RMW_SET_ERROR_MSG("create_datareader() could not create data reader");
@@ -435,7 +439,6 @@ __create_dynamic_subscription(
   rmw_fastrtps_shared_cpp::__init_subscription_for_loans(rmw_subscription);
   rmw_subscription->is_cft_enabled = info->filtered_topic_ != nullptr;
 
-  topic.should_be_deleted = false;
   cleanup_rmw_subscription.cancel();
   cleanup_datareader.cancel();
   cleanup_info.cancel();
@@ -453,7 +456,7 @@ __create_dynamic_subscription(
 // =================================================================================================
 rmw_subscription_t *
 __create_subscription(
-  const CustomParticipantInfo * participant_info,
+  CustomParticipantInfo * participant_info,
   const rosidl_message_type_support_t * type_supports,
   const char * topic_name,
   const rmw_qos_profile_t * qos_policies,
