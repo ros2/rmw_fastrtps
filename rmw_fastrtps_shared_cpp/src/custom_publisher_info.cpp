@@ -44,7 +44,15 @@ void CustomDataWriterListener::on_publication_matched(
   } else if (status.current_count_change == -1) {
     publisher_event_->untrack_unique_subscription(
       eprosima::fastrtps::rtps::iHandle2GUID(status.last_subscription_handle));
+  } else {
+    return;
   }
+
+  publisher_event_->update_matched(
+    status.total_count,
+    status.total_count_change,
+    status.current_count,
+    status.current_count_change);
 }
 
 
@@ -82,7 +90,9 @@ RMWPublisherEvent::RMWPublisherEvent(CustomPublisherInfo * info)
 : publisher_info_(info),
   deadline_changed_(false),
   liveliness_changed_(false),
-  incompatible_qos_changed_(false)
+  incompatible_qos_changed_(false),
+  matched_changes_(false),
+  matched_unread_(0)
 {
 }
 
@@ -158,6 +168,30 @@ bool RMWPublisherEvent::take_event(
         inconsistent_topic_status_.total_count_change = 0;
       }
       break;
+    case RMW_EVENT_PUBLICATION_MATCHED:
+      {
+        auto rmw_data = static_cast<rmw_matched_status_t *>(event_info);
+
+        if (matched_changes_) {
+          rmw_data->total_count = static_cast<size_t>(matched_status_.total_count);
+          rmw_data->total_count_change = static_cast<size_t>(matched_status_.total_count_change);
+          rmw_data->current_count = static_cast<size_t>(matched_status_.current_count);
+          rmw_data->current_count_change = matched_status_.current_count_change;
+          matched_changes_ = false;
+        } else {
+          eprosima::fastdds::dds::PublicationMatchedStatus matched_status;
+          publisher_info_->data_writer_->get_publication_matched_status(matched_status);
+
+          rmw_data->total_count = static_cast<size_t>(matched_status.total_count);
+          rmw_data->total_count_change = static_cast<size_t>(matched_status.total_count_change);
+          rmw_data->current_count = static_cast<size_t>(matched_status.current_count);
+          rmw_data->current_count_change = matched_status.current_count_change;
+        }
+
+        matched_status_.total_count_change = 0;
+        matched_status_.current_count_change = 0;
+      }
+      break;
     default:
       return false;
   }
@@ -210,6 +244,17 @@ void RMWPublisherEvent::set_on_new_event_callback(
         if (inconsistent_topic_status_.total_count_change > 0) {
           callback(user_data, inconsistent_topic_status_.total_count_change);
           inconsistent_topic_status_.total_count_change = 0;
+        }
+        break;
+      case RMW_EVENT_PUBLICATION_MATCHED:
+        {
+          publisher_info_->data_writer_->get_publication_matched_status(matched_status_);
+          if (matched_unread_ > 0) {
+            callback(user_data, matched_unread_);
+            matched_unread_ = 0;
+            matched_status_.total_count_change = 0;
+            matched_status_.current_count_change = 0;
+          }
         }
         break;
       default:
@@ -307,10 +352,38 @@ void RMWPublisherEvent::update_inconsistent_topic(uint32_t total_count, uint32_t
   trigger_event(RMW_EVENT_PUBLISHER_INCOMPATIBLE_TYPE);
 }
 
+void RMWPublisherEvent::update_matched(
+  int32_t total_count,
+  int32_t total_count_change,
+  int32_t current_count,
+  int32_t current_count_change)
+{
+  std::lock_guard<std::mutex> lock(on_new_event_m_);
+
+  matched_status_.total_count = total_count;
+  matched_status_.total_count_change += total_count_change;
+  matched_status_.current_count = current_count;
+  matched_status_.current_count_change += current_count_change;
+
+  matched_changes_ = true;
+
+  trigger_event(RMW_EVENT_PUBLICATION_MATCHED);
+}
+
 void RMWPublisherEvent::trigger_event(rmw_event_type_t event_type)
 {
   if (on_new_event_cb_[event_type]) {
     on_new_event_cb_[event_type](user_data_[event_type], 1);
+  } else {
+    switch (event_type) {
+      case RMW_EVENT_PUBLICATION_MATCHED:
+        {
+          matched_unread_++;
+          break;
+        }
+      default:
+        break;
+    }
   }
 
   event_guard[event_type].set_trigger_value(true);
