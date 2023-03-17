@@ -236,9 +236,6 @@ private:
   eprosima::fastdds::dds::SubscriptionMatchedStatus matched_status_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  size_t matched_unread_
-  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
-
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(
     publishers_mutex_);
 

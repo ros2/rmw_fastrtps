@@ -91,8 +91,7 @@ RMWPublisherEvent::RMWPublisherEvent(CustomPublisherInfo * info)
   deadline_changed_(false),
   liveliness_changed_(false),
   incompatible_qos_changed_(false),
-  matched_changes_(false),
-  matched_unread_(0)
+  matched_changes_(false)
 {
 }
 
@@ -248,10 +247,9 @@ void RMWPublisherEvent::set_on_new_event_callback(
         break;
       case RMW_EVENT_PUBLICATION_MATCHED:
         {
-          publisher_info_->data_writer_->get_publication_matched_status(matched_status_);
-          if (matched_unread_ > 0) {
-            callback(user_data, matched_unread_);
-            matched_unread_ = 0;
+          if (matched_status_.total_count_change > 0) {
+            callback(user_data, matched_status_.total_count_change);
+            publisher_info_->data_writer_->get_publication_matched_status(matched_status_);
             matched_status_.total_count_change = 0;
             matched_status_.current_count_change = 0;
           }
@@ -374,16 +372,6 @@ void RMWPublisherEvent::trigger_event(rmw_event_type_t event_type)
 {
   if (on_new_event_cb_[event_type]) {
     on_new_event_cb_[event_type](user_data_[event_type], 1);
-  } else {
-    switch (event_type) {
-      case RMW_EVENT_PUBLICATION_MATCHED:
-        {
-          matched_unread_++;
-          break;
-        }
-      default:
-        break;
-    }
   }
 
   event_guard[event_type].set_trigger_value(true);

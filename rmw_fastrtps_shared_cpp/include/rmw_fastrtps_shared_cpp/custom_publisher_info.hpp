@@ -191,9 +191,6 @@ private:
   eprosima::fastdds::dds::PublicationMatchedStatus matched_status_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  size_t matched_unread_
-  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
-
   void trigger_event(rmw_event_type_t event_type);
 };
 
