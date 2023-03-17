@@ -211,6 +211,13 @@ private:
         if (RMW_RET_OK != rmw_dds_common::parse_type_hash_from_user_data(
             userDataValue.data(), userDataValue.size(), type_hash))
         {
+          RCUTILS_LOG_WARN_NAMED(
+            "rmw_fastrtps_shared_cpp",
+            "Failed to parse type hash for topic '%s' with type '%s' from USER_DATA '%*s'.",
+            proxyData.topicName().c_str(),
+            proxyData.typeName().c_str(),
+            static_cast<int>(userDataValue.size()),
+            reinterpret_cast<const char *>(userDataValue.data()));
           type_hash = rosidl_get_zero_initialized_type_hash();
         }
 

@@ -15,6 +15,8 @@
 #include <limits>
 #include <vector>
 
+#include "rcutils/logging_macros.h"
+
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 
 #include "fastdds/dds/publisher/qos/DataWriterQos.hpp"
@@ -158,6 +160,9 @@ bool fill_data_entity_qos_from_profile(
   }
   std::string user_data_str;
   if (RMW_RET_OK != rmw_dds_common::encode_type_hash_for_user_data_qos(type_hash, user_data_str)) {
+    RCUTILS_LOG_WARN_NAMED(
+      "rmw_fastrtps_shared_cpp",
+      "Failed to encode type hash for topic, will not distribute it in USER_DATA.");
     user_data_str.clear();
   }
   std::vector<uint8_t> user_data(user_data_str.begin(), user_data_str.end());
