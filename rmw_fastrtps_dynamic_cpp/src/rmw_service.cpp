@@ -48,8 +48,6 @@
 
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
-#include "rosidl_runtime_c/type_hash.h"
-
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
 #include "rosidl_typesupport_introspection_c/identifier.h"
 
@@ -125,32 +123,14 @@ rmw_create_service(
 
   /////
   // Get RMW Type Support
-  const void * untyped_request_members;
-  const void * untyped_response_members;
-  rosidl_type_hash_t request_type_hash = rosidl_get_zero_initialized_type_hash();
-  rosidl_type_hash_t response_type_hash = rosidl_get_zero_initialized_type_hash();
   const rosidl_service_type_support_t * type_support = get_service_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
-  if (type_support) {
-    auto service_members = static_cast<
-      const rosidl_typesupport_introspection_c__ServiceMembers *>(type_support->data);
-    request_type_hash = service_members->request_members_->type_hash_;
-    response_type_hash = service_members->response_members_->type_hash_;
-    untyped_request_members = service_members->request_members_;
-    untyped_response_members = service_members->response_members_;
-  } else {
+  if (!type_support) {
     rcutils_error_string_t prev_error_string = rcutils_get_error_string();
     rcutils_reset_error();
     type_support = get_service_typesupport_handle(
       type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
-    if (type_support) {
-      auto service_members = static_cast<
-        const rosidl_typesupport_introspection_cpp::ServiceMembers *>(type_support->data);
-      request_type_hash = service_members->request_members_->type_hash_;
-      response_type_hash = service_members->response_members_->type_hash_;
-      untyped_request_members = service_members->request_members_;
-      untyped_response_members = service_members->response_members_;
-    } else {
+    if (!type_support) {
       rcutils_error_string_t error_string = rcutils_get_error_string();
       rcutils_reset_error();
       RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
@@ -169,6 +149,11 @@ rmw_create_service(
   // Find and check existing topics and types
 
   // Create Topic and Type names
+  const void * untyped_request_members = get_request_ptr(
+    type_support->data, type_support->typesupport_identifier);
+  const void * untyped_response_members = get_response_ptr(
+    type_support->data, type_support->typesupport_identifier);
+
   std::string request_type_name = _create_type_name(
     untyped_request_members, type_support->typesupport_identifier);
   std::string response_type_name = _create_type_name(
@@ -359,7 +344,9 @@ rmw_create_service(
     reader_qos.data_sharing().off();
   }
 
-  if (!get_datareader_qos(adapted_qos_policies, request_type_hash, reader_qos)) {
+  if (!get_datareader_qos(
+      adapted_qos_policies, *type_supports->request_typesupport->type_hash, reader_qos))
+  {
     RMW_SET_ERROR_MSG("create_service() failed setting request DataReader QoS");
     return nullptr;
   }
@@ -417,7 +404,9 @@ rmw_create_service(
     writer_qos.data_sharing().off();
   }
 
-  if (!get_datawriter_qos(adapted_qos_policies, response_type_hash, writer_qos)) {
+  if (!get_datawriter_qos(
+      adapted_qos_policies, *type_supports->response_typesupport->type_hash, writer_qos))
+  {
     RMW_SET_ERROR_MSG("create_service() failed setting response DataWriter QoS");
     return nullptr;
   }

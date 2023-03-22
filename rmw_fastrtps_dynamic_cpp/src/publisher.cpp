@@ -33,8 +33,6 @@
 #include "rmw/rmw.h"
 #include "rmw/validate_full_topic_name.h"
 
-#include "rosidl_runtime_c/type_hash.h"
-
 #include "rcpputils/scope_exit.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
@@ -104,23 +102,14 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
 
   /////
   // Get RMW Type Support
-  rosidl_type_hash_t type_hash = rosidl_get_zero_initialized_type_hash();
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
-  if (type_support) {
-    auto members = static_cast<const rosidl_typesupport_introspection_c__MessageMembers *>(
-      type_support->data);
-    type_hash = members->type_hash_;
-  } else {
+  if (!type_support) {
     rcutils_error_string_t prev_error_string = rcutils_get_error_string();
     rcutils_reset_error();
     type_support = get_message_typesupport_handle(
       type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
-    if (type_support) {
-      auto members = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(
-        type_support->data);
-      type_hash = members->type_hash_;
-    } else {
+    if (!type_support) {
       rcutils_error_string_t error_string = rcutils_get_error_string();
       rcutils_reset_error();
       RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
@@ -273,7 +262,7 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   }
 
   // Get QoS from RMW
-  if (!get_datawriter_qos(*qos_policies, type_hash, writer_qos)) {
+  if (!get_datawriter_qos(*qos_policies, *type_supports->type_hash, writer_qos)) {
     RMW_SET_ERROR_MSG("create_publisher() failed setting data writer QoS");
     return nullptr;
   }

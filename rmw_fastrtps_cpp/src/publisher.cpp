@@ -256,7 +256,7 @@ rmw_fastrtps_cpp::create_publisher(
   }
 
   // Get QoS from RMW
-  if (!get_datawriter_qos(*qos_policies, callbacks->type_hash_, writer_qos)) {
+  if (!get_datawriter_qos(*qos_policies, *type_supports->type_hash, writer_qos)) {
     RMW_SET_ERROR_MSG("create_publisher() failed setting data writer QoS");
     return nullptr;
   }

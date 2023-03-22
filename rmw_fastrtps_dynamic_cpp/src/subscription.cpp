@@ -105,23 +105,14 @@ create_subscription(
 
   /////
   // Get RMW Type Support
-  rosidl_type_hash_t type_hash = rosidl_get_zero_initialized_type_hash();
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
     type_supports, rosidl_typesupport_introspection_c__identifier);
-  if (type_support) {
-    auto members = static_cast<const rosidl_typesupport_introspection_c__MessageMembers *>(
-      type_support->data);
-    type_hash = members->type_hash_;
-  } else {
+  if (!type_support) {
     rcutils_error_string_t prev_error_string = rcutils_get_error_string();
     rcutils_reset_error();
     type_support = get_message_typesupport_handle(
       type_supports, rosidl_typesupport_introspection_cpp::typesupport_identifier);
-    if (type_support) {
-      auto members = static_cast<const rosidl_typesupport_introspection_cpp::MessageMembers *>(
-        type_support->data);
-      type_hash = members->type_hash_;
-    } else {
+    if (!type_support) {
       rcutils_error_string_t error_string = rcutils_get_error_string();
       rcutils_reset_error();
       RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
@@ -275,7 +266,7 @@ create_subscription(
     reader_qos.data_sharing().off();
   }
 
-  if (!get_datareader_qos(*qos_policies, type_hash, reader_qos)) {
+  if (!get_datareader_qos(*qos_policies, *type_supports->type_hash, reader_qos)) {
     RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
     return nullptr;
   }
