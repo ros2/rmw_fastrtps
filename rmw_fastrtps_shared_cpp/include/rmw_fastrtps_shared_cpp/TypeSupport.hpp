@@ -35,10 +35,16 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
+enum SerializedDataType {
+  FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER,
+  FASTRTPS_SERIALIZED_DATA_TYPE_DYNAMIC_MESSAGE,
+  FASTRTPS_SERIALIZED_DATA_TYPE_ROS_MESSAGE
+};
+
 // Publishers write method will receive a pointer to this struct
 struct SerializedData
 {
-  bool is_cdr_buffer;  // Whether next field is a pointer to a Cdr or to a plain ros message
+  SerializedDataType type;  // The type of the next field
   void * data;
   const void * impl;   // RMW implementation specific data
 };

@@ -54,7 +54,7 @@ __rmw_publish(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "publisher info pointer is null", return RMW_RET_ERROR);
 
   rmw_fastrtps_shared_cpp::SerializedData data;
-  data.is_cdr_buffer = false;
+  data.type = FASTRTPS_SERIALIZED_DATA_TYPE_ROS_MESSAGE;
   data.data = const_cast<void *>(ros_message);
   data.impl = info->type_support_impl_;
   TRACEPOINT(rmw_publish, ros_message);
@@ -101,9 +101,9 @@ __rmw_publish_serialized_message(
   }
 
   rmw_fastrtps_shared_cpp::SerializedData data;
-  data.is_cdr_buffer = true;
+  data.type = FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER;
   data.data = &ser;
-  data.impl = nullptr;    // not used when is_cdr_buffer is true
+  data.impl = nullptr;  // not used when type is FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER
   if (!info->data_writer_->write(&data)) {
     RMW_SET_ERROR_MSG("cannot publish data");
     return RMW_RET_ERROR;
