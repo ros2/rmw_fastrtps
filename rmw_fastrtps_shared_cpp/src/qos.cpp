@@ -150,7 +150,8 @@ bool fill_entity_qos_from_profile(
 }
 
 template<typename DDSEntityQos>
-bool fill_data_entity_qos_from_profile(
+bool
+fill_data_entity_qos_from_profile(
   const rmw_qos_profile_t & qos_policies,
   const rosidl_type_hash_t & type_hash,
   DDSEntityQos & entity_qos)
