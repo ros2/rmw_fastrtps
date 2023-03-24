@@ -196,6 +196,13 @@ public:
     eprosima::fastdds::dds::QosPolicyId_t last_policy_id,
     uint32_t total_count, uint32_t total_count_change);
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void update_matched(
+    int32_t total_count,
+    int32_t total_count_change,
+    int32_t current_count,
+    int32_t current_count_change);
+
 private:
   CustomSubscriberInfo * subscriber_info_ = nullptr;
 
@@ -223,6 +230,12 @@ private:
   eprosima::fastdds::dds::RequestedIncompatibleQosStatus incompatible_qos_status_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
+  bool matched_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
+  eprosima::fastdds::dds::SubscriptionMatchedStatus matched_status_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
   std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(
     publishers_mutex_);
 
@@ -233,6 +246,8 @@ private:
   std::mutex on_new_message_m_;
 
   mutable std::mutex publishers_mutex_;
+
+  void trigger_event(rmw_event_type_t event_type);
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_

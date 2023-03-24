@@ -152,6 +152,13 @@ public:
     eprosima::fastdds::dds::QosPolicyId_t last_policy_id,
     uint32_t total_count, uint32_t total_count_change);
 
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void update_matched(
+    int32_t total_count,
+    int32_t total_count_change,
+    int32_t current_count,
+    int32_t current_count_change);
+
 private:
   CustomPublisherInfo * publisher_info_ = nullptr;
 
@@ -176,6 +183,12 @@ private:
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
   eprosima::fastdds::dds::OfferedIncompatibleQosStatus incompatible_qos_status_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
+  bool matched_changes_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
+  eprosima::fastdds::dds::PublicationMatchedStatus matched_status_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
   void trigger_event(rmw_event_type_t event_type);
