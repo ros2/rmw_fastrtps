@@ -32,6 +32,8 @@
 #include "rmw/rmw.h"
 #include "rmw/validate_full_topic_name.h"
 
+#include "rosidl_runtime_c/type_hash.h"
+
 #include "rcpputils/scope_exit.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
@@ -264,7 +266,7 @@ create_subscription(
     reader_qos.data_sharing().off();
   }
 
-  if (!get_datareader_qos(*qos_policies, reader_qos)) {
+  if (!get_datareader_qos(*qos_policies, *type_supports->type_hash, reader_qos)) {
     RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
     return nullptr;
   }
