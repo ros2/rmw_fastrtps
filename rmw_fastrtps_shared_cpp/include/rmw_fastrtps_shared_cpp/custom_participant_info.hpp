@@ -148,8 +148,10 @@ public:
         discovery_options_(*discovery_options) {}
 
   void on_participant_discovery(
-      eprosima::fastdds::dds::DomainParticipant *participant,
-      eprosima::fastrtps::rtps::ParticipantDiscoveryInfo &&info) override {
+      eprosima::fastdds::dds::DomainParticipant *,
+      eprosima::fastrtps::rtps::ParticipantDiscoveryInfo &&info,
+      bool& should_be_ignored) override {
+    should_be_ignored = false;
     switch (info.status) {
     case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::
         DISCOVERED_PARTICIPANT: {
@@ -172,7 +174,7 @@ public:
           RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
                                   "Ignoring participant on host %s",
                                   hostname_str.c_str());
-          participant->ignore_participant(info.info.m_guid);
+          should_be_ignored = true;
         } else {
           RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
                                   "Accepting participant on host %s",
