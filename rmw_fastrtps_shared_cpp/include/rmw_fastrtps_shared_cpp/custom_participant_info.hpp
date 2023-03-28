@@ -356,14 +356,14 @@ private:
     for (size_t ii = 0; ii < discovery_options_.static_peers_count; ++ii) {
       if (hostname == discovery_options_.static_peers[ii].peer_address) {
         RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                                "Matching host in our static peer list");
+                                "'%s' is in our static peer list", hostname.c_str());
         return true;
       }
 
       if (aliases.count(discovery_options_.static_peers[ii].peer_address) > 0)
       {
         RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                              "Matching host in our static peer list");
+                              "'%s' is in our static peer list", hostname.c_str());
         return true;
       }
     }
@@ -374,7 +374,7 @@ private:
     {
       if (std::find(other_static_peers.begin(), other_static_peers.end(), alias) != other_static_peers.end()) {
         RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                                "Matched us in their static peer list");
+                                "Other peer matched us in their static peer list as '%s'", alias.c_str());
         return true;
       }
     }
