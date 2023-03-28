@@ -60,10 +60,11 @@ using rmw_dds_common::operator<<;
 
 class ParticipantListener;
 
-enum class publishing_mode_t {
-  ASYNCHRONOUS, // Asynchronous publishing mode
-  SYNCHRONOUS,  // Synchronous publishing mode
-  AUTO          // Use publishing mode set in XML file or Fast DDS default
+enum class publishing_mode_t
+{
+  ASYNCHRONOUS,  // Asynchronous publishing mode
+  SYNCHRONOUS,   // Synchronous publishing mode
+  AUTO           // Use publishing mode set in XML file or Fast DDS default
 };
 
 class CustomTopicListener final : public eprosima::fastdds::dds::TopicListener
@@ -138,107 +139,110 @@ typedef struct CustomParticipantInfo
     EventListenerInterface * event_listener);
 } CustomParticipantInfo;
 
-class ParticipantListener
-    : public eprosima::fastdds::dds::DomainParticipantListener {
+class ParticipantListener : public eprosima::fastdds::dds::DomainParticipantListener
+{
 public:
-  explicit ParticipantListener(const char *identifier,
-                               rmw_dds_common::Context *context,
-                               const std::string &hostname,
-                               const rmw_discovery_options_t *discovery_options)
-      : context(context), identifier_(identifier), my_hostname_(hostname),
-        discovery_options_(*discovery_options) {}
+  explicit ParticipantListener(
+    const char * identifier,
+    rmw_dds_common::Context * context,
+    const std::string & hostname,
+    const rmw_discovery_options_t * discovery_options)
+  : context(context),
+    identifier_(identifier),
+    my_hostname_(hostname),
+    discovery_options_(*discovery_options)
+  {}
 
   void on_participant_discovery(
-      eprosima::fastdds::dds::DomainParticipant *,
-      eprosima::fastrtps::rtps::ParticipantDiscoveryInfo &&info,
-      bool& should_be_ignored) override {
+    eprosima::fastdds::dds::DomainParticipant *,
+    eprosima::fastrtps::rtps::ParticipantDiscoveryInfo &&info,
+    bool& should_be_ignored) override
+  {
     should_be_ignored = false;
     switch (info.status) {
-    case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::
-        DISCOVERED_PARTICIPANT: {
-      auto map = rmw::impl::cpp::parse_key_value(info.info.m_userData);
+      case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DISCOVERED_PARTICIPANT:
+        {
+          auto map = rmw::impl::cpp::parse_key_value(info.info.m_userData);
 
-      // First check if the new participant should be ignored or not
-      auto hostname = map.find("hostname");
-      if (hostname == map.end()) {
-        // hostname key/value was not found in the user data, so accept the
-        // participant
-        RCUTILS_LOG_DEBUG_NAMED(
-            "rmw_fastrtps_shared_cpp",
-            "hostname key/value missing from new participant's user data; "
-            "accepting participant");
-      } else {
-        auto hostname_str =
-            std::string(hostname->second.begin(), hostname->second.end());
-        auto other_static_peers = get_other_static_peers(map);
-        if (should_ignore_host(hostname_str, other_static_peers)) {
-          RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                                  "Ignoring participant on host %s",
-                                  hostname_str.c_str());
-          should_be_ignored = true;
-        } else {
-          RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                                  "Accepting participant on host %s",
-                                  hostname_str.c_str());
+          // First check if the new participant should be ignored or not
+          auto hostname = map.find("hostname");
+          if (hostname == map.end()) {
+            // hostname key/value was not found in the user data, so accept the
+            // participant
+            RCUTILS_LOG_DEBUG_NAMED(
+                "rmw_fastrtps_shared_cpp",
+                "hostname key/value missing from new participant's user data; "
+                "accepting participant");
+          } else {
+            auto hostname_str =
+                std::string(hostname->second.begin(), hostname->second.end());
+            auto other_static_peers = get_other_static_peers(map);
+            if (should_ignore_host(hostname_str, other_static_peers)) {
+              RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
+                                      "Ignoring participant on host %s",
+                                      hostname_str.c_str());
+              should_be_ignored = true;
+            } else {
+              RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
+                                      "Accepting participant on host %s",
+                                      hostname_str.c_str());
+            }
+          }
+
+          // Get the security enclave name
+          auto name_found = map.find("enclave");
+
+          if (name_found == map.end()) {
+            return;
+          }
+          auto enclave =
+            std::string(name_found->second.begin(), name_found->second.end());
+
+          context->graph_cache.add_participant(
+            rmw_fastrtps_shared_cpp::create_rmw_gid(
+              identifier_, info.info.m_guid),
+            enclave);
+          break;
         }
-      }
-
-      // Get the security enclave name
-      auto name_found = map.find("enclave");
-
-      if (name_found == map.end()) {
+      case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::REMOVED_PARTICIPANT:
+      // fall through
+      case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DROPPED_PARTICIPANT:
+        context->graph_cache.remove_participant(
+          rmw_fastrtps_shared_cpp::create_rmw_gid(
+            identifier_, info.info.m_guid));
+        break;
+      default:
         return;
-      }
-      auto enclave =
-          std::string(name_found->second.begin(), name_found->second.end());
-
-      context->graph_cache.add_participant(
-          rmw_fastrtps_shared_cpp::create_rmw_gid(identifier_,
-                                                  info.info.m_guid),
-          enclave);
-      break;
-    }
-    case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::
-        REMOVED_PARTICIPANT:
-    // fall through
-    case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::
-        DROPPED_PARTICIPANT:
-      context->graph_cache.remove_participant(
-          rmw_fastrtps_shared_cpp::create_rmw_gid(identifier_,
-                                                  info.info.m_guid));
-      break;
-    default:
-      return;
     }
   }
 
   void on_subscriber_discovery(
-      eprosima::fastdds::dds::DomainParticipant *,
-      eprosima::fastrtps::rtps::ReaderDiscoveryInfo &&info) override {
-    if (eprosima::fastrtps::rtps::ReaderDiscoveryInfo::CHANGED_QOS_READER !=
-        info.status) {
+    eprosima::fastdds::dds::DomainParticipant *,
+    eprosima::fastrtps::rtps::ReaderDiscoveryInfo && info) override
+  {
+    if (eprosima::fastrtps::rtps::ReaderDiscoveryInfo::CHANGED_QOS_READER != info.status) {
       bool is_alive =
-          eprosima::fastrtps::rtps::ReaderDiscoveryInfo::DISCOVERED_READER ==
-          info.status;
+        eprosima::fastrtps::rtps::ReaderDiscoveryInfo::DISCOVERED_READER == info.status;
       process_discovery_info(info.info, is_alive, true);
     }
   }
 
   void on_publisher_discovery(
-      eprosima::fastdds::dds::DomainParticipant *,
-      eprosima::fastrtps::rtps::WriterDiscoveryInfo &&info) override {
-    if (eprosima::fastrtps::rtps::WriterDiscoveryInfo::CHANGED_QOS_WRITER !=
-        info.status) {
+    eprosima::fastdds::dds::DomainParticipant *,
+    eprosima::fastrtps::rtps::WriterDiscoveryInfo && info) override
+  {
+    if (eprosima::fastrtps::rtps::WriterDiscoveryInfo::CHANGED_QOS_WRITER != info.status) {
       bool is_alive =
-          eprosima::fastrtps::rtps::WriterDiscoveryInfo::DISCOVERED_WRITER ==
-          info.status;
+        eprosima::fastrtps::rtps::WriterDiscoveryInfo::DISCOVERED_WRITER == info.status;
       process_discovery_info(info.info, is_alive, false);
     }
   }
 
 private:
-  template <class T>
-  void process_discovery_info(T &proxyData, bool is_alive, bool is_reader) {
+  template<class T>
+  void
+  process_discovery_info(T & proxyData, bool is_alive, bool is_reader)
+  {
     {
       if (is_alive) {
         rmw_qos_profile_t qos_profile = rmw_qos_profile_unknown;
@@ -273,9 +277,10 @@ private:
           is_reader);
       } else {
         context->graph_cache.remove_entity(
-            rmw_fastrtps_shared_cpp::create_rmw_gid(identifier_,
-                                                    proxyData.guid()),
-            is_reader);
+          rmw_fastrtps_shared_cpp::create_rmw_gid(
+            identifier_,
+            proxyData.guid()),
+          is_reader);
       }
     }
   }
@@ -378,10 +383,10 @@ private:
     return false;
   }
 
-  rmw_dds_common::Context *context;
-  const char *const identifier_;
+  rmw_dds_common::Context * context;
+  const char * const identifier_;
   std::string my_hostname_;
   rmw_discovery_options_t discovery_options_;
 };
 
-#endif // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
