@@ -327,8 +327,6 @@ private:
 
   bool should_ignore_host(const std::string &hostname,
                           const std::unordered_set<std::string> &other_static_peers) {
-    bool should_ignore = false;
-
     if (RMW_AUTOMATIC_DISCOVERY_RANGE_OFF ==
           discovery_options_.automatic_discovery_range) {
       return true;
@@ -340,12 +338,12 @@ private:
               discovery_options_.automatic_discovery_range) {
 
         if (!is_static_peer(hostname, other_static_peers)) {
-          should_ignore = true;
+          return true;
         }
       }
     }
 
-    return should_ignore;
+    return false;
   }
 
 
