@@ -296,8 +296,9 @@ private:
       std::string delimiter(",");
       size_t start = 0;
       size_t end = 0;
-      while ((end = static_peers_string.find(delimiter, start)) !=
-             std::string::npos) {
+      while (
+        (end = static_peers_string.find(delimiter, start)) != std::string::npos
+      ) {
         if ((end - start) == 0) {
           // Ignore empty peer list entries
           RCUTILS_LOG_WARN_NAMED(
