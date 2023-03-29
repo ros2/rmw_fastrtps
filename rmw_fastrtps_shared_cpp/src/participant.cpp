@@ -192,8 +192,6 @@ rmw_fastrtps_shared_cpp::create_participant(
     break;
   }
 
-  std::stringstream user_data;
-
   // Add any initial peers
   if (discovery_options->static_peers_count > 0 &&
     discovery_options->automatic_discovery_range != RMW_AUTOMATIC_DISCOVERY_RANGE_OFF) {
@@ -226,18 +224,16 @@ rmw_fastrtps_shared_cpp::create_participant(
     domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(peer);
   }
 
-  user_data << "enclave=" << enclave << ';';
-
-  auto length = user_data.str().length() + 1;
+  size_t length = snprintf(nullptr, 0, "enclave=%s;", enclave) + 1;
   domainParticipantQos.user_data().resize(length);
+
   int written = snprintf(
     reinterpret_cast<char *>(domainParticipantQos.user_data().data()),
-    length, "%s", user_data.str().c_str());
+    length, "enclave=%s;", enclave);
   if (written < 0 || written > static_cast<int>(length) - 1) {
     RMW_SET_ERROR_MSG("failed to populate user_data buffer");
     return nullptr;
   }
-  RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "User data for new participant set to '%s'", user_data.str().c_str());
   domainParticipantQos.name(enclave);
 
   bool leave_middleware_default_qos = false;
