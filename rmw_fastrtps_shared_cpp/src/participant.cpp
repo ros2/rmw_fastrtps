@@ -154,36 +154,6 @@ __create_participant(
   return participant_info;
 }
 
-
-/// \brief Get the ip version of a host
-/// \param peer - The string with the IP address.
-/// \return 4 or 6 depending on IP version. -1 if indeterminate.
-int ip_version(const std::string& peer) {
-  struct sockaddr_in addr;
-  memset(&addr, 0, sizeof(addr));
-  addr.sin_family = AF_INET;
-  auto result = inet_pton(addr.sin_family, peer.c_str(), &addr.sin_addr);
-
-  if (result != 1)
-  {
-    // Try checking IPv6
-    struct sockaddr_in6 addr6;
-    memset(&addr6, 0, sizeof(addr6));
-    addr6.sin6_family = AF_INET6;
-    result = inet_pton(addr6.sin6_family, peer.c_str(), &addr6.sin6_addr);
-
-    if (result != 1)
-    {
-      // TODO: Deal with hostnames
-    }
-    else {
-      return 6;
-    }
-  }
-
-  return 4;
-}
-
 CustomParticipantInfo *
 rmw_fastrtps_shared_cpp::create_participant(
   const char * identifier,
@@ -211,24 +181,22 @@ rmw_fastrtps_shared_cpp::create_participant(
     // Clear the list of multicast listening locators
     domainParticipantQos.wire_protocol()
         .builtin.metatrafficMulticastLocatorList.clear();
-    // Clear unicast listening locators and add UDPv4 any
+    // Clear unicast listening locators
     domainParticipantQos.wire_protocol()
         .builtin.metatrafficUnicastLocatorList.clear();
-    eprosima::fastrtps::rtps::Locator_t unicast_locator;
-    std::istringstream("UDPv4:[0.0.0.0]:0") >> unicast_locator;
-    domainParticipantQos.wire_protocol()
-        .builtin.metatrafficUnicastLocatorList.push_back(unicast_locator);
+    domainParticipantQos.transport().use_builtin_transports = false;
     break;
   }
-  case RMW_AUTOMATIC_DISCOVERY_RANGE_DEFAULT:
+  case RMW_AUTOMATIC_DISCOVERY_RANGE_DEFAULT: // TODO(sloretz) Replace with SYSTEM_DEFAULT
   // Fall through to localhost behaviour
   case RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST: {
-    // Create a descriptor for the new transport.
-    auto udp_transport = std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
-    udp_transport->TTL = 0;
-    domainParticipantQos.transport().clear();
-    domainParticipantQos.transport().user_transports.push_back(udp_transport);
-    domainParticipantQos.transport().use_builtin_transports = false;
+    // Clear the list of multicast listening locators
+    domainParticipantQos.wire_protocol()
+        .builtin.metatrafficMulticastLocatorList.clear();
+    // Add a unicast locator to prevent creation of default multicast locator
+    eprosima::fastrtps::rtps::Locator_t default_unicast_locator;
+    domainParticipantQos.wire_protocol()
+        .builtin.metatrafficUnicastLocatorList.push_back(default_unicast_locator);
     break;
   }
   case RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET:
@@ -241,16 +209,18 @@ rmw_fastrtps_shared_cpp::create_participant(
   // Add any initial peers
   if (discovery_options->static_peers_count > 0 &&
     discovery_options->automatic_discovery_range != RMW_AUTOMATIC_DISCOVERY_RANGE_OFF) {
-    user_data << "staticpeers=";
     for (size_t ii = 0; ii < discovery_options->static_peers_count; ++ii) {
       eprosima::fastrtps::rtps::Locator_t peer;
-      if (ip_version(discovery_options->static_peers[ii].peer_address) == 4) {
-        eprosima::fastrtps::rtps::IPLocator::setIPv4(
-            peer, discovery_options->static_peers[ii].peer_address);
-      }
-      else if (ip_version(discovery_options->static_peers[ii].peer_address) == 6) {
-        eprosima::fastrtps::rtps::IPLocator::setIPv6(
-            peer, discovery_options->static_peers[ii].peer_address);
+      auto response = eprosima::fastrtps::rtps::IPLocator::resolveNameDNS(
+        discovery_options->static_peers[ii].peer_address);
+      // Get the first returned IPv4
+      if (response.first.size() > 0) {
+        eprosima::fastrtps::rtps::IPLocator::setIPv4(peer, response.first.begin()->data());
+      } else {
+        RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+          "Unable to resolve peer %s\n",
+          discovery_options->static_peers[ii].peer_address);
+        return nullptr;
       }
       // Not specifying the port of the peer means FastDDS will try all
       // possible participant ports according to the port calculation equation
@@ -258,25 +228,15 @@ rmw_fastrtps_shared_cpp::create_participant(
       // in maxInitialPeersRange.
       domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(
           peer);
-
-      user_data << discovery_options->static_peers[ii].peer_address << ',';
-
-      // Add any aliases (IPs for hostnames, hostnames for IPs)
-      auto aliases = utils::get_peer_aliases(
-        discovery_options->static_peers[ii].peer_address);
-      for (const auto &alias : aliases) {
-        user_data << alias << ',';
-      }
     }
-    user_data << ";";
   }
 
-  char hostname[HOST_NAME_MAX];
-  if (gethostname(hostname, HOST_NAME_MAX) == -1) {
-    RMW_SET_ERROR_MSG("failed to get host name");
-    return nullptr;
+  if (RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST == discovery_options->automatic_discovery_range) {
+    // Add localhost as a static peer
+    eprosima::fastrtps::rtps::Locator_t peer;
+    eprosima::fastrtps::rtps::IPLocator::setIPv4(peer, "127.0.0.1");
+    domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(peer);
   }
-  user_data << "hostname=" << utils::get_fqdn_for_host(hostname) << ';';
 
   user_data << "enclave=" << enclave << ';';
 
@@ -393,7 +353,7 @@ rmw_fastrtps_shared_cpp::create_participant(
     common_context,
     domain_id,
     discovery_options,
-    hostname);
+    "TODO(sloretz) remove");
 }
 
 rmw_ret_t

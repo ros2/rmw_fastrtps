@@ -15,14 +15,6 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
 
-#include <arpa/inet.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <algorithm>
 #include <map>
 #include <memory>
 #include <mutex>
@@ -145,12 +137,10 @@ public:
   explicit ParticipantListener(
     const char * identifier,
     rmw_dds_common::Context * context,
-    const std::string & hostname,
-    const rmw_discovery_options_t * discovery_options)
+    const std::string & /* hostname TODO(SLORETZ) remove */,
+    const rmw_discovery_options_t * /* discovery_options TODO(sloretz) remove*/)
   : context(context),
-    identifier_(identifier),
-    my_hostname_(hostname),
-    discovery_options_(*discovery_options)
+    identifier_(identifier)
   {}
 
   void on_participant_discovery(
@@ -163,33 +153,6 @@ public:
       case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DISCOVERED_PARTICIPANT:
         {
           auto map = rmw::impl::cpp::parse_key_value(info.info.m_userData);
-
-          // First check if the new participant should be ignored or not
-          auto hostname = map.find("hostname");
-          if (hostname == map.end()) {
-            // hostname key/value was not found in the user data, so accept the
-            // participant
-            RCUTILS_LOG_DEBUG_NAMED(
-                "rmw_fastrtps_shared_cpp",
-                "hostname key/value missing from new participant's user data; "
-                "accepting participant");
-          } else {
-            auto hostname_str =
-                std::string(hostname->second.begin(), hostname->second.end());
-            auto other_static_peers = get_other_static_peers(map);
-            if (should_ignore_host(hostname_str, other_static_peers)) {
-              RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                                      "Ignoring participant on host %s",
-                                      hostname_str.c_str());
-              should_be_ignored = true;
-            } else {
-              RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                                      "Accepting participant on host %s",
-                                      hostname_str.c_str());
-            }
-          }
-
-          // Get the security enclave name
           auto name_found = map.find("enclave");
 
           if (name_found == map.end()) {
@@ -325,66 +288,8 @@ private:
     return result;
   }
 
-  bool should_ignore_host(const std::string &hostname,
-                          const std::unordered_set<std::string> &other_static_peers) {
-    if (RMW_AUTOMATIC_DISCOVERY_RANGE_OFF ==
-          discovery_options_.automatic_discovery_range) {
-      return true;
-    }
-    if (hostname != my_hostname_) {
-      if (RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST ==
-              discovery_options_.automatic_discovery_range ||
-          RMW_AUTOMATIC_DISCOVERY_RANGE_DEFAULT ==
-              discovery_options_.automatic_discovery_range) {
-
-        if (!is_static_peer(hostname, other_static_peers)) {
-          return true;
-        }
-      }
-    }
-
-    return false;
-  }
-
-
-  bool is_static_peer(const std::string &hostname,
-                      const std::unordered_set<std::string> &other_static_peers) {
-
-    using namespace rmw_fastrtps_shared_cpp;
-    // Check if the host is a static peer on our list
-    auto aliases = utils::get_peer_aliases(hostname);
-    for (size_t ii = 0; ii < discovery_options_.static_peers_count; ++ii) {
-      if (hostname == discovery_options_.static_peers[ii].peer_address) {
-        RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                                "'%s' is in our static peer list", hostname.c_str());
-        return true;
-      }
-
-      if (aliases.count(discovery_options_.static_peers[ii].peer_address) > 0)
-      {
-        RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                              "'%s' is in our static peer list", hostname.c_str());
-        return true;
-      }
-    }
-
-    auto peer_aliases = utils::get_peer_aliases(my_hostname_);
-
-    for (const auto &alias: peer_aliases)
-    {
-      if (std::find(other_static_peers.begin(), other_static_peers.end(), alias) != other_static_peers.end()) {
-        RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp",
-                                "Other peer matched us in their static peer list as '%s'", alias.c_str());
-        return true;
-      }
-    }
-    return false;
-  }
-
   rmw_dds_common::Context * context;
   const char * const identifier_;
-  std::string my_hostname_;
-  rmw_discovery_options_t discovery_options_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
