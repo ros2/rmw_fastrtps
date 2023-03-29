@@ -45,7 +45,6 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_security_logging.hpp"
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
-#include "rmw_fastrtps_shared_cpp/utils/net_utils.hpp"
 
 #include "rmw_dds_common/security.hpp"
 

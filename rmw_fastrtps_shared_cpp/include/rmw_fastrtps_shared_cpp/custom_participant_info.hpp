@@ -46,7 +46,6 @@
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
-#include "rmw_fastrtps_shared_cpp/utils/net_utils.hpp"
 
 using rmw_dds_common::operator<<;
 
@@ -244,46 +243,6 @@ private:
           is_reader);
       }
     }
-  }
-
-  std::unordered_set<std::string>
-  get_other_static_peers(const std::map<std::string, std::vector<uint8_t>> &map) {
-    std::unordered_set<std::string> result;
-
-    auto static_peers_entry = map.find("staticpeers");
-    if (static_peers_entry != map.end()) {
-      auto static_peers_string = std::string(static_peers_entry->second.begin(),
-                                             static_peers_entry->second.end());
-      std::string delimiter(",");
-      size_t start = 0;
-      size_t end = 0;
-      while (
-        (end = static_peers_string.find(delimiter, start)) != std::string::npos
-      ) {
-        if ((end - start) == 0) {
-          // Ignore empty peer list entries
-          RCUTILS_LOG_WARN_NAMED(
-              "rmw_fastrtps_shared_cpp",
-              "Empty entry found in static peers list from new participant");
-        } else {
-          auto hostname = static_peers_string.substr(start, end - start);
-          result.insert(hostname);
-          auto peer_aliases = rmw_fastrtps_shared_cpp::utils::get_peer_aliases(hostname);
-          for (const auto &a : peer_aliases) {
-            result.insert(a);
-          }
-          RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Got static peer: %s", hostname.c_str());
-        }
-        start = end + delimiter.length();
-      }
-      if (start < static_peers_string.length() - 1) {
-        auto peer = static_peers_string.substr(start);
-        result.insert(peer);
-        RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Got last static peer: %s", peer.c_str());
-      }
-    }
-
-    return result;
   }
 
   rmw_dds_common::Context * context;
