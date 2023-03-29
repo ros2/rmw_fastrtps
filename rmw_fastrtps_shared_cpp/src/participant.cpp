@@ -13,15 +13,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <arpa/inet.h>
-#include <limits.h>
-#include <netdb.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-#include <sys/types.h>
-#include <unistd.h>
-
-#include <algorithm>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -66,9 +57,7 @@ __create_participant(
   bool leave_middleware_default_qos,
   publishing_mode_t publishing_mode,
   rmw_dds_common::Context * common_context,
-  size_t domain_id,
-  const rmw_discovery_options_t *discovery_options,
-  const char *hostname)
+  size_t domain_id)
 {
   CustomParticipantInfo * participant_info = nullptr;
 
@@ -96,7 +85,7 @@ __create_participant(
   // Create Participant listener
   try {
     participant_info->listener_ = new ParticipantListener(
-      identifier, common_context, hostname, discovery_options);
+      identifier, common_context);
   } catch (std::bad_alloc &) {
     RMW_SET_ERROR_MSG("__create_participant failed to allocate participant listener");
     return nullptr;
@@ -351,9 +340,7 @@ rmw_fastrtps_shared_cpp::create_participant(
     leave_middleware_default_qos,
     publishing_mode,
     common_context,
-    domain_id,
-    discovery_options,
-    "TODO(sloretz) remove");
+    domain_id);
 }
 
 rmw_ret_t

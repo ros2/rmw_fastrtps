@@ -136,9 +136,7 @@ class ParticipantListener : public eprosima::fastdds::dds::DomainParticipantList
 public:
   explicit ParticipantListener(
     const char * identifier,
-    rmw_dds_common::Context * context,
-    const std::string & /* hostname TODO(SLORETZ) remove */,
-    const rmw_discovery_options_t * /* discovery_options TODO(sloretz) remove*/)
+    rmw_dds_common::Context * context)
   : context(context),
     identifier_(identifier)
   {}
