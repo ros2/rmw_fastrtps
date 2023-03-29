@@ -34,7 +34,7 @@ rmw_fastrtps_shared_cpp::__rmw_feature_supported(rmw_feature_t feature)
     case RMW_MIDDLEWARE_SUPPORTS_TYPE_DISCOVERY:
       return false;
 
-    case RMW_MIDDLEWARE_CAN_TAKE_DYNAMIC_DATA:
+    case RMW_MIDDLEWARE_CAN_TAKE_DYNAMIC_MESSAGE:
       return true;
 
     default:
