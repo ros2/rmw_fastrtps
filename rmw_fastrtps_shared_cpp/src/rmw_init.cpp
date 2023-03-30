@@ -45,7 +45,7 @@ rmw_init_options_init(
   init_options->security_options = rmw_get_default_security_options();
   init_options->localhost_only = RMW_LOCALHOST_ONLY_DEFAULT;
   init_options->discovery_options = rmw_get_zero_initialized_discovery_options();
-  return RMW_RET_OK;
+  return rmw_discovery_options_init(&(init_options->discovery_options), 0, &allocator);
 }
 
 rmw_ret_t
