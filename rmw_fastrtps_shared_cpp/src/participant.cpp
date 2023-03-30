@@ -181,7 +181,7 @@ rmw_fastrtps_shared_cpp::create_participant(
         domainParticipantQos.wire_protocol()
         .builtin.metatrafficUnicastLocatorList.push_back(default_unicast_locator);
         break;
-    }
+      }
     case RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET:
       // Nothing to do; use the default FastDDS behaviour
       break;
