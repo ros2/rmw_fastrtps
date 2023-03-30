@@ -142,8 +142,8 @@ public:
 
   void on_participant_discovery(
     eprosima::fastdds::dds::DomainParticipant *,
-    eprosima::fastrtps::rtps::ParticipantDiscoveryInfo &&info,
-    bool& should_be_ignored) override
+    eprosima::fastrtps::rtps::ParticipantDiscoveryInfo && info,
+    bool & should_be_ignored) override
   {
     should_be_ignored = false;
     switch (info.status) {

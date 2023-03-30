@@ -165,43 +165,36 @@ rmw_fastrtps_shared_cpp::create_participant(
 
   // Configure discovery
   switch (discovery_options->automatic_discovery_range) {
-  case RMW_AUTOMATIC_DISCOVERY_RANGE_NOT_SET:
-    RMW_SET_ERROR_MSG("automatic discovery range must be set");
-    return nullptr;
-    break;
-  case RMW_AUTOMATIC_DISCOVERY_RANGE_OFF: {
-    // Clear the list of multicast listening locators
-    domainParticipantQos.wire_protocol()
-        .builtin.metatrafficMulticastLocatorList.clear();
-    // Clear unicast listening locators
-    domainParticipantQos.wire_protocol()
-        .builtin.metatrafficUnicastLocatorList.clear();
-    domainParticipantQos.transport().use_builtin_transports = false;
-    break;
-  }
-  case RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST: {
-    // Clear the list of multicast listening locators
-    domainParticipantQos.wire_protocol()
-        .builtin.metatrafficMulticastLocatorList.clear();
-    // Add a unicast locator to prevent creation of default multicast locator
-    eprosima::fastrtps::rtps::Locator_t default_unicast_locator;
-    domainParticipantQos.wire_protocol()
+    case RMW_AUTOMATIC_DISCOVERY_RANGE_NOT_SET:
+      RMW_SET_ERROR_MSG("automatic discovery range must be set");
+      return nullptr;
+      break;
+    case RMW_AUTOMATIC_DISCOVERY_RANGE_OFF:
+      domainParticipantQos.wire_protocol().builtin.discovery_config.discoveryProtocol =
+        eprosima::fastrtps::rtps::DiscoveryProtocol_t::NONE;
+      break;
+    case RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST: {
+        // Clear the list of multicast listening locators
+        domainParticipantQos.wire_protocol().builtin.metatrafficMulticastLocatorList.clear();
+        // Add a unicast locator to prevent creation of default multicast locator
+        eprosima::fastrtps::rtps::Locator_t default_unicast_locator;
+        domainParticipantQos.wire_protocol()
         .builtin.metatrafficUnicastLocatorList.push_back(default_unicast_locator);
-    break;
-  }
-  case RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET:
-    // Nothing to do; use the default FastDDS behaviour
-    break;
-  case RMW_AUTOMATIC_DISCOVERY_RANGE_SYSTEM_DEFAULT:
-    // Nothing to do; use the default FastDDS behaviour
-    break;
+        break;
+    }
+    case RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET:
+      // Nothing to do; use the default FastDDS behaviour
+      break;
+    case RMW_AUTOMATIC_DISCOVERY_RANGE_SYSTEM_DEFAULT:
+      // Nothing to do; use the default FastDDS behaviour
+      break;
   }
 
   // Add initial peers if LOCALHOST or SUBNET are used
   if (
     RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST == discovery_options->automatic_discovery_range ||
-    RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET == discovery_options->automatic_discovery_range
-  ) {
+    RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET == discovery_options->automatic_discovery_range)
+  {
     for (size_t ii = 0; ii < discovery_options->static_peers_count; ++ii) {
       eprosima::fastrtps::rtps::Locator_t peer;
       auto response = eprosima::fastrtps::rtps::IPLocator::resolveNameDNS(
@@ -219,8 +212,7 @@ rmw_fastrtps_shared_cpp::create_participant(
       // possible participant ports according to the port calculation equation
       // in the RTPS spec section 9.6.1.1, up to the number of peers specified
       // in maxInitialPeersRange.
-      domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(
-          peer);
+      domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(peer);
     }
   }
 

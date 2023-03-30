@@ -110,8 +110,9 @@ rmw_init_options_fini(const char * identifier, rmw_init_options_t * init_options
 
   allocator->deallocate(init_options->enclave, allocator->state);
   rmw_ret_t ret = rmw_security_options_fini(&init_options->security_options, allocator);
-  if (ret != RMW_RET_OK)
+  if (ret != RMW_RET_OK) {
     return ret;
+  }
 
   ret = rmw_discovery_options_fini(&init_options->discovery_options);
   *init_options = rmw_get_zero_initialized_init_options();

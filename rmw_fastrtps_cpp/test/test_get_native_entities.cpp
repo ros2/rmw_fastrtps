@@ -46,6 +46,7 @@ protected:
     });
     options.enclave = rcutils_strdup("/", rcutils_get_default_allocator());
     ASSERT_STREQ("/", options.enclave);
+    options.discovery_options.automatic_discovery_range = RMW_AUTOMATIC_DISCOVERY_RANGE_OFF;
     ret = rmw_init(&options, &context);
     ASSERT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
     constexpr char node_name[] = "my_node";
@@ -56,8 +57,11 @@ protected:
 
   void TearDown() override
   {
-    rmw_ret_t ret = rmw_destroy_node(node);
-    EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
+    rmw_ret_t ret;
+    if (nullptr != node) {
+      ret = rmw_destroy_node(node);
+      EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
+    }
     ret = rmw_shutdown(&context);
     EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
     ret = rmw_context_fini(&context);
