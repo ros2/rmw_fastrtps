@@ -180,6 +180,9 @@ rmw_fastrtps_shared_cpp::create_participant(
         eprosima::fastrtps::rtps::Locator_t default_unicast_locator;
         domainParticipantQos.wire_protocol()
         .builtin.metatrafficUnicastLocatorList.push_back(default_unicast_locator);
+        // Add a shared memory transport
+        auto shm_transport = std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
+        domainParticipantQos.transport().user_transports.push_back(shm_transport);
         break;
       }
     case RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET:
