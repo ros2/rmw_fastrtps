@@ -198,6 +198,10 @@ rmw_fastrtps_shared_cpp::create_participant(
     case RMW_AUTOMATIC_DISCOVERY_RANGE_SYSTEM_DEFAULT:
       // Nothing to do; use the default FastDDS behaviour
       break;
+    default:
+      RMW_SET_ERROR_MSG("automatic_discovery_range is an unknown value");
+      return nullptr;
+      break;
   }
 
   // Add initial peers if LOCALHOST or SUBNET are used
