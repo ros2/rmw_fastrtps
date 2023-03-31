@@ -180,8 +180,11 @@ rmw_fastrtps_shared_cpp::create_participant(
         eprosima::fastrtps::rtps::Locator_t default_unicast_locator;
         domainParticipantQos.wire_protocol()
         .builtin.metatrafficUnicastLocatorList.push_back(default_unicast_locator);
+        // Disable built-in transports, since we are configuring our own.
+        domainParticipantQos.transport().use_builtin_transports = false;
         // Add a shared memory transport
-        auto shm_transport = std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
+        auto shm_transport =
+          std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
         domainParticipantQos.transport().user_transports.push_back(shm_transport);
         // Add UDP transport with max initial peers set to maximum possible value
         auto udp_transport = std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
