@@ -12,20 +12,19 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <fastcdr/Cdr.h>
+#include <rcutils/logging_macros.h>
+#include <rosidl_dynamic_typesupport_fastrtps/serialization_support.h>
+
 #include "rmw/allocators.h"
 #include "rmw/convert_rcutils_ret_to_rmw_ret.h"
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
-#include <rcutils/logging_macros.h>
-
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
-#include <rosidl_dynamic_typesupport_fastrtps/serialization_support.h>
-
-#include <fastcdr/Cdr.h>
 
 extern "C"
 {
@@ -54,7 +53,7 @@ rmw_take_dynamic_message_with_info(
 }
 
 rmw_ret_t
-rmw_get_serialization_support(  // Fallback to rcl if the rmw doesn't implement it
+rmw_get_serialization_support(
   const char * /*serialization_lib_name*/,
   rosidl_dynamic_typesupport_serialization_support_t ** serialization_support)
 {
@@ -64,5 +63,4 @@ rmw_get_serialization_support(  // Fallback to rcl if the rmw doesn't implement 
       rosidl_dynamic_typesupport_fastrtps_create_serialization_support_interface(),
       serialization_support));
 }
-
 }  // extern "C"

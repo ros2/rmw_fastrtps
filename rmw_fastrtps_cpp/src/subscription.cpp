@@ -25,8 +25,8 @@
 
 #include "fastdds/rtps/resources/ResourceManagement.h"
 
-#include <fastrtps/types/DynamicType.h>
-#include <fastrtps/types/DynamicTypePtr.h>
+#include "fastrtps/types/DynamicType.h"
+#include "fastrtps/types/DynamicTypePtr.h"
 
 #include "rcutils/allocator.h"
 #include "rcutils/error_handling.h"
@@ -158,8 +158,9 @@ __create_dynamic_subscription(
   //                     already having the type. Too much restructuring is needed elsewhere to
   //                     support deferral...
 
-  if (type_support->typesupport_identifier
-      != rmw_dynamic_typesupport_c__identifier) {
+  if (type_support->typesupport_identifier !=
+    rmw_dynamic_typesupport_c__identifier)
+  {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "Type support not from this implementation. Got:\n"
       "    %s, but expected\n"
@@ -190,9 +191,9 @@ __create_dynamic_subscription(
   std::string::size_type pos = 0;
   std::string::size_type last_pos = 0;
   while ((pos = type_name.find("::", pos)) != std::string::npos) {
-     ++occurrences;
-     pos += 2;  // Length of "::"
-     last_pos = pos;
+    ++occurrences;
+    pos += 2;   // Length of "::"
+    last_pos = pos;
   }
 
   if (occurrences != 2) {  // Name is not namespaced: <package_name>::<msg/srv>::<type_name>
@@ -203,8 +204,9 @@ __create_dynamic_subscription(
     return nullptr;
   }
 
-  type_name = _create_type_name(type_name.substr(0, last_pos - 2),  // package
-                                type_name.substr(last_pos, type_name.length() - last_pos));  // name
+  type_name = _create_type_name(
+    type_name.substr(0, last_pos - 2),  // package
+    type_name.substr(last_pos, type_name.length() - last_pos));  // name
 
   auto topic_name_mangled =
     _create_topic_name(qos_policies, ros_topic_prefix, topic_name).to_string();

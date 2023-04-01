@@ -35,7 +35,8 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
-enum SerializedDataType {
+enum SerializedDataType
+{
   FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER,
   FASTRTPS_SERIALIZED_DATA_TYPE_DYNAMIC_MESSAGE,
   FASTRTPS_SERIALIZED_DATA_TYPE_ROS_MESSAGE
