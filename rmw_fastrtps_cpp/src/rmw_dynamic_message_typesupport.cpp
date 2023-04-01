@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include "rmw/allocators.h"
+#include "rmw/convert_rcutils_ret_to_rmw_ret.h"
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
@@ -52,13 +53,16 @@ rmw_take_dynamic_message_with_info(
     allocation);
 }
 
-rosidl_dynamic_typesupport_serialization_support_t *
+rmw_ret_t
 rmw_get_serialization_support(  // Fallback to rcl if the rmw doesn't implement it
-  const char * /*serialization_lib_name*/)
+  const char * /*serialization_lib_name*/,
+  rosidl_dynamic_typesupport_serialization_support_t ** serialization_support)
 {
-  return rosidl_dynamic_typesupport_serialization_support_init(
-    rosidl_dynamic_typesupport_fastrtps_create_serialization_support_impl(),
-    rosidl_dynamic_typesupport_fastrtps_create_serialization_support_interface());
+  return rmw_convert_rcutils_ret_to_rmw_ret(
+    rosidl_dynamic_typesupport_serialization_support_init(
+      rosidl_dynamic_typesupport_fastrtps_create_serialization_support_impl(),
+      rosidl_dynamic_typesupport_fastrtps_create_serialization_support_interface(),
+      serialization_support));
 }
 
 }  // extern "C"
