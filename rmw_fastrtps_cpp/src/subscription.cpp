@@ -280,7 +280,10 @@ create_subscription(
     reader_qos.data_sharing().off();
   }
 
-  if (!get_datareader_qos(*qos_policies, *type_supports->type_hash, reader_qos)) {
+  if (!get_datareader_qos(
+      *qos_policies, *type_supports->get_type_hash_func(type_supports),
+      reader_qos))
+  {
     RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
     return nullptr;
   }
