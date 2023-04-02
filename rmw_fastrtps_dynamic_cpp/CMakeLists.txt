@@ -64,6 +64,7 @@ add_library(rmw_fastrtps_dynamic_cpp
   src/rmw_client.cpp
   src/rmw_compare_gids_equal.cpp
   src/rmw_count.cpp
+  src/rmw_dynamic_message_typesupport.cpp
   src/rmw_event.cpp
   src/rmw_features.cpp
   src/rmw_get_gid_for_client.cpp
