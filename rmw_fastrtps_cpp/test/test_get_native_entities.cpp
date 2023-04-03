@@ -57,11 +57,8 @@ protected:
 
   void TearDown() override
   {
-    rmw_ret_t ret;
-    if (nullptr != node) {
-      ret = rmw_destroy_node(node);
-      EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
-    }
+    rmw_ret_t ret = rmw_destroy_node(node);
+    EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
     ret = rmw_shutdown(&context);
     EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
     ret = rmw_context_fini(&context);
