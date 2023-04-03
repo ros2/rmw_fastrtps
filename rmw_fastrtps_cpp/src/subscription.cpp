@@ -381,7 +381,10 @@ __create_dynamic_subscription(
     reader_qos.data_sharing().off();
   }
 
-  if (!get_datareader_qos(*qos_policies, *type_support->type_hash, reader_qos)) {
+  if (!get_datareader_qos(
+      *qos_policies, *type_support->get_type_hash_func(type_support),
+      reader_qos))
+  {
     RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
     return nullptr;
   }
