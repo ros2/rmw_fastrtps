@@ -201,6 +201,17 @@ __rmw_wait(
         if (guard_condition.get_trigger_value()) {
           active = true;
           guard_condition.set_trigger_value(false);
+        } else {
+          switch (event->event_type) {
+            // Both a listener and a WaitSet for the same communication status, there are
+            // 2 triggers. Avoid repeated notification, filter it based trigger value.
+            case RMW_EVENT_SUBSCRIPTION_MATCHED:
+            case RMW_EVENT_PUBLICATION_MATCHED:
+              active = false;
+              break;
+            default:
+              break;
+          }
         }
       }
 
