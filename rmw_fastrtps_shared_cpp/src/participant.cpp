@@ -169,10 +169,19 @@ rmw_fastrtps_shared_cpp::create_participant(
       RMW_SET_ERROR_MSG("automatic discovery range must be set");
       return nullptr;
       break;
-    case RMW_AUTOMATIC_DISCOVERY_RANGE_OFF:
-      domainParticipantQos.wire_protocol().builtin.discovery_config.discoveryProtocol =
-        eprosima::fastrtps::rtps::DiscoveryProtocol_t::NONE;
-      break;
+    case RMW_AUTOMATIC_DISCOVERY_RANGE_OFF: {
+        // Limit the number of participants to 1 (the local participant)
+        domainParticipantQos.allocation().participants.initial = 1;
+        domainParticipantQos.allocation().participants.maximum = 1;
+        domainParticipantQos.allocation().participants.increment = 0;
+        // Clear the list of multicast listening locators
+        domainParticipantQos.wire_protocol().builtin.metatrafficMulticastLocatorList.clear();
+        // Add a unicast locator to prevent creation of default multicast locator
+        eprosima::fastrtps::rtps::Locator_t default_unicast_locator;
+        domainParticipantQos.wire_protocol()
+        .builtin.metatrafficUnicastLocatorList.push_back(default_unicast_locator);
+        break;
+      }
     case RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST: {
         // Clear the list of multicast listening locators
         domainParticipantQos.wire_protocol().builtin.metatrafficMulticastLocatorList.clear();
