@@ -32,10 +32,10 @@
 #include "rcutils/error_handling.h"
 #include "rcutils/macros.h"
 #include "rcutils/strdup.h"
+#include "rosidl_dynamic_typesupport/dynamic_message_type_support_struct.h"
 
 #include "rmw/allocators.h"
 #include "rmw/dynamic_message_type_support.h"
-#include "rmw/dynamic_typesupport_identifier.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/validate_full_topic_name.h"
@@ -176,7 +176,8 @@ __create_dynamic_subscription(
   }
 
   // NOTE(methylDragon): The internals are non-const, so this is technically not const correct
-  auto ts_impl = static_cast<const rmw_dynamic_message_type_support_impl_t *>(type_support->data);
+  auto ts_impl = static_cast<const rosidl_dynamic_message_type_support_impl_t *>(
+    type_support->data);
 
   std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
 

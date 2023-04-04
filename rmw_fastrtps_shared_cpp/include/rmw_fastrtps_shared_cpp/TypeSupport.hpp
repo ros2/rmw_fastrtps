@@ -47,7 +47,7 @@ struct SerializedData
 {
   SerializedDataType type;  // The type of the next field
   void * data;
-  const void * impl;   // RMW implementation specific data
+  const void * impl;  // RMW implementation specific data
 };
 
 class TypeSupport : public eprosima::fastdds::dds::TopicDataType

@@ -44,6 +44,7 @@ find_package(fastrtps 2.3 REQUIRED CONFIG)
 find_package(FastRTPS 2.3 REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
+find_package(rosidl_dynamic_typesupport REQUIRED)
 find_package(rosidl_runtime_c REQUIRED)
 find_package(rosidl_typesupport_fastrtps_c REQUIRED)
 find_package(rosidl_typesupport_fastrtps_cpp REQUIRED)
