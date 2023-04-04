@@ -195,9 +195,14 @@ rmw_fastrtps_shared_cpp::create_participant(
         auto shm_transport =
           std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
         domainParticipantQos.transport().user_transports.push_back(shm_transport);
-        // Add UDP transport with max initial peers set to maximum possible value
+        // Add UDP transport with increased max initial peers.
+        // This controls the number of participants that can be connected to on a single host,
+        // which is roughly equivalent to the number of ROS 2 processes on a given domain id.
+        // If it's too small then we won't connect to all participants.
+        // If it's too large then we will send a lot of announcement traffic.
+        // The default number here is picked arbitrarily.
         auto udp_transport = std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
-        udp_transport->maxInitialPeersRange = 119;
+        udp_transport->maxInitialPeersRange = 32;
         domainParticipantQos.transport().user_transports.push_back(udp_transport);
         break;
       }
