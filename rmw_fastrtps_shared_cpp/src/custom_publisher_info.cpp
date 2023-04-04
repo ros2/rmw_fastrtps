@@ -360,14 +360,16 @@ void RMWPublisherEvent::update_matched(
 {
   std::lock_guard<std::mutex> lock(on_new_event_m_);
 
-  matched_status_.total_count = total_count;
-  matched_status_.total_count_change += total_count_change;
-  matched_status_.current_count = current_count;
-  matched_status_.current_count_change += current_count_change;
+  if (on_new_event_cb_[RMW_EVENT_PUBLICATION_MATCHED]) {
+    matched_status_.total_count = total_count;
+    matched_status_.total_count_change += total_count_change;
+    matched_status_.current_count = current_count;
+    matched_status_.current_count_change += current_count_change;
 
-  matched_changes_ = true;
+    matched_changes_ = true;
 
-  trigger_event(RMW_EVENT_PUBLICATION_MATCHED);
+    trigger_event(RMW_EVENT_PUBLICATION_MATCHED);
+  }
 }
 
 void RMWPublisherEvent::trigger_event(rmw_event_type_t event_type)
