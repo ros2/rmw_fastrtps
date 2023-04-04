@@ -35,7 +35,7 @@
 
 #include "rmw/allocators.h"
 #include "rmw/dynamic_message_type_support.h"
-#include "rmw/dynamic_message_type_support_identifier.h"
+#include "rmw/dynamic_typesupport_identifier.h"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/validate_full_topic_name.h"
@@ -132,11 +132,13 @@ create_subscription(
 
   // Short-circuit for runtime-type subscriptions
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
-    type_supports, rmw_dynamic_typesupport_c__identifier);
+    type_supports, rmw_get_dynamic_typesupport_identifier());
   if (type_support) {
     return __create_dynamic_subscription(
       participant_info, type_support, topic_name, qos_policies, subscription_options, keyed);
   }
+  // In the case it fails to find, rosidl_typesupport emits an error message
+  rcutils_reset_error();
 
   return __create_subscription(
     participant_info, type_supports,
@@ -161,7 +163,7 @@ __create_dynamic_subscription(
   //                     support deferral...
 
   if (type_support->typesupport_identifier !=
-    rmw_dynamic_typesupport_c__identifier)
+    rmw_get_dynamic_typesupport_identifier())
   {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "Type support not from this implementation. Got:\n"
@@ -169,7 +171,7 @@ __create_dynamic_subscription(
       "    %s\n"
       "while fetching it",
       type_support->typesupport_identifier,
-      rmw_dynamic_typesupport_c__identifier);
+      rmw_get_dynamic_typesupport_identifier());
     return nullptr;
   }
 
