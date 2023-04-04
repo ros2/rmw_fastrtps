@@ -27,7 +27,9 @@ You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment varia
 
 ## Advance usage
 
-ROS 2 only allows for the configuration of certain middleware QoS (see [ROS 2 QoS policies](https://docs.ros.org/en/foxy/Concepts/About-Quality-of-Service-Settings.html#qos-policies)).
+[//]: # (TODO sloretz - link ROS 2 discovery documentation when it's created)
+ROS 2 only allows for the configuration of certain middleware features.
+For example, see [ROS 2 QoS policies](https://docs.ros.org/en/foxy/Concepts/About-Quality-of-Service-Settings.html#qos-policies)).
 In addition to ROS 2 QoS policies, `rmw_fastrtps` sets two more Fast DDS configurable parameters:
 
 * History memory policy: `PREALLOCATED_WITH_REALLOC_MEMORY_MODE`
@@ -37,6 +39,7 @@ However, `rmw_fastrtps` offers the possibility to further configure Fast DDS:
 
 * [Change publication mode](#change-publication-mode)
 * [Full QoS configuration](#full-qos-configuration)
+* [Change participant discovery options](#change-participant-discovery-options)
 
 ### Change publication mode
 
@@ -224,6 +227,12 @@ The following example configures Fast DDS to publish synchronously, and to have 
         ```bash
         FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_xml_file> RMW_FASTRTPS_USE_QOS_FROM_XML=1 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ros2 run demo_nodes_cpp listener
         ```
+
+### Change participant discovery options
+
+ROS 2 allows controlling participant discovery with two environment variables: `ROS_AUTOMATIC_DISCOVERY_RANGE` and `ROS_STATIC_PEERS`.
+Full configuration of particpant discovery can also be set with XML files; however, the ROS specific environment variables should be disabled to prevent them from interferring.
+Set `ROS_AUTOMATIC_DISCOVERY_RANGE` to the value `SYSTEM_DEFAULT` to disable both ROS specific environment variables.
 
 ## Quality Declaration files
 
