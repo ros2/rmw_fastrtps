@@ -250,11 +250,11 @@ rmw_fastrtps_shared_cpp::create_participant(
     RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET == discovery_options->automatic_discovery_range &&
     domainParticipantQos.wire_protocol().builtin.initialPeersList.size())
   {
-    // Need to add default the default multicast address
+    // Make sure we send an announcment on the multicast address
     eprosima::fastrtps::rtps::Locator_t locator;
     eprosima::fastrtps::rtps::IPLocator::setIPv4(locator, 239, 255, 0, 1);
     domainParticipantQos.wire_protocol()
-    .builtin.metatrafficMulticastLocatorList.push_back(locator);
+    .builtin.initialPeersList.push_back(locator);
   }
 
   size_t length = snprintf(nullptr, 0, "enclave=%s;", enclave) + 1;
