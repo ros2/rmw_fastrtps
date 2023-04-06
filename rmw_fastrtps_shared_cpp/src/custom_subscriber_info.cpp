@@ -323,7 +323,8 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
     user_data_[event_type] = nullptr;
     on_new_event_cb_[event_type] = nullptr;
 
-    // subscription_matched status should be kept enabled, since we need to keep tracking matched publications
+    // subscription_matched status should be kept enabled, since we need to
+    // keep tracking matched publications
     if (RMW_EVENT_SUBSCRIPTION_MATCHED != event_type) {
       status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
     }
