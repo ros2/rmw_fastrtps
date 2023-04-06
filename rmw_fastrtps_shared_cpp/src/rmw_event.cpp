@@ -142,10 +142,18 @@ __rmw_init_event(
   rmw_event->data = data;
   rmw_event->event_type = event_type;
   CustomEventInfo * event = static_cast<CustomEventInfo *>(rmw_event->data);
-  eprosima::fastdds::dds::StatusMask status_mask =
-    event->get_listener()->get_statuscondition().get_enabled_statuses();
-  status_mask |= rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
-  event->get_listener()->get_statuscondition().set_enabled_statuses(status_mask);
+
+  // For matched events, we always notify the waitset with the guard condition,
+  // so we will not enable them on the status condition.
+  bool is_matched_event =
+    (RMW_EVENT_PUBLICATION_MATCHED == event_type) ||
+    (RMW_EVENT_SUBSCRIPTION_MATCHED == event_type);
+  if (!is_matched_event) {
+    eprosima::fastdds::dds::StatusMask status_mask =
+      event->get_listener()->get_statuscondition().get_enabled_statuses();
+    status_mask |= rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
+    event->get_listener()->get_statuscondition().set_enabled_statuses(status_mask);
+  }
 
   return RMW_RET_OK;
 }

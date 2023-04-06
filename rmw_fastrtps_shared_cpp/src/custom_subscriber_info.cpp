@@ -494,9 +494,7 @@ void RMWSubscriptionEvent::update_matched(
   matched_status_.current_count_change += current_count_change;
   matched_changes_ = true;
 
-  if (on_new_event_cb_[RMW_EVENT_SUBSCRIPTION_MATCHED]) {
-    trigger_event(RMW_EVENT_SUBSCRIPTION_MATCHED);
-  }
+  trigger_event(RMW_EVENT_SUBSCRIPTION_MATCHED);
 }
 
 void RMWSubscriptionEvent::trigger_event(rmw_event_type_t event_type)
