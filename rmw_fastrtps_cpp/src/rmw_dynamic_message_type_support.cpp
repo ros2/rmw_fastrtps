@@ -58,7 +58,7 @@ rmw_get_serialization_support(
   rosidl_dynamic_typesupport_serialization_support_t ** serialization_support)
 {
   return rmw_convert_rcutils_ret_to_rmw_ret(
-    rosidl_dynamic_typesupport_serialization_support_init(
+    rosidl_dynamic_typesupport_serialization_support_create(
       rosidl_dynamic_typesupport_fastrtps_create_serialization_support_impl(),
       rosidl_dynamic_typesupport_fastrtps_create_serialization_support_interface(),
       serialization_support));
