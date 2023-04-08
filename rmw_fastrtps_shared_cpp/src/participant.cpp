@@ -13,8 +13,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <string>
 #include <memory>
+#include <string>
 #include <unordered_map>
 #include <vector>
 
@@ -28,9 +28,11 @@
 #include "fastdds/dds/subscriber/Subscriber.hpp"
 #include "fastdds/dds/subscriber/qos/SubscriberQos.hpp"
 #include "fastdds/rtps/attributes/PropertyPolicy.h"
+#include "fastdds/rtps/common/Locator.h"
 #include "fastdds/rtps/common/Property.h"
 #include "fastdds/rtps/transport/UDPv4TransportDescriptor.h"
 #include "fastdds/rtps/transport/shared_mem/SharedMemTransportDescriptor.h"
+#include "fastrtps/utils/IPLocator.h"
 
 #include "rcpputils/scope_exit.hpp"
 #include "rcutils/env.h"
@@ -145,7 +147,7 @@ rmw_fastrtps_shared_cpp::create_participant(
   const char * identifier,
   size_t domain_id,
   const rmw_security_options_t * security_options,
-  bool localhost_only,
+  const rmw_discovery_options_t * discovery_options,
   const char * enclave,
   rmw_dds_common::Context * common_context)
 {
@@ -161,19 +163,103 @@ rmw_fastrtps_shared_cpp::create_participant(
   eprosima::fastdds::dds::DomainParticipantQos domainParticipantQos =
     eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->get_default_participant_qos();
 
+  // Configure discovery
+  switch (discovery_options->automatic_discovery_range) {
+    case RMW_AUTOMATIC_DISCOVERY_RANGE_NOT_SET:
+      RMW_SET_ERROR_MSG("automatic discovery range must be set");
+      return nullptr;
+      break;
+    case RMW_AUTOMATIC_DISCOVERY_RANGE_OFF: {
+        // Limit the number of participants to 1 (the local participant)
+        domainParticipantQos.allocation().participants.initial = 1;
+        domainParticipantQos.allocation().participants.maximum = 1;
+        domainParticipantQos.allocation().participants.increment = 0;
+        // Clear the list of multicast listening locators
+        domainParticipantQos.wire_protocol().builtin.metatrafficMulticastLocatorList.clear();
+        // Add a unicast locator to prevent creation of default multicast locator
+        eprosima::fastrtps::rtps::Locator_t default_unicast_locator;
+        domainParticipantQos.wire_protocol()
+        .builtin.metatrafficUnicastLocatorList.push_back(default_unicast_locator);
+        break;
+      }
+    case RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST: {
+        // Clear the list of multicast listening locators
+        domainParticipantQos.wire_protocol().builtin.metatrafficMulticastLocatorList.clear();
+        // Add a unicast locator to prevent creation of default multicast locator
+        eprosima::fastrtps::rtps::Locator_t default_unicast_locator;
+        domainParticipantQos.wire_protocol()
+        .builtin.metatrafficUnicastLocatorList.push_back(default_unicast_locator);
+        // Disable built-in transports, since we are configuring our own.
+        domainParticipantQos.transport().use_builtin_transports = false;
+        // Add a shared memory transport
+        auto shm_transport =
+          std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
+        domainParticipantQos.transport().user_transports.push_back(shm_transport);
+        // Add UDP transport with increased max initial peers.
+        // This controls the number of participants that can be discovered on a single host,
+        // which is roughly equivalent to the number of ROS 2 processes.
+        // If it's too small then we won't connect to all participants.
+        // If it's too large then we will send a lot of announcement traffic.
+        // The default number here is picked arbitrarily.
+        auto udp_transport = std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
+        udp_transport->maxInitialPeersRange = 32;
+        domainParticipantQos.transport().user_transports.push_back(udp_transport);
+        break;
+      }
+    case RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET:
+      // Nothing to do; use the default FastDDS behaviour
+      break;
+    case RMW_AUTOMATIC_DISCOVERY_RANGE_SYSTEM_DEFAULT:
+      // Nothing to do; use the default FastDDS behaviour
+      break;
+    default:
+      RMW_SET_ERROR_MSG("automatic_discovery_range is an unknown value");
+      return nullptr;
+      break;
+  }
 
-  if (localhost_only) {
-    // In order to use the interface white list, we need to disable the default transport config
-    domainParticipantQos.transport().use_builtin_transports = false;
+  // Add initial peers if LOCALHOST or SUBNET are used
+  if (
+    RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST == discovery_options->automatic_discovery_range ||
+    RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET == discovery_options->automatic_discovery_range)
+  {
+    for (size_t ii = 0; ii < discovery_options->static_peers_count; ++ii) {
+      eprosima::fastrtps::rtps::Locator_t peer;
+      auto response = eprosima::fastrtps::rtps::IPLocator::resolveNameDNS(
+        discovery_options->static_peers[ii].peer_address);
+      // Get the first returned IPv4
+      if (response.first.size() > 0) {
+        eprosima::fastrtps::rtps::IPLocator::setIPv4(peer, response.first.begin()->data());
+      } else {
+        RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+          "Unable to resolve peer %s\n",
+          discovery_options->static_peers[ii].peer_address);
+        return nullptr;
+      }
+      // Not specifying the port of the peer means FastDDS will try all
+      // possible participant ports according to the port calculation equation
+      // in the RTPS spec section 9.6.1.1, up to the number of peers specified
+      // in maxInitialPeersRange.
+      domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(peer);
+    }
+  }
 
-    // Add a UDPv4 transport with only localhost enabled
-    auto udp_transport = std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
-    udp_transport->interfaceWhiteList.emplace_back("127.0.0.1");
-    domainParticipantQos.transport().user_transports.push_back(udp_transport);
+  if (RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST == discovery_options->automatic_discovery_range) {
+    // Add localhost as a static peer
+    eprosima::fastrtps::rtps::Locator_t peer;
+    eprosima::fastrtps::rtps::IPLocator::setIPv4(peer, "127.0.0.1");
+    domainParticipantQos.wire_protocol().builtin.initialPeersList.push_back(peer);
+  }
 
-    // Add SHM transport if available
-    auto shm_transport = std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
-    domainParticipantQos.transport().user_transports.push_back(shm_transport);
+  if (
+    RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET == discovery_options->automatic_discovery_range &&
+    domainParticipantQos.wire_protocol().builtin.initialPeersList.size())
+  {
+    // Make sure we send an announcment on the multicast address
+    eprosima::fastrtps::rtps::Locator_t locator;
+    eprosima::fastrtps::rtps::IPLocator::setIPv4(locator, 239, 255, 0, 1);
+    domainParticipantQos.wire_protocol()
+    .builtin.initialPeersList.push_back(locator);
   }
 
   size_t length = snprintf(nullptr, 0, "enclave=%s;", enclave) + 1;

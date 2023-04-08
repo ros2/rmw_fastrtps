@@ -46,6 +46,7 @@ protected:
     });
     options.enclave = rcutils_strdup("/", rcutils_get_default_allocator());
     ASSERT_STREQ("/", options.enclave);
+    options.discovery_options.automatic_discovery_range = RMW_AUTOMATIC_DISCOVERY_RANGE_OFF;
     ret = rmw_init(&options, &context);
     ASSERT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
     constexpr char node_name[] = "my_node";

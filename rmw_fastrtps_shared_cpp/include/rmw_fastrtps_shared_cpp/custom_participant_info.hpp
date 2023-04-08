@@ -142,8 +142,10 @@ public:
 
   void on_participant_discovery(
     eprosima::fastdds::dds::DomainParticipant *,
-    eprosima::fastrtps::rtps::ParticipantDiscoveryInfo && info) override
+    eprosima::fastrtps::rtps::ParticipantDiscoveryInfo && info,
+    bool & should_be_ignored) override
   {
+    should_be_ignored = false;
     switch (info.status) {
       case eprosima::fastrtps::rtps::ParticipantDiscoveryInfo::DISCOVERED_PARTICIPANT:
         {
@@ -211,6 +213,12 @@ private:
         if (RMW_RET_OK != rmw_dds_common::parse_type_hash_from_user_data(
             userDataValue.data(), userDataValue.size(), type_hash))
         {
+          // Avoid deadlock trying to acquire rclcpp's global logging mutex
+          // by using eProsima's logging mechanism.
+          // TODO(sloretz) revisit when this is fixed: https://github.com/ros2/rclcpp/issues/2147
+          EPROSIMA_LOG_WARNING(
+            "rmw_fastrtps_shared_cpp", "Failed to parse a type hash for a topic");
+          /*
           RCUTILS_LOG_WARN_NAMED(
             "rmw_fastrtps_shared_cpp",
             "Failed to parse type hash for topic '%s' with type '%s' from USER_DATA '%*s'.",
@@ -218,6 +226,7 @@ private:
             proxyData.typeName().c_str(),
             static_cast<int>(userDataValue.size()),
             reinterpret_cast<const char *>(userDataValue.data()));
+          */
           type_hash = rosidl_get_zero_initialized_type_hash();
         }
 
