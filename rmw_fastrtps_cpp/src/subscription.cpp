@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <rosidl_dynamic_typesupport/identifier.h>
+
 #include <string>
 #include <utility>
 
@@ -132,7 +134,7 @@ create_subscription(
 
   // Short-circuit for runtime-type subscriptions
   const rosidl_message_type_support_t * type_support = get_message_typesupport_handle(
-    type_supports, rmw_get_dynamic_typesupport_identifier());
+    type_supports, rosidl_get_dynamic_typesupport_identifier());
   if (type_support) {
     return __create_dynamic_subscription(
       participant_info, type_support, topic_name, qos_policies, subscription_options, keyed);
@@ -162,16 +164,14 @@ __create_dynamic_subscription(
   //                     already having the type. Too much restructuring is needed elsewhere to
   //                     support deferral...
 
-  if (type_support->typesupport_identifier !=
-    rmw_get_dynamic_typesupport_identifier())
-  {
+  if (type_support->typesupport_identifier != rosidl_get_dynamic_typesupport_identifier()) {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "Type support not from this implementation. Got:\n"
       "    %s, but expected\n"
       "    %s\n"
       "while fetching it",
       type_support->typesupport_identifier,
-      rmw_get_dynamic_typesupport_identifier());
+      rosidl_get_dynamic_typesupport_identifier());
     return nullptr;
   }
 
