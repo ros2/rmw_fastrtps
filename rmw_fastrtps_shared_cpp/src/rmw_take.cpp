@@ -35,6 +35,8 @@
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
 
+#include "rosidl_dynamic_typesupport/types.h"
+
 #include "tracetools/tracetools.h"
 
 #include "rcpputils/scope_exit.hpp"
@@ -85,7 +87,7 @@ _take(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
   rmw_fastrtps_shared_cpp::SerializedData data;
-  data.is_cdr_buffer = false;
+  data.type = FASTRTPS_SERIALIZED_DATA_TYPE_ROS_MESSAGE;
   data.data = ros_message;
   data.impl = info->type_support_impl_;
 
@@ -94,6 +96,9 @@ _take(
   eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
 
   while (ReturnCode_t::RETCODE_OK == info->data_reader_->take(data_values, info_seq, 1)) {
+    // The info->data_reader_->take() call already modified the ros_message arg
+    // See rmw_fastrtps_shared_cpp/src/TypeSupport_impl.cpp
+
     auto reset = rcpputils::make_scope_exit(
       [&]()
       {
@@ -307,12 +312,11 @@ _take_serialized_message(
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
 
   eprosima::fastcdr::FastBuffer buffer;
-  eprosima::fastdds::dds::SampleInfo sinfo;
 
   rmw_fastrtps_shared_cpp::SerializedData data;
-  data.is_cdr_buffer = true;
+  data.type = FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER;
   data.data = &buffer;
-  data.impl = nullptr;    // not used when is_cdr_buffer is true
+  data.impl = nullptr;  // not used when type is FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER
 
   eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> data_values;
   const_cast<void **>(data_values.buffer())[0] = &data;
@@ -392,6 +396,112 @@ __rmw_take_serialized_message_with_info(
 
   return _take_serialized_message(
     identifier, subscription, serialized_message, taken, message_info, allocation);
+}
+
+rmw_ret_t
+_take_dynamic_message(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  rosidl_dynamic_typesupport_dynamic_data_t * dynamic_data,
+  bool * taken,
+  rmw_message_info_t * message_info,
+  rmw_subscription_allocation_t * allocation)
+{
+  (void) allocation;
+  *taken = false;
+
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription handle,
+    subscription->implementation_identifier, identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "custom subscriber info is null", return RMW_RET_ERROR);
+
+  eprosima::fastcdr::FastBuffer buffer;
+
+  rmw_fastrtps_shared_cpp::SerializedData data;
+  data.type = FASTRTPS_SERIALIZED_DATA_TYPE_DYNAMIC_MESSAGE;
+  data.data = dynamic_data->impl->handle;
+  data.impl = nullptr;  // not used when type is FASTRTPS_SERIALIZED_DATA_TYPE_DYNAMIC_MESSAGE
+
+  eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> data_values;
+  const_cast<void **>(data_values.buffer())[0] = &data;
+  eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
+
+  while (ReturnCode_t::RETCODE_OK == info->data_reader_->take(data_values, info_seq, 1)) {
+    // The info->data_reader_->take() call already modified the dynamic_data arg
+    // See rmw_fastrtps_shared_cpp/src/TypeSupport_impl.cpp
+
+    auto reset = rcpputils::make_scope_exit(
+      [&]()
+      {
+        data_values.length(0);
+        info_seq.length(0);
+      });
+
+    if (info_seq[0].valid_data) {
+      if (message_info) {
+        _assign_message_info(identifier, message_info, &info_seq[0]);
+      }
+      *taken = true;
+      break;
+    }
+  }
+
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
+__rmw_take_dynamic_message(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  rosidl_dynamic_typesupport_dynamic_data_t * dynamic_data,
+  bool * taken,
+  rmw_subscription_allocation_t * allocation)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    subscription, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    dynamic_data, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    dynamic_data->impl, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    taken, RMW_RET_INVALID_ARGUMENT);
+
+  return _take_dynamic_message(
+    identifier, subscription, dynamic_data, taken, nullptr, allocation);
+}
+
+rmw_ret_t
+__rmw_take_dynamic_message_with_info(
+  const char * identifier,
+  const rmw_subscription_t * subscription,
+  rosidl_dynamic_typesupport_dynamic_data_t * dynamic_data,
+  bool * taken,
+  rmw_message_info_t * message_info,
+  rmw_subscription_allocation_t * allocation)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    subscription, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    dynamic_data, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    dynamic_data->impl, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    taken, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    message_info, RMW_RET_INVALID_ARGUMENT);
+
+  return _take_dynamic_message(
+    identifier, subscription, dynamic_data, taken, message_info, allocation);
 }
 
 // ----------------- Loans related code ------------------------- //

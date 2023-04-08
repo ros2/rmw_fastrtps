@@ -58,9 +58,9 @@ __rmw_take_response(
   // Todo(sloretz) eliminate heap allocation pending eprosima/Fast-CDR#19
   response.buffer_.reset(new eprosima::fastcdr::FastBuffer());
   rmw_fastrtps_shared_cpp::SerializedData data;
-  data.is_cdr_buffer = true;
+  data.type = FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER;
   data.data = response.buffer_.get();
-  data.impl = nullptr;      // not used when is_cdr_buffer is true
+  data.impl = nullptr;  // not used when type is FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER
 
   eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> data_values;
   const_cast<void **>(data_values.buffer())[0] = &data;
@@ -152,7 +152,7 @@ __rmw_send_response(
   }
 
   rmw_fastrtps_shared_cpp::SerializedData data;
-  data.is_cdr_buffer = false;
+  data.type = FASTRTPS_SERIALIZED_DATA_TYPE_ROS_MESSAGE;
   data.data = const_cast<void *>(ros_response);
   data.impl = info->response_type_support_impl_;
   if (info->response_writer_->write(&data, wparams)) {

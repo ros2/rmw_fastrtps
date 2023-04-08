@@ -44,6 +44,7 @@ find_package(fastrtps 2.10 REQUIRED CONFIG)
 find_package(FastRTPS 2.10 REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
+find_package(rosidl_dynamic_typesupport REQUIRED)
 find_package(rosidl_runtime_c REQUIRED)
 find_package(rosidl_typesupport_fastrtps_c REQUIRED)
 find_package(rosidl_typesupport_fastrtps_cpp REQUIRED)
@@ -63,6 +64,7 @@ add_library(rmw_fastrtps_cpp
   src/rmw_client.cpp
   src/rmw_compare_gids_equal.cpp
   src/rmw_count.cpp
+  src/rmw_dynamic_message_type_support.cpp
   src/rmw_event.cpp
   src/rmw_features.cpp
   src/rmw_get_gid_for_client.cpp
