@@ -125,7 +125,7 @@ _take(
     }
   }
 
-  TRACEPOINT(
+  TRACETOOLS_TRACEPOINT(
     rmw_take,
     static_cast<const void *>(subscription),
     static_cast<const void *>(ros_message),

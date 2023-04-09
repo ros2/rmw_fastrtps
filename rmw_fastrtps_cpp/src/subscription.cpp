@@ -454,7 +454,7 @@ __create_dynamic_subscription(
   cleanup_datareader.cancel();
   cleanup_info.cancel();
 
-  TRACEPOINT(
+  TRACETOOLS_TRACEPOINT(
     rmw_subscription_init,
     static_cast<const void *>(rmw_subscription),
     info->subscription_gid_.data);
@@ -721,7 +721,7 @@ __create_subscription(
   cleanup_datareader.cancel();
   cleanup_info.cancel();
 
-  TRACEPOINT(
+  TRACETOOLS_TRACEPOINT(
     rmw_subscription_init,
     static_cast<const void *>(rmw_subscription),
     info->subscription_gid_.data);

@@ -57,7 +57,7 @@ __rmw_publish(
   data.type = FASTRTPS_SERIALIZED_DATA_TYPE_ROS_MESSAGE;
   data.data = const_cast<void *>(ros_message);
   data.impl = info->type_support_impl_;
-  TRACEPOINT(rmw_publish, ros_message);
+  TRACETOOLS_TRACEPOINT(rmw_publish, ros_message);
   if (!info->data_writer_->write(&data)) {
     RMW_SET_ERROR_MSG("cannot publish data");
     return RMW_RET_ERROR;
