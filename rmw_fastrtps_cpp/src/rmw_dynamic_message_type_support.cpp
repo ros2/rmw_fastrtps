@@ -56,7 +56,7 @@ rmw_take_dynamic_message_with_info(
 }
 
 rmw_ret_t
-rmw_init_serialization_support(
+rmw_serialization_support_init(
   const char * /*serialization_lib_name*/,
   rcutils_allocator_t * allocator,
   rosidl_dynamic_typesupport_serialization_support_t * serialization_support)
