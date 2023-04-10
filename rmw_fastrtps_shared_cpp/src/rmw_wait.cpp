@@ -29,7 +29,6 @@
 
 namespace rmw_fastrtps_shared_cpp
 {
-
 /// Check if any condition in the set of entities has a triggered condition.
 /**
  * If any condition is triggered before waiting, then we can skip some set-up,
@@ -42,14 +41,18 @@ namespace rmw_fastrtps_shared_cpp
  * \param[in] events events to check
  * \return true if any condition is triggered, false otherwise
  */
-bool has_triggered_condition(
+static bool has_triggered_condition(
   rmw_subscriptions_t * subscriptions,
   rmw_guard_conditions_t * guard_conditions,
   rmw_services_t * services,
   rmw_clients_t * clients,
   rmw_events_t * events)
 {
-  // Events and guard conditions are the cheapest to check, so check them first
+  // `get_first_untaken_info` is relatively more expensive than checking guard conditions,
+  // so should be skipped if possible.
+  // Subscriptions, services, and clients typically have additional waitables
+  // connected (eg receive event or intraprocess waitable), so we can hit those first
+  // before having to query SampleInfo.
   if (guard_conditions) {
     for (size_t i = 0; i < guard_conditions->guard_condition_count; ++i) {
       void * data = guard_conditions->guard_conditions[i];
@@ -198,7 +201,7 @@ __rmw_wait(
     }
 
     // Attach all of the conditions to the wait set.
-    // \TODO(mjcarroll) When upstream has the ability to attach a vector of conditions,
+    // TODO(mjcarroll): When upstream has the ability to attach a vector of conditions,
     // switch to that API
     for (auto & condition : attached_conditions) {
       fastdds_wait_set->attach_condition(*condition);
@@ -215,7 +218,7 @@ __rmw_wait(
     wait_result = (ret_code == ReturnCode_t::RETCODE_OK);
 
     // Detach all of the conditions from the wait set.
-    // \TODO(mjcarroll) When upstream has the ability to detach a vector of conditions,
+    // TODO(mjcarroll): When upstream has the ability to detach a vector of conditions,
     // switch to that API
     for (auto & condition : attached_conditions) {
       fastdds_wait_set->detach_condition(*condition);
