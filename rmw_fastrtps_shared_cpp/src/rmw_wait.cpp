@@ -56,7 +56,8 @@ bool should_skip_wait(
     for (size_t i = 0; i < events->event_count; ++i) {
       auto event = static_cast<rmw_event_t *>(events->events[i]);
       auto custom_event_info = static_cast<CustomEventInfo *>(event->data);
-      if (custom_event_info->get_listener()->get_statuscondition().get_trigger_value())
+      if (custom_event_info->get_listener()->get_statuscondition().get_trigger_value() ||
+          custom_event_info->get_listener()->get_event_guard(event->event_type).get_trigger_value())
         return true;
     }
   }
