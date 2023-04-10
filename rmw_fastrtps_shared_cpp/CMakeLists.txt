@@ -49,9 +49,6 @@ find_package(fastcdr REQUIRED CONFIG)
 find_package(fastrtps 2.3 REQUIRED CONFIG)
 find_package(FastRTPS 2.3 REQUIRED MODULE)
 
-find_package(Threads REQUIRED)
-find_package(tracy_vendor REQUIRED)
-
 find_package(rmw REQUIRED)
 
 add_library(rmw_fastrtps_shared_cpp
@@ -118,8 +115,6 @@ ament_target_dependencies(rmw_fastrtps_shared_cpp
   "rosidl_typesupport_introspection_c"
   "rosidl_typesupport_introspection_cpp"
   "tracetools"
-  "tracy_vendor"
-  "Threads"
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
@@ -142,8 +137,6 @@ ament_export_dependencies(rmw_dds_common)
 ament_export_dependencies(rosidl_typesupport_introspection_c)
 ament_export_dependencies(rosidl_typesupport_introspection_cpp)
 ament_export_dependencies(tracetools)
-ament_export_dependencies(tracy_vendor)
-ament_export_dependencies(Threads)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)
