@@ -98,5 +98,4 @@ fail:
   }
   return rmw_convert_rcutils_ret_to_rmw_ret(ret);
 }
-
 }  // extern "C"

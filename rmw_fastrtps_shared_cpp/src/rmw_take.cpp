@@ -422,7 +422,7 @@ _take_dynamic_message(
 
   rmw_fastrtps_shared_cpp::SerializedData data;
   data.type = FASTRTPS_SERIALIZED_DATA_TYPE_DYNAMIC_MESSAGE;
-  data.data = dynamic_data->impl->handle;
+  data.data = dynamic_data->impl.handle;
   data.impl = nullptr;  // not used when type is FASTRTPS_SERIALIZED_DATA_TYPE_DYNAMIC_MESSAGE
 
   eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> data_values;
@@ -467,9 +467,6 @@ __rmw_take_dynamic_message(
     dynamic_data, RMW_RET_INVALID_ARGUMENT);
 
   RMW_CHECK_ARGUMENT_FOR_NULL(
-    dynamic_data->impl, RMW_RET_INVALID_ARGUMENT);
-
-  RMW_CHECK_ARGUMENT_FOR_NULL(
     taken, RMW_RET_INVALID_ARGUMENT);
 
   return _take_dynamic_message(
@@ -490,9 +487,6 @@ __rmw_take_dynamic_message_with_info(
 
   RMW_CHECK_ARGUMENT_FOR_NULL(
     dynamic_data, RMW_RET_INVALID_ARGUMENT);
-
-  RMW_CHECK_ARGUMENT_FOR_NULL(
-    dynamic_data->impl, RMW_RET_INVALID_ARGUMENT);
 
   RMW_CHECK_ARGUMENT_FOR_NULL(
     taken, RMW_RET_INVALID_ARGUMENT);
