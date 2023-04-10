@@ -13,7 +13,10 @@
 // limitations under the License.
 
 #include <fastcdr/Cdr.h>
+#include <rcutils/allocator.h>
 #include <rcutils/logging_macros.h>
+#include <rosidl_dynamic_typesupport/types.h>
+#include <rosidl_dynamic_typesupport/api/serialization_support_interface.h>
 #include <rosidl_dynamic_typesupport_fastrtps/serialization_support.h>
 
 #include "rmw/allocators.h"
@@ -53,14 +56,47 @@ rmw_take_dynamic_message_with_info(
 }
 
 rmw_ret_t
-rmw_get_serialization_support(
+rmw_init_serialization_support(
   const char * /*serialization_lib_name*/,
-  rosidl_dynamic_typesupport_serialization_support_t ** serialization_support)
+  rcutils_allocator_t * allocator,
+  rosidl_dynamic_typesupport_serialization_support_t * serialization_support)
 {
+  RMW_CHECK_ARGUMENT_FOR_NULL(allocator, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_ARGUMENT_FOR_NULL(serialization_support, RMW_RET_INVALID_ARGUMENT);
+
+  rcutils_ret_t ret = RCUTILS_RET_ERROR;
+
+  rosidl_dynamic_typesupport_serialization_support_impl_t impl =
+    rosidl_dynamic_typesupport_get_zero_initialized_serialization_support_impl();
+
+  rosidl_dynamic_typesupport_serialization_support_interface_t methods =
+    rosidl_dynamic_typesupport_get_zero_initialized_serialization_support_interface();
+
+  ret = rosidl_dynamic_typesupport_fastrtps_init_serialization_support_impl(allocator, &impl);
+  if (ret != RCUTILS_RET_OK) {
+    RMW_SET_ERROR_MSG_AND_APPEND_PREV_ERROR("Could not initialize serialization support impl");
+    goto fail;
+  }
+
+  ret = rosidl_dynamic_typesupport_fastrtps_init_serialization_support_interface(
+    allocator, &methods);
+  if (ret != RCUTILS_RET_OK) {
+    RMW_SET_ERROR_MSG_AND_APPEND_PREV_ERROR("could not initialize serialization support interface");
+    goto fail;
+  }
+
   return rmw_convert_rcutils_ret_to_rmw_ret(
-    rosidl_dynamic_typesupport_serialization_support_create(
-      rosidl_dynamic_typesupport_fastrtps_create_serialization_support_impl(),
-      rosidl_dynamic_typesupport_fastrtps_create_serialization_support_interface(),
-      serialization_support));
+    rosidl_dynamic_typesupport_serialization_support_init(
+      &impl, &methods, allocator, serialization_support));
+
+fail:
+  if (rosidl_dynamic_typesupport_serialization_support_fini(serialization_support) !=
+    RCUTILS_RET_ERROR)
+  {
+    RCUTILS_SAFE_FWRITE_TO_STDERR_AND_APPEND_PREV_ERROR(
+      "While handling another error, could not finalize serialization support");
+  }
+  return rmw_convert_rcutils_ret_to_rmw_ret(ret);
 }
+
 }  // extern "C"
