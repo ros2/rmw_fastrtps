@@ -62,6 +62,10 @@ rmw_serialization_support_init(
   rosidl_dynamic_typesupport_serialization_support_t * serialization_support)
 {
   RMW_CHECK_ARGUMENT_FOR_NULL(allocator, RMW_RET_INVALID_ARGUMENT);
+  if (!rcutils_allocator_is_valid(allocator)) {
+    RMW_SET_ERROR_MSG("allocator is invalid");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
   RMW_CHECK_ARGUMENT_FOR_NULL(serialization_support, RMW_RET_INVALID_ARGUMENT);
 
   rcutils_ret_t ret = RCUTILS_RET_ERROR;
