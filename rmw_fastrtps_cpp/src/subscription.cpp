@@ -187,7 +187,7 @@ __create_dynamic_subscription(
   // Create Topic and Type names
   auto dyn_type_ptr = eprosima::fastrtps::types::DynamicType_ptr(
     *static_cast<eprosima::fastrtps::types::DynamicType_ptr *>(
-      ts_impl->dynamic_message_type->impl->handle));
+      ts_impl->dynamic_message_type->impl.handle));
 
   // Check if we need to split the name into namespace and type name
   std::string type_name = dyn_type_ptr->get_name();
