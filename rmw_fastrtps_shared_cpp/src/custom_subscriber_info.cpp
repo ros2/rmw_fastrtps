@@ -206,21 +206,20 @@ bool RMWSubscriptionEvent::take_event(
       {
         auto rmw_data = static_cast<rmw_matched_status_t *>(event_info);
 
-        if (matched_changes_) {
-          rmw_data->total_count = static_cast<size_t>(matched_status_.total_count);
-          rmw_data->total_count_change = static_cast<size_t>(matched_status_.total_count_change);
-          rmw_data->current_count = static_cast<size_t>(matched_status_.current_count);
-          rmw_data->current_count_change = matched_status_.current_count_change;
-          matched_changes_ = false;
-        } else {
-          eprosima::fastdds::dds::SubscriptionMatchedStatus matched_status;
-          subscriber_info_->data_reader_->get_subscription_matched_status(matched_status);
+        eprosima::fastdds::dds::SubscriptionMatchedStatus matched_status;
+        subscriber_info_->data_reader_->get_subscription_matched_status(matched_status);
 
-          rmw_data->total_count = static_cast<size_t>(matched_status.total_count);
-          rmw_data->total_count_change = static_cast<size_t>(matched_status.total_count_change);
-          rmw_data->current_count = static_cast<size_t>(matched_status.current_count);
-          rmw_data->current_count_change = matched_status.current_count_change;
+        rmw_data->total_count = static_cast<size_t>(matched_status.total_count);
+        rmw_data->total_count_change = static_cast<size_t>(matched_status.total_count_change);
+        rmw_data->current_count = static_cast<size_t>(matched_status.current_count);
+        rmw_data->current_count_change = matched_status.current_count_change;
+
+        if (matched_changes_) {
+          rmw_data->total_count_change += static_cast<size_t>(matched_status_.total_count_change);
+          rmw_data->current_count_change += matched_status_.current_count_change;
+          matched_changes_ = false;
         }
+
         matched_status_.total_count_change = 0;
         matched_status_.current_count_change = 0;
       }
@@ -323,7 +322,11 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
     user_data_[event_type] = nullptr;
     on_new_event_cb_[event_type] = nullptr;
 
-    status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
+    // subscription_matched status should be kept enabled, since we need to
+    // keep tracking matched publications
+    if (RMW_EVENT_SUBSCRIPTION_MATCHED != event_type) {
+      status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
+    }
   }
 
   subscriber_info_->data_reader_->set_listener(
@@ -488,7 +491,6 @@ void RMWSubscriptionEvent::update_matched(
   matched_status_.total_count_change += total_count_change;
   matched_status_.current_count = current_count;
   matched_status_.current_count_change += current_count_change;
-
   matched_changes_ = true;
 
   trigger_event(RMW_EVENT_SUBSCRIPTION_MATCHED);
