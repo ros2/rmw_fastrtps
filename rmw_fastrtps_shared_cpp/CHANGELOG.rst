@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix matched event issues (`#683 <https://github.com/ros2/rmw_fastrtps/issues/683>`_)
+* Contributors: Miguel Company
+
 7.1.0 (2023-04-12)
 ------------------
 * Dynamic Subscription (BONUS: Allocators): rmw_fastrtps (`#687 <https://github.com/ros2/rmw_fastrtps/issues/687>`_)
