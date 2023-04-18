@@ -78,8 +78,8 @@ protected:
 
   std::mutex on_new_event_m_;
 
-  bool inconsistent_topic_changed_{false}
-  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+  bool inconsistent_topic_changed_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_) = false;
 
   eprosima::fastdds::dds::InconsistentTopicStatus inconsistent_topic_status_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
