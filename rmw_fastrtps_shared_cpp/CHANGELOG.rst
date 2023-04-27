@@ -2,6 +2,9 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+7.2.0 (2023-04-27)
+------------------
+
 7.1.1 (2023-04-12)
 ------------------
 * Fix matched event issues (`#683 <https://github.com/ros2/rmw_fastrtps/issues/683>`_)
