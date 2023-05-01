@@ -87,6 +87,12 @@ rmw_init_options_copy(
     &src->discovery_options,
     &allocator,
     &tmp.discovery_options);
+  if (ret != RMW_RET_OK) {
+    allocator.deallocate(tmp.enclave, allocator.state);
+    rmw_security_options_fini(&tmp.security_options, &allocator);
+    // Error already set
+    return ret;
+  }
   *dst = tmp;
   return RMW_RET_OK;
 }
