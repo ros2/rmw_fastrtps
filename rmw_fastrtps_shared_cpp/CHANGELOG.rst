@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+7.2.1 (2023-05-11)
+------------------
 * address clang nightly build error. (`#689 <https://github.com/ros2/rmw_fastrtps/issues/689>`_)
 * Check for errors while doing an rmw_discovery_options_copy. (`#690 <https://github.com/ros2/rmw_fastrtps/issues/690>`_)
 * Contributors: Chris Lalancette, Tomoya Fujita
