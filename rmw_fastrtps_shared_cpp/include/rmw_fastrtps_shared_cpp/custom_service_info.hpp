@@ -248,13 +248,8 @@ public:
     data.is_cdr_buffer = true;
     data.data = request.buffer_;
     data.impl = nullptr;    // not used when is_cdr_buffer is true
-<<<<<<< HEAD
-    if (sub->takeNextData(&data, &request.sample_info_)) {
+    while (sub->takeNextData(&data, &request.sample_info_)) {
       if (eprosima::fastrtps::rtps::ALIVE == request.sample_info_.sampleKind) {
-=======
-    while (reader->take_next_sample(&data, &request.sample_info_) == ReturnCode_t::RETCODE_OK) {
-      if (request.sample_info_.valid_data) {
->>>>>>> e9abdc4 (Take all available samples on service/client on_data_available. (#616))
         request.sample_identity_ = request.sample_info_.sample_identity;
         // Use response subscriber guid (on related_sample_identity) when present.
         const eprosima::fastrtps::rtps::GUID_t & reader_guid =
