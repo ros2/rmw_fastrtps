@@ -126,7 +126,7 @@ public:
   explicit RMWSubscriptionEvent(CustomSubscriberInfo * info);
 
   // Provide handlers to perform an action when a
-  // new event from this listener has ocurred
+  // new event from this listener has occurred
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void
   set_on_new_message_callback(
