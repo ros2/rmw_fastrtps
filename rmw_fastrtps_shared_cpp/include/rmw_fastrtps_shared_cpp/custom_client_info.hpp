@@ -124,7 +124,7 @@ public:
   }
 
   // Provide handlers to perform an action when a
-  // new event from this listener has ocurred
+  // new event from this listener has occurred
   void
   set_on_new_response_callback(
     const void * user_data,

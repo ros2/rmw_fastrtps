@@ -231,7 +231,7 @@ The following example configures Fast DDS to publish synchronously, and to have 
 ### Change participant discovery options
 
 ROS 2 allows controlling participant discovery with two environment variables: `ROS_AUTOMATIC_DISCOVERY_RANGE` and `ROS_STATIC_PEERS`.
-Full configuration of particpant discovery can also be set with XML files; however, the ROS specific environment variables should be disabled to prevent them from interferring.
+Full configuration of participant discovery can also be set with XML files; however, the ROS specific environment variables should be disabled to prevent them from interfering.
 Set `ROS_AUTOMATIC_DISCOVERY_RANGE` to the value `SYSTEM_DEFAULT` to disable both ROS specific environment variables.
 
 ## Quality Declaration files
