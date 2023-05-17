@@ -248,7 +248,7 @@ public:
     data.is_cdr_buffer = true;
     data.data = request.buffer_;
     data.impl = nullptr;    // not used when is_cdr_buffer is true
-    if (sub->takeNextData(&data, &request.sample_info_)) {
+    while (sub->takeNextData(&data, &request.sample_info_)) {
       if (eprosima::fastrtps::rtps::ALIVE == request.sample_info_.sampleKind) {
         request.sample_identity_ = request.sample_info_.sample_identity;
         // Use response subscriber guid (on related_sample_identity) when present.
