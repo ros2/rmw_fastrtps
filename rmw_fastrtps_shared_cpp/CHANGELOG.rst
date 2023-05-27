@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Take all available samples on service/client on_data_available. (backport `#616 <https://github.com/ros2/rmw_fastrtps/issues/616>`_) (`#623 <https://github.com/ros2/rmw_fastrtps/issues/623>`_)
+* Contributors: Miguel Company, Tomoya Fujita
+
 1.3.1 (2022-07-25)
 ------------------
 * Handle exception on deserializing ROS message (`#603 <https://github.com/ros2/rmw_fastrtps/issues/603>`_)

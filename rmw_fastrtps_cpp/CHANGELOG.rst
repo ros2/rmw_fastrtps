@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Fix incoherent dissociate_writer to dissociate_reader (`#647 <https://github.com/ros2/rmw_fastrtps/issues/647>`_) (`#649 <https://github.com/ros2/rmw_fastrtps/issues/649>`_) (`#652 <https://github.com/ros2/rmw_fastrtps/issues/652>`_)
+* Contributors: Oscarchoi
+
 1.3.1 (2022-07-25)
 ------------------
 * Handle exception on deserializing ROS message (`#603 <https://github.com/ros2/rmw_fastrtps/issues/603>`_)
