@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+1.3.2 (2023-05-27)
+------------------
 * Take all available samples on service/client on_data_available. (backport `#616 <https://github.com/ros2/rmw_fastrtps/issues/616>`_) (`#623 <https://github.com/ros2/rmw_fastrtps/issues/623>`_)
 * Contributors: Miguel Company, Tomoya Fujita
 
