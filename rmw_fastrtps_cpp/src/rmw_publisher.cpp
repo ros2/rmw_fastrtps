@@ -151,6 +151,23 @@ rmw_publisher_count_matched_subscriptions(
 }
 
 rmw_ret_t
+rmw_publisher_count_non_local_matched_subscriptions(
+  const rmw_publisher_t * publisher,
+  size_t * non_local_subscription_count)
+{
+  RMW_CHECK_ARGUMENT_FOR_NULL(publisher, RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher,
+    publisher->implementation_identifier,
+    eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_ARGUMENT_FOR_NULL(non_local_subscription_count, RMW_RET_INVALID_ARGUMENT);
+
+  return rmw_fastrtps_shared_cpp::__rmw_publisher_count_non_local_matched_subscriptions(
+    publisher, non_local_subscription_count);
+}
+
+rmw_ret_t
 rmw_publisher_assert_liveliness(const rmw_publisher_t * publisher)
 {
   return rmw_fastrtps_shared_cpp::__rmw_publisher_assert_liveliness(

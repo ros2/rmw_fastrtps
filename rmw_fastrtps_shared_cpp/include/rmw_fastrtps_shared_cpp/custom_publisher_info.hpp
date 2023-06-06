@@ -122,7 +122,7 @@ public:
    * \param[in] guid The GUID of the newly-matched subscription to track.
    */
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void track_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid);
+  void track_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid, bool is_local);
 
   /// Remove a GUID from the internal set of unique subscriptions matched to this publisher.
   /**
@@ -132,7 +132,7 @@ public:
    * \param[in] guid The GUID of the newly-unmatched subscription to track.
    */
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void untrack_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid);
+  void untrack_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid, bool is_local);
 
   /// Return the number of unique subscriptions matched to this publisher.
   /**
@@ -140,6 +140,13 @@ public:
    */
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   size_t subscription_count() const;
+
+  /// Return the number of unique non-local subscriptions matched to this publisher.
+  /**
+   * \return Number of unique non-local subscriptions matched to this publisher.
+   */
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  size_t non_local_subscription_count() const;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void update_deadline(uint32_t total_count, uint32_t total_count_change);
@@ -163,6 +170,9 @@ private:
   CustomPublisherInfo * publisher_info_ = nullptr;
 
   std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_
+  RCPPUTILS_TSA_GUARDED_BY(subscriptions_mutex_);
+
+  std::set<eprosima::fastrtps::rtps::GUID_t> non_local_subscriptions_
   RCPPUTILS_TSA_GUARDED_BY(subscriptions_mutex_);
 
   mutable std::mutex subscriptions_mutex_;
