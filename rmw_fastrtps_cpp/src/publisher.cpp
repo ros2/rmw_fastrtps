@@ -321,7 +321,7 @@ rmw_fastrtps_cpp::create_publisher(
   cleanup_datawriter.cancel();
   cleanup_info.cancel();
 
-  TRACEPOINT(
+  TRACETOOLS_TRACEPOINT(
     rmw_publisher_init,
     static_cast<const void *>(rmw_publisher),
     info->publisher_gid.data);
