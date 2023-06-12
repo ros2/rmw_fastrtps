@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use TRACETOOLS\_ prefix for tracepoint-related macros (`#686 <https://github.com/ros2/rmw_fastrtps/issues/686>`_)
+* Contributors: Christophe Bedard
+
 7.2.1 (2023-05-11)
 ------------------
 

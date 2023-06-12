@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use TRACETOOLS\_ prefix for tracepoint-related macros (`#686 <https://github.com/ros2/rmw_fastrtps/issues/686>`_)
+* typo fix. (`#693 <https://github.com/ros2/rmw_fastrtps/issues/693>`_)
+* Contributors: Christophe Bedard, Tomoya Fujita
+
 7.2.1 (2023-05-11)
 ------------------
 * address clang nightly build error. (`#689 <https://github.com/ros2/rmw_fastrtps/issues/689>`_)

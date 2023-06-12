@@ -2,6 +2,9 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 7.2.1 (2023-05-11)
 ------------------
 
