@@ -165,6 +165,9 @@ fill_data_entity_qos_from_profile(
       "rmw_fastrtps_shared_cpp",
       "Failed to encode type hash for topic, will not distribute it in USER_DATA.");
     user_data_str.clear();
+    // Since we are going to go on without a hash, we clear the error so other
+    // code won't overwrite it.
+    rmw_reset_error();
   }
   std::vector<uint8_t> user_data(user_data_str.begin(), user_data_str.end());
   entity_qos.user_data().resize(user_data.size());

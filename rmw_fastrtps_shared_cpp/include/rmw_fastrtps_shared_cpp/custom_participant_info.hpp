@@ -228,6 +228,8 @@ private:
             reinterpret_cast<const char *>(userDataValue.data()));
           */
           type_hash = rosidl_get_zero_initialized_type_hash();
+          // We've handled the error, so clear it out.
+          rmw_reset_error();
         }
 
         context->graph_cache.add_entity(
