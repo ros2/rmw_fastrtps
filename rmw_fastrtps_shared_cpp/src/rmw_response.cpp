@@ -142,7 +142,8 @@ __rmw_send_response(
     // Related guid is a reader, so it is the response subscription guid.
     // Wait for the response writer to be matched with it.
     auto listener = info->pub_listener_;
-    auto writer_max_blocking_time = info->response_writer_->get_qos().reliability().max_blocking_time;
+    auto writer_max_blocking_time =
+      info->response_writer_->get_qos().reliability().max_blocking_time;
     auto max_blocking_time =
       std::chrono::seconds(writer_max_blocking_time.seconds) +
       std::chrono::nanoseconds(writer_max_blocking_time.nanosec);
