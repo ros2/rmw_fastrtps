@@ -138,9 +138,11 @@ public:
     return cv_.wait_for(lock, rel_time, guid_is_present);
   }
 
+  template<class Rep, class Period>
   client_present_t
   check_for_subscription(
-    const eprosima::fastrtps::rtps::GUID_t & guid)
+    const eprosima::fastrtps::rtps::GUID_t & guid,
+    const std::chrono::duration<Rep, Period> & max_blocking_time)
   {
     {
       std::lock_guard<std::mutex> lock(mutex_);
@@ -151,7 +153,7 @@ public:
       }
     }
     // Wait for subscription
-    if (!wait_for_subscription(guid, std::chrono::milliseconds(100))) {
+    if (!wait_for_subscription(guid, max_blocking_time)) {
       return client_present_t::MAYBE;
     }
     return client_present_t::YES;
