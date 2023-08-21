@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+7.4.0 (2023-08-21)
+------------------
 * Clear out errors once we have handled them. (`#701 <https://github.com/ros2/rmw_fastrtps/issues/701>`_)
 * Instrument loaned message publication code path (`#698 <https://github.com/ros2/rmw_fastrtps/issues/698>`_)
 * Add in a missing data_reader check when creating subscription. (`#697 <https://github.com/ros2/rmw_fastrtps/issues/697>`_)
