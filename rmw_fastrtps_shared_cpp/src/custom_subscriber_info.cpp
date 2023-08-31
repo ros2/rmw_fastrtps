@@ -20,6 +20,8 @@
 #include "event_helpers.hpp"
 #include "types/event_types.hpp"
 
+#include "rcpputils/unique_lock.hpp"
+
 EventListenerInterface *
 CustomSubscriberInfo::get_listener() const
 {
@@ -126,7 +128,7 @@ bool RMWSubscriptionEvent::take_event(
 {
   assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
 
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   switch (event_type) {
     case RMW_EVENT_LIVELINESS_CHANGED:
@@ -237,7 +239,7 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
   const void * user_data,
   rmw_event_callback_t callback)
 {
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   eprosima::fastdds::dds::StatusMask status_mask =
     subscriber_info_->data_reader_->get_status_mask();
@@ -389,7 +391,7 @@ void RMWSubscriptionEvent::untrack_unique_publisher(eprosima::fastrtps::rtps::GU
 
 void RMWSubscriptionEvent::update_data_available()
 {
-  std::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
 
   if (on_new_message_cb_) {
     auto unread_messages = subscriber_info_->data_reader_->get_unread_count(true);
@@ -403,7 +405,7 @@ void RMWSubscriptionEvent::update_data_available()
 void RMWSubscriptionEvent::update_requested_deadline_missed(
   uint32_t total_count, uint32_t total_count_change)
 {
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
   requested_deadline_missed_status_.total_count = total_count;
@@ -419,7 +421,7 @@ void RMWSubscriptionEvent::update_liveliness_changed(
   uint32_t alive_count, uint32_t not_alive_count,
   uint32_t alive_count_change, uint32_t not_alive_count_change)
 {
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
   liveliness_changed_status_.alive_count = alive_count;

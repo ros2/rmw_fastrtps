@@ -21,6 +21,8 @@
 #include "event_helpers.hpp"
 #include "types/event_types.hpp"
 
+#include "rcpputils/unique_lock.hpp"
+
 EventListenerInterface *
 CustomPublisherInfo::get_listener() const
 {
@@ -106,7 +108,7 @@ bool RMWPublisherEvent::take_event(
 {
   assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
 
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   switch (event_type) {
     case RMW_EVENT_LIVELINESS_LOST:
@@ -202,7 +204,7 @@ void RMWPublisherEvent::set_on_new_event_callback(
   const void * user_data,
   rmw_event_callback_t callback)
 {
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   eprosima::fastdds::dds::StatusMask status_mask =
     publisher_info_->data_writer_->get_status_mask();
@@ -295,7 +297,7 @@ size_t RMWPublisherEvent::subscription_count() const
 
 void RMWPublisherEvent::update_deadline(uint32_t total_count, uint32_t total_count_change)
 {
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
   offered_deadline_missed_status_.total_count = total_count;
@@ -309,7 +311,7 @@ void RMWPublisherEvent::update_deadline(uint32_t total_count, uint32_t total_cou
 
 void RMWPublisherEvent::update_liveliness_lost(uint32_t total_count, uint32_t total_count_change)
 {
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
   liveliness_lost_status_.total_count = total_count;
@@ -325,7 +327,7 @@ void RMWPublisherEvent::update_offered_incompatible_qos(
   eprosima::fastdds::dds::QosPolicyId_t last_policy_id, uint32_t total_count,
   uint32_t total_count_change)
 {
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
   incompatible_qos_status_.last_policy_id = last_policy_id;
@@ -340,7 +342,7 @@ void RMWPublisherEvent::update_offered_incompatible_qos(
 
 void RMWPublisherEvent::update_inconsistent_topic(uint32_t total_count, uint32_t total_count_change)
 {
-  std::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
   inconsistent_topic_status_.total_count = total_count;
