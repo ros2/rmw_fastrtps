@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Switch to using rclcpp::unique_lock. (`#712 <https://github.com/ros2/rmw_fastrtps/issues/712>`_)
+* Use DataWriter Qos to configure max_blocking_time on rmw_send_response (`#704 <https://github.com/ros2/rmw_fastrtps/issues/704>`_)
+* Contributors: Chris Lalancette, Miguel Company
+
 7.4.0 (2023-08-21)
 ------------------
 * Clear out errors once we have handled them. (`#701 <https://github.com/ros2/rmw_fastrtps/issues/701>`_)
