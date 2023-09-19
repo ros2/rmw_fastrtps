@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.4 (2023-09-19)
+------------------
+* Fix incoherent dissociate_writer to dissociate_reader (`#647 <https://github.com/ros2/rmw_fastrtps/issues/647>`_) (`#649 <https://github.com/ros2/rmw_fastrtps/issues/649>`_) (`#651 <https://github.com/ros2/rmw_fastrtps/issues/651>`_)
+* update fast-dds version into 2.6.2. (`#702 <https://github.com/ros2/rmw_fastrtps/issues/702>`_)
+* Contributors: Tomoya Fujita, mergify[bot]
+
 6.2.3 (2023-07-18)
 ------------------
 
