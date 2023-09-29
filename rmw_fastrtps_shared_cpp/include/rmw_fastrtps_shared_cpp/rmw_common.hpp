@@ -62,6 +62,22 @@ __rmw_count_subscribers(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_count_clients(
+  const char * identifier,
+  const rmw_node_t * node,
+  const char * service_name,
+  size_t * count);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_count_services(
+  const char * identifier,
+  const rmw_node_t * node,
+  const char * service_name,
+  size_t * count);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_get_gid_for_publisher(
   const char * identifier,
   const rmw_publisher_t * publisher,

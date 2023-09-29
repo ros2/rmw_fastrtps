@@ -47,4 +47,24 @@ rmw_count_subscribers(
   return rmw_fastrtps_shared_cpp::__rmw_count_subscribers(
     eprosima_fastrtps_identifier, node, topic_name, count);
 }
+
+rmw_ret_t
+rmw_count_clients(
+  const rmw_node_t * node,
+  const char * service_name,
+  size_t * count)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_count_clients(
+    eprosima_fastrtps_identifier, node, service_name, count);
+}
+
+rmw_ret_t
+rmw_count_services(
+  const rmw_node_t * node,
+  const char * service_name,
+  size_t * count)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_count_services(
+    eprosima_fastrtps_identifier, node, service_name, count);
+}
 }  // extern "C"
