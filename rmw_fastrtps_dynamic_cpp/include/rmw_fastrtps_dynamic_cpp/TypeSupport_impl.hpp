@@ -852,26 +852,26 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
-        last_member_size = sizeof(int8_t);
+        last_member_size = array_size * sizeof(int8_t);
         current_alignment += array_size * sizeof(int8_t);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
-        last_member_size = sizeof(uint16_t);
+        last_member_size = array_size * sizeof(uint16_t);
         current_alignment += array_size * sizeof(uint16_t) +
           eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint16_t));
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
-        last_member_size = sizeof(uint32_t);
+        last_member_size = array_size * sizeof(uint32_t);
         current_alignment += array_size * sizeof(uint32_t) +
           eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
-        last_member_size = sizeof(uint64_t);
+        last_member_size = array_size * sizeof(uint64_t);
         current_alignment += array_size * sizeof(uint64_t) +
           eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint64_t));
         break;
