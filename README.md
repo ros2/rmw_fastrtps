@@ -40,6 +40,7 @@ However, `rmw_fastrtps` offers the possibility to further configure Fast DDS:
 * [Change publication mode](#change-publication-mode)
 * [Full QoS configuration](#full-qos-configuration)
 * [Change participant discovery options](#change-participant-discovery-options)
+* [Enable Zero Copy Data Sharing](#enable-zero-copy-data-sharing)
 
 ### Change publication mode
 
@@ -233,6 +234,40 @@ The following example configures Fast DDS to publish synchronously, and to have 
 ROS 2 allows controlling participant discovery with two environment variables: `ROS_AUTOMATIC_DISCOVERY_RANGE` and `ROS_STATIC_PEERS`.
 Full configuration of participant discovery can also be set with XML files; however, the ROS specific environment variables should be disabled to prevent them from interfering.
 Set `ROS_AUTOMATIC_DISCOVERY_RANGE` to the value `SYSTEM_DEFAULT` to disable both ROS specific environment variables.
+
+### Enable Zero Copy Data Sharing
+
+ROS 2 provides [Loaned Messages](https://design.ros2.org/articles/zero_copy.html) that allows the user application to loan the message memory from the RMW implementation to eliminate the copy between the ROS 2 application and RMW implementation.
+And Fast DDS `rmw_fastrtps_cpp` provides [Shared Memory Transport](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/shared_memory/shared_memory.html) and [Data-sharing delivery](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/datasharing.html) features to speed up the localhost communication.
+Taking advantage of these features all together, it provides significant performance improvement to ROS 2 application.
+
+By default, `rmw_fastrtps_cpp` tries to use [Shared Memory Transport](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/shared_memory/shared_memory.html) and [Data-sharing delivery](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/datasharing.html) for localhost communication along with network communication if the message data type is a bounded type (a fixed sized data object).
+
+To enable [Loaned Messages](https://design.ros2.org/articles/zero_copy.html) with `rmw_fastrtps_cpp`, [Plain Old Data](https://en.wikipedia.org/wiki/Passive_data_structure) is the only requirement to `Iron Irwini` or later.
+For `Humble Hawksbill`, the following XML file needs to be applied to set Fast-DDS `data_sharing` is explicitly enabled. (see more details for https://github.com/ros2/rmw_fastrtps/pull/568)
+
+```xml
+<?xml version="1.0" encoding="UTF-8" ?>
+<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+
+  <!-- Default publisher profile -->
+  <data_writer profile_name="default publisher profile" is_default_profile="true">
+    <qos>
+      <data_sharing>
+        <kind>AUTOMATIC</kind>
+      </data_sharing>
+    </qos>
+  </data_writer>
+
+  <data_reader profile_name="default subscription profile" is_default_profile="true">
+    <qos>
+      <data_sharing>
+        <kind>AUTOMATIC</kind>
+      </data_sharing>
+    </qos>
+  </data_reader>
+</profiles>
+```
 
 ## Quality Declaration files
 
