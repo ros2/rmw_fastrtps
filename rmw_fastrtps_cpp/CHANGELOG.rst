@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+7.6.0 (2023-10-04)
+------------------
 * Add rmw_count clients,services impl (`#641 <https://github.com/ros2/rmw_fastrtps/issues/641>`_)
 * Improve node graph delivery by using a unique listening port (`#711 <https://github.com/ros2/rmw_fastrtps/issues/711>`_)
 * Contributors: Miguel Company, Minju, Lee
