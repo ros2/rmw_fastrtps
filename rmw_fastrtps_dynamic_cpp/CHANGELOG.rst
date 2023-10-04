@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Account for alignment on is_plain calculations. (`#716 <https://github.com/ros2/rmw_fastrtps/issues/716>`_)
+* Add rmw_count clients,services impl (`#641 <https://github.com/ros2/rmw_fastrtps/issues/641>`_)
+* Improve node graph delivery by using a unique listening port (`#711 <https://github.com/ros2/rmw_fastrtps/issues/711>`_)
+* Contributors: Chris Lalancette, Miguel Company, Minju, Lee
+
 7.5.0 (2023-09-07)
 ------------------
 

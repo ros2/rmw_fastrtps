@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add rmw_count clients,services impl (`#641 <https://github.com/ros2/rmw_fastrtps/issues/641>`_)
+* Contributors: Minju, Lee
+
 7.5.0 (2023-09-07)
 ------------------
 * Switch to using rclcpp::unique_lock. (`#712 <https://github.com/ros2/rmw_fastrtps/issues/712>`_)
