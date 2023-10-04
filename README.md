@@ -241,9 +241,10 @@ ROS 2 provides [Loaned Messages](https://design.ros2.org/articles/zero_copy.html
 And Fast DDS `rmw_fastrtps_cpp` provides [Shared Memory Transport](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/shared_memory/shared_memory.html) and [Data-sharing delivery](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/datasharing.html) features to speed up the localhost communication.
 Taking advantage of these features all together, it provides significant performance improvement to ROS 2 application.
 
-By default, `rmw_fastrtps_cpp` tries to use [Shared Memory Transport](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/shared_memory/shared_memory.html) and [Data-sharing delivery](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/datasharing.html) for localhost communication along with network communication if the message data type is a bounded type(fixed sized data object).
+By default, `rmw_fastrtps_cpp` tries to use [Shared Memory Transport](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/shared_memory/shared_memory.html) and [Data-sharing delivery](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/datasharing.html) for localhost communication along with network communication if the message data type is a bounded type (a fixed sized data object).
 
-To enable [Loaned Messages](https://design.ros2.org/articles/zero_copy.html) with `rmw_fastrtps_cpp`, [Plain Old Data](https://en.wikipedia.org/wiki/Passive_data_structure) is the only requirement to `Iron Irwini` or later. For `Humble Hawksbill`, the following XML file needs to be applied to set Fast-DDS `data_sharing` is explicitly enabled. (see more details for https://github.com/ros2/rmw_fastrtps/pull/568)
+To enable [Loaned Messages](https://design.ros2.org/articles/zero_copy.html) with `rmw_fastrtps_cpp`, [Plain Old Data](https://en.wikipedia.org/wiki/Passive_data_structure) is the only requirement to `Iron Irwini` or later.
+For `Humble Hawksbill`, the following XML file needs to be applied to set Fast-DDS `data_sharing` is explicitly enabled. (see more details for https://github.com/ros2/rmw_fastrtps/pull/568)
 
 ```xml
 <?xml version="1.0" encoding="UTF-8" ?>
