@@ -37,11 +37,7 @@ However, `rmw_fastrtps` offers the possibility to further configure Fast DDS:
 
 * [Change publication mode](#change-publication-mode)
 * [Full QoS configuration](#full-qos-configuration)
-<<<<<<< HEAD
-=======
-* [Change participant discovery options](#change-participant-discovery-options)
 * [Enable Zero Copy Data Sharing](#enable-zero-copy-data-sharing)
->>>>>>> 936a5a0 (add doc section for Zero Copy Data Sharing. (#718))
 
 ### Change publication mode
 
@@ -230,14 +226,6 @@ The following example configures Fast DDS to publish synchronously, and to have 
         FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_xml_file> RMW_FASTRTPS_USE_QOS_FROM_XML=1 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ros2 run demo_nodes_cpp listener
         ```
 
-<<<<<<< HEAD
-=======
-### Change participant discovery options
-
-ROS 2 allows controlling participant discovery with two environment variables: `ROS_AUTOMATIC_DISCOVERY_RANGE` and `ROS_STATIC_PEERS`.
-Full configuration of participant discovery can also be set with XML files; however, the ROS specific environment variables should be disabled to prevent them from interfering.
-Set `ROS_AUTOMATIC_DISCOVERY_RANGE` to the value `SYSTEM_DEFAULT` to disable both ROS specific environment variables.
-
 ### Enable Zero Copy Data Sharing
 
 ROS 2 provides [Loaned Messages](https://design.ros2.org/articles/zero_copy.html) that allows the user application to loan the message memory from the RMW implementation to eliminate the copy between the ROS 2 application and RMW implementation.
@@ -272,7 +260,6 @@ For `Humble Hawksbill`, the following XML file needs to be applied to set Fast-D
 </profiles>
 ```
 
->>>>>>> 936a5a0 (add doc section for Zero Copy Data Sharing. (#718))
 ## Quality Declaration files
 
 Quality Declarations for each package in this repository:
