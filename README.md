@@ -27,11 +27,19 @@ You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment varia
 
 ## Advance usage
 
+<<<<<<< HEAD
 ROS 2 only allows for the configuration of certain middleware QoS (see [ROS 2 QoS policies](https://docs.ros.org/en/foxy/Concepts/About-Quality-of-Service-Settings.html#qos-policies)).
 In addition to ROS 2 QoS policies, `rmw_fastrtps` sets two more Fast DDS configurable parameters:
+=======
+[//]: # (TODO sloretz - link ROS 2 discovery documentation when it's created)
+ROS 2 only allows for the configuration of certain middleware features.
+For example, see [ROS 2 QoS policies](https://docs.ros.org/en/foxy/Concepts/About-Quality-of-Service-Settings.html#qos-policies).
+In addition to ROS 2 QoS policies, `rmw_fastrtps` sets the following Fast DDS configurable parameters:
+>>>>>>> 8eeb955 (Clarify Data Sharing enabling (#719))
 
 * History memory policy: `PREALLOCATED_WITH_REALLOC_MEMORY_MODE`
-* Publication mode: `ASYNCHRONOUS_PUBLISH_MODE`
+* Publication mode: `SYNCHRONOUS_PUBLISH_MODE`
+* Data Sharing: `OFF`
 
 However, `rmw_fastrtps` offers the possibility to further configure Fast DDS:
 
@@ -82,12 +90,14 @@ Bear in mind that setting this environment variable but not setting either of th
 [Fast DDS XML]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/xml_configuration/xml_configuration.html
 [history memory policy]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#rtpsendpointqos
 [publication mode]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/dds_layer/core/policy/eprosimaExtensions.html#publishmodeqospolicy
+[datasharing]: https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/datasharing.html
 
 Note: Setting `RMW_FASTRTPS_USE_QOS_FROM_XML` to 1 effectively overrides whatever configuration was set with `RMW_FASTRTPS_PUBLICATION_MODE`.
 Furthermore, If `RMW_FASTRTPS_USE_QOS_FROM_XML` is set to 1, and [history memory policy] or [publication mode] are not specified in the XML, then the Fast DDS' default configurations will be used:
 
 * [history memory policy] : `PREALLOCATED_MEMORY_MODE`.
 * [publication mode] : `SYNCHRONOUS_PUBLISH_MODE`.
+* [datasharing] : `AUTO`.
 
 There are two ways of telling a ROS 2 application which XML to use:
 
@@ -154,7 +164,7 @@ If neither of the previous profiles exist, `rmw_fastrtps` attempts to load the `
 
 #### Example
 
-The following example configures Fast DDS to publish synchronously, and to have a pre-allocated history that can be expanded whenever it gets filled.
+The following example configures Fast DDS to publish synchronously, to have a pre-allocated history that can be expanded whenever it gets filled, and to use Data Sharing if possible.
 
 1. Create a Fast DDS XML file with:
 
@@ -168,12 +178,20 @@ The following example configures Fast DDS to publish synchronously, and to have 
                     <publishMode>
                         <kind>SYNCHRONOUS</kind>
                     </publishMode>
+                    <data_sharing>
+                        <kind>AUTOMATIC</kind>
+                    </data_sharing>
                 </qos>
                 <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
             </publisher>
 
             <!-- Default subscriber profile -->
             <subscriber profile_name="default subscriber profile" is_default_profile="true">
+                <qos>
+                    <data_sharing>
+                        <kind>AUTOMATIC</kind>
+                    </data_sharing>
+                </qos>
                 <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
             </subscriber>
 
@@ -183,11 +201,19 @@ The following example configures Fast DDS to publish synchronously, and to have 
                     <publishMode>
                         <kind>SYNCHRONOUS</kind>
                     </publishMode>
+                    <data_sharing>
+                        <kind>AUTOMATIC</kind>
+                    </data_sharing>
                 </qos>
             </publisher>
 
             <!-- Request subscriber profile for services -->
             <subscriber profile_name="service">
+                <qos>
+                    <data_sharing>
+                        <kind>AUTOMATIC</kind>
+                    </data_sharing>
+                </qos>
                 <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
             </subscriber>
 
@@ -197,16 +223,29 @@ The following example configures Fast DDS to publish synchronously, and to have 
                     <publishMode>
                         <kind>ASYNCHRONOUS</kind>
                     </publishMode>
+                    <data_sharing>
+                        <kind>AUTOMATIC</kind>
+                    </data_sharing>
                 </qos>
             </publisher>
 
             <!-- Request subscriber profile for server of service "add_two_ints" -->
             <subscriber profile_name="rq/add_two_intsRequest">
+                <qos>
+                    <data_sharing>
+                        <kind>AUTOMATIC</kind>
+                    </data_sharing>
+                </qos>
                 <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
             </subscriber>
 
             <!-- Reply subscriber profile for client of service "add_two_ints" -->
             <subscriber profile_name="rr/add_two_intsReply">
+                <qos>
+                    <data_sharing>
+                        <kind>AUTOMATIC</kind>
+                    </data_sharing>
+                </qos>
                 <historyMemoryPolicy>PREALLOCATED_WITH_REALLOC</historyMemoryPolicy>
             </subscriber>
         </profiles>
@@ -228,37 +267,41 @@ The following example configures Fast DDS to publish synchronously, and to have 
 
 ### Enable Zero Copy Data Sharing
 
-ROS 2 provides [Loaned Messages](https://design.ros2.org/articles/zero_copy.html) that allows the user application to loan the message memory from the RMW implementation to eliminate the copy between the ROS 2 application and RMW implementation.
-And Fast DDS `rmw_fastrtps_cpp` provides [Shared Memory Transport](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/shared_memory/shared_memory.html) and [Data-sharing delivery](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/datasharing.html) features to speed up the localhost communication.
-Taking advantage of these features all together, it provides significant performance improvement to ROS 2 application.
+ROS 2 provides [Loaned Messages](https://design.ros2.org/articles/zero_copy.html) that allow the user application to loan the messages memory from the RMW implementation to eliminate the data copy between the ROS 2 application and the RMW implementation.
+Furthermore, `rmw_fastrtps`, through Fast DDS, provides both a [Shared Memory Transport](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/shared_memory/shared_memory.html) and [Data Sharing delivery mechanism](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/datasharing.html) to speed up the intra-host communication.
+Combining these two features (message loaning and Data Sharing), it is possible to achieve a zero-copy message delivery pipeline, thus bringing significant performance improvements to ROS 2 application.
 
-By default, `rmw_fastrtps_cpp` tries to use [Shared Memory Transport](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/shared_memory/shared_memory.html) and [Data-sharing delivery](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/datasharing.html) for localhost communication along with network communication if the message data type is a bounded type (a fixed sized data object).
+By default, both `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` use [Shared Memory Transport](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/shared_memory/shared_memory.html) for intra-host communication, along with network based transports (UDPv4) for inter-host message delivery.
 
-To enable [Loaned Messages](https://design.ros2.org/articles/zero_copy.html) with `rmw_fastrtps_cpp`, [Plain Old Data](https://en.wikipedia.org/wiki/Passive_data_structure) is the only requirement to `Iron Irwini` or later.
-For `Humble Hawksbill`, the following XML file needs to be applied to set Fast-DDS `data_sharing` is explicitly enabled. (see more details for https://github.com/ros2/rmw_fastrtps/pull/568)
+In order to achieve a Zero Copy message delivery, applications need to both enable Fast DDS Data Sharing mechanism, and use the [Loaned Messages](https://design.ros2.org/articles/zero_copy.html) API:
 
-```xml
-<?xml version="1.0" encoding="UTF-8" ?>
-<profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
+1. To enable Loaned Messages in `Iron Irwini` or later, the only requirement is for the data type to be [Plain Old Data](https://en.wikipedia.org/wiki/Passive_data_structure).
+   For `Humble Hawksbill`, in addition to POD types, enabling Fast DDS Data Sharing is also required.
+1. To enable Fast DDS Data Sharing delivery mechanism, the following XML profiles need to be loaded, and environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` needs to be set to 1 (see [Full QoS configuration](#full-qos-configuration))
 
-  <!-- Default publisher profile -->
-  <data_writer profile_name="default publisher profile" is_default_profile="true">
-    <qos>
-      <data_sharing>
-        <kind>AUTOMATIC</kind>
-      </data_sharing>
-    </qos>
-  </data_writer>
+    ```xml
+    <?xml version="1.0" encoding="UTF-8" ?>
+    <profiles xmlns="http://www.eprosima.com/XMLSchemas/fastRTPS_Profiles">
 
-  <data_reader profile_name="default subscription profile" is_default_profile="true">
-    <qos>
-      <data_sharing>
-        <kind>AUTOMATIC</kind>
-      </data_sharing>
-    </qos>
-  </data_reader>
-</profiles>
-```
+    <!-- Default publisher profile -->
+    <publisher profile_name="default publisher profile" is_default_profile="true">
+        <qos>
+        <data_sharing>
+            <kind>AUTOMATIC</kind>
+        </data_sharing>
+        </qos>
+    </publisher>
+
+    <!-- Default subscription profile -->
+    <subscriber profile_name="default subscription profile" is_default_profile="true">
+        <qos>
+        <data_sharing>
+            <kind>AUTOMATIC</kind>
+        </data_sharing>
+        </qos>
+    </subscriber>
+    </profiles>
+    ```
 
 ## Quality Declaration files
 
