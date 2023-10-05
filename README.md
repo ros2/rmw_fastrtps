@@ -27,15 +27,10 @@ You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment varia
 
 ## Advance usage
 
-<<<<<<< HEAD
-ROS 2 only allows for the configuration of certain middleware QoS (see [ROS 2 QoS policies](https://docs.ros.org/en/foxy/Concepts/About-Quality-of-Service-Settings.html#qos-policies)).
-In addition to ROS 2 QoS policies, `rmw_fastrtps` sets two more Fast DDS configurable parameters:
-=======
 [//]: # (TODO sloretz - link ROS 2 discovery documentation when it's created)
 ROS 2 only allows for the configuration of certain middleware features.
 For example, see [ROS 2 QoS policies](https://docs.ros.org/en/foxy/Concepts/About-Quality-of-Service-Settings.html#qos-policies).
 In addition to ROS 2 QoS policies, `rmw_fastrtps` sets the following Fast DDS configurable parameters:
->>>>>>> 8eeb955 (Clarify Data Sharing enabling (#719))
 
 * History memory policy: `PREALLOCATED_WITH_REALLOC_MEMORY_MODE`
 * Publication mode: `SYNCHRONOUS_PUBLISH_MODE`
