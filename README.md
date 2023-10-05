@@ -33,7 +33,7 @@ For example, see [ROS 2 QoS policies](https://docs.ros.org/en/foxy/Concepts/Abou
 In addition to ROS 2 QoS policies, `rmw_fastrtps` sets the following Fast DDS configurable parameters:
 
 * History memory policy: `PREALLOCATED_WITH_REALLOC_MEMORY_MODE`
-* Publication mode: `ASYNCHRONOUS_PUBLISH_MODE`
+* Publication mode: `SYNCHRONOUS_PUBLISH_MODE`
 * Data Sharing: `OFF`
 
 However, `rmw_fastrtps` offers the possibility to further configure Fast DDS:
@@ -279,7 +279,7 @@ In order to achieve a Zero Copy message delivery, applications need to both enab
 
 1. To enable Loaned Messages in `Iron Irwini` or later, the only requirement is for the data type to be [Plain Old Data](https://en.wikipedia.org/wiki/Passive_data_structure).
    For `Humble Hawksbill`, in addition to POD types, enabling Fast DDS Data Sharing is also required.
-1. To enable Fast DDS Data Sharing delivery mechanism, the following XML profiles need to be loaded, and environment variable `RMW_FASTRTPS_PUBLICATION_MODE` needs to be set to 1 (see [Full QoS configuration](#full-qos-configuration))
+1. To enable Fast DDS Data Sharing delivery mechanism, the following XML profiles need to be loaded, and environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML` needs to be set to 1 (see [Full QoS configuration](#full-qos-configuration))
 
     ```xml
     <?xml version="1.0" encoding="UTF-8" ?>
