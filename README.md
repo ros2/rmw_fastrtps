@@ -3,6 +3,7 @@
 `rmw_fastrtps` is a [ROS 2](https://docs.ros.org/en/rolling) middleware implementation, providing an interface between ROS 2 and [eProsima's](https://www.eprosima.com/index.php) [Fast DDS](https://github.com/eProsima/Fast-DDS) middleware.
 
 ## Getting started
+
 This implementation is available in all ROS 2 distributions, both from binaries and from sources.
 You can specify Fast DDS as your ROS 2 middleware layer in two different ways:
 
@@ -27,9 +28,8 @@ You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment varia
 
 ## Advance usage
 
-[//]: # (TODO sloretz - link ROS 2 discovery documentation when it's created)
 ROS 2 only allows for the configuration of certain middleware features.
-For example, see [ROS 2 QoS policies](https://docs.ros.org/en/foxy/Concepts/About-Quality-of-Service-Settings.html#qos-policies).
+For example, see [ROS 2 QoS policies](https://docs.ros.org/en/rolling/Concepts/About-Quality-of-Service-Settings.html#qos-policies).
 In addition to ROS 2 QoS policies, `rmw_fastrtps` sets the following Fast DDS configurable parameters:
 
 * History memory policy: `PREALLOCATED_WITH_REALLOC_MEMORY_MODE`
@@ -266,6 +266,7 @@ The following example configures Fast DDS to publish synchronously, to have a pr
 ROS 2 allows controlling participant discovery with two environment variables: `ROS_AUTOMATIC_DISCOVERY_RANGE` and `ROS_STATIC_PEERS`.
 Full configuration of participant discovery can also be set with XML files; however, the ROS specific environment variables should be disabled to prevent them from interfering.
 Set `ROS_AUTOMATIC_DISCOVERY_RANGE` to the value `SYSTEM_DEFAULT` to disable both ROS specific environment variables.
+See more details for [Improved Dynamic Discovery](https://docs.ros.org/en/rolling/Tutorials/Advanced/Improved-Dynamic-Discovery.html).
 
 ### Enable Zero Copy Data Sharing
 
