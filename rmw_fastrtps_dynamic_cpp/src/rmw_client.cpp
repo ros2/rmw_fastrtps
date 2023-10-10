@@ -135,7 +135,7 @@ rmw_create_client(
     }
   }
 
-  std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
+  std::unique_lock<std::mutex> lck(participant_info->entity_creation_mutex_);
 
   /////
   // Find and check existing topics and types
@@ -472,6 +472,16 @@ rmw_create_client(
   memcpy(const_cast<char *>(rmw_client->service_name), service_name, strlen(service_name) + 1);
 
   {
+    // It's unnecessary to lock `lck` in current scope.
+    // Unlock `lck` first and re-lock it after exiting the scope can avoid `lock-order-inversion`.
+    // https://github.com/ros2/ros2/issues/1488
+    lck.unlock();
+    auto lock_scope_exit = rcpputils::make_scope_exit(
+      [&lck]() {
+        // lock again for cleanup actions
+        lck.lock();
+      });
+
     // Update graph
     std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
     rmw_gid_t request_publisher_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
