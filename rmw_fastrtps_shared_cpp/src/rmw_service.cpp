@@ -65,7 +65,7 @@ __rmw_destroy_service(
   final_ret = common_context->destroy_service_graph(
     request_subscriber_gid, response_publisher_gid,
     node->name, node->namespace_,
-    [identifier] (rmw_publisher_t * pub, void * msg) {
+    [identifier](rmw_publisher_t * pub, void * msg) {
       return rmw_fastrtps_shared_cpp::__rmw_publish(
         identifier,
         pub,

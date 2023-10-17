@@ -109,7 +109,7 @@ __rmw_create_node(
   // In that case, the last message published is not accurate.
   rmw_ret_t rmw_ret = common_context->update_node_graph(
     name, namespace_,
-    [identifier=node_handle->implementation_identifier] (rmw_publisher_t * pub, void * msg) {
+    [identifier = node_handle->implementation_identifier](rmw_publisher_t * pub, void * msg) {
       return __rmw_publish(
         identifier,
         pub,
@@ -135,7 +135,7 @@ __rmw_destroy_node(
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   ret = common_context->destroy_node_graph(
     node->name, node->namespace_,
-    [identifier] (rmw_publisher_t * pub, void * msg) {
+    [identifier](rmw_publisher_t * pub, void * msg) {
       return __rmw_publish(
         identifier,
         pub,

@@ -52,7 +52,7 @@ __rmw_destroy_client(
   final_ret = common_context->destroy_client_graph(
     request_publisher_gid, response_subscriber_gid,
     node->name, node->namespace_,
-    [identifier] (rmw_publisher_t * pub, void * msg) {
+    [identifier](rmw_publisher_t * pub, void * msg) {
       return rmw_fastrtps_shared_cpp::__rmw_publish(
         identifier,
         pub,

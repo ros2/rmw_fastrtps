@@ -480,7 +480,7 @@ rmw_create_client(
   rmw_ret_t rmw_ret = common_context->update_client_graph(
     request_publisher_gid, response_subscriber_gid,
     node->name, node->namespace_,
-    [] (rmw_publisher_t * pub, void * msg) {
+    [](rmw_publisher_t * pub, void * msg) {
       return rmw_fastrtps_shared_cpp::__rmw_publish(
         eprosima_fastrtps_identifier,
         pub,

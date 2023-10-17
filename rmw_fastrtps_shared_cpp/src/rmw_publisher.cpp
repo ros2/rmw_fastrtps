@@ -54,7 +54,7 @@ __rmw_destroy_publisher(
   rmw_ret_t rmw_ret = common_context->destroy_publisher_graph(
     info->publisher_gid,
     node->name, node->namespace_,
-    [identifier] (rmw_publisher_t * pub, void * msg) {
+    [identifier](rmw_publisher_t * pub, void * msg) {
       return rmw_fastrtps_shared_cpp::__rmw_publish(
         identifier,
         pub,

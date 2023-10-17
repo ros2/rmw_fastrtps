@@ -101,7 +101,7 @@ rmw_create_subscription(
   rmw_ret_t rmw_ret = common_context->update_subscriber_graph(
     info->subscription_gid_,
     node->name, node->namespace_,
-    [] (rmw_publisher_t * pub, void * msg) {
+    [](rmw_publisher_t * pub, void * msg) {
       return rmw_fastrtps_shared_cpp::__rmw_publish(
         eprosima_fastrtps_identifier,
         pub,

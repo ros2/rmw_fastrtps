@@ -479,7 +479,7 @@ rmw_create_service(
   rmw_ret_t rmw_ret = common_context->update_service_graph(
     request_subscriber_gid, response_publisher_gid,
     node->name, node->namespace_,
-    [] (rmw_publisher_t * pub, void * msg) {
+    [](rmw_publisher_t * pub, void * msg) {
       return rmw_fastrtps_shared_cpp::__rmw_publish(
         eprosima_fastrtps_identifier,
         pub,
