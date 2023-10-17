@@ -103,33 +103,34 @@ rmw_create_publisher(
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
 
   auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
-  {
-    // Update graph
-    std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
-    rmw_dds_common::msg::ParticipantEntitiesInfo msg =
-      common_context->graph_cache.associate_writer(
-      info->publisher_gid, common_context->gid, node->name, node->namespace_);
-    rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
-      eprosima_fastrtps_identifier,
-      common_context->pub,
-      static_cast<void *>(&msg),
-      nullptr);
-    if (RMW_RET_OK != rmw_ret) {
-      rmw_error_state_t error_state = *rmw_get_error_state();
-      rmw_reset_error();
-      static_cast<void>(common_context->graph_cache.dissociate_writer(
-        info->publisher_gid, common_context->gid, node->name, node->namespace_));
-      rmw_ret = rmw_fastrtps_shared_cpp::destroy_publisher(
-        eprosima_fastrtps_identifier, participant_info, publisher);
-      if (RMW_RET_OK != rmw_ret) {
-        RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
-        RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "' cleanup\n");
-        rmw_reset_error();
-      }
-      rmw_set_error_state(error_state.message, error_state.file, error_state.line_number);
-      return nullptr;
+
+  // Update graph
+  rmw_ret_t rmw_ret = common_context->update_publisher_graph(
+    info->publisher_gid,
+    node->name, node->namespace_,
+    [] (rmw_publisher_t * pub, void * msg) {
+      return rmw_fastrtps_shared_cpp::__rmw_publish(
+        eprosima_fastrtps_identifier,
+        pub,
+        msg,
+        nullptr);
     }
+  );
+
+  if (RMW_RET_OK != rmw_ret) {
+    rmw_error_state_t error_state = *rmw_get_error_state();
+    rmw_reset_error();
+    rmw_ret = rmw_fastrtps_shared_cpp::destroy_publisher(
+      eprosima_fastrtps_identifier, participant_info, publisher);
+    if (RMW_RET_OK != rmw_ret) {
+      RMW_SAFE_FWRITE_TO_STDERR(rmw_get_error_string().str);
+      RMW_SAFE_FWRITE_TO_STDERR(" during '" RCUTILS_STRINGIFY(__function__) "' cleanup\n");
+      rmw_reset_error();
+    }
+    rmw_set_error_state(error_state.message, error_state.file, error_state.line_number);
+    return nullptr;
   }
+
   return publisher;
 }
 
