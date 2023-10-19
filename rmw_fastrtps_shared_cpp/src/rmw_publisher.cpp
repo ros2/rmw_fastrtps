@@ -53,14 +53,7 @@ __rmw_destroy_publisher(
   // Update graph
   rmw_ret_t rmw_ret = common_context->destroy_publisher_graph(
     info->publisher_gid,
-    node->name, node->namespace_,
-    [identifier](rmw_publisher_t * pub, void * msg) {
-      return rmw_fastrtps_shared_cpp::__rmw_publish(
-        identifier,
-        pub,
-        msg,
-        nullptr);
-    }
+    node->name, node->namespace_
   );
   if (RMW_RET_OK != rmw_ret) {
     error_state = *rmw_get_error_state();

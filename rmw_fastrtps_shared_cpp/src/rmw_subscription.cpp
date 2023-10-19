@@ -55,14 +55,7 @@ __rmw_destroy_subscription(
   // Update graph
   ret = common_context->destroy_subscriber_graph(
     info->subscription_gid_,
-    node->name, node->namespace_,
-    [identifier](rmw_publisher_t * pub, void * msg) {
-      return rmw_fastrtps_shared_cpp::__rmw_publish(
-        identifier,
-        pub,
-        msg,
-        nullptr);
-    }
+    node->name, node->namespace_
   );
   if (RMW_RET_OK != ret) {
     error_state = *rmw_get_error_state();
@@ -212,14 +205,7 @@ __rmw_subscription_set_content_filter(
   // Update graph
   ret = common_context->update_subscriber_graph(
     info->subscription_gid_,
-    node->name, node->namespace_,
-    [identifier](rmw_publisher_t * pub, void * msg) {
-      return rmw_fastrtps_shared_cpp::__rmw_publish(
-        identifier,
-        pub,
-        msg,
-        nullptr);
-    }
+    node->name, node->namespace_
   );
   if (RMW_RET_OK != ret) {
     return RMW_RET_ERROR;
