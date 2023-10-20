@@ -159,7 +159,7 @@ init_context_impl(
   common_context->gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
     eprosima_fastrtps_identifier, participant_info->participant_->guid());
   common_context->pub = publisher.get();
-  common_context->publish_callback = [](rmw_publisher_t * pub, void * msg) {
+  common_context->publish_callback = [](const rmw_publisher_t * pub, const void * msg) {
       return rmw_fastrtps_shared_cpp::__rmw_publish(
         eprosima_fastrtps_identifier,
         pub,
