@@ -120,6 +120,7 @@ public:
    * user calls rmw_count_subscribers().
    *
    * \param[in] guid The GUID of the newly-matched subscription to track.
+   * \param[in] is_local Whether \c guid belongs to the same participant as this publisher.
    */
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void track_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid, bool is_local);
@@ -130,6 +131,7 @@ public:
    * user calls rmw_count_subscribers().
    *
    * \param[in] guid The GUID of the newly-unmatched subscription to track.
+   * \param[in] is_local Whether \c guid belongs to the same participant as this publisher.
    */
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void untrack_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid, bool is_local);
