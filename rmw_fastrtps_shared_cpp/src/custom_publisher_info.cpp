@@ -277,7 +277,9 @@ void RMWPublisherEvent::set_on_new_event_callback(
   publisher_info_->data_writer_->set_listener(publisher_info_->data_writer_listener_, status_mask);
 }
 
-void RMWPublisherEvent::track_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid, bool is_local)
+void RMWPublisherEvent::track_unique_subscription(
+  eprosima::fastrtps::rtps::GUID_t guid,
+  bool is_local)
 {
   std::lock_guard<std::mutex> lock(subscriptions_mutex_);
   subscriptions_.insert(guid);
@@ -286,7 +288,9 @@ void RMWPublisherEvent::track_unique_subscription(eprosima::fastrtps::rtps::GUID
   }
 }
 
-void RMWPublisherEvent::untrack_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid, bool is_local)
+void RMWPublisherEvent::untrack_unique_subscription(
+  eprosima::fastrtps::rtps::GUID_t guid,
+  bool is_local)
 {
   std::lock_guard<std::mutex> lock(subscriptions_mutex_);
   subscriptions_.erase(guid);
