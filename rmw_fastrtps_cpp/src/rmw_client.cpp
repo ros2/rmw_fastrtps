@@ -447,12 +447,10 @@ rmw_create_client(
     eprosima_fastrtps_identifier, info->request_writer_->guid());
   rmw_gid_t response_subscriber_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
     eprosima_fastrtps_identifier, info->response_reader_->guid());
-  rmw_ret_t rmw_ret = common_context->update_client_graph(
-    request_publisher_gid, response_subscriber_gid,
-    node->name, node->namespace_
-  );
-
-  if (RMW_RET_OK != rmw_ret) {
+  if (RMW_RET_OK != common_context->update_client_graph(
+      request_publisher_gid, response_subscriber_gid,
+      node->name, node->namespace_))
+  {
     return nullptr;
   }
 
