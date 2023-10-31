@@ -102,11 +102,6 @@ __rmw_create_node(
 
   node_handle->context = context;
 
-  // Though graph_cache methods are thread safe, both cache update and publishing have to also
-  // be atomic.
-  // If not, the following race condition is possible:
-  // node1-update-get-message / node2-update-get-message / node2-publish / node1-publish
-  // In that case, the last message published is not accurate.
   rmw_ret_t rmw_ret = common_context->add_node_graph(
     name, namespace_
   );

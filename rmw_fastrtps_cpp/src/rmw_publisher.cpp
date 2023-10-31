@@ -116,7 +116,6 @@ rmw_create_publisher(
     });
 
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
-
   auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
 
   // Update graph
