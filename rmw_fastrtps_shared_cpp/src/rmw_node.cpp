@@ -107,7 +107,7 @@ __rmw_create_node(
   // If not, the following race condition is possible:
   // node1-update-get-message / node2-update-get-message / node2-publish / node1-publish
   // In that case, the last message published is not accurate.
-  rmw_ret_t rmw_ret = common_context->update_node_graph(
+  rmw_ret_t rmw_ret = common_context->add_node_graph(
     name, namespace_
   );
   if (RMW_RET_OK != rmw_ret) {
@@ -126,7 +126,7 @@ __rmw_destroy_node(
   assert(node->implementation_identifier == identifier);
   rmw_ret_t ret = RMW_RET_OK;
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
-  ret = common_context->destroy_node_graph(
+  ret = common_context->remove_node_graph(
     node->name, node->namespace_
   );
   rmw_free(const_cast<char *>(node->name));

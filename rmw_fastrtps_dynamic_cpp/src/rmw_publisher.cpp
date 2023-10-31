@@ -120,7 +120,7 @@ rmw_create_publisher(
   auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
 
   // Update graph
-  if (RMW_RET_OK != common_context->update_publisher_graph(
+  if (RMW_RET_OK != common_context->add_publisher_graph(
       info->publisher_gid,
       node->name, node->namespace_))
   {

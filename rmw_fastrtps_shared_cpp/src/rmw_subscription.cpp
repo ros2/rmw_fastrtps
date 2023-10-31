@@ -53,7 +53,7 @@ __rmw_destroy_subscription(
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   auto info = static_cast<const CustomSubscriberInfo *>(subscription->data);
   // Update graph
-  ret = common_context->destroy_subscriber_graph(
+  ret = common_context->remove_subscriber_graph(
     info->subscription_gid_,
     node->name, node->namespace_
   );
@@ -203,7 +203,7 @@ __rmw_subscription_set_content_filter(
   const rmw_node_t * node = info->node_;
 
   // Update graph
-  ret = common_context->update_subscriber_graph(
+  ret = common_context->add_subscriber_graph(
     info->subscription_gid_,
     node->name, node->namespace_
   );

@@ -62,7 +62,7 @@ __rmw_destroy_service(
     identifier, info->request_reader_->guid());
   rmw_gid_t response_publisher_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
     identifier, info->response_writer_->guid());
-  final_ret = common_context->destroy_service_graph(
+  final_ret = common_context->remove_service_graph(
     request_subscriber_gid, response_publisher_gid,
     node->name, node->namespace_
   );

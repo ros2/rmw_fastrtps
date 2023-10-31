@@ -51,7 +51,7 @@ __rmw_destroy_publisher(
   auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
 
   // Update graph
-  rmw_ret_t rmw_ret = common_context->destroy_publisher_graph(
+  rmw_ret_t rmw_ret = common_context->remove_publisher_graph(
     info->publisher_gid,
     node->name, node->namespace_
   );

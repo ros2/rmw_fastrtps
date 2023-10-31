@@ -113,7 +113,7 @@ rmw_create_subscription(
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
 
   // Update graph
-  if (RMW_RET_OK != common_context->update_subscriber_graph(
+  if (RMW_RET_OK != common_context->add_subscriber_graph(
       info->subscription_gid_,
       node->name, node->namespace_))
   {

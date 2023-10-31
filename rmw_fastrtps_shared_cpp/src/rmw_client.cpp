@@ -49,7 +49,7 @@ __rmw_destroy_client(
     identifier, info->request_writer_->guid());
   rmw_gid_t response_subscriber_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
     identifier, info->response_reader_->guid());
-  final_ret = common_context->destroy_client_graph(
+  final_ret = common_context->remove_client_graph(
     request_publisher_gid, response_subscriber_gid,
     node->name, node->namespace_
   );
