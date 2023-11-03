@@ -442,42 +442,16 @@ rmw_create_service(
   }
   memcpy(const_cast<char *>(rmw_service->service_name), service_name, strlen(service_name) + 1);
 
+  // Update graph
+  rmw_gid_t request_subscriber_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
+    eprosima_fastrtps_identifier, info->request_reader_->guid());
+  rmw_gid_t response_publisher_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
+    eprosima_fastrtps_identifier, info->response_writer_->guid());
+  if (RMW_RET_OK != common_context->add_service_graph(
+      request_subscriber_gid, response_publisher_gid,
+      node->name, node->namespace_))
   {
-    // Update graph
-    std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
-    rmw_gid_t request_subscriber_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
-      eprosima_fastrtps_identifier, info->request_reader_->guid());
-    common_context->graph_cache.associate_reader(
-      request_subscriber_gid,
-      common_context->gid,
-      node->name,
-      node->namespace_);
-    rmw_gid_t response_publisher_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
-      eprosima_fastrtps_identifier, info->response_writer_->guid());
-    rmw_dds_common::msg::ParticipantEntitiesInfo msg =
-      common_context->graph_cache.associate_writer(
-      response_publisher_gid,
-      common_context->gid,
-      node->name,
-      node->namespace_);
-    rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_publish(
-      eprosima_fastrtps_identifier,
-      common_context->pub,
-      static_cast<void *>(&msg),
-      nullptr);
-    if (RMW_RET_OK != ret) {
-      common_context->graph_cache.dissociate_writer(
-        response_publisher_gid,
-        common_context->gid,
-        node->name,
-        node->namespace_);
-      common_context->graph_cache.dissociate_reader(
-        request_subscriber_gid,
-        common_context->gid,
-        node->name,
-        node->namespace_);
-      return nullptr;
-    }
+    return nullptr;
   }
 
   cleanup_rmw_service.cancel();

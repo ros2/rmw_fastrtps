@@ -44,27 +44,15 @@ __rmw_destroy_client(
     static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
   auto info = static_cast<CustomClientInfo *>(client->data);
 
-  {
-    // Update graph
-    std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
-    rmw_gid_t gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
-      identifier, info->request_writer_->guid());
-    common_context->graph_cache.dissociate_writer(
-      gid,
-      common_context->gid,
-      node->name,
-      node->namespace_);
-    gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
-      identifier, info->response_reader_->guid());
-    rmw_dds_common::msg::ParticipantEntitiesInfo msg =
-      common_context->graph_cache.dissociate_reader(
-      gid, common_context->gid, node->name, node->namespace_);
-    final_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
-      identifier,
-      common_context->pub,
-      static_cast<void *>(&msg),
-      nullptr);
-  }
+  // Update graph
+  rmw_gid_t request_publisher_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
+    identifier, info->request_writer_->guid());
+  rmw_gid_t response_subscriber_gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
+    identifier, info->response_reader_->guid());
+  final_ret = common_context->remove_client_graph(
+    request_publisher_gid, response_subscriber_gid,
+    node->name, node->namespace_
+  );
 
   auto show_previous_error =
     [&final_ret]()

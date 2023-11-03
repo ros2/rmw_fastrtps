@@ -49,22 +49,16 @@ __rmw_destroy_publisher(
   rmw_error_state_t error_state;
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
-  {
-    // Update graph
-    std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
-    rmw_dds_common::msg::ParticipantEntitiesInfo msg =
-      common_context->graph_cache.dissociate_writer(
-      info->publisher_gid, common_context->gid, node->name, node->namespace_);
-    rmw_ret_t publish_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
-      identifier,
-      common_context->pub,
-      &msg,
-      nullptr);
-    if (RMW_RET_OK != publish_ret) {
-      error_state = *rmw_get_error_state();
-      ret = publish_ret;
-      rmw_reset_error();
-    }
+
+  // Update graph
+  rmw_ret_t rmw_ret = common_context->remove_publisher_graph(
+    info->publisher_gid,
+    node->name, node->namespace_
+  );
+  if (RMW_RET_OK != rmw_ret) {
+    error_state = *rmw_get_error_state();
+    ret = rmw_ret;
+    rmw_reset_error();
   }
 
   auto participant_info =

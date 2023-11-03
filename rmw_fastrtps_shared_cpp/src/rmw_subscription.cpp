@@ -52,22 +52,15 @@ __rmw_destroy_subscription(
   rmw_error_string_t error_string;
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
   auto info = static_cast<const CustomSubscriberInfo *>(subscription->data);
-  {
-    // Update graph
-    std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
-    rmw_dds_common::msg::ParticipantEntitiesInfo msg =
-      common_context->graph_cache.dissociate_reader(
-      info->subscription_gid_, common_context->gid, node->name, node->namespace_);
-    ret = rmw_fastrtps_shared_cpp::__rmw_publish(
-      identifier,
-      common_context->pub,
-      static_cast<void *>(&msg),
-      nullptr);
-    if (RMW_RET_OK != ret) {
-      error_state = *rmw_get_error_state();
-      error_string = rmw_get_error_string();
-      rmw_reset_error();
-    }
+  // Update graph
+  ret = common_context->remove_subscriber_graph(
+    info->subscription_gid_,
+    node->name, node->namespace_
+  );
+  if (RMW_RET_OK != ret) {
+    error_state = *rmw_get_error_state();
+    error_string = rmw_get_error_string();
+    rmw_reset_error();
   }
 
   auto participant_info =
@@ -145,10 +138,10 @@ __rmw_subscription_set_content_filter(
   eprosima::fastdds::dds::DomainParticipant * dds_participant =
     info->dds_participant_;
   eprosima::fastdds::dds::TopicDescription * des_topic = nullptr;
-  const char * eprosima_fastrtps_identifier = subscription->implementation_identifier;
+  const char * identifier = subscription->implementation_identifier;
 
   rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_destroy_subscription(
-    eprosima_fastrtps_identifier,
+    identifier,
     info->node_,
     subscription,
     true /* reset_cft */);
@@ -204,28 +197,20 @@ __rmw_subscription_set_content_filter(
   /////
   // Update RMW GID
   info->subscription_gid_ = rmw_fastrtps_shared_cpp::create_rmw_gid(
-    eprosima_fastrtps_identifier, info->data_reader_->guid());
+    identifier, info->data_reader_->guid());
 
-  {
-    rmw_dds_common::Context * common_context = info->common_context_;
-    const rmw_node_t * node = info->node_;
+  rmw_dds_common::Context * common_context = info->common_context_;
+  const rmw_node_t * node = info->node_;
 
-    // Update graph
-    std::lock_guard<std::mutex> guard(common_context->node_update_mutex);
-    rmw_dds_common::msg::ParticipantEntitiesInfo msg =
-      common_context->graph_cache.associate_reader(
-      info->subscription_gid_, common_context->gid, node->name, node->namespace_);
-    rmw_ret_t rmw_ret = rmw_fastrtps_shared_cpp::__rmw_publish(
-      eprosima_fastrtps_identifier,
-      common_context->pub,
-      static_cast<void *>(&msg),
-      nullptr);
-    if (RMW_RET_OK != rmw_ret) {
-      static_cast<void>(common_context->graph_cache.dissociate_reader(
-        info->subscription_gid_, common_context->gid, node->name, node->namespace_));
-      return RMW_RET_ERROR;
-    }
+  // Update graph
+  ret = common_context->add_subscriber_graph(
+    info->subscription_gid_,
+    node->name, node->namespace_
+  );
+  if (RMW_RET_OK != ret) {
+    return RMW_RET_ERROR;
   }
+
   cleanup_datareader.cancel();
   return RMW_RET_OK;
 }
