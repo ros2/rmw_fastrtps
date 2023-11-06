@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+8.0.0 (2023-11-06)
+------------------
 * Quiet compiler warning in Release mode. (`#730 <https://github.com/ros2/rmw_fastrtps/issues/730>`_)
 * avoid using dds common public mutex directly (`#725 <https://github.com/ros2/rmw_fastrtps/issues/725>`_)
 * Contributors: Chen Lihui, Chris Lalancette
