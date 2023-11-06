@@ -118,6 +118,7 @@ __rmw_destroy_node(
   const char * identifier,
   rmw_node_t * node)
 {
+  (void)identifier;
   assert(node->implementation_identifier == identifier);
   rmw_ret_t ret = RMW_RET_OK;
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
