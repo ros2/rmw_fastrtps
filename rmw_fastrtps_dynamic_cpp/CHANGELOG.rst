@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* avoid using dds common public mutex directly (`#725 <https://github.com/ros2/rmw_fastrtps/issues/725>`_)
+* Contributors: Chen Lihui
+
 7.6.0 (2023-10-04)
 ------------------
 * Account for alignment on is_plain calculations. (`#716 <https://github.com/ros2/rmw_fastrtps/issues/716>`_)
