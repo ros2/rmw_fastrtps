@@ -824,6 +824,7 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
 
   const size_t padding = 4;
 
+  size_t last_member_size = 0;
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     const auto * member = members->members_ + i;
 
@@ -844,28 +845,33 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
       }
     }
 
+    last_member_size = 0;
     switch (member->type_id_) {
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BYTE:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
+        last_member_size = array_size * sizeof(int8_t);
         current_alignment += array_size * sizeof(int8_t);
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
+        last_member_size = array_size * sizeof(uint16_t);
         current_alignment += array_size * sizeof(uint16_t) +
           eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint16_t));
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT32:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
+        last_member_size = array_size * sizeof(uint32_t);
         current_alignment += array_size * sizeof(uint32_t) +
           eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint32_t));
         break;
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT64:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
+        last_member_size = array_size * sizeof(uint64_t);
         current_alignment += array_size * sizeof(uint64_t) +
           eprosima::fastcdr::Cdr::alignment(current_alignment, sizeof(uint64_t));
         break;
@@ -887,7 +893,9 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
         {
           auto sub_members = static_cast<const MembersType *>(member->members_->data);
           for (size_t index = 0; index < array_size; ++index) {
-            current_alignment += calculateMaxSerializedSize(sub_members, current_alignment);
+            size_t curr = calculateMaxSerializedSize(sub_members, current_alignment);
+            current_alignment += curr;
+            last_member_size += curr;
           }
         }
         break;
@@ -896,7 +904,15 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
     }
   }
 
-  return current_alignment - initial_alignment;
+  size_t ret_val = current_alignment - initial_alignment;
+  if (last_member_size > 0) {
+    if (this->is_plain_) {
+      const auto * last_member = members->members_ + (members->member_count_ - 1);
+      this->is_plain_ = (last_member->offset_ + last_member_size) == ret_val;
+    }
+  }
+
+  return ret_val;
 }
 
 template<typename MembersType>
