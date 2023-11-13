@@ -2,6 +2,9 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.5 (2023-11-13)
+------------------
+
 6.2.4 (2023-09-19)
 ------------------
 * Delay lock on message callback setters (`#657 <https://github.com/ros2/rmw_fastrtps/issues/657>`_) (`#661 <https://github.com/ros2/rmw_fastrtps/issues/661>`_)
