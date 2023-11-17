@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+7.1.2 (2023-11-17)
+------------------
 * Use DataWriter Qos to configure max_blocking_time on rmw_send_response (`#708 <https://github.com/ros2/rmw_fastrtps/issues/708>`_)
 * Contributors: Miguel Company
 
