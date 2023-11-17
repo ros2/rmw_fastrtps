@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Account for alignment on is_plain calculations. (`#731 <https://github.com/ros2/rmw_fastrtps/issues/731>`_)
+* Contributors: Chris Lalancette
+
 7.1.1 (2023-04-12)
 ------------------
 
