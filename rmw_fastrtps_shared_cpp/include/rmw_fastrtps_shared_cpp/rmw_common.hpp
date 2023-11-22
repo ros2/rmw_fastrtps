@@ -17,6 +17,9 @@
 
 #include "./visibility_control.h"
 
+#include "rcutils/allocator.h"
+#include "rcutils/types/string_array.h"
+
 #include "rmw/error_handling.h"
 #include "rmw/event.h"
 #include "rmw/features.h"
