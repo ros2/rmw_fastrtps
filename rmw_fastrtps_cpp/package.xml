@@ -29,6 +29,7 @@
   <build_depend>rmw_dds_common</build_depend>
   <build_depend>rmw_fastrtps_shared_cpp</build_depend>
   <build_depend>rosidl_dynamic_typesupport</build_depend>
+  <build_depend>rosidl_dynamic_typesupport_fastrtps</build_depend>
   <build_depend>rosidl_runtime_c</build_depend>
   <build_depend>rosidl_runtime_cpp</build_depend>
   <build_depend>rosidl_typesupport_fastrtps_c</build_depend>
@@ -54,6 +55,7 @@
   <exec_depend>rmw</exec_depend>
   <exec_depend>rmw_fastrtps_shared_cpp</exec_depend>
   <exec_depend>rosidl_dynamic_typesupport</exec_depend>
+  <exec_depend>rosidl_dynamic_typesupport_fastrtps</exec_depend>
   <exec_depend>tracetools</exec_depend>
 
   <test_depend>ament_cmake_gtest</test_depend>

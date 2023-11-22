@@ -15,7 +15,6 @@
 #include <fastcdr/Cdr.h>
 #include <rcutils/allocator.h>
 #include <rcutils/logging_macros.h>
-#include <rosidl_dynamic_typesupport_fastrtps/serialization_support.h>
 
 #include "rmw/allocators.h"
 #include "rmw/convert_rcutils_ret_to_rmw_ret.h"
