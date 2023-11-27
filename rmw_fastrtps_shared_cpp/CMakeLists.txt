@@ -36,7 +36,6 @@ endif()
 
 find_package(ament_cmake_ros REQUIRED)
 find_package(rosidl_dynamic_typesupport REQUIRED)
-find_package(rosidl_dynamic_typesupport_fastrtps REQUIRED)
 
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
@@ -104,27 +103,26 @@ target_include_directories(rmw_fastrtps_shared_cpp
   PUBLIC
   "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
-target_link_libraries(rmw_fastrtps_shared_cpp
-  fastcdr fastrtps
+target_link_libraries(rmw_fastrtps_shared_cpp PUBLIC
+  fastcdr
+  fastrtps
+  rcpputils::rcpputils
+  rcutils::rcutils
+  rmw::rmw
+  rmw_dds_common::rmw_dds_common_library
   rosidl_dynamic_typesupport::rosidl_dynamic_typesupport
-  rosidl_dynamic_typesupport_fastrtps::rosidl_dynamic_typesupport_fastrtps
 )
 
-# specific order: dependents before dependencies
-ament_target_dependencies(rmw_fastrtps_shared_cpp
-  "rcpputils"
-  "rcutils"
-  "rmw"
-  "rmw_dds_common"
-  "rosidl_typesupport_introspection_c"
-  "rosidl_typesupport_introspection_cpp"
-  "tracetools"
+target_link_libraries(rmw_fastrtps_shared_cpp PRIVATE
+  rosidl_typesupport_introspection_c::rosidl_typesupport_introspection_c
+  rosidl_typesupport_introspection_cpp::rosidl_typesupport_introspection_cpp
+  tracetools::tracetools
 )
 
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME}
-PRIVATE "RMW_FASTRTPS_SHARED_CPP_BUILDING_LIBRARY")
+  PRIVATE "RMW_FASTRTPS_SHARED_CPP_BUILDING_LIBRARY")
 
 # Export old-style CMake variables
 ament_export_include_directories("include/${PROJECT_NAME}")
@@ -133,17 +131,7 @@ ament_export_libraries(rmw_fastrtps_shared_cpp)
 # Export modern CMake targets
 ament_export_targets(rmw_fastrtps_shared_cpp)
 
-# specific order: dependents before dependencies
-ament_export_dependencies(rcpputils)
-ament_export_dependencies(rcutils)
-ament_export_dependencies(rmw)
-ament_export_dependencies(rmw_dds_common)
-ament_export_dependencies(rosidl_typesupport_introspection_c)
-ament_export_dependencies(rosidl_typesupport_introspection_cpp)
-ament_export_dependencies(tracetools)
-
-ament_export_dependencies(rosidl_dynamic_typesupport_fastrtps)
-ament_export_dependencies(rosidl_dynamic_typesupport)
+ament_export_dependencies(fastcdr rcpputils rcutils rmw rmw_dds_common rosidl_dynamic_typesupport)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

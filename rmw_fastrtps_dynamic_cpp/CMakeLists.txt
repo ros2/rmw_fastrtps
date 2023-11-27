@@ -100,25 +100,21 @@ add_library(rmw_fastrtps_dynamic_cpp
   src/type_support_registry.cpp
   src/rmw_get_endpoint_network_flow.cpp
 )
-target_link_libraries(rmw_fastrtps_dynamic_cpp
-  fastcdr fastrtps)
-
-# specific order: dependents before dependencies
-ament_target_dependencies(rmw_fastrtps_dynamic_cpp
-  "rcpputils"
-  "rcutils"
-  "rosidl_typesupport_fastrtps_c"
-  "rosidl_typesupport_fastrtps_cpp"
-  "rosidl_typesupport_introspection_c"
-  "rosidl_typesupport_introspection_cpp"
-  "rmw_dds_common"
-  "rmw_fastrtps_shared_cpp"
-  "rmw"
-  "rosidl_runtime_c"
+target_link_libraries(rmw_fastrtps_dynamic_cpp PUBLIC
+  fastcdr
+  fastrtps
+  rcpputils::rcpputils
+  rcutils::rcutils
+  rmw::rmw
+  rmw_fastrtps_shared_cpp::rmw_fastrtps_shared_cpp
+  rosidl_runtime_c::rosidl_runtime_c
+  rosidl_typesupport_fastrtps_c::rosidl_typesupport_fastrtps_c
+  rosidl_typesupport_fastrtps_cpp::rosidl_typesupport_fastrtps_cpp
+  rosidl_typesupport_introspection_c::rosidl_typesupport_introspection_c
+  rosidl_typesupport_introspection_cpp::rosidl_typesupport_introspection_cpp
 )
-
-target_link_libraries(rmw_fastrtps_dynamic_cpp
-  ${rmw_dds_common_LIBRARIES__rosidl_typesupport_introspection_cpp}
+target_link_libraries(rmw_fastrtps_dynamic_cpp PRIVATE
+  rmw_dds_common::rmw_dds_common_library
 )
 
 configure_rmw_library(rmw_fastrtps_dynamic_cpp)
@@ -126,23 +122,24 @@ configure_rmw_library(rmw_fastrtps_dynamic_cpp)
 # Causes the visibility macros to use dllexport rather than dllimport,
 # which is appropriate when building the dll but not consuming it.
 target_compile_definitions(${PROJECT_NAME}
-PRIVATE "RMW_FASTRTPS_DYNAMIC_CPP_BUILDING_LIBRARY")
+  PRIVATE "RMW_FASTRTPS_DYNAMIC_CPP_BUILDING_LIBRARY")
 
 # Export old-style CMake variables
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(rmw_fastrtps_dynamic_cpp)
 
-# specific order: dependents before dependencies
-ament_export_dependencies(rcpputils)
-ament_export_dependencies(rcutils)
-ament_export_dependencies(rmw)
-ament_export_dependencies(rmw_dds_common)
-ament_export_dependencies(rmw_fastrtps_shared_cpp)
-ament_export_dependencies(rosidl_runtime_c)
-ament_export_dependencies(rosidl_typesupport_fastrtps_c)
-ament_export_dependencies(rosidl_typesupport_fastrtps_cpp)
-ament_export_dependencies(rosidl_typesupport_introspection_c)
-ament_export_dependencies(rosidl_typesupport_introspection_cpp)
+ament_export_dependencies(
+  fastcdr
+  rcpputils
+  rcutils
+  rmw
+  rmw_fastrtps_shared_cpp
+  rosidl_runtime_c
+  rosidl_typesupport_fastrtps_c
+  rosidl_typesupport_fastrtps_cpp
+  rosidl_typesupport_introspection_c
+  rosidl_typesupport_introspection_cpp
+)
 
 register_rmw_implementation(
   "c:rosidl_typesupport_c:rosidl_typesupport_introspection_c"
@@ -158,14 +155,20 @@ if(BUILD_TESTING)
 
   ament_add_gtest(test_get_native_entities
     test/test_get_native_entities.cpp)
-  ament_target_dependencies(test_get_native_entities
-    osrf_testing_tools_cpp rcutils rmw test_msgs
+  target_link_libraries(test_get_native_entities
+    osrf_testing_tools_cpp::memory_tools
+    rcutils::rcutils
+    rmw::rmw
+    rmw_fastrtps_dynamic_cpp
+    ${test_msgs_TARGETS}
   )
-  target_link_libraries(test_get_native_entities rmw_fastrtps_dynamic_cpp)
 
   ament_add_gtest(test_logging test/test_logging.cpp)
-  ament_target_dependencies(test_logging rmw)
-  target_link_libraries(test_logging rmw_fastrtps_dynamic_cpp)
+  target_link_libraries(test_logging
+    fastrtps
+    rmw::rmw
+    rmw_fastrtps_dynamic_cpp
+  )
 endif()
 
 ament_package(
