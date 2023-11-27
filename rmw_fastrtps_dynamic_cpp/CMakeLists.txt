@@ -128,8 +128,18 @@ target_compile_definitions(${PROJECT_NAME}
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(rmw_fastrtps_dynamic_cpp)
 
-# specific order: dependents before dependencies
-ament_export_dependencies(fastcdr rcpputils rcutils rmw rmw_fastrtps_shared_cpp rosidl_runtime_c rosidl_typesupport_fastrtps_c rosidl_typesupport_fastrtps_cpp rosidl_typesupport_introspection_c rosidl_typesupport_introspection_cpp)
+ament_export_dependencies(
+  fastcdr
+  rcpputils
+  rcutils
+  rmw
+  rmw_fastrtps_shared_cpp
+  rosidl_runtime_c
+  rosidl_typesupport_fastrtps_c
+  rosidl_typesupport_fastrtps_cpp
+  rosidl_typesupport_introspection_c
+  rosidl_typesupport_introspection_cpp
+)
 
 register_rmw_implementation(
   "c:rosidl_typesupport_c:rosidl_typesupport_introspection_c"
