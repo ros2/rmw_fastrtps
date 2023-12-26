@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Switch to target_link_libraries for linking. (`#734 <https://github.com/ros2/rmw_fastrtps/issues/734>`_)
+* Contributors: Chris Lalancette
+
 8.0.0 (2023-11-06)
 ------------------
 * avoid using dds common public mutex directly (`#725 <https://github.com/ros2/rmw_fastrtps/issues/725>`_)
