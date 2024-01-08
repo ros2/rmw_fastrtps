@@ -219,6 +219,12 @@ __rmw_publisher_count_matched_subscriptions(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_publisher_count_non_local_matched_subscriptions(
+  const rmw_publisher_t * publisher,
+  size_t * non_local_subscription_count);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_publisher_get_actual_qos(
   const rmw_publisher_t * publisher,
   rmw_qos_profile_t * qos);

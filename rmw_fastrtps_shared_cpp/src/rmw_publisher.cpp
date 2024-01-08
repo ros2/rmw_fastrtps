@@ -94,6 +94,18 @@ __rmw_publisher_count_matched_subscriptions(
 }
 
 rmw_ret_t
+__rmw_publisher_count_non_local_matched_subscriptions(
+  const rmw_publisher_t * publisher,
+  size_t * non_local_subscription_count)
+{
+  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
+
+  *non_local_subscription_count = info->publisher_event_->non_local_subscription_count();
+
+  return RMW_RET_OK;
+}
+
+rmw_ret_t
 __rmw_publisher_assert_liveliness(
   const char * identifier,
   const rmw_publisher_t * publisher)

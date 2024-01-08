@@ -38,14 +38,14 @@ void CustomDataWriterListener::on_publication_matched(
   eprosima::fastdds::dds::DataWriter * writer,
   const eprosima::fastdds::dds::PublicationMatchedStatus & status)
 {
-  (void)writer;
+  eprosima::fastrtps::rtps::GUID_t subscription_guid =
+    eprosima::fastrtps::rtps::iHandle2GUID(status.last_subscription_handle);
+  bool is_local = writer->guid().guidPrefix == subscription_guid.guidPrefix;
 
   if (status.current_count_change == 1) {
-    publisher_event_->track_unique_subscription(
-      eprosima::fastrtps::rtps::iHandle2GUID(status.last_subscription_handle));
+    publisher_event_->track_unique_subscription(subscription_guid, is_local);
   } else if (status.current_count_change == -1) {
-    publisher_event_->untrack_unique_subscription(
-      eprosima::fastrtps::rtps::iHandle2GUID(status.last_subscription_handle));
+    publisher_event_->untrack_unique_subscription(subscription_guid, is_local);
   } else {
     return;
   }
@@ -277,22 +277,38 @@ void RMWPublisherEvent::set_on_new_event_callback(
   publisher_info_->data_writer_->set_listener(publisher_info_->data_writer_listener_, status_mask);
 }
 
-void RMWPublisherEvent::track_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid)
+void RMWPublisherEvent::track_unique_subscription(
+  eprosima::fastrtps::rtps::GUID_t guid,
+  bool is_local)
 {
   std::lock_guard<std::mutex> lock(subscriptions_mutex_);
   subscriptions_.insert(guid);
+  if (!is_local) {
+    non_local_subscriptions_.insert(guid);
+  }
 }
 
-void RMWPublisherEvent::untrack_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid)
+void RMWPublisherEvent::untrack_unique_subscription(
+  eprosima::fastrtps::rtps::GUID_t guid,
+  bool is_local)
 {
   std::lock_guard<std::mutex> lock(subscriptions_mutex_);
   subscriptions_.erase(guid);
+  if (!is_local) {
+    non_local_subscriptions_.erase(guid);
+  }
 }
 
 size_t RMWPublisherEvent::subscription_count() const
 {
   std::lock_guard<std::mutex> lock(subscriptions_mutex_);
   return subscriptions_.size();
+}
+
+size_t RMWPublisherEvent::non_local_subscription_count() const
+{
+  std::lock_guard<std::mutex> lock(subscriptions_mutex_);
+  return non_local_subscriptions_.size();
 }
 
 void RMWPublisherEvent::update_deadline(uint32_t total_count, uint32_t total_count_change)
