@@ -119,9 +119,9 @@ bool TypeSupport::deserializeROSmessage(
       "Fast CDR exception deserializing message of type %s.",
       getName());
     return false;
-  } catch (...) {
+  } catch (std::bad_alloc &) {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
-      "Unhandled exception deserializing message of type %s.",
+      "'Bad alloc' exception deserializing message of type %s.",
       getName());
     return false;
   }
