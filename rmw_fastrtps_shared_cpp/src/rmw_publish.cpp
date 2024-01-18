@@ -109,6 +109,7 @@ __rmw_publish_serialized_message(
   data.type = FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER;
   data.data = &ser;
   data.impl = nullptr;  // not used when type is FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER
+  TRACETOOLS_TRACEPOINT(rmw_publish, serialized_message);
   if (!info->data_writer_->write(&data)) {
     RMW_SET_ERROR_MSG("cannot publish data");
     return RMW_RET_ERROR;
