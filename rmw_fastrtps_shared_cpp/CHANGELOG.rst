@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add timestamp to rmw_publish tracepoint (`#694 <https://github.com/ros2/rmw_fastrtps/issues/694>`_)
+* Switch to Unix line endings. (`#736 <https://github.com/ros2/rmw_fastrtps/issues/736>`_)
+* Contributors: Chris Lalancette, Christopher Wecht
+
 8.1.0 (2023-12-26)
 ------------------
 * Switch to target_link_libraries for linking. (`#734 <https://github.com/ros2/rmw_fastrtps/issues/734>`_)
