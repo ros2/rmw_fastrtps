@@ -78,11 +78,12 @@ bool TypeSupport::serialize(
         eprosima::fastcdr::FastBuffer fastbuffer(  // Object that manages the raw buffer
           reinterpret_cast<char *>(payload->data), payload->max_size);
         eprosima::fastcdr::Cdr ser(  // Object that serializes the data
-          fastbuffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
+          fastbuffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::CdrVersion::XCDRv1);
+        ser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
         if (this->serializeROSmessage(ser_data->data, ser, ser_data->impl)) {
           payload->encapsulation = ser.endianness() ==
             eprosima::fastcdr::Cdr::BIG_ENDIANNESS ? CDR_BE : CDR_LE;
-          payload->length = (uint32_t)ser.getSerializedDataLength();
+          payload->length = (uint32_t)ser.get_serialized_data_length();
           return true;
         }
         break;
@@ -91,11 +92,11 @@ bool TypeSupport::serialize(
     case FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER:
       {
         auto ser = static_cast<eprosima::fastcdr::Cdr *>(ser_data->data);
-        if (payload->max_size >= ser->getSerializedDataLength()) {
-          payload->length = static_cast<uint32_t>(ser->getSerializedDataLength());
+        if (payload->max_size >= ser->get_serialized_data_length()) {
+          payload->length = static_cast<uint32_t>(ser->get_serialized_data_length());
           payload->encapsulation = ser->endianness() ==
             eprosima::fastcdr::Cdr::BIG_ENDIANNESS ? CDR_BE : CDR_LE;
-          memcpy(payload->data, ser->getBufferPointer(), ser->getSerializedDataLength());
+          memcpy(payload->data, ser->get_buffer_pointer(), ser->get_serialized_data_length());
           return true;
         }
         break;
@@ -132,7 +133,7 @@ bool TypeSupport::deserialize(
         eprosima::fastcdr::FastBuffer fastbuffer(
           reinterpret_cast<char *>(payload->data), payload->length);
         eprosima::fastcdr::Cdr deser(
-          fastbuffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
+          fastbuffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN);
         return deserializeROSmessage(deser, ser_data->data, ser_data->impl);
       }
 
@@ -171,7 +172,7 @@ std::function<uint32_t()> TypeSupport::getSerializedSizeProvider(void * data)
     {
       if (ser_data->type == FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER) {
         auto ser = static_cast<eprosima::fastcdr::Cdr *>(ser_data->data);
-        return static_cast<uint32_t>(ser->getSerializedDataLength());
+        return static_cast<uint32_t>(ser->get_serialized_data_length());
       }
       return static_cast<uint32_t>(
         this->getEstimatedSerializedSize(ser_data->data, ser_data->impl));
@@ -301,12 +302,13 @@ const TypeObject * GetCompleteObject(
   // DDS document)
   eprosima::fastcdr::Cdr ser(
     fastbuffer, eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
-    eprosima::fastcdr::Cdr::DDS_CDR);  // Object that serializes the data.
+    eprosima::fastcdr::CdrVersion::XCDRv1);  // Object that serializes the data.
+  ser.set_encoding_flag(eprosima::fastcdr::PLAIN_CDR);
   payload.encapsulation = CDR_LE;
 
   type_object->serialize(ser);
   payload.length =
-    static_cast<uint32_t>(ser.getSerializedDataLength());  // Get the serialized length
+    static_cast<uint32_t>(ser.get_serialized_data_length());  // Get the serialized length
   MD5 objectHash;
   objectHash.update(reinterpret_cast<char *>(payload.data), payload.length);
   objectHash.finalize();
@@ -377,12 +379,13 @@ const TypeObject * GetMinimalObject(
   // DDS document)
   eprosima::fastcdr::Cdr ser(
     fastbuffer, eprosima::fastcdr::Cdr::LITTLE_ENDIANNESS,
-    eprosima::fastcdr::Cdr::DDS_CDR);  // Object that serializes the data.
+    eprosima::fastcdr::CdrVersion::XCDRv1);  // Object that serializes the data.
+  ser.set_encoding_flag(eprosima::fastcdr::PLAIN_CDR);
   payload.encapsulation = CDR_LE;
 
   type_object->serialize(ser);
   payload.length =
-    static_cast<uint32_t>(ser.getSerializedDataLength());  // Get the serialized length
+    static_cast<uint32_t>(ser.get_serialized_data_length());  // Get the serialized length
   MD5 objectHash;
   objectHash.update(reinterpret_cast<char *>(payload.data), payload.length);
   objectHash.finalize();
