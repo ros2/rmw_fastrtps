@@ -39,7 +39,7 @@ find_package(rmw_fastrtps_shared_cpp REQUIRED)
 find_package(tracetools REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
-find_package(fastcdr REQUIRED CONFIG)
+find_package(fastcdr 2 REQUIRED CONFIG)
 find_package(fastrtps 2.10 REQUIRED CONFIG)
 find_package(FastRTPS 2.10 REQUIRED MODULE)
 

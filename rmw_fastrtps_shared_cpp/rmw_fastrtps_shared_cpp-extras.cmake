@@ -15,7 +15,7 @@
 # copied from rmw_fastrtps_shared_cpp/rmw_fastrtps_shared_cpp-extras.cmake
 
 find_package(fastrtps_cmake_module REQUIRED)
-find_package(fastcdr REQUIRED CONFIG)
+find_package(fastcdr 2 REQUIRED CONFIG)
 find_package(fastrtps REQUIRED CONFIG)
 find_package(FastRTPS REQUIRED MODULE)
 
