@@ -55,7 +55,8 @@ rmw_serialize(
     reinterpret_cast<char *>(serialized_message->buffer),
     data_length);
   eprosima::fastcdr::Cdr ser(
-    buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
+    buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::CdrVersion::XCDRv1);
+  ser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
 
   auto ret = tss->serializeROSmessage(ros_message, ser, ts->data);
   serialized_message->buffer_length = data_length;
@@ -85,8 +86,7 @@ rmw_deserialize(
   auto tss = type_registry.get_message_type_support(ts);
   eprosima::fastcdr::FastBuffer buffer(
     reinterpret_cast<char *>(serialized_message->buffer), serialized_message->buffer_length);
-  eprosima::fastcdr::Cdr deser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
-    eprosima::fastcdr::Cdr::DDS_CDR);
+  eprosima::fastcdr::Cdr deser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN);
 
   auto ret = tss->deserializeROSmessage(deser, ros_message, ts->data);
   type_registry.return_message_type_support(ts);
