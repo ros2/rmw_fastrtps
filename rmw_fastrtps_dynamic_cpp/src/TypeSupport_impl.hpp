@@ -92,6 +92,38 @@ inline void serialize_wide_string(
   ser << wstr;
 }
 
+// ------ Wide string deserialization ------
+
+/**
+ * Perform deserialization of a u16string into a CDR stream.
+ *
+ * \param deser Stream where the data is being deserialized from.
+ * \param u16str u16string to produce.
+ */
+inline void deserialize_wide_string(
+  eprosima::fastcdr::Cdr & deser,
+  std::u16string & u16str)
+{
+  std::wstring wstr;
+  deser >> wstr;
+  rosidl_typesupport_fastrtps_cpp::wstring_to_u16string(wstr, u16str);
+}
+
+/**
+ * Perform deserialization of a rosidl_runtime_c__U16String into a CDR stream.
+ *
+ * \param deser Stream where the data is being deserialized from.
+ * \param u16str rosidl_runtime_c__U16String to produce.
+ */
+inline void deserialize_wide_string(
+  eprosima::fastcdr::Cdr & deser,
+  rosidl_runtime_c__U16String & u16str)
+{
+  std::wstring wstr;
+  deser >> wstr;
+  rosidl_typesupport_fastrtps_c::wstring_to_u16string(wstr, u16str);
+}
+
 template<typename MembersType>
 TypeSupport<MembersType>::TypeSupport(const void * ros_type_support)
 : BaseTypeSupport(ros_type_support)
@@ -623,11 +655,8 @@ inline void deserialize_field<std::wstring>(
   void * field,
   eprosima::fastcdr::Cdr & deser)
 {
-  std::wstring wstr;
   if (!member->is_array_) {
-    deser >> wstr;
-    rosidl_typesupport_fastrtps_cpp::wstring_to_u16string(
-      wstr, *static_cast<std::u16string *>(field));
+    deserialize_wide_string(deser, *static_cast<std::u16string*>(field));
   } else {
     uint32_t size;
     if (member->array_size_ && !member->is_upper_bound_) {
@@ -639,8 +668,7 @@ inline void deserialize_field<std::wstring>(
     for (size_t i = 0; i < size; ++i) {
       void * element = member->get_function(field, i);
       auto u16str = static_cast<std::u16string *>(element);
-      deser >> wstr;
-      rosidl_typesupport_fastrtps_cpp::wstring_to_u16string(wstr, *u16str);
+      deserialize_wide_string(deser, *u16str);
     }
   }
 }
@@ -716,16 +744,12 @@ inline void deserialize_field<std::wstring>(
   void * field,
   eprosima::fastcdr::Cdr & deser)
 {
-  std::wstring wstr;
   if (!member->is_array_) {
-    deser >> wstr;
-    rosidl_typesupport_fastrtps_c::wstring_to_u16string(
-      wstr, *static_cast<rosidl_runtime_c__U16String *>(field));
+    deserialize_wide_string(deser, *static_cast<rosidl_runtime_c__U16String *>(field));
   } else if (member->array_size_ && !member->is_upper_bound_) {
     auto array = static_cast<rosidl_runtime_c__U16String *>(field);
     for (size_t i = 0; i < member->array_size_; ++i) {
-      deser >> wstr;
-      rosidl_typesupport_fastrtps_c::wstring_to_u16string(wstr, array[i]);
+      deserialize_wide_string(deser, array[i]);
     }
   } else {
     uint32_t size;
@@ -735,8 +759,7 @@ inline void deserialize_field<std::wstring>(
       throw std::runtime_error("unable to initialize rosidl_runtime_c__U16String sequence");
     }
     for (size_t i = 0; i < sequence->size; ++i) {
-      deser >> wstr;
-      rosidl_typesupport_fastrtps_c::wstring_to_u16string(wstr, sequence->data[i]);
+      deserialize_wide_string(deser, sequence->data[i]);
     }
   }
 }
