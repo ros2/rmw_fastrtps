@@ -25,8 +25,6 @@
 
 #include "rmw/error_handling.h"
 
-#include "rosidl_typesupport_fastrtps_c/wstring_conversion.hpp"
-#include "rosidl_typesupport_fastrtps_cpp/wstring_conversion.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 #include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
 #include "rosidl_typesupport_introspection_cpp/service_introspection.hpp"

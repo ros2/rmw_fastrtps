@@ -127,8 +127,6 @@ Results of the nightly linter tests can be found [here](https://ci.ros2.org/view
 * `rmw_dds_common`: [QUALITY DECLARATION](https://github.com/ros2/rmw_dds_common/blob/master/rmw_dds_common/QUALITY_DECLARATION.md)
 * `rmw_fastrtps_shared_cpp`: [QUALITY DECLARATION](https://github.com/ros2/rmw_fastrtps/blob/master/rmw_fastrtps_shared_cpp/QUALITY_DECLARATION.md)
 * `rosidl_runtime_c`: [QUALITY DECLARATION](https://github.com/ros2/rosidl/blob/master/rosidl_runtime_c/QUALITY_DECLARATION.md)
-* `rosidl_typesupport_fastrtps_c`: [QUALITY DECLARATION](https://github.com/ros2/rosidl_typesupport_fastrtps/blob/master/rosidl_typesupport_fastrtps_c/QUALITY_DECLARATION.md)
-* `rosidl_typesupport_fastrtps_cpp`: [QUALITY DECLARATION](https://github.com/ros2/rosidl_typesupport_fastrtps/blob/master/rosidl_typesupport_fastrtps_cpp/QUALITY_DECLARATION.md)
 * `rosidl_typesupport_introspection_c`
 * `rosidl_typesupport_introspection_cpp`
 
