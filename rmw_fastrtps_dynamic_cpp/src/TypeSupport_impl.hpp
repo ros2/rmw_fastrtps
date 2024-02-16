@@ -23,9 +23,6 @@
 #include "fastcdr/FastBuffer.h"
 #include "fastcdr/exceptions/Exception.h"
 
-#include "TypeSupport.hpp"
-#include "serialization_helpers.hpp"
-
 #include "rmw/error_handling.h"
 
 #include "rosidl_typesupport_fastrtps_c/wstring_conversion.hpp"
@@ -39,6 +36,9 @@
 
 #include "rosidl_runtime_c/primitives_sequence_functions.h"
 #include "rosidl_runtime_c/u16string_functions.h"
+
+#include "TypeSupport.hpp"
+#include "serialization_helpers.hpp"
 
 namespace rmw_fastrtps_dynamic_cpp
 {
@@ -59,38 +59,6 @@ SPECIALIZE_GENERIC_C_SEQUENCE(int32, int32_t)
 SPECIALIZE_GENERIC_C_SEQUENCE(uint32, uint32_t)
 SPECIALIZE_GENERIC_C_SEQUENCE(int64, int64_t)
 SPECIALIZE_GENERIC_C_SEQUENCE(uint64, uint64_t)
-
-// ------ Wide string serialization ------
-
-/**
- * Perform serialization of a u16string into a CDR stream.
- *
- * \param ser Stream where the data is being serialized.
- * \param u16str u16string to serialize.
- */
-inline void serialize_wide_string(
-  eprosima::fastcdr::Cdr & ser,
-  const std::u16string & u16str)
-{
-  std::wstring wstr;
-  rosidl_typesupport_fastrtps_cpp::u16string_to_wstring(u16str, wstr);
-  ser << wstr;
-}
-
-/**
- * Perform serialization of a rosidl_runtime_c__U16String into a CDR stream.
- *
- * \param ser Stream where the data is being serialized.
- * \param u16str rosidl_runtime_c__U16String to serialize.
- */
-inline void serialize_wide_string(
-  eprosima::fastcdr::Cdr & ser,
-  const rosidl_runtime_c__U16String & u16str)
-{
-  std::wstring wstr;
-  rosidl_typesupport_fastrtps_c::u16string_to_wstring(u16str, wstr);
-  ser << wstr;
-}
 
 // ------ Wide string deserialization ------
 
@@ -159,7 +127,7 @@ void serialize_field<std::wstring>(
 {
   if (!member->is_array_) {
     auto u16str = static_cast<std::u16string *>(field);
-    serialize_wide_string(ser, *u16str);
+    ser << *u16str;
   } else {
     size_t size;
     if (member->array_size_ && !member->is_upper_bound_) {
@@ -171,7 +139,7 @@ void serialize_field<std::wstring>(
     for (size_t i = 0; i < size; ++i) {
       const void * element = member->get_const_function(field, i);
       auto u16str = static_cast<const std::u16string *>(element);
-      serialize_wide_string(ser, *u16str);
+      ser << *u16str;
     }
   }
 }
@@ -242,17 +210,17 @@ void serialize_field<std::wstring>(
 {
   if (!member->is_array_) {
     auto u16str = static_cast<rosidl_runtime_c__U16String *>(field);
-    serialize_wide_string(ser, *u16str);
+    ser << *u16str;
   } else if (member->array_size_ && !member->is_upper_bound_) {
     auto array = static_cast<rosidl_runtime_c__U16String *>(field);
     for (size_t i = 0; i < member->array_size_; ++i) {
-      serialize_wide_string(ser, array[i]);
+      ser << array[i];
     }
   } else {
     auto sequence = static_cast<rosidl_runtime_c__U16String__Sequence *>(field);
     ser << static_cast<uint32_t>(sequence->size);
     for (size_t i = 0; i < sequence->size; ++i) {
-      serialize_wide_string(ser, sequence->data[i]);
+      ser << sequence->data[i];
     }
   }
 }

@@ -33,4 +33,38 @@
     } \
   };
 
+namespace eprosima
+{
+namespace fastcdr
+{
+
+inline eprosima::fastcdr::Cdr & operator << (
+  eprosima::fastcdr::Cdr & cdr, const std::u16string & u16str)
+{
+  auto ptr = u16str.c_str();
+  auto len = static_cast<uint32_t>(u16str.size());
+  cdr << len;
+  for(;len > 0; --len)
+  {
+    cdr << static_cast<uint32_t>(*ptr++);
+  }
+  return cdr;
+}
+
+inline eprosima::fastcdr::Cdr & operator << (
+  eprosima::fastcdr::Cdr & cdr, const rosidl_runtime_c__U16String & u16str)
+{
+  auto ptr = u16str.data;
+  auto len = static_cast<uint32_t>(u16str.size);
+  cdr << len;
+  for(;len > 0; --len)
+  {
+    cdr << static_cast<uint32_t>(*ptr++);
+  }
+  return cdr;
+}
+
+}  // namespace fastcdr
+}  // namespace eprosima
+
 #endif  // RMW_FASTRTPS_DYNAMIC_CPP__SERIALIZATION_HELPERS_HPP_
