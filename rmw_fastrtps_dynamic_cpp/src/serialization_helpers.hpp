@@ -64,6 +64,42 @@ inline eprosima::fastcdr::Cdr & operator << (
   return cdr;
 }
 
+inline eprosima::fastcdr::Cdr & operator >> (
+  eprosima::fastcdr::Cdr & cdr, std::u16string & u16str)
+{
+  uint32_t len;
+  cdr >> len;
+  u16str.resize(len);
+  for (uint32_t i = 0; i < len; ++i)
+  {
+    uint32_t c;
+    cdr >> c;
+    u16str[i] = static_cast<char16_t>(c);
+  }
+
+  return cdr;
+}
+
+inline eprosima::fastcdr::Cdr & operator >> (
+  eprosima::fastcdr::Cdr & cdr, rosidl_runtime_c__U16String & u16str)
+{
+  uint32_t len;
+  cdr >> len;
+  if (!rosidl_runtime_c__U16String__resize(&u16str, len))
+  {
+    throw std::bad_alloc();
+  }
+
+  for (uint32_t i = 0; i < len; ++i)
+  {
+      uint32_t c;
+      cdr >> c;
+      u16str.data[i] = static_cast<char16_t>(c);
+  }
+
+  return cdr;
+}
+
 }  // namespace fastcdr
 }  // namespace eprosima
 
