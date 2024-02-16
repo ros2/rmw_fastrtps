@@ -24,7 +24,7 @@
 #include "fastcdr/exceptions/Exception.h"
 
 #include "TypeSupport.hpp"
-#include "rmw_fastrtps_dynamic_cpp/macros.hpp"
+#include "serialization_helpers.hpp"
 
 #include "rmw/error_handling.h"
 
