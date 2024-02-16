@@ -592,7 +592,7 @@ inline void deserialize_field<std::wstring>(
   eprosima::fastcdr::Cdr & deser)
 {
   if (!member->is_array_) {
-    deser >> *static_cast<std::u16string*>(field);
+    deser >> *static_cast<std::u16string *>(field);
   } else {
     uint32_t size;
     if (member->array_size_ && !member->is_upper_bound_) {

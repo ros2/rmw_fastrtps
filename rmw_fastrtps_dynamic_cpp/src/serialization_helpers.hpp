@@ -38,40 +38,37 @@ namespace eprosima
 namespace fastcdr
 {
 
-inline eprosima::fastcdr::Cdr & operator << (
+inline eprosima::fastcdr::Cdr & operator<<(
   eprosima::fastcdr::Cdr & cdr, const std::u16string & u16str)
 {
   auto ptr = u16str.c_str();
   auto len = static_cast<uint32_t>(u16str.size());
   cdr << len;
-  for(;len > 0; --len)
-  {
+  for (; len > 0; --len) {
     cdr << static_cast<uint32_t>(*ptr++);
   }
   return cdr;
 }
 
-inline eprosima::fastcdr::Cdr & operator << (
+inline eprosima::fastcdr::Cdr & operator<<(
   eprosima::fastcdr::Cdr & cdr, const rosidl_runtime_c__U16String & u16str)
 {
   auto ptr = u16str.data;
   auto len = static_cast<uint32_t>(u16str.size);
   cdr << len;
-  for(;len > 0; --len)
-  {
+  for (; len > 0; --len) {
     cdr << static_cast<uint32_t>(*ptr++);
   }
   return cdr;
 }
 
-inline eprosima::fastcdr::Cdr & operator >> (
+inline eprosima::fastcdr::Cdr & operator>>(
   eprosima::fastcdr::Cdr & cdr, std::u16string & u16str)
 {
   uint32_t len;
   cdr >> len;
   u16str.resize(len);
-  for (uint32_t i = 0; i < len; ++i)
-  {
+  for (uint32_t i = 0; i < len; ++i) {
     uint32_t c;
     cdr >> c;
     u16str[i] = static_cast<char16_t>(c);
@@ -80,21 +77,19 @@ inline eprosima::fastcdr::Cdr & operator >> (
   return cdr;
 }
 
-inline eprosima::fastcdr::Cdr & operator >> (
+inline eprosima::fastcdr::Cdr & operator>>(
   eprosima::fastcdr::Cdr & cdr, rosidl_runtime_c__U16String & u16str)
 {
   uint32_t len;
   cdr >> len;
-  if (!rosidl_runtime_c__U16String__resize(&u16str, len))
-  {
+  if (!rosidl_runtime_c__U16String__resize(&u16str, len)) {
     throw std::bad_alloc();
   }
 
-  for (uint32_t i = 0; i < len; ++i)
-  {
-      uint32_t c;
-      cdr >> c;
-      u16str.data[i] = static_cast<char16_t>(c);
+  for (uint32_t i = 0; i < len; ++i) {
+    uint32_t c;
+    cdr >> c;
+    u16str.data[i] = static_cast<char16_t>(c);
   }
 
   return cdr;
