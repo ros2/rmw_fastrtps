@@ -25,7 +25,7 @@
 
 #include "rcpputils/find_and_replace.hpp"
 
-#include "rmw_fastrtps_dynamic_cpp/MessageTypeSupport.hpp"
+#include "MessageTypeSupport.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
 namespace rmw_fastrtps_dynamic_cpp

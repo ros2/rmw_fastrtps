@@ -14,7 +14,7 @@
 
 #include "rmw/error_handling.h"
 
-#include "rmw_fastrtps_dynamic_cpp/TypeSupport.hpp"
+#include "TypeSupport.hpp"
 
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
 

@@ -24,8 +24,8 @@
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
-#include "rmw_fastrtps_dynamic_cpp/MessageTypeSupport.hpp"
-#include "rmw_fastrtps_dynamic_cpp/ServiceTypeSupport.hpp"
+#include "MessageTypeSupport.hpp"
+#include "ServiceTypeSupport.hpp"
 
 #include "rosidl_typesupport_introspection_c/visibility_control.h"
 

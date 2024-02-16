@@ -23,7 +23,7 @@
 #include "fastcdr/FastBuffer.h"
 #include "fastcdr/exceptions/Exception.h"
 
-#include "rmw_fastrtps_dynamic_cpp/TypeSupport.hpp"
+#include "TypeSupport.hpp"
 #include "rmw_fastrtps_dynamic_cpp/macros.hpp"
 
 #include "rmw/error_handling.h"
