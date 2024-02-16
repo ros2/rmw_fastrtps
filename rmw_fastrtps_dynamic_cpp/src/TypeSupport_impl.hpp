@@ -328,17 +328,19 @@ size_t next_field_align_string(
   const size_t padding = 4;
   size_t character_size =
     (member->type_id_ == rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING) ? 4 : 1;
+  size_t extra_char =
+    (member->type_id_ == rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING) ? 0 : 1;
   if (!member->is_array_) {
     current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
     current_alignment += padding;
     auto & str = *static_cast<T *>(field);
-    current_alignment += character_size * (str.size() + 1);
+    current_alignment += character_size * (str.size() + extra_char);
   } else if (member->array_size_ && !member->is_upper_bound_) {
     auto str_arr = static_cast<T *>(field);
     for (size_t index = 0; index < member->array_size_; ++index) {
       current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       current_alignment += padding;
-      current_alignment += character_size * (str_arr[index].size() + 1);
+      current_alignment += character_size * (str_arr[index].size() + extra_char);
     }
   } else {
     auto & data = *reinterpret_cast<std::vector<T> *>(field);
@@ -347,7 +349,7 @@ size_t next_field_align_string(
     for (auto & it : data) {
       current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
       current_alignment += padding;
-      current_alignment += character_size * (it.size() + 1);
+      current_alignment += character_size * (it.size() + extra_char);
     }
   }
   return current_alignment;
@@ -430,14 +432,14 @@ size_t next_field_align_string<std::wstring>(
     auto u16str = static_cast<rosidl_runtime_c__U16String *>(field);
     current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
     current_alignment += padding;
-    current_alignment += 4 * (u16str->size + 1);
+    current_alignment += 4 * (u16str->size);
   } else {
     if (member->array_size_ && !member->is_upper_bound_) {
       auto string_field = static_cast<rosidl_runtime_c__U16String *>(field);
       for (size_t i = 0; i < member->array_size_; ++i) {
         current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
         current_alignment += padding;
-        current_alignment += 4 * (string_field[i].size + 1);
+        current_alignment += 4 * (string_field[i].size);
       }
     } else {
       current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
@@ -447,7 +449,7 @@ size_t next_field_align_string<std::wstring>(
       for (size_t i = 0; i < string_sequence_field.size; ++i) {
         current_alignment += eprosima::fastcdr::Cdr::alignment(current_alignment, padding);
         current_alignment += padding;
-        current_alignment += 4 * (string_sequence_field.data[i].size + 1);
+        current_alignment += 4 * (string_sequence_field.data[i].size);
       }
     }
   }
@@ -866,10 +868,12 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
           this->is_plain_ = false;
           size_t character_size =
             (member->type_id_ == rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING) ? 4 : 1;
+          size_t extra_char =
+            (member->type_id_ == rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING) ? 0 : 1;
           for (size_t index = 0; index < array_size; ++index) {
             current_alignment += padding +
               eprosima::fastcdr::Cdr::alignment(current_alignment, padding) +
-              character_size * (member->string_upper_bound_ + 1);
+              character_size * (member->string_upper_bound_ + extra_char);
           }
         }
         break;
