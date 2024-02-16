@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_HPP_
-#define RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_HPP_
+#ifndef SERVICETYPESUPPORT_HPP_
+#define SERVICETYPESUPPORT_HPP_
 
 #include <cassert>
 
@@ -44,4 +44,4 @@ public:
 
 #include "ServiceTypeSupport_impl.hpp"
 
-#endif  // RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_HPP_
+#endif  // SERVICETYPESUPPORT_HPP_

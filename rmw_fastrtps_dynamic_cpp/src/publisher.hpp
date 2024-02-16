@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_DYNAMIC_CPP__PUBLISHER_HPP_
-#define RMW_FASTRTPS_DYNAMIC_CPP__PUBLISHER_HPP_
+#ifndef PUBLISHER_HPP_
+#define PUBLISHER_HPP_
 
 #include "rmw/rmw.h"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
@@ -31,4 +31,4 @@ create_publisher(
 
 }  // namespace rmw_fastrtps_dynamic_cpp
 
-#endif  // RMW_FASTRTPS_DYNAMIC_CPP__PUBLISHER_HPP_
+#endif  // PUBLISHER_HPP_

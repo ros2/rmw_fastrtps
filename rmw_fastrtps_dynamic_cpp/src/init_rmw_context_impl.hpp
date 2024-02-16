@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_DYNAMIC_CPP__INIT_RMW_CONTEXT_IMPL_HPP_
-#define RMW_FASTRTPS_DYNAMIC_CPP__INIT_RMW_CONTEXT_IMPL_HPP_
+#ifndef INIT_RMW_CONTEXT_IMPL_HPP_
+#define INIT_RMW_CONTEXT_IMPL_HPP_
 
 #include "rmw/init.h"
 #include "rmw/types.h"
@@ -30,4 +30,4 @@ increment_context_impl_ref_count(rmw_context_t * context);
 
 }  // namespace rmw_fastrtps_dynamic_cpp
 
-#endif  // RMW_FASTRTPS_DYNAMIC_CPP__INIT_RMW_CONTEXT_IMPL_HPP_
+#endif  // INIT_RMW_CONTEXT_IMPL_HPP_

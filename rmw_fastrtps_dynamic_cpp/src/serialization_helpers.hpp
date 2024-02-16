@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_DYNAMIC_CPP__SERIALIZATION_HELPERS_HPP_
-#define RMW_FASTRTPS_DYNAMIC_CPP__SERIALIZATION_HELPERS_HPP_
+#ifndef SERIALIZATION_HELPERS_HPP_
+#define SERIALIZATION_HELPERS_HPP_
 
 #include <limits>
 #include <string>
@@ -103,4 +103,4 @@ inline eprosima::fastcdr::Cdr & operator >> (
 }  // namespace fastcdr
 }  // namespace eprosima
 
-#endif  // RMW_FASTRTPS_DYNAMIC_CPP__SERIALIZATION_HELPERS_HPP_
+#endif  // SERIALIZATION_HELPERS_HPP_

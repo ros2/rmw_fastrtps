@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_DYNAMIC_CPP__MESSAGETYPESUPPORT_HPP_
-#define RMW_FASTRTPS_DYNAMIC_CPP__MESSAGETYPESUPPORT_HPP_
+#ifndef MESSAGETYPESUPPORT_HPP_
+#define MESSAGETYPESUPPORT_HPP_
 
 #include <cassert>
 #include <memory>
@@ -39,4 +39,4 @@ public:
 
 #include "MessageTypeSupport_impl.hpp"
 
-#endif  // RMW_FASTRTPS_DYNAMIC_CPP__MESSAGETYPESUPPORT_HPP_
+#endif  // MESSAGETYPESUPPORT_HPP_

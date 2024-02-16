@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_IMPL_HPP_
-#define RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_IMPL_HPP_
+#ifndef TYPESUPPORT_IMPL_HPP_
+#define TYPESUPPORT_IMPL_HPP_
 
 #include <cassert>
 #include <string>
@@ -979,4 +979,4 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
 
 }  // namespace rmw_fastrtps_dynamic_cpp
 
-#endif  // RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_IMPL_HPP_
+#endif  // TYPESUPPORT_IMPL_HPP_

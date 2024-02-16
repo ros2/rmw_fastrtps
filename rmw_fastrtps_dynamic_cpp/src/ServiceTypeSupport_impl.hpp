@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_IMPL_HPP_
-#define RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_IMPL_HPP_
+#ifndef SERVICETYPESUPPORT_IMPL_HPP_
+#define SERVICETYPESUPPORT_IMPL_HPP_
 
 #include <cassert>
 #include <sstream>
@@ -98,4 +98,4 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
 
 }  // namespace rmw_fastrtps_dynamic_cpp
 
-#endif  // RMW_FASTRTPS_DYNAMIC_CPP__SERVICETYPESUPPORT_IMPL_HPP_
+#endif  // SERVICETYPESUPPORT_IMPL_HPP_
