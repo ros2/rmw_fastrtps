@@ -32,11 +32,11 @@
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
-#include "rmw_fastrtps_dynamic_cpp/publisher.hpp"
 
 #include "rmw_dds_common/context.hpp"
 #include "rmw_dds_common/msg/participant_entities_info.hpp"
 
+#include "publisher.hpp"
 #include "type_support_common.hpp"
 #include "type_support_registry.hpp"
 

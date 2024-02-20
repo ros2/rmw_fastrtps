@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw_fastrtps_dynamic_cpp/init_rmw_context_impl.hpp"
+#include "init_rmw_context_impl.hpp"
 
 #include <cassert>
 #include <memory>
@@ -25,10 +25,9 @@
 #include "rmw_dds_common/msg/participant_entities_info.hpp"
 
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
-#include "rmw_fastrtps_dynamic_cpp/publisher.hpp"
-#include "rmw_fastrtps_dynamic_cpp/subscription.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/listener_thread.hpp"
 #include "rmw_fastrtps_shared_cpp/participant.hpp"
 #include "rmw_fastrtps_shared_cpp/publisher.hpp"
 #include "rmw_fastrtps_shared_cpp/subscription.hpp"
@@ -36,7 +35,8 @@
 
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
-#include "rmw_fastrtps_shared_cpp/listener_thread.hpp"
+#include "publisher.hpp"
+#include "subscription.hpp"
 
 using rmw_dds_common::msg::ParticipantEntitiesInfo;
 

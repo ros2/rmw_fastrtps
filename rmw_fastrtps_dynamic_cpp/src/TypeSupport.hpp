@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_HPP_
-#define RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_HPP_
+#ifndef TYPESUPPORT_HPP_
+#define TYPESUPPORT_HPP_
 
 #include <cassert>
 #include <string>
@@ -198,4 +198,4 @@ private:
 
 #include "TypeSupport_impl.hpp"
 
-#endif  // RMW_FASTRTPS_DYNAMIC_CPP__TYPESUPPORT_HPP_
+#endif  // TYPESUPPORT_HPP_

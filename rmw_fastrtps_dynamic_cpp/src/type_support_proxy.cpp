@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw_fastrtps_dynamic_cpp/TypeSupport.hpp"
+#include "TypeSupport.hpp"
 
 namespace rmw_fastrtps_dynamic_cpp
 {

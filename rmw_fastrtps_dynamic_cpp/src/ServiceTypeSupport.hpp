@@ -12,31 +12,36 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_DYNAMIC_CPP__MESSAGETYPESUPPORT_HPP_
-#define RMW_FASTRTPS_DYNAMIC_CPP__MESSAGETYPESUPPORT_HPP_
+#ifndef SERVICETYPESUPPORT_HPP_
+#define SERVICETYPESUPPORT_HPP_
 
 #include <cassert>
-#include <memory>
 
 #include "fastcdr/FastBuffer.h"
 #include "fastcdr/Cdr.h"
 
 #include "TypeSupport.hpp"
-#include "rosidl_typesupport_introspection_cpp/message_introspection.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
 namespace rmw_fastrtps_dynamic_cpp
 {
 
-template<typename MembersType>
-class MessageTypeSupport : public TypeSupport<MembersType>
+template<typename ServiceMembersType, typename MessageMembersType>
+class RequestTypeSupport : public TypeSupport<MessageMembersType>
 {
 public:
-  MessageTypeSupport(const MembersType * members, const void * ros_type_support);
+  RequestTypeSupport(const ServiceMembersType * members, const void * ros_type_support);
+};
+
+template<typename ServiceMembersType, typename MessageMembersType>
+class ResponseTypeSupport : public TypeSupport<MessageMembersType>
+{
+public:
+  ResponseTypeSupport(const ServiceMembersType * members, const void * ros_type_support);
 };
 
 }  // namespace rmw_fastrtps_dynamic_cpp
 
-#include "MessageTypeSupport_impl.hpp"
+#include "ServiceTypeSupport_impl.hpp"
 
-#endif  // RMW_FASTRTPS_DYNAMIC_CPP__MESSAGETYPESUPPORT_HPP_
+#endif  // SERVICETYPESUPPORT_HPP_

@@ -1,4 +1,4 @@
-// Copyright 2017-2019 Open Source Robotics Foundation, Inc.
+// Copyright 2020 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,23 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_DYNAMIC_CPP__PUBLISHER_HPP_
-#define RMW_FASTRTPS_DYNAMIC_CPP__PUBLISHER_HPP_
+#ifndef INIT_RMW_CONTEXT_IMPL_HPP_
+#define INIT_RMW_CONTEXT_IMPL_HPP_
 
-#include "rmw/rmw.h"
-#include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw/init.h"
+#include "rmw/types.h"
 
 namespace rmw_fastrtps_dynamic_cpp
 {
 
-rmw_publisher_t *
-create_publisher(
-  CustomParticipantInfo * participant_info,
-  const rosidl_message_type_support_t * type_supports,
-  const char * topic_name,
-  const rmw_qos_profile_t * qos_policies,
-  const rmw_publisher_options_t * publisher_options);
+/// Increment `rmw_context_impl_t` reference count, initializing it if necessary.
+/**
+ * Should be called when creating a node, and before using `context->impl`.
+ */
+rmw_ret_t
+increment_context_impl_ref_count(rmw_context_t * context);
 
 }  // namespace rmw_fastrtps_dynamic_cpp
 
-#endif  // RMW_FASTRTPS_DYNAMIC_CPP__PUBLISHER_HPP_
+#endif  // INIT_RMW_CONTEXT_IMPL_HPP_

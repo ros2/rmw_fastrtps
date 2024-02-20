@@ -42,8 +42,9 @@
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
-#include "rmw_fastrtps_dynamic_cpp/publisher.hpp"
-#include "rmw_fastrtps_dynamic_cpp/subscription.hpp"
+
+#include "publisher.hpp"
+#include "subscription.hpp"
 
 extern "C"
 {

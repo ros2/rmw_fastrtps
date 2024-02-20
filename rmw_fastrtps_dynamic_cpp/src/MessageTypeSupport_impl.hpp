@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_DYNAMIC_CPP__MESSAGETYPESUPPORT_IMPL_HPP_
-#define RMW_FASTRTPS_DYNAMIC_CPP__MESSAGETYPESUPPORT_IMPL_HPP_
+#ifndef MESSAGETYPESUPPORT_IMPL_HPP_
+#define MESSAGETYPESUPPORT_IMPL_HPP_
 
 #include <cassert>
 #include <memory>
@@ -25,7 +25,7 @@
 
 #include "rcpputils/find_and_replace.hpp"
 
-#include "rmw_fastrtps_dynamic_cpp/MessageTypeSupport.hpp"
+#include "MessageTypeSupport.hpp"
 #include "rosidl_typesupport_introspection_cpp/field_types.hpp"
 
 namespace rmw_fastrtps_dynamic_cpp
@@ -66,4 +66,4 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(
 
 }  // namespace rmw_fastrtps_dynamic_cpp
 
-#endif  // RMW_FASTRTPS_DYNAMIC_CPP__MESSAGETYPESUPPORT_IMPL_HPP_
+#endif  // MESSAGETYPESUPPORT_IMPL_HPP_

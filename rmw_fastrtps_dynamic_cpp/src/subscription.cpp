@@ -50,8 +50,8 @@
 #include "fastrtps/xmlparser/XMLProfileManager.h"
 
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
-#include "rmw_fastrtps_dynamic_cpp/subscription.hpp"
 
+#include "subscription.hpp"
 #include "type_support_common.hpp"
 #include "type_support_registry.hpp"
 

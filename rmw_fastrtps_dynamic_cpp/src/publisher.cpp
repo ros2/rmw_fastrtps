@@ -44,8 +44,8 @@
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
-#include "rmw_fastrtps_dynamic_cpp/publisher.hpp"
 
+#include "publisher.hpp"
 #include "type_support_common.hpp"
 #include "type_support_registry.hpp"
 
