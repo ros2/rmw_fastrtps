@@ -75,12 +75,7 @@ typedef struct CustomServiceInfo
 typedef struct CustomServiceRequest
 {
   eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
-  eprosima::fastcdr::FastBuffer * buffer_;
-
-  CustomServiceRequest()
-  : buffer_(nullptr)
-  {
-  }
+  eprosima::fastcdr::FastBuffer * buffer_{nullptr};
 } CustomServiceRequest;
 
 class ServicePubListener : public eprosima::fastdds::dds::DataWriterListener
