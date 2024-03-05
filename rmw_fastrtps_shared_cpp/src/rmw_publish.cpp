@@ -112,7 +112,7 @@ __rmw_publish_serialized_message(
   eprosima::fastrtps::Time_t stamp;
   eprosima::fastrtps::Time_t::now(stamp);
   TRACETOOLS_TRACEPOINT(rmw_publish, publisher, serialized_message, stamp.to_ns());
-  if (!info->data_writer_->write(&data)) {
+  if (!info->data_writer_->write_w_timestamp(&data, eprosima::fastdds::dds::HANDLE_NIL, stamp)) {
     RMW_SET_ERROR_MSG("cannot publish data");
     return RMW_RET_ERROR;
   }
