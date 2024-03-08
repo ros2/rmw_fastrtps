@@ -214,5 +214,21 @@ create_datareader(
   return true;
 }
 
+void
+apply_qos_resource_limits_for_keys(
+  const eprosima::fastdds::dds::HistoryQosPolicy & history_qos,
+  eprosima::fastdds::dds::ResourceLimitsQosPolicy & res_limits_qos)
+{
+  res_limits_qos.max_instances = 0;
+  res_limits_qos.max_samples = 0;
+  if (history_qos.kind == eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS)
+  {
+    res_limits_qos.max_samples_per_instance = history_qos.depth;
+  }
+  else
+  {
+    res_limits_qos.max_samples_per_instance = 0;
+  }
+}
 
 }  // namespace rmw_fastrtps_shared_cpp

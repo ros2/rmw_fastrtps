@@ -23,14 +23,35 @@
 #include "type_support_common.hpp"
 
 bool
-using_introspection_c_typesupport(const char * typesupport_identifier)
+using_introspection_c_typesupport(const char * typesupport_identifier, uint8_t &abi_version)
 {
-  return typesupport_identifier == rosidl_typesupport_introspection_c__identifier;
+  bool ret = false;
+  if (strcmp(typesupport_identifier, rosidl_typesupport_introspection_c__identifier) == 0)
+  {
+    abi_version = rmw_fastrtps_shared_cpp::TypeSupport::AbiVersion::ABI_V1;
+    ret = true;
+
+  } else if (strcmp(typesupport_identifier, rosidl_typesupport_introspection_c__identifier_v2) == 0)
+  {
+    abi_version = rmw_fastrtps_shared_cpp::TypeSupport::AbiVersion::ABI_V2;
+    ret = true;
+  }
+  return ret;
 }
 
 bool
-using_introspection_cpp_typesupport(const char * typesupport_identifier)
+using_introspection_cpp_typesupport(const char * typesupport_identifier, uint8_t &abi_version)
 {
-  return typesupport_identifier ==
-         rosidl_typesupport_introspection_cpp::typesupport_identifier;
+  bool ret = false;
+  if (strcmp(typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_identifier) == 0)
+  {
+    abi_version = rmw_fastrtps_shared_cpp::TypeSupport::AbiVersion::ABI_V1;
+    ret = true;
+
+  } else if (strcmp(typesupport_identifier, rosidl_typesupport_introspection_cpp::typesupport_identifier_v2) == 0)
+  {
+    abi_version = rmw_fastrtps_shared_cpp::TypeSupport::AbiVersion::ABI_V2;
+    ret = true;
+  }
+  return ret;
 }

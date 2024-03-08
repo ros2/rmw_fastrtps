@@ -184,6 +184,22 @@ create_datareader(
   SubListener * listener,
   eprosima::fastdds::dds::DataReader ** data_reader);
 
+
+/**
+* Apply specific resource limits when using keys.
+* Max samples per instance is set to history depth if KEEP_LAST
+* else UNLIMITED.
+*
+* \param[in]       hitory_qos       History entitiy QoS.
+* \param[in, out]  res_limits_qos   Resource limits entitiy QoS.
+*
+*/
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+void
+apply_qos_resource_limits_for_keys(
+  const eprosima::fastdds::dds::HistoryQosPolicy & history_qos,
+  eprosima::fastdds::dds::ResourceLimitsQosPolicy & res_limits_qos);
+
 }  // namespace rmw_fastrtps_shared_cpp
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__UTILS_HPP_

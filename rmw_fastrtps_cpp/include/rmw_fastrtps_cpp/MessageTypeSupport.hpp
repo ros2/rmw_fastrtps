@@ -25,7 +25,7 @@ namespace rmw_fastrtps_cpp
 class MessageTypeSupport : public TypeSupport
 {
 public:
-  explicit MessageTypeSupport(const message_type_support_callbacks_t * members);
+  explicit MessageTypeSupport(const message_type_support_callbacks_t * members, uint8_t abi_version);
 };
 
 }  // namespace rmw_fastrtps_cpp

@@ -271,6 +271,15 @@ create_subscription(
     return nullptr;
   }
 
+  // Apply resource limits QoS if the type is keyed
+  if (fastdds_type->m_isGetKeyDefined &&
+      !participant_info->leave_middleware_default_qos)
+  {
+    rmw_fastrtps_shared_cpp::apply_qos_resource_limits_for_keys(
+      reader_qos.history(),
+      reader_qos.resource_limits());
+  }
+
   eprosima::fastdds::dds::DataReaderQos original_qos = reader_qos;
   switch (subscription_options->require_unique_network_flow_endpoints) {
     default:

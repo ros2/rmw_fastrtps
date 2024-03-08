@@ -33,6 +33,8 @@
 #include "rosidl_typesupport_fastrtps_cpp/service_type_support.h"
 #define RMW_FASTRTPS_CPP_TYPESUPPORT_C rosidl_typesupport_fastrtps_c__identifier
 #define RMW_FASTRTPS_CPP_TYPESUPPORT_CPP rosidl_typesupport_fastrtps_cpp::typesupport_identifier
+#define RMW_FASTRTPS_CPP_TYPESUPPORT_C_V2 rosidl_typesupport_fastrtps_c__identifier_v2
+#define RMW_FASTRTPS_CPP_TYPESUPPORT_CPP_V2 rosidl_typesupport_fastrtps_cpp::typesupport_identifier_v2
 
 using MessageTypeSupport_cpp = rmw_fastrtps_cpp::MessageTypeSupport;
 using TypeSupport_cpp = rmw_fastrtps_cpp::TypeSupport;

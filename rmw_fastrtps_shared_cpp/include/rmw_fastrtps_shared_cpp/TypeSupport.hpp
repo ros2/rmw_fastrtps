@@ -25,6 +25,7 @@
 
 #include "fastcdr/FastBuffer.h"
 #include "fastcdr/Cdr.h"
+#include "fastrtps/utils/md5.h"
 
 #include "rcutils/logging_macros.h"
 
@@ -46,6 +47,13 @@ struct SerializedData
 class TypeSupport : public eprosima::fastdds::dds::TopicDataType
 {
 public:
+
+  enum AbiVersion
+  {
+    ABI_V1 = 1,
+    ABI_V2
+  };
+
   virtual size_t getEstimatedSerializedSize(const void * ros_message, const void * impl) const = 0;
 
   virtual bool serializeROSmessage(
@@ -54,15 +62,14 @@ public:
   virtual bool deserializeROSmessage(
     eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const = 0;
 
+  virtual bool get_key_hash_from_ros_message(
+    void * ros_message, eprosima::fastrtps::rtps::InstanceHandle_t * ihandle, bool force_md5, const void * impl) const = 0;
+
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool getKey(
     void * data,
     eprosima::fastrtps::rtps::InstanceHandle_t * ihandle,
-    bool force_md5 = false) override
-  {
-    (void)data; (void)ihandle; (void)force_md5;
-    return false;
-  }
+    bool force_md5 = false) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool serialize(void * data, eprosima::fastrtps::rtps::SerializedPayload_t * payload) override;
@@ -104,8 +111,13 @@ protected:
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   TypeSupport();
 
+  mutable uint8_t abi_version_;
   bool max_size_bound_;
   bool is_plain_;
+  bool key_is_unbounded_;
+  mutable size_t key_max_serialized_size_;
+  mutable MD5 md5_;
+  mutable std::vector<uint8_t> key_buffer_;
 };
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC

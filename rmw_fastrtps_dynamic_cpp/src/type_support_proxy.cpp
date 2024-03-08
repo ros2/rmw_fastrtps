@@ -23,6 +23,7 @@ TypeSupportProxy::TypeSupportProxy(rmw_fastrtps_shared_cpp::TypeSupport * inner_
   m_typeSize = inner_type->m_typeSize;
   is_plain_ = inner_type->is_plain();
   max_size_bound_ = inner_type->is_bounded();
+  m_isGetKeyDefined = inner_type->m_isGetKeyDefined;
 }
 
 size_t TypeSupportProxy::getEstimatedSerializedSize(
@@ -44,6 +45,13 @@ bool TypeSupportProxy::deserializeROSmessage(
 {
   auto type_impl = static_cast<const rmw_fastrtps_shared_cpp::TypeSupport *>(impl);
   return type_impl->deserializeROSmessage(deser, ros_message, impl);
+}
+
+bool TypeSupportProxy::get_key_hash_from_ros_message(
+    void * ros_message, eprosima::fastrtps::rtps::InstanceHandle_t * ihandle, bool force_md5, const void * impl) const
+{
+  auto type_impl = static_cast<const rmw_fastrtps_shared_cpp::TypeSupport *>(impl);
+  return type_impl->get_key_hash_from_ros_message(ros_message, ihandle, force_md5, impl);
 }
 
 }  // namespace rmw_fastrtps_dynamic_cpp

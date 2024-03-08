@@ -123,6 +123,8 @@ create_subscription(
     }
   }
 
+  uint8_t abi_version = get_type_support_abi_version(type_support->typesupport_identifier);
+
   std::lock_guard<std::mutex> lck(participant_info->entity_creation_mutex_);
 
   /////
@@ -178,7 +180,7 @@ create_subscription(
   /////
   // Create the Type Support struct
   if (!fastdds_type) {
-    auto tsupport = new (std::nothrow) MessageTypeSupport_cpp(callbacks);
+    auto tsupport = new (std::nothrow) MessageTypeSupport_cpp(callbacks, abi_version);
     if (!tsupport) {
       RMW_SET_ERROR_MSG("create_subscription() failed to allocate MessageTypeSupport");
       return nullptr;
@@ -278,6 +280,15 @@ create_subscription(
   if (!get_datareader_qos(*qos_policies, reader_qos)) {
     RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
     return nullptr;
+  }
+
+  // Apply resource limits QoS if the type is keyed
+  if (fastdds_type->m_isGetKeyDefined &&
+      !participant_info->leave_middleware_default_qos)
+  {
+    rmw_fastrtps_shared_cpp::apply_qos_resource_limits_for_keys(
+      reader_qos.history(),
+      reader_qos.resource_limits());
   }
 
   info->datareader_qos_ = reader_qos;

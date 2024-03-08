@@ -63,10 +63,12 @@ using ResponseTypeSupport_cpp = rmw_fastrtps_dynamic_cpp::ResponseTypeSupport<
 >;
 
 bool
-using_introspection_c_typesupport(const char * typesupport_identifier);
+using_introspection_c_typesupport(const char * typesupport_identifier,
+                                  uint8_t& abi_version);
 
 bool
-using_introspection_cpp_typesupport(const char * typesupport_identifier);
+using_introspection_cpp_typesupport(const char * typesupport_identifier,
+                                  uint8_t& abi_version);
 
 template<typename MembersType>
 ROSIDL_TYPESUPPORT_INTROSPECTION_CPP_LOCAL
@@ -98,10 +100,12 @@ _create_type_name(
   const void * untyped_members,
   const char * typesupport)
 {
-  if (using_introspection_c_typesupport(typesupport)) {
+  uint8_t abi_version = rmw_fastrtps_shared_cpp::TypeSupport::AbiVersion::ABI_V1;
+  (void)abi_version;
+  if (using_introspection_c_typesupport(typesupport, abi_version)) {
     return _create_type_name<rosidl_typesupport_introspection_c__MessageMembers>(
       untyped_members);
-  } else if (using_introspection_cpp_typesupport(typesupport)) {
+  } else if (using_introspection_cpp_typesupport(typesupport, abi_version)) {
     return _create_type_name<rosidl_typesupport_introspection_cpp::MessageMembers>(
       untyped_members);
   }

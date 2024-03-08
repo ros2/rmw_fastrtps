@@ -20,10 +20,12 @@
 const void *
 get_request_ptr(const void * untyped_service_members, const char * typesupport)
 {
-  if (using_introspection_c_typesupport(typesupport)) {
+  uint8_t abi_version = rmw_fastrtps_shared_cpp::TypeSupport::AbiVersion::ABI_V1;
+  (void)abi_version;
+  if (using_introspection_c_typesupport(typesupport, abi_version)) {
     return get_request_ptr<rosidl_typesupport_introspection_c__ServiceMembers>(
       untyped_service_members);
-  } else if (using_introspection_cpp_typesupport(typesupport)) {
+  } else if (using_introspection_cpp_typesupport(typesupport, abi_version)) {
     return get_request_ptr<rosidl_typesupport_introspection_cpp::ServiceMembers>(
       untyped_service_members);
   }
@@ -34,10 +36,12 @@ get_request_ptr(const void * untyped_service_members, const char * typesupport)
 const void *
 get_response_ptr(const void * untyped_service_members, const char * typesupport)
 {
-  if (using_introspection_c_typesupport(typesupport)) {
+  uint8_t abi_version = rmw_fastrtps_shared_cpp::TypeSupport::AbiVersion::ABI_V1;
+  (void)abi_version;
+  if (using_introspection_c_typesupport(typesupport, abi_version)) {
     return get_response_ptr<rosidl_typesupport_introspection_c__ServiceMembers>(
       untyped_service_members);
-  } else if (using_introspection_cpp_typesupport(typesupport)) {
+  } else if (using_introspection_cpp_typesupport(typesupport, abi_version)) {
     return get_response_ptr<rosidl_typesupport_introspection_cpp::ServiceMembers>(
       untyped_service_members);
   }

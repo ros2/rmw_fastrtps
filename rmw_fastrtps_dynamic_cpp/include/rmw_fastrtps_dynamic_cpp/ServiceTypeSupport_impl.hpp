@@ -32,11 +32,12 @@ namespace rmw_fastrtps_dynamic_cpp
 
 template<typename ServiceMembersType, typename MessageMembersType>
 RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
-  const ServiceMembersType * members, const void * ros_type_support)
+  const ServiceMembersType * members, const void * ros_type_support, uint8_t abi_version)
 : TypeSupport<MessageMembersType>(ros_type_support)
 {
   assert(members);
   this->members_ = members->request_members_;
+  this->abi_version_ = abi_version;
 
   std::ostringstream ss;
   std::string service_namespace(members->service_namespace_);
@@ -55,21 +56,29 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
   // Encapsulation size
   this->m_typeSize = 4;
   if (this->members_->member_count_ != 0) {
-    this->m_typeSize += static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 0));
+    this->m_typeSize += static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 0, this->key_max_serialized_size_));
   } else {
     this->m_typeSize++;
   }
+
+  if (this->key_max_serialized_size_ != 0)
+  {
+    this->m_isGetKeyDefined = true;
+    this->key_buffer_.reserve(this->key_max_serialized_size_);
+  }
+
   // Account for RTPS submessage alignment
   this->m_typeSize = (this->m_typeSize + 3) & ~3;
 }
 
 template<typename ServiceMembersType, typename MessageMembersType>
 ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport(
-  const ServiceMembersType * members, const void * ros_type_support)
+  const ServiceMembersType * members, const void * ros_type_support, uint8_t abi_version)
 : TypeSupport<MessageMembersType>(ros_type_support)
 {
   assert(members);
   this->members_ = members->response_members_;
+  this->abi_version_ = abi_version;
 
   std::ostringstream ss;
   std::string service_namespace(members->service_namespace_);
@@ -88,10 +97,17 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
   // Encapsulation size
   this->m_typeSize = 4;
   if (this->members_->member_count_ != 0) {
-    this->m_typeSize += static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 0));
+    this->m_typeSize += static_cast<uint32_t>(this->calculateMaxSerializedSize(this->members_, 0, this->key_max_serialized_size_));
   } else {
     this->m_typeSize++;
   }
+
+  if (this->key_max_serialized_size_ != 0)
+  {
+    this->m_isGetKeyDefined = true;
+    this->key_buffer_.reserve(this->key_max_serialized_size_);
+  }
+
   // Account for RTPS submessage alignment
   this->m_typeSize = (this->m_typeSize + 3) & ~3;
 }
