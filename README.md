@@ -42,6 +42,7 @@ However, `rmw_fastrtps` offers the possibility to further configure Fast DDS:
 * [Full QoS configuration](#full-qos-configuration)
 * [Change participant discovery options](#change-participant-discovery-options)
 * [Enable Zero Copy Data Sharing](#enable-zero-copy-data-sharing)
+* [Large data transfer over lossy network](#large-data-transfer-over-lossy-network)
 
 ### Change publication mode
 
@@ -305,6 +306,26 @@ In order to achieve a Zero Copy message delivery, applications need to both enab
     </subscriber>
     </profiles>
     ```
+
+### Large data transfer over lossy network
+
+In default, Fast DDS uses UDPv4 for the data communication over the network.
+UDP has its own merit for realtime capability, and many applications rely on UDP.
+But this depends on the application requirement, if it requires a more reliable network communication with large data samples over the lossy network, probably TCP flow control is more suitable.
+
+Fast DDS provides the configuration to modify the builtin transports via environmental variable `FASTDDS_BUILTIN_TRANSPORTS` as below.
+
+```bash
+export FASTDDS_BUILTIN_TRANSPORTS=LARGE_DATA
+```
+
+This adds TCP transport for data communication, and restricts UDP transport only for discovery process.
+This will improve the large data transmission over the lossy network environment.
+
+> [!NOTE]
+> The environmental variable needs to be set on both publisher and subscription side.
+
+You can find more information for [FASTDDS_BUILTIN_TRANSPORTS](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html#fastdds-builtin-transports).
 
 ## Quality Declaration files
 
