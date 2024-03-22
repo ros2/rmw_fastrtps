@@ -78,7 +78,8 @@ bool TypeSupport::serialize(
         eprosima::fastcdr::FastBuffer fastbuffer(  // Object that manages the raw buffer
           reinterpret_cast<char *>(payload->data), payload->max_size);
         eprosima::fastcdr::Cdr ser(  // Object that serializes the data
-          fastbuffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::CdrVersion::XCDRv1);
+          fastbuffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
+          eprosima::fastcdr::CdrVersion::XCDRv1);
         ser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
         if (this->serializeROSmessage(ser_data->data, ser, ser_data->impl)) {
           payload->encapsulation = ser.endianness() ==
