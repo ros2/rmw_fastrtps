@@ -309,23 +309,23 @@ In order to achieve a Zero Copy message delivery, applications need to both enab
 
 ### Large data transfer over lossy network
 
-In default, Fast DDS uses UDPv4 for the data communication over the network.
-UDP has its own merit for realtime capability, and many applications rely on UDP.
-But this depends on the application requirement, if it requires a more reliable network communication with large data samples over the lossy network, probably TCP flow control is more suitable.
+Out of the box, Fast DDS uses UDPv4 for the data communication over the network.
+Although UDP has its own merit for realtime communications, with many applications relying on UDP, depending on application requirements, a more reliable network transmission may be needed.
+Such cases included but are not limited to sending large data samples over lossy networks, where TCP's builtin reliability and flow control tend to perform better.
 
-Fast DDS provides the configuration to modify the builtin transports via environmental variable `FASTDDS_BUILTIN_TRANSPORTS` as below.
+Because of this reason, Fast DDS provides the possibility to modify its builtin transports via an environmental variable `FASTDDS_BUILTIN_TRANSPORTS`, allow for easily changing the transport layer to TCP when needed:
 
 ```bash
 export FASTDDS_BUILTIN_TRANSPORTS=LARGE_DATA
 ```
 
-This adds TCP transport for data communication, and restricts UDP transport only for discovery process.
-This will improve the large data transmission over the lossy network environment.
+This `LARGE_DATA` mode adds a TCP transport for data communication, restricting the use of the UDP transport to the first part of the discovery process, thus achieving a reliable transmission with automatic discovery capabilities.
+This will improve the transmission of large data samples over lossy networks.
 
 > [!NOTE]
 > The environmental variable needs to be set on both publisher and subscription side.
 
-You can find more information for [FASTDDS_BUILTIN_TRANSPORTS](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html#fastdds-builtin-transports).
+For more information, please refer to [FASTDDS_BUILTIN_TRANSPORTS](https://fast-dds.docs.eprosima.com/en/latest/fastdds/env_vars/env_vars.html#fastdds-builtin-transports).
 
 ## Quality Declaration files
 
