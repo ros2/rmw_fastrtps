@@ -313,7 +313,7 @@ Out of the box, Fast DDS uses UDPv4 for the data communication over the network.
 Although UDP has its own merit for realtime communications, with many applications relying on UDP, depending on application requirements, a more reliable network transmission may be needed.
 Such cases included but are not limited to sending large data samples over lossy networks, where TCP's builtin reliability and flow control tend to perform better.
 
-Because of this reason, Fast DDS provides the possibility to modify its builtin transports via an environmental variable `FASTDDS_BUILTIN_TRANSPORTS`, allow for easily changing the transport layer to TCP when needed:
+Because of this reason, Fast DDS provides the possibility to modify its builtin transports via an environmental variable `FASTDDS_BUILTIN_TRANSPORTS`, allowing for easily changing the transport layer to TCP when needed:
 
 ```bash
 export FASTDDS_BUILTIN_TRANSPORTS=LARGE_DATA
