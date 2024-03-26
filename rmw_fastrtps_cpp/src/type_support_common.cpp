@@ -31,6 +31,11 @@ TypeSupport::TypeSupport(
   is_compute_key_provided = false;
   max_size_bound_ = false;
   is_plain_ = false;
+  key_is_unbounded_ = false;
+  key_max_serialized_size_ = 0;
+  members_ = nullptr;
+  key_callbacks_ = nullptr;
+  has_data_ = false;
 }
 
 void TypeSupport::set_members(const message_type_support_callbacks_t * members)
@@ -60,6 +65,18 @@ void TypeSupport::set_members(const message_type_support_callbacks_t * members)
   max_serialized_type_size = 4 + data_size;
   // Account for RTPS submessage alignment
   max_serialized_type_size = (max_serialized_type_size + 3) & ~3;
+
+  if (nullptr != members->key_callbacks)
+  {
+    key_callbacks_ = members->key_callbacks;
+    is_compute_key_provided = true;
+
+    key_max_serialized_size_ = key_callbacks_->max_serialized_size_key(key_is_unbounded_);
+    if (!key_is_unbounded_)
+    {
+      key_buffer_.reserve(key_max_serialized_size_);
+    }
+  }
 }
 
 size_t TypeSupport::getEstimatedSerializedSize(const void * ros_message, const void * impl) const
@@ -127,6 +144,61 @@ bool TypeSupport::deserializeROSmessage(
       "'Bad alloc' exception deserializing message of type %s.",
       get_name().c_str());
     return false;
+  }
+
+  return true;
+}
+
+bool TypeSupport::get_key_hash_from_ros_message(
+    void * ros_message,
+    eprosima::fastdds::rtps::InstanceHandle_t * ihandle,
+    bool force_md5,
+    const void * impl) const
+{
+  assert(ros_message);
+  (void)impl;
+
+  // retrieve estimated serialized size in case key is unbounded
+  if (key_is_unbounded_)
+  {
+    key_max_serialized_size_ = (std::max) (
+      key_max_serialized_size_,
+      key_callbacks_->get_serialized_size_key(ros_message));
+    key_buffer_.reserve(key_max_serialized_size_);
+  }
+
+  eprosima::fastcdr::FastBuffer fast_buffer(
+    reinterpret_cast<char *>(key_buffer_.data()),
+    key_max_serialized_size_);
+
+  eprosima::fastcdr::Cdr ser(
+    fast_buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::CdrVersion::XCDRv1);
+
+  key_callbacks_->cdr_serialize_key(ros_message, ser);
+
+  const size_t max_serialized_key_length = 16;
+
+  auto ser_length = ser.get_serialized_data_length();
+
+  // check for md5
+  if (force_md5 || key_max_serialized_size_ > max_serialized_key_length)
+  {
+    md5_.init();
+    md5_.update(key_buffer_.data(), static_cast<unsigned int>(ser_length));
+    md5_.finalize();
+
+    for (uint8_t i = 0; i < max_serialized_key_length; ++i)
+    {
+      ihandle->value[i] = md5_.digest[i];
+    }
+  }
+  else
+  {
+    memset(ihandle->value, 0, max_serialized_key_length);
+    for (uint8_t i = 0; i < ser_length; ++i)
+    {
+        ihandle->value[i] = key_buffer_[i];
+    }
   }
 
   return true;
