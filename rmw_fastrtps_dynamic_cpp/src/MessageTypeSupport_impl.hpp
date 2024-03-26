@@ -61,6 +61,14 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(
   } else {
     this->max_serialized_type_size++;
   }
+
+  if (this->members_->has_any_key_member_)
+  {
+    this->key_max_serialized_size_ = this->calculateMaxSerializedKeySize(members);
+    this->m_isGetKeyDefined = true;
+    this->key_buffer_.reserve(this->key_max_serialized_size_);
+  }
+
   // Account for RTPS submessage alignment
   this->max_serialized_type_size = (this->max_serialized_type_size + 3) & ~3;
 }

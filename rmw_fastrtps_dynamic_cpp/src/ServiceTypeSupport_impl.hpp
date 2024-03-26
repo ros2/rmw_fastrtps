@@ -62,6 +62,14 @@ RequestTypeSupport<ServiceMembersType, MessageMembersType>::RequestTypeSupport(
   } else {
     this->max_serialized_type_size++;
   }
+
+  if (this->members_->has_any_key_member_)
+  {
+    this->key_max_serialized_size_ = this->calculateMaxSerializedKeySize(this->members_);
+    this->m_isGetKeyDefined = true;
+    this->key_buffer_.reserve(this->key_max_serialized_size_);
+  }
+
   // Account for RTPS submessage alignment
   this->max_serialized_type_size = (this->max_serialized_type_size + 3) & ~3;
 }
@@ -98,6 +106,14 @@ ResponseTypeSupport<ServiceMembersType, MessageMembersType>::ResponseTypeSupport
   } else {
     this->max_serialized_type_size++;
   }
+
+  if (this->members_->has_any_key_member_)
+  {
+    this->key_max_serialized_size_ = this->calculateMaxSerializedKeySize(this->members_);
+    this->m_isGetKeyDefined = true;
+    this->key_buffer_.reserve(this->key_max_serialized_size_);
+  }
+
   // Account for RTPS submessage alignment
   this->max_serialized_type_size = (this->max_serialized_type_size + 3) & ~3;
 }
