@@ -77,7 +77,7 @@ void serialize_field(
   if (!member->is_array_) {
     ser << *static_cast<T *>(field);
   } else if (member->array_size_ && !member->is_upper_bound_) {
-    ser.serializeArray(static_cast<T *>(field), member->array_size_);
+    ser.serialize_array(static_cast<T *>(field), member->array_size_);
   } else {
     std::vector<T> & data = *reinterpret_cast<std::vector<T> *>(field);
     ser << data;
@@ -120,10 +120,10 @@ void serialize_field(
   if (!member->is_array_) {
     ser << *static_cast<T *>(field);
   } else if (member->array_size_ && !member->is_upper_bound_) {
-    ser.serializeArray(static_cast<T *>(field), member->array_size_);
+    ser.serialize_array(static_cast<T *>(field), member->array_size_);
   } else {
     auto & data = *reinterpret_cast<typename GenericCSequence<T>::type *>(field);
-    ser.serializeSequence(reinterpret_cast<T *>(data.data), data.size);
+    ser.serialize_sequence(reinterpret_cast<T *>(data.data), data.size);
   }
 }
 
@@ -561,7 +561,7 @@ void deserialize_field(
   if (!member->is_array_) {
     deser >> *static_cast<T *>(field);
   } else if (member->array_size_ && !member->is_upper_bound_) {
-    deser.deserializeArray(static_cast<T *>(field), member->array_size_);
+    deser.deserialize_array(static_cast<T *>(field), member->array_size_);
   } else {
     auto & vector = *reinterpret_cast<std::vector<T> *>(field);
     deser >> vector;
@@ -578,7 +578,7 @@ inline void deserialize_field<std::string>(
     deser >> *static_cast<std::string *>(field);
   } else if (member->array_size_ && !member->is_upper_bound_) {
     std::string * array = static_cast<std::string *>(field);
-    deser.deserializeArray(array, member->array_size_);
+    deser.deserialize_array(array, member->array_size_);
   } else {
     auto & vector = *reinterpret_cast<std::vector<std::string> *>(field);
     deser >> vector;
@@ -618,13 +618,13 @@ void deserialize_field(
   if (!member->is_array_) {
     deser >> *static_cast<T *>(field);
   } else if (member->array_size_ && !member->is_upper_bound_) {
-    deser.deserializeArray(static_cast<T *>(field), member->array_size_);
+    deser.deserialize_array(static_cast<T *>(field), member->array_size_);
   } else {
     auto & data = *reinterpret_cast<typename GenericCSequence<T>::type *>(field);
     int32_t dsize = 0;
     deser >> dsize;
     GenericCSequence<T>::init(&data, dsize);
-    deser.deserializeArray(reinterpret_cast<T *>(data.data), dsize);
+    deser.deserialize_array(reinterpret_cast<T *>(data.data), dsize);
   }
 }
 

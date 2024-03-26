@@ -77,8 +77,7 @@ __rmw_take_response(
           info->response_type_support_.get());
         eprosima::fastcdr::Cdr deser(
           *response.buffer_,
-          eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
-          eprosima::fastcdr::Cdr::DDS_CDR);
+          eprosima::fastcdr::Cdr::DEFAULT_ENDIAN);
         if (raw_type_support->deserializeROSmessage(
             deser, ros_response, info->response_type_support_impl_))
         {

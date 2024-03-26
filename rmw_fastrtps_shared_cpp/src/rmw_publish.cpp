@@ -98,7 +98,8 @@ __rmw_publish_serialized_message(
   eprosima::fastcdr::FastBuffer buffer(
     reinterpret_cast<char *>(serialized_message->buffer), serialized_message->buffer_length);
   eprosima::fastcdr::Cdr ser(
-    buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::Cdr::DDS_CDR);
+    buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::CdrVersion::XCDRv1);
+  ser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
   if (!ser.jump(serialized_message->buffer_length)) {
     RMW_SET_ERROR_MSG("cannot correctly set serialized buffer");
     return RMW_RET_ERROR;
