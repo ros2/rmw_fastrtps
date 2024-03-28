@@ -619,15 +619,13 @@ __create_subscription(
       subscription_options->content_filter_options;
     if (nullptr != options->filter_expression) {
       eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic = nullptr;
-      if (!rmw_fastrtps_shared_cpp::create_content_filtered_topic(
+      if (rmw_fastrtps_shared_cpp::create_content_filtered_topic(
           dds_participant, des_topic,
           topic_name_mangled, options, &filtered_topic))
       {
-        RMW_SET_ERROR_MSG("create_contentfilteredtopic() failed to create contentfilteredtopic");
-        return nullptr;
+        info->filtered_topic_ = filtered_topic;
+        des_topic = filtered_topic;
       }
-      info->filtered_topic_ = filtered_topic;
-      des_topic = filtered_topic;
     }
   }
 
