@@ -2,6 +2,30 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Support Fast CDR v2 (`#746 <https://github.com/ros2/rmw_fastrtps/issues/746>`_)
+  * Require fastcdr version 2
+  * Changes to build rmw_fastrtps_shared_cpp
+  * Changes to build rmw_fastrtps_cpp
+  * Changes to build rmw_fastrtps_dynamic_cpp
+* compare string contents but string pointer addresses. (`#744 <https://github.com/ros2/rmw_fastrtps/issues/744>`_)
+* Improve wide string (de)serialization in rwm_dynamic_fastrtps_cpp (`#740 <https://github.com/ros2/rmw_fastrtps/issues/740>`_)
+  * Move type support headers to src
+  * Fix references to moved headers
+  * move macros.hpp to src/serialization_helpers.hpp
+  * Move other non-api headers
+  * Move common code into serialize_wide_string.
+  * Move common code into deserialize_wide_string.
+  * Move serialization into serialization_helpers.hpp
+  * Move deserialization into serialization_helpers.hpp
+  * Fix header guards
+  * Linters
+  * Do not account for extra character on serialized size calculation
+  * Remove dependency on rosidl_typesupport_fastrtps_c(pp)
+  ---------
+* Contributors: Miguel Company, Tomoya Fujita
+
 8.2.0 (2024-01-24)
 ------------------
 * Capture `std::bad_alloc` on deserializeROSmessage. (`#665 <https://github.com/ros2/rmw_fastrtps/issues/665>`_)

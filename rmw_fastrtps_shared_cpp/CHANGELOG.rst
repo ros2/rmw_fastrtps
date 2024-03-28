@@ -2,6 +2,18 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Support Fast CDR v2 (`#746 <https://github.com/ros2/rmw_fastrtps/issues/746>`_)
+  * Require fastcdr version 2
+  * Changes to build rmw_fastrtps_shared_cpp
+  * Changes to build rmw_fastrtps_cpp
+  * Changes to build rmw_fastrtps_dynamic_cpp
+* Remove an unnecessary constructor. (`#743 <https://github.com/ros2/rmw_fastrtps/issues/743>`_)
+  We can just use brace initialization here, and this
+  allows us to side-step an uncrustify issue with the constructor.
+* Contributors: Chris Lalancette, Miguel Company
+
 8.2.0 (2024-01-24)
 ------------------
 * Add timestamp to rmw_publish tracepoint (`#694 <https://github.com/ros2/rmw_fastrtps/issues/694>`_)
