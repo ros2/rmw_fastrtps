@@ -2,7 +2,7 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>rmw_fastrtps_shared_cpp</name>
-  <version>8.2.0</version>
+  <version>8.3.0</version>
   <description>Code shared on static and dynamic type support of rmw_fastrtps_cpp.</description>
 
   <maintainer email="geoff@openrobotics.org">Geoffrey Biggs</maintainer>
