@@ -905,7 +905,7 @@ template<typename MembersType>
 size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
   const MembersType * members, size_t current_alignment)
 {
-  bool is_key_unbounded{false}; //unused
+  bool is_key_unbounded{false};  // unused
   return calculateMaxSerializedSize(members, current_alignment, false, is_key_unbounded);
 }
 
@@ -1117,7 +1117,6 @@ bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
   void * ros_message, eprosima::fastrtps::rtps::InstanceHandle_t * ihandle, bool force_md5,
   const void * impl) const
 {
-
   assert(ros_message);
   assert(members_);
 
