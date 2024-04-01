@@ -65,27 +65,26 @@ void * TypeSupport::createData()
 }
 
 bool TypeSupport::getKey(
-    void * data,
-    eprosima::fastrtps::rtps::InstanceHandle_t * ihandle,
-    bool force_md5)
+  void * data,
+  eprosima::fastrtps::rtps::InstanceHandle_t * ihandle,
+  bool force_md5)
 {
   assert(data);
 
   bool ret = false;
 
-  if (!m_isGetKeyDefined)
-  {
-      return ret;
+  if (!m_isGetKeyDefined) {
+    return ret;
   }
 
   auto ser_data = static_cast<SerializedData *>(data);
 
-  switch (ser_data->type)
-  {
+  switch (ser_data->type) {
     case FASTRTPS_SERIALIZED_DATA_TYPE_ROS_MESSAGE:
       {
         std::lock_guard lock(this->mtx_);
-        ret = this->get_key_hash_from_ros_message(ser_data->data, ihandle, force_md5, ser_data->impl);
+        ret =
+          this->get_key_hash_from_ros_message(ser_data->data, ihandle, force_md5, ser_data->impl);
         break;
       }
 
