@@ -146,6 +146,7 @@ protected:
   mutable size_t key_max_serialized_size_ {0};
   mutable eprosima::fastdds::MD5 md5_;
   mutable std::vector<uint8_t> key_buffer_;
+  mutable std::mutex mtx_;
 };
 
 }  // namespace rmw_fastrtps_shared_cpp

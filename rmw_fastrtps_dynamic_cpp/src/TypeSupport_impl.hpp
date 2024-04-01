@@ -340,7 +340,7 @@ bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
   // get estimated serialized size in case key is unbounded
   if (this->key_is_unbounded_)
   {
-    this->key_max_serialized_size_ = this->getEstimatedSerializedKeySize(members, ros_message);
+    this->key_max_serialized_size_ = (std::max) (this->key_max_serialized_size_, this->getEstimatedSerializedKeySize(members, ros_message));
     key_buffer_.reserve(this->key_max_serialized_size_);
   }
 
@@ -1005,7 +1005,6 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
 
           if (compute_key)
           {
-            std::cout << "Setting is key unbounded !" << std::endl;
             is_key_unbounded = true;
           }
 
