@@ -140,7 +140,8 @@ public:
     eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const override;
 
   bool get_key_hash_from_ros_message(
-    void * ros_message, eprosima::fastrtps::rtps::InstanceHandle_t * ihandle, bool force_md5, const void * impl) const override;
+    void * ros_message, eprosima::fastrtps::rtps::InstanceHandle_t * ihandle, bool force_md5,
+    const void * impl) const override;
 };
 
 class BaseTypeSupport : public rmw_fastrtps_shared_cpp::TypeSupport
@@ -189,7 +190,8 @@ public:
     eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const override;
 
   bool get_key_hash_from_ros_message(
-    void * ros_message, eprosima::fastrtps::rtps::InstanceHandle_t * ihandle, bool force_md5, const void * impl) const override;
+    void * ros_message, eprosima::fastrtps::rtps::InstanceHandle_t * ihandle, bool force_md5,
+    const void * impl) const override;
 
 protected:
   // Meant for messages typesupport
@@ -206,12 +208,11 @@ protected:
   const MembersType * members_;
 
 private:
-
   size_t calculateMaxSerializedSize(
     const MembersType * members,
     size_t current_alignment,
     bool compute_key,
-    bool& is_key_unbounded);
+    bool & is_key_unbounded);
 
   size_t getEstimatedSerializedSize(
     const MembersType * members,
