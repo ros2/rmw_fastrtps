@@ -129,6 +129,7 @@ protected:
   mutable size_t key_max_serialized_size_;
   mutable MD5 md5_;
   mutable std::vector<uint8_t> key_buffer_;
+  mutable std::mutex mtx_;
 };
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
