@@ -17,6 +17,7 @@
 
 #include <cassert>
 #include <string>
+#include <vector>
 
 #include "fastdds/dds/topic/TopicDataType.hpp"
 #include "fastdds/rtps/common/InstanceHandle.hpp"

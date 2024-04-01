@@ -92,14 +92,13 @@ bool TypeSupport::compute_key(
 
     case FASTDDS_SERIALIZED_DATA_TYPE_CDR_BUFFER:
       {
-        // TODO
-        // We would need a get_key_hash_from_payload method
+        // TODO(MiguelCompany): In order to support keys in rmw_publish_serialized_message,
+        // we would need a get_key_hash_from_payload method
         break;
       }
 
     case FASTDDS_SERIALIZED_DATA_TYPE_DYNAMIC_MESSAGE:
       {
-
         auto m_type = std::make_shared<eprosima::fastdds::dds::DynamicPubSubType>();
 
         // Retrieves the key (ihandle) from the dynamic data stored in data->data
