@@ -49,7 +49,8 @@ bool TypeSupportProxy::deserializeROSmessage(
 }
 
 bool TypeSupportProxy::get_key_hash_from_ros_message(
-    void * ros_message, eprosima::fastrtps::rtps::InstanceHandle_t * ihandle, bool force_md5, const void * impl) const
+  void * ros_message, eprosima::fastrtps::rtps::InstanceHandle_t * ihandle, bool force_md5,
+  const void * impl) const
 {
   auto type_impl = static_cast<const rmw_fastrtps_shared_cpp::TypeSupport *>(impl);
   return type_impl->get_key_hash_from_ros_message(ros_message, ihandle, force_md5, impl);

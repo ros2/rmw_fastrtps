@@ -191,12 +191,9 @@ apply_qos_resource_limits_for_keys(
 {
   res_limits_qos.max_instances = 0;
   res_limits_qos.max_samples = 0;
-  if (history_qos.kind == eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS)
-  {
+  if (history_qos.kind == eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS) {
     res_limits_qos.max_samples_per_instance = history_qos.depth;
-  }
-  else
-  {
+  } else {
     res_limits_qos.max_samples_per_instance = 0;
   }
 }

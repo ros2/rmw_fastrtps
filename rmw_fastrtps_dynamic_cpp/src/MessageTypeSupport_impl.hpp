@@ -61,8 +61,7 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(
     this->m_typeSize++;
   }
 
-  if (this->members_->has_any_key_member_)
-  {
+  if (this->members_->has_any_key_member_) {
     this->key_max_serialized_size_ = this->calculateMaxSerializedKeySize(members);
     this->m_isGetKeyDefined = true;
     this->key_buffer_.reserve(this->key_max_serialized_size_);
