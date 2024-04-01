@@ -84,6 +84,7 @@ bool TypeSupport::getKey(
   {
     case FASTRTPS_SERIALIZED_DATA_TYPE_ROS_MESSAGE:
       {
+        std::lock_guard lock(this->mtx_);
         ret = this->get_key_hash_from_ros_message(ser_data->data, ihandle, force_md5, ser_data->impl);
         break;
       }

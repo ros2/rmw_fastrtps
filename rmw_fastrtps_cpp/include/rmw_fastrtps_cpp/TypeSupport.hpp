@@ -52,7 +52,7 @@ protected:
 
 private:
   const message_type_support_callbacks_t * members_;
-  const message_type_support_key_callbacks_t*  key_callbacks_;
+  const message_type_support_key_callbacks_t *  key_callbacks_;
   bool has_data_;
 };
 
