@@ -2,6 +2,17 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Allow pkcs11 when calling rmw_dds_common::get_security_files. (`#565 <https://github.com/ros2/rmw_fastrtps/issues/565>`_)
+  Co-authored-by: Miguel Company <MiguelCompany@eprosima.com>
+* Add tracepoint for publish/subscribe serialized_message (`#748 <https://github.com/ros2/rmw_fastrtps/issues/748>`_)
+  * Add: tracepoint for generic pub/sub
+  * Fix: correspond to PR 454
+  * Fix: change write to write_to_timestamp
+  ---------
+* Contributors: IkerLuengo, h-suzuki-isp
+
 8.3.0 (2024-03-28)
 ------------------
 * Support Fast CDR v2 (`#746 <https://github.com/ros2/rmw_fastrtps/issues/746>`_)
