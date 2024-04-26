@@ -2,6 +2,9 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 8.4.0 (2024-04-09)
 ------------------
 
