@@ -142,7 +142,7 @@ bool fill_entity_qos_from_profile(
     // See doc at https://github.com/eProsima/Fast-RTPS/blob/
     //   a8691a40be6b8460b01edde36ad8563170a3a35a/include/fastrtps/qos/QosPolicies.h#L223-L232
     int64_t period_in_ns = entity_qos.liveliness().lease_duration.to_ns() * 2 / 3;
-    double period_in_s = RCUITLS_NS_TO_S(period_in_s);
+    double period_in_s = RCUTILS_NS_TO_S(period_in_ns);
     entity_qos.liveliness().announcement_period = eprosima::fastrtps::Duration_t(period_in_s);
   }
 
