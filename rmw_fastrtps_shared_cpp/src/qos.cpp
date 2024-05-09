@@ -190,7 +190,15 @@ get_datawriter_qos(
   const rosidl_type_hash_t & type_hash,
   eprosima::fastdds::dds::DataWriterQos & datawriter_qos)
 {
-  return fill_data_entity_qos_from_profile(qos_policies, type_hash, datawriter_qos);
+  if (fill_data_entity_qos_from_profile(qos_policies, type_hash, datawriter_qos)) {
+    // The type support in the RMW implementation is always XCDR1.
+    constexpr auto rep = eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION;
+    datawriter_qos.representation().clear();
+    datawriter_qos.representation().m_value.push_back(rep);
+    return true;
+  }
+
+  return false;
 }
 
 bool
