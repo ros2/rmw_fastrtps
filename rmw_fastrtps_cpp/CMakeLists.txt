@@ -39,8 +39,8 @@ find_package(tracetools REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr REQUIRED CONFIG)
-find_package(fastrtps 2.14.0 REQUIRED CONFIG)
-find_package(FastRTPS 2.14.0 REQUIRED MODULE)
+find_package(fastrtps 2.14.1 REQUIRED CONFIG)
+find_package(FastRTPS 2.14.1 REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
 find_package(rosidl_runtime_c REQUIRED)
