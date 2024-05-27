@@ -103,6 +103,10 @@ TEST_F(GetDataReaderQoSTest, nominal_conversion) {
     eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS,
     subscriber_qos_.history().kind);
   EXPECT_GE(10, subscriber_qos_.history().depth);
+  ASSERT_EQ(1, subscriber_qos_.type_consistency().representation.m_value.size());
+  EXPECT_EQ(
+    eprosima::fastdds::dds::DataRepresentationId::XCDR_DATA_REPRESENTATION,
+    subscriber_qos_.type_consistency().representation.m_value[0]);
 }
 
 TEST_F(GetDataReaderQoSTest, large_depth_conversion) {
@@ -201,6 +205,10 @@ TEST_F(GetDataWriterQoSTest, nominal_conversion) {
     eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS,
     publisher_qos_.history().kind);
   EXPECT_GE(10, publisher_qos_.history().depth);
+  ASSERT_EQ(1, publisher_qos_.representation().m_value.size());
+  EXPECT_EQ(
+    eprosima::fastdds::dds::DataRepresentationId::XCDR_DATA_REPRESENTATION,
+    publisher_qos_.representation().m_value[0]);
 }
 
 TEST_F(GetDataWriterQoSTest, large_depth_conversion) {
