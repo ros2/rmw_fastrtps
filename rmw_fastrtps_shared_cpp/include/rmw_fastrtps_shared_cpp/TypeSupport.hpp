@@ -105,6 +105,12 @@ public:
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  inline bool is_plain(eprosima::fastdds::dds::DataRepresentationId_t rep) const override
+  {
+    return is_plain_ && rep == eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION;
+  }
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   virtual ~TypeSupport() {}
 
 protected:
