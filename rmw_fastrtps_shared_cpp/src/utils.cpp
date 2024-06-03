@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <atomic>
+#include <cstdint>
 #include <string>
 
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
@@ -109,7 +111,9 @@ create_content_filtered_topic(
   }
 
   auto topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(topic_desc);
-  std::string cft_topic_name = topic_name_mangled + CONTENT_FILTERED_TOPIC_POSTFIX;
+  static std::atomic<uint32_t> cft_counter{0};
+  std::string cft_topic_name = topic_name_mangled + CONTENT_FILTERED_TOPIC_POSTFIX + "_" +
+    std::to_string(cft_counter.fetch_add(1));
   eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic =
     participant->create_contentfilteredtopic(
     cft_topic_name,
