@@ -43,7 +43,7 @@ __rmw_service_server_is_available(
 {
   if (!node) {
     RMW_SET_ERROR_MSG("node handle is null");
-    return RMW_RET_ERROR;
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -53,7 +53,7 @@ __rmw_service_server_is_available(
 
   if (!client) {
     RMW_SET_ERROR_MSG("client handle is null");
-    return RMW_RET_ERROR;
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
@@ -63,7 +63,7 @@ __rmw_service_server_is_available(
 
   if (!is_available) {
     RMW_SET_ERROR_MSG("is_available is null");
-    return RMW_RET_ERROR;
+    return RMW_RET_INVALID_ARGUMENT;
   }
 
   auto client_info = static_cast<CustomClientInfo *>(client->data);
