@@ -76,7 +76,7 @@ fail:
 rmw_ret_t
 __rmw_destroy_wait_set(const char * identifier, rmw_wait_set_t * wait_set)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(wait_set, RMW_RET_ERROR);
+  RMW_CHECK_ARGUMENT_FOR_NULL(wait_set, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     wait set handle,
     wait_set->implementation_identifier, identifier,
