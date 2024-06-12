@@ -73,8 +73,7 @@ __create_participant(
     [participant_info]() {
       if (nullptr != participant_info->participant_) {
         participant_info->participant_->delete_publisher(participant_info->publisher_);
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(
-          participant_info->participant_);
+        participant_info->factory_->delete_participant(participant_info->participant_);
       }
       delete participant_info->listener_;
       delete participant_info;
@@ -99,7 +98,7 @@ __create_participant(
   eprosima::fastdds::dds::StatusMask participant_mask = eprosima::fastdds::dds::StatusMask::none();
 
   participant_info->participant_ =
-    eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->create_participant(
+    participant_info->factory_->create_participant(
     static_cast<uint32_t>(domain_id), domainParticipantQos,
     participant_info->listener_, participant_mask);
 
@@ -159,9 +158,9 @@ rmw_fastrtps_shared_cpp::create_participant(
   }
 
   // Load default XML profile.
-  eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->load_profiles();
-  eprosima::fastdds::dds::DomainParticipantQos domainParticipantQos =
-    eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->get_default_participant_qos();
+  auto factory = eprosima::fastdds::dds::DomainParticipantFactory::get_shared_instance();
+  factory->load_profiles();
+  auto domainParticipantQos = factory->get_default_participant_qos();
 
   // Configure discovery
   switch (discovery_options->automatic_discovery_range) {
@@ -432,8 +431,7 @@ rmw_fastrtps_shared_cpp::destroy_participant(CustomParticipantInfo * participant
   }
 
   // Delete Domain Participant
-  ret =
-    eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->delete_participant(
+  ret = participant_info->factory_->delete_participant(
     participant_info->participant_);
 
   if (ReturnCode_t::RETCODE_OK != ret) {
