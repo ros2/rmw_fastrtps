@@ -24,6 +24,7 @@
 #include <vector>
 
 #include "fastdds/dds/domain/DomainParticipant.hpp"
+#include "fastdds/dds/domain/DomainParticipantFactory.hpp"
 #include "fastdds/dds/domain/DomainParticipantListener.hpp"
 #include "fastdds/dds/publisher/Publisher.hpp"
 #include "fastdds/dds/subscriber/Subscriber.hpp"
@@ -91,6 +92,9 @@ typedef struct UseCountTopic
 
 typedef struct CustomParticipantInfo
 {
+  std::shared_ptr<eprosima::fastdds::dds::DomainParticipantFactory> factory_ =
+    eprosima::fastdds::dds::DomainParticipantFactory::get_shared_instance();
+
   eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
   ParticipantListener * listener_{nullptr};
 
