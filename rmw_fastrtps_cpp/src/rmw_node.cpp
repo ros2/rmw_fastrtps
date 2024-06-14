@@ -26,12 +26,14 @@
 #include "rmw/ret_types.h"
 #include "rmw/rmw.h"
 
+#include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/init_rmw_context_impl.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/init_rmw_context_impl.hpp"
+#include "rmw_fastrtps_cpp/get_participant.hpp"
 
 extern "C"
 {
@@ -120,5 +122,37 @@ rmw_node_get_graph_guard_condition(const rmw_node_t * node)
 {
   return rmw_fastrtps_shared_cpp::__rmw_node_get_graph_guard_condition(
     node);
+}
+
+rmw_ret_t
+rmw_notify_participant_dynamic_network_interface(rmw_context_t * context)
+{
+  auto impl = static_cast<CustomParticipantInfo *>(context->impl->participant_info);
+
+  if (nullptr == impl)
+  {
+    return RMW_RET_ERROR;
+  }
+
+  eprosima::fastdds::dds::DomainParticipant * participant = impl->participant_;
+
+  if (nullptr == participant)
+  {
+    return RMW_RET_ERROR;
+  }
+
+  eprosima::fastdds::dds::DomainParticipantQos participant_qos;
+  if (participant->get_qos(participant_qos) != ReturnCode_t::RETCODE_OK)
+  {
+    return RMW_RET_ERROR;
+  }
+
+  ReturnCode_t ret = participant->set_qos(participant_qos);
+
+  if (ret != ReturnCode_t::RETCODE_OK)
+  {
+    return RMW_RET_ERROR;
+  }
+  return RMW_RET_OK;
 }
 }  // extern "C"
