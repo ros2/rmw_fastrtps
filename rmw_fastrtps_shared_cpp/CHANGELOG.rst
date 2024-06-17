@@ -2,6 +2,15 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Make rmw_service_server_is_available return RMW_RET_INVALID_ARGUMENT (`#763 <https://github.com/ros2/rmw_fastrtps/issues/763>`_)
+* Use rmw_namespace_validation_result_string() in rmw_create_node (`#765 <https://github.com/ros2/rmw_fastrtps/issues/765>`_)
+* Make rmw_destroy_wait_set return RMW_RET_INVALID_ARGUMENT (`#766 <https://github.com/ros2/rmw_fastrtps/issues/766>`_)
+* Use unique mangled names when creating Content Filter Topics (`#762 <https://github.com/ros2/rmw_fastrtps/issues/762>`_)
+* Add support for data representation (`#756 <https://github.com/ros2/rmw_fastrtps/issues/756>`_)
+* Contributors: Christophe Bedard, Mario Domínguez López, Miguel Company
+
 8.5.0 (2024-04-26)
 ------------------
 
