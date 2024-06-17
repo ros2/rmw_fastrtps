@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.0.0 (2024-06-17)
+------------------
 * Make rmw_service_server_is_available return RMW_RET_INVALID_ARGUMENT (`#763 <https://github.com/ros2/rmw_fastrtps/issues/763>`_)
 * Use rmw_namespace_validation_result_string() in rmw_create_node (`#765 <https://github.com/ros2/rmw_fastrtps/issues/765>`_)
 * Make rmw_destroy_wait_set return RMW_RET_INVALID_ARGUMENT (`#766 <https://github.com/ros2/rmw_fastrtps/issues/766>`_)
