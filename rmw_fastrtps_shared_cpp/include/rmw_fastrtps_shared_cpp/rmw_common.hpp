@@ -525,6 +525,26 @@ __rmw_get_subscriptions_info_by_topic(
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
+__rmw_get_clients_info_by_service(
+  const char * identifier,
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * service_name,
+  bool no_mangle,
+  rmw_topic_endpoint_info_array_t * clients_info);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_get_servers_info_by_service(
+  const char * identifier,
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * service_name,
+  bool no_mangle,
+  rmw_topic_endpoint_info_array_t * servers_info);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
 __rmw_qos_profile_check_compatible(
   const rmw_qos_profile_t publisher_profile,
   const rmw_qos_profile_t subscription_profile,
