@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Use unique mangled names when creating Content Filter Topics (`#762 <https://github.com/ros2/rmw_fastrtps/issues/762>`_) (`#769 <https://github.com/ros2/rmw_fastrtps/issues/769>`_)
+  Co-authored-by: Mario Domínguez López <116071334+Mario-DL@users.noreply.github.com>
+* Add support for data representation (`#756 <https://github.com/ros2/rmw_fastrtps/issues/756>`_) (`#759 <https://github.com/ros2/rmw_fastrtps/issues/759>`_)
+  Co-authored-by: Miguel Company <miguelcompany@eprosima.com>
+
 8.4.0 (2024-04-09)
 ------------------
 * Allow pkcs11 when calling rmw_dds_common::get_security_files. (`#565 <https://github.com/ros2/rmw_fastrtps/issues/565>`_)
