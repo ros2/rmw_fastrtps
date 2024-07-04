@@ -45,6 +45,8 @@
 
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 
+#include "tracetools/tracetools.h"
+
 #include "publisher.hpp"
 #include "type_support_common.hpp"
 #include "type_support_registry.hpp"
@@ -326,5 +328,10 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   cleanup_datawriter.cancel();
   return_type_support.cancel();
   cleanup_info.cancel();
+
+  TRACETOOLS_TRACEPOINT(
+    rmw_publisher_init,
+    static_cast<const void *>(rmw_publisher),
+    info->publisher_gid.data);
   return rmw_publisher;
 }
