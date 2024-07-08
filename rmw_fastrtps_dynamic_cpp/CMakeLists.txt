@@ -36,6 +36,7 @@ find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw_dds_common REQUIRED)
 find_package(rmw_fastrtps_shared_cpp REQUIRED)
+find_package(tracetools REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr 2 REQUIRED CONFIG)
@@ -111,6 +112,7 @@ target_link_libraries(rmw_fastrtps_dynamic_cpp PUBLIC
 )
 target_link_libraries(rmw_fastrtps_dynamic_cpp PRIVATE
   rmw_dds_common::rmw_dds_common_library
+  tracetools::tracetools
 )
 
 configure_rmw_library(rmw_fastrtps_dynamic_cpp)

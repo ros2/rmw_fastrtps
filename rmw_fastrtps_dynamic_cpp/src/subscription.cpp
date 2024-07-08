@@ -51,6 +51,8 @@
 
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 
+#include "tracetools/tracetools.h"
+
 #include "subscription.hpp"
 #include "type_support_common.hpp"
 #include "type_support_registry.hpp"
@@ -365,6 +367,11 @@ create_subscription(
   cleanup_datareader.cancel();
   return_type_support.cancel();
   cleanup_info.cancel();
+
+  TRACETOOLS_TRACEPOINT(
+    rmw_subscription_init,
+    static_cast<const void *>(rmw_subscription),
+    info->subscription_gid_.data);
   return rmw_subscription;
 }
 
