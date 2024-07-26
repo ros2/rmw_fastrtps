@@ -2,6 +2,9 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.7 (2024-07-26)
+------------------
+
 6.2.6 (2024-01-24)
 ------------------
 * Capture `std::bad_alloc` on deserializeROSmessage. (`#665 <https://github.com/ros2/rmw_fastrtps/issues/665>`_) (`#737 <https://github.com/ros2/rmw_fastrtps/issues/737>`_)

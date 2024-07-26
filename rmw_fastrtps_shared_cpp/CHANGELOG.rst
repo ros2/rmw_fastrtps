@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+6.2.7 (2024-07-26)
+------------------
+* Use unique mangled names when creating Content Filter Topics (`#762 <https://github.com/ros2/rmw_fastrtps/issues/762>`_) (`#768 <https://github.com/ros2/rmw_fastrtps/issues/768>`_)
+* Contributors: mergify[bot]
+
 6.2.6 (2024-01-24)
 ------------------
 
