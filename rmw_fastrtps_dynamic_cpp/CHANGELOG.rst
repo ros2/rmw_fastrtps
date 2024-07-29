@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.0.1 (2024-07-29)
+------------------
+* Add tracing instrumentation to rmw_fastrtps_dynamic_cpp (`#772 <https://github.com/ros2/rmw_fastrtps/issues/772>`_)
+* Contributors: Christophe Bedard
+
 9.0.0 (2024-06-17)
 ------------------
 

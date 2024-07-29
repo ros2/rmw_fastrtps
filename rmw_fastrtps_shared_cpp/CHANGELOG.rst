@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.0.1 (2024-07-29)
+------------------
+* remove rmw_localhost_only_t. (`#773 <https://github.com/ros2/rmw_fastrtps/issues/773>`_)
+* Contributors: Tomoya Fujita
+
 9.0.0 (2024-06-17)
 ------------------
 * Make rmw_service_server_is_available return RMW_RET_INVALID_ARGUMENT (`#763 <https://github.com/ros2/rmw_fastrtps/issues/763>`_)
