@@ -16,13 +16,11 @@
   <author>Ricardo González</author>
 
   <buildtool_depend>ament_cmake_ros</buildtool_depend>
-  <buildtool_depend>fastrtps_cmake_module</buildtool_depend>
 
   <buildtool_export_depend>ament_cmake</buildtool_export_depend>
 
   <build_depend>fastcdr</build_depend>
   <build_depend>fastdds</build_depend>
-  <build_depend>fastrtps_cmake_module</build_depend>
   <build_depend>rcpputils</build_depend>
   <build_depend>rcutils</build_depend>
   <build_depend>rmw</build_depend>
@@ -38,7 +36,6 @@
 
   <build_export_depend>fastcdr</build_export_depend>
   <build_export_depend>fastdds</build_export_depend>
-  <build_export_depend>fastrtps_cmake_module</build_export_depend>
   <build_export_depend>rcutils</build_export_depend>
   <build_export_depend>rmw_dds_common</build_export_depend>
   <build_export_depend>rmw_fastrtps_shared_cpp</build_export_depend>
