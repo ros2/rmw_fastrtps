@@ -17,7 +17,7 @@
 
 #include <string>
 
-#include "fastrtps/utils/fixed_size_string.hpp"
+#include "fastcdr/cdr/fixed_size_string.hpp"
 #include "rmw/types.h"
 #include "namespace_prefix.hpp"
 
@@ -28,7 +28,7 @@
   * \param[in] suffix Optional suffix for topic name.
   */
 inline
-eprosima::fastrtps::string_255
+eprosima::fastcdr::string_255
 _mangle_topic_name(
   const char * prefix,
   const char * base,
@@ -53,7 +53,7 @@ _mangle_topic_name(
   * \param[in] suffix Optional suffix for topic name.
   */
 inline
-eprosima::fastrtps::string_255
+eprosima::fastcdr::string_255
 _create_topic_name(
   const rmw_qos_profile_t * qos_profile,
   const char * prefix,

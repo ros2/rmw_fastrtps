@@ -20,16 +20,16 @@
 #include <cstring>
 #include <type_traits>
 
-#include "fastdds/rtps/common/Guid.h"
+#include "fastdds/rtps/common/Guid.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
 
 template<typename ByteT>
 void
-copy_from_byte_array_to_fastrtps_guid(
+copy_from_byte_array_to_fastdds_guid(
   const ByteT * guid_byte_array,
-  eprosima::fastrtps::rtps::GUID_t * guid)
+  eprosima::fastdds::rtps::GUID_t * guid)
 {
   static_assert(
     std::is_same<uint8_t, ByteT>::value || std::is_same<int8_t, ByteT>::value,
@@ -43,8 +43,8 @@ copy_from_byte_array_to_fastrtps_guid(
 
 template<typename ByteT>
 void
-copy_from_fastrtps_guid_to_byte_array(
-  const eprosima::fastrtps::rtps::GUID_t & guid,
+copy_from_fastdds_guid_to_byte_array(
+  const eprosima::fastdds::rtps::GUID_t & guid,
   ByteT * guid_byte_array)
 {
   static_assert(
@@ -56,9 +56,9 @@ copy_from_fastrtps_guid_to_byte_array(
   memcpy(&guid_byte_array[prefix_size], &guid.entityId, guid.entityId.size);
 }
 
-struct hash_fastrtps_guid
+struct hash_fastdds_guid
 {
-  std::size_t operator()(const eprosima::fastrtps::rtps::GUID_t & guid) const
+  std::size_t operator()(const eprosima::fastdds::rtps::GUID_t & guid) const
   {
     union u_convert {
       uint8_t plain_value[sizeof(guid)];
@@ -71,7 +71,7 @@ struct hash_fastrtps_guid
       offsetof(u_convert, plain_value) == offsetof(u_convert, plain_ints),
       "Plain guid should be easily convertible to uint32_t[4]");
 
-    copy_from_fastrtps_guid_to_byte_array(guid, u.plain_value);
+    copy_from_fastdds_guid_to_byte_array(guid, u.plain_value);
 
     constexpr std::size_t prime_1 = 7;
     constexpr std::size_t prime_2 = 31;
