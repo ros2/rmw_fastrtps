@@ -45,10 +45,8 @@ find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 find_package(tracetools REQUIRED)
 
-find_package(fastrtps_cmake_module REQUIRED)
-find_package(fastcdr 2 REQUIRED CONFIG)
-find_package(fastdds 3 REQUIRED CONFIG)
-find_package(FastDDS 3 REQUIRED MODULE)
+find_package(fastcdr 2 REQUIRED)
+find_package(fastdds 3 REQUIRED)
 
 find_package(rmw REQUIRED)
 
