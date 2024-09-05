@@ -14,10 +14,8 @@
 
 # copied from rmw_fastrtps_dynamic_cpp/rmw_fastrtps_dynamic_cpp-extras.cmake
 
-find_package(fastrtps_cmake_module REQUIRED)
-find_package(fastcdr 2 REQUIRED CONFIG)
-find_package(fastdds 3 REQUIRED CONFIG)
-find_package(FastDDS 3 REQUIRED MODULE)
+find_package(fastcdr 2 REQUIRED)
+find_package(fastdds 3 REQUIRED)
 
 list(APPEND rmw_fastrtps_dynamic_cpp_INCLUDE_DIRS ${FAST_INCLUDE_DIR})
 # specific order: dependents before dependencies
