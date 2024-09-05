@@ -28,8 +28,8 @@
 #include "fastdds/dds/topic/Topic.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 
-#include "fastdds/rtps/common/Guid.h"
-#include "fastdds/rtps/common/InstanceHandle.h"
+#include "fastdds/rtps/common/Guid.hpp"
+#include "fastdds/rtps/common/InstanceHandle.hpp"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rmw/rmw.h"
@@ -41,28 +41,28 @@ class RMWPublisherEvent;
 class CustomDataWriterListener final : public eprosima::fastdds::dds::DataWriterListener
 {
 public:
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   explicit CustomDataWriterListener(RMWPublisherEvent * pub_event);
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   void
   on_publication_matched(
     eprosima::fastdds::dds::DataWriter * writer,
     const eprosima::fastdds::dds::PublicationMatchedStatus & status) override;
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   void
   on_offered_deadline_missed(
     eprosima::fastdds::dds::DataWriter * writer,
     const eprosima::fastdds::dds::OfferedDeadlineMissedStatus & status) override;
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   void
   on_liveliness_lost(
     eprosima::fastdds::dds::DataWriter * writer,
     const eprosima::fastdds::dds::LivelinessLostStatus & status) override;
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   void
   on_offered_incompatible_qos(
     eprosima::fastdds::dds::DataWriter *,
@@ -86,7 +86,7 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
 
   eprosima::fastdds::dds::Topic * topic_{nullptr};
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   EventListenerInterface *
   get_listener() const final;
 } CustomPublisherInfo;
@@ -94,24 +94,24 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
 class RMWPublisherEvent final : public EventListenerInterface
 {
 public:
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   explicit RMWPublisherEvent(CustomPublisherInfo * info);
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   eprosima::fastdds::dds::StatusCondition & get_statuscondition() const override;
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   bool take_event(
     rmw_event_type_t event_type,
     void * event_info) override;
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   void set_on_new_event_callback(
     rmw_event_type_t event_type,
     const void * user_data,
     rmw_event_callback_t callback) override;
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   void update_inconsistent_topic(uint32_t total_count, uint32_t total_count_change) override;
 
   /// Add a GUID to the internal set of unique subscriptions matched to this publisher.
@@ -121,8 +121,8 @@ public:
    *
    * \param[in] guid The GUID of the newly-matched subscription to track.
    */
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void track_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid);
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  void track_unique_subscription(eprosima::fastdds::rtps::GUID_t guid);
 
   /// Remove a GUID from the internal set of unique subscriptions matched to this publisher.
   /**
@@ -131,28 +131,28 @@ public:
    *
    * \param[in] guid The GUID of the newly-unmatched subscription to track.
    */
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void untrack_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid);
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  void untrack_unique_subscription(eprosima::fastdds::rtps::GUID_t guid);
 
   /// Return the number of unique subscriptions matched to this publisher.
   /**
    * \return Number of unique subscriptions matched to this publisher.
    */
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   size_t subscription_count() const;
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   void update_deadline(uint32_t total_count, uint32_t total_count_change);
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   void update_liveliness_lost(uint32_t total_count, uint32_t total_count_change);
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   void update_offered_incompatible_qos(
     eprosima::fastdds::dds::QosPolicyId_t last_policy_id,
     uint32_t total_count, uint32_t total_count_change);
 
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  RMW_FASTDDS_SHARED_CPP_PUBLIC
   void update_matched(
     int32_t total_count,
     int32_t total_count_change,
@@ -162,7 +162,7 @@ public:
 private:
   CustomPublisherInfo * publisher_info_ = nullptr;
 
-  std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_
+  std::set<eprosima::fastdds::rtps::GUID_t> subscriptions_
   RCPPUTILS_TSA_GUARDED_BY(subscriptions_mutex_);
 
   mutable std::mutex subscriptions_mutex_;

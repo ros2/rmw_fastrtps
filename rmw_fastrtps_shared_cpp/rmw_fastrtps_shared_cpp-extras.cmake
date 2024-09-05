@@ -16,9 +16,9 @@
 
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr 2 REQUIRED CONFIG)
-find_package(fastrtps 2.13 REQUIRED CONFIG)
-find_package(FastRTPS 2.13 REQUIRED MODULE)
+find_package(fastdds 3.0 REQUIRED CONFIG)
+find_package(FastDDS 3.0 REQUIRED MODULE)
 
-list(APPEND rmw_fastrtps_shared_cpp_INCLUDE_DIRS ${FastRTPS_INCLUDE_DIR})
+list(APPEND rmw_fastrtps_shared_cpp_INCLUDE_DIRS ${FastDDS_INCLUDE_DIR})
 # specific order: dependents before dependencies
-list(APPEND rmw_fastrtps_shared_cpp_LIBRARIES fastrtps fastcdr)
+list(APPEND rmw_fastrtps_shared_cpp_LIBRARIES fastdds fastcdr)

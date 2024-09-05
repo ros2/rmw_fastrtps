@@ -22,12 +22,12 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
+RMW_FASTDDS_SHARED_CPP_PUBLIC
 void
 __init_subscription_for_loans(
   rmw_subscription_t * subscription);
 
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
+RMW_FASTDDS_SHARED_CPP_PUBLIC
 rmw_ret_t
 destroy_subscription(
   const char * identifier,
