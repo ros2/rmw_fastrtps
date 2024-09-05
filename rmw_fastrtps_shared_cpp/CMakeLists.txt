@@ -47,8 +47,8 @@ find_package(tracetools REQUIRED)
 
 find_package(fastrtps_cmake_module REQUIRED)
 find_package(fastcdr 2 REQUIRED CONFIG)
-find_package(fastrtps 2.13 REQUIRED CONFIG)
-find_package(FastRTPS 2.13 REQUIRED MODULE)
+find_package(fastdds 3 REQUIRED CONFIG)
+find_package(FastDDS 3 REQUIRED MODULE)
 
 find_package(rmw REQUIRED)
 
@@ -105,7 +105,7 @@ target_include_directories(rmw_fastrtps_shared_cpp
   "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 target_link_libraries(rmw_fastrtps_shared_cpp PUBLIC
   fastcdr
-  fastrtps
+  fastdds
   rcpputils::rcpputils
   rcutils::rcutils
   rmw::rmw

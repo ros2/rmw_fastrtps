@@ -62,7 +62,18 @@ template<typename MembersType>
 TypeSupport<MembersType>::TypeSupport(const void * ros_type_support)
 : BaseTypeSupport(ros_type_support)
 {
-  m_isGetKeyDefined = false;
+  is_compute_key_provided = false;
+  max_size_bound_ = false;
+  is_plain_ = false;
+}
+
+template<typename MembersType>
+TypeSupport<MembersType>::TypeSupport(
+  const void * ros_type_support,
+  const void * ros_message_type_supports)
+: BaseTypeSupport(ros_type_support, ros_message_type_supports)
+{
+  is_compute_key_provided = false;
   max_size_bound_ = false;
   is_plain_ = false;
 }
@@ -906,7 +917,7 @@ size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
   const void * ros_message, const void * impl) const
 {
   if (is_plain_) {
-    return m_typeSize;
+    return max_serialized_type_size;
   }
 
   assert(ros_message);
@@ -967,12 +978,12 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
   } catch (const eprosima::fastcdr::exception::Exception &) {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "Fast CDR exception deserializing message of type %s.",
-      getName());
+      get_name().c_str());
     return false;
   } catch (const std::bad_alloc &) {
     RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
       "'Bad alloc' exception deserializing message of type %s.",
-      getName());
+      get_name().c_str());
     return false;
   }
 
