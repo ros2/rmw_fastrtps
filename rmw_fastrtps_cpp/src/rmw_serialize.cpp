@@ -40,7 +40,7 @@ rmw_serialize(
   }
 
   auto callbacks = static_cast<const message_type_support_callbacks_t *>(ts->data);
-  auto tss = MessageTypeSupport_cpp(callbacks);
+  auto tss = MessageTypeSupport_cpp(callbacks, type_support);
   auto data_length = tss.getEstimatedSerializedSize(ros_message, callbacks);
   if (serialized_message->buffer_capacity < data_length) {
     if (rmw_serialized_message_resize(serialized_message, data_length) != RMW_RET_OK) {
@@ -79,7 +79,7 @@ rmw_deserialize(
   }
 
   auto callbacks = static_cast<const message_type_support_callbacks_t *>(ts->data);
-  auto tss = MessageTypeSupport_cpp(callbacks);
+  auto tss = MessageTypeSupport_cpp(callbacks, type_support);
   eprosima::fastcdr::FastBuffer buffer(
     reinterpret_cast<char *>(serialized_message->buffer), serialized_message->buffer_length);
   eprosima::fastcdr::Cdr deser(buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN);

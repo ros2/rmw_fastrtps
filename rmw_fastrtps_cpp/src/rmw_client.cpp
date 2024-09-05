@@ -26,7 +26,7 @@
 #include "fastdds/dds/topic/TypeSupport.hpp"
 #include "fastdds/dds/topic/qos/TopicQos.hpp"
 
-#include "fastdds/rtps/resources/ResourceManagement.h"
+#include "fastdds/rtps/attributes/ResourceManagement.hpp"
 
 #include "rcpputils/scope_exit.hpp"
 #include "rcutils/error_handling.h"
@@ -213,7 +213,8 @@ rmw_create_client(
   info->response_type_support_impl_ = response_members;
 
   if (!request_fastdds_type) {
-    auto tsupport = new (std::nothrow) RequestTypeSupport_cpp(service_members);
+    auto tsupport = new (std::nothrow) RequestTypeSupport_cpp(service_members,
+        type_supports->request_typesupport);
     if (!tsupport) {
       RMW_SET_ERROR_MSG("create_client() failed to allocate request typesupport");
       return nullptr;
@@ -222,7 +223,8 @@ rmw_create_client(
     request_fastdds_type.reset(tsupport);
   }
   if (!response_fastdds_type) {
-    auto tsupport = new (std::nothrow) ResponseTypeSupport_cpp(service_members);
+    auto tsupport = new (std::nothrow) ResponseTypeSupport_cpp(service_members,
+        type_supports->response_typesupport);
     if (!tsupport) {
       RMW_SET_ERROR_MSG("create_client() failed to allocate response typesupport");
       return nullptr;
@@ -231,13 +233,13 @@ rmw_create_client(
     response_fastdds_type.reset(tsupport);
   }
 
-  if (ReturnCode_t::RETCODE_OK != request_fastdds_type.register_type(dds_participant)) {
+  if (eprosima::fastdds::dds::RETCODE_OK != request_fastdds_type.register_type(dds_participant)) {
     RMW_SET_ERROR_MSG("create_client() failed to register request type");
     return nullptr;
   }
   info->request_type_support_ = request_fastdds_type;
 
-  if (ReturnCode_t::RETCODE_OK != response_fastdds_type.register_type(dds_participant)) {
+  if (eprosima::fastdds::dds::RETCODE_OK != response_fastdds_type.register_type(dds_participant)) {
     RMW_SET_ERROR_MSG("create_client() failed to register response type");
     return nullptr;
   }
@@ -309,7 +311,7 @@ rmw_create_client(
 
   if (!participant_info->leave_middleware_default_qos) {
     reader_qos.endpoint().history_memory_policy =
-      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+      eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
     reader_qos.data_sharing().off();
   }
@@ -361,13 +363,13 @@ rmw_create_client(
   // Modify specific DataWriter Qos
   if (!participant_info->leave_middleware_default_qos) {
     if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS) {
-      writer_qos.publish_mode().kind = eprosima::fastrtps::ASYNCHRONOUS_PUBLISH_MODE;
+      writer_qos.publish_mode().kind = eprosima::fastdds::dds::ASYNCHRONOUS_PUBLISH_MODE;
     } else if (participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
-      writer_qos.publish_mode().kind = eprosima::fastrtps::SYNCHRONOUS_PUBLISH_MODE;
+      writer_qos.publish_mode().kind = eprosima::fastdds::dds::SYNCHRONOUS_PUBLISH_MODE;
     }
 
     writer_qos.endpoint().history_memory_policy =
-      eprosima::fastrtps::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+      eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
     writer_qos.data_sharing().off();
   }

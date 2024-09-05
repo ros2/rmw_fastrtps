@@ -15,12 +15,12 @@
 #ifndef TIME_UTILS_HPP_
 #define TIME_UTILS_HPP_
 
-#include "fastdds/rtps/common/Time_t.h"
+#include "fastdds/dds/core/Time_t.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
 
-eprosima::fastrtps::Duration_t rmw_time_to_fastrtps(const rmw_time_t & time);
+eprosima::fastdds::dds::Duration_t rmw_time_to_fastrtps(const rmw_time_t & time);
 
 }  // namespace rmw_fastrtps_shared_cpp
 
