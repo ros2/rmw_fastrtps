@@ -643,7 +643,8 @@ __rmw_return_loaned_message_from_subscription(
   std::unique_ptr<rmw_fastrtps_shared_cpp::LoanManager::Item> item;
   item = info->loan_manager_->erase_item(loaned_message);
   if (item != nullptr) {
-    if (!info->data_reader_->return_loan(item->data_seq, item->info_seq)) {
+    auto ret_code = info->data_reader_->return_loan(item->data_seq, item->info_seq);
+    if (eprosima::fastdds::dds::RETCODE_OK != ret_code) {
       RMW_SET_ERROR_MSG("Error returning loan");
       return RMW_RET_ERROR;
     }
