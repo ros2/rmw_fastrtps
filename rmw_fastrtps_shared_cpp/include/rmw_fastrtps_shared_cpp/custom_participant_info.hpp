@@ -61,19 +61,19 @@ enum class publishing_mode_t
 class CustomTopicListener final : public eprosima::fastdds::dds::TopicListener
 {
 public:
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   explicit CustomTopicListener(EventListenerInterface * event_listener);
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void
   on_inconsistent_topic(
     eprosima::fastdds::dds::Topic * topic,
     eprosima::fastdds::dds::InconsistentTopicStatus status) override;
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void add_event_listener(EventListenerInterface * event_listener);
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void remove_event_listener(EventListenerInterface * event_listener);
 
 private:
@@ -117,14 +117,14 @@ typedef struct CustomParticipantInfo
   bool leave_middleware_default_qos;
   publishing_mode_t publishing_mode;
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   eprosima::fastdds::dds::Topic * find_or_create_topic(
     const std::string & topic_name,
     const std::string & type_name,
     const eprosima::fastdds::dds::TopicQos & topic_qos,
     EventListenerInterface * event_listener);
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void delete_topic(
     const eprosima::fastdds::dds::Topic * topic,
     EventListenerInterface * event_listener);

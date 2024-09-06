@@ -24,7 +24,7 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
-RMW_FASTDDS_SHARED_CPP_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_gid_t
 create_rmw_gid(const char * identifier, const eprosima::fastdds::rtps::GUID_t & guid);
 
