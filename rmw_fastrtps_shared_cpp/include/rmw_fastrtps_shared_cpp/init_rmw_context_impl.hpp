@@ -27,7 +27,7 @@ namespace rmw_fastrtps_shared_cpp
 /**
  * Function that should be called when destroying a node.
  */
-RMW_FASTDDS_SHARED_CPP_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 decrement_context_impl_ref_count(rmw_context_t * context);
 
