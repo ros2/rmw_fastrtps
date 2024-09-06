@@ -22,7 +22,7 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
-RMW_FASTDDS_SHARED_CPP_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 destroy_publisher(
   const char * identifier,

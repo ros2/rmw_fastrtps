@@ -22,11 +22,11 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
-RMW_FASTDDS_SHARED_CPP_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 run_listener_thread(rmw_context_t * context);
 
-RMW_FASTDDS_SHARED_CPP_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 join_listener_thread(rmw_context_t * context);
 
