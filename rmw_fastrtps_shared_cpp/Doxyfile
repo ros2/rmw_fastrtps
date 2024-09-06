@@ -17,7 +17,7 @@ GENERATE_LATEX         = NO
 ENABLE_PREPROCESSING   = YES
 MACRO_EXPANSION        = YES
 EXPAND_ONLY_PREDEF     = YES
-PREDEFINED             = RMW_FASTDDS_SHARED_CPP_PUBLIC=
+PREDEFINED             = RMW_FASTRTPS_SHARED_CPP_PUBLIC=
 
 # Tag files that do not exist will produce a warning and cross-project linking will not work.
 TAGFILES += "../../../../doxygen_tag_files/cppreference-doxygen-web.tag.xml=http://en.cppreference.com/w/"

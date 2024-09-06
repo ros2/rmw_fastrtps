@@ -27,31 +27,31 @@
 
 #include "rosidl_runtime_c/type_hash.h"
 
-RMW_FASTDDS_SHARED_CPP_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 is_valid_qos(const rmw_qos_profile_t & qos_policies);
 
-RMW_FASTDDS_SHARED_CPP_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
   const rosidl_type_hash_t & type_hash,
   eprosima::fastdds::dds::DataReaderQos & reader_qos);
 
-RMW_FASTDDS_SHARED_CPP_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
   const rosidl_type_hash_t & type_hash,
   eprosima::fastdds::dds::DataWriterQos & writer_qos);
 
-RMW_FASTDDS_SHARED_CPP_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_topic_qos(
   const rmw_qos_profile_t & qos_policies,
   eprosima::fastdds::dds::TopicQos & topic_qos);
 
-RMW_FASTDDS_SHARED_CPP_PUBLIC
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_time_t
 dds_duration_to_rmw(const eprosima::fastdds::dds::Duration_t & duration);
 
@@ -177,12 +177,12 @@ rtps_qos_to_rmw_qos(
   qos->liveliness_lease_duration = dds_duration_to_rmw(rtps_qos.liveliness.lease_duration);
 }
 
-extern template RMW_FASTDDS_SHARED_CPP_PUBLIC
+extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
 void dds_qos_to_rmw_qos<eprosima::fastdds::dds::DataWriterQos>(
   const eprosima::fastdds::dds::DataWriterQos & dds_qos,
   rmw_qos_profile_t * qos);
 
-extern template RMW_FASTDDS_SHARED_CPP_PUBLIC
+extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
 void dds_qos_to_rmw_qos<eprosima::fastdds::dds::DataReaderQos>(
   const eprosima::fastdds::dds::DataReaderQos & dds_qos,
   rmw_qos_profile_t * qos);

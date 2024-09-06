@@ -60,7 +60,7 @@ public:
   virtual bool deserializeROSmessage(
     eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const = 0;
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool compute_key(
     const void * const data,
     eprosima::fastdds::rtps::InstanceHandle_t & ihandle,
@@ -70,7 +70,7 @@ public:
     return false;
   }
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool compute_key(
     eprosima::fastdds::rtps::SerializedPayload_t & data,
     eprosima::fastdds::rtps::InstanceHandle_t & ihandle,
@@ -80,28 +80,28 @@ public:
     return false;
   }
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool serialize(
     const void * const data,
     eprosima::fastdds::rtps::SerializedPayload_t & payload,
     eprosima::fastdds::dds::DataRepresentationId_t data_representation) override;
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool deserialize(eprosima::fastdds::rtps::SerializedPayload_t & payload, void * data) override;
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   uint32_t calculate_serialized_size(
     const void * const data,
     eprosima::fastdds::dds::DataRepresentationId_t data_representation)
   override;
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void * create_data() override;
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void delete_data(void * data) override;
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   inline bool is_bounded() const
 #ifdef TOPIC_DATA_TYPE_API_HAS_IS_BOUNDED
   override
@@ -110,25 +110,25 @@ public:
     return max_size_bound_;
   }
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   inline bool is_plain(eprosima::fastdds::dds::DataRepresentationId_t rep) const override
   {
     return is_plain_ && rep == eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION;
   }
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC void register_type_object_representation() override;
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC void register_type_object_representation() override;
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   inline const rosidl_message_type_support_t * ros_message_type_supports() const
   {
     return type_supports_;
   }
 
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   virtual ~TypeSupport() {}
 
 protected:
-  RMW_FASTDDS_SHARED_CPP_PUBLIC
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   TypeSupport(
     const rosidl_message_type_support_t * type_supports
   );
