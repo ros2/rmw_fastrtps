@@ -38,7 +38,7 @@ TEST(RMWInitOptionsTest, init_w_invalid_args_fails) {
     rmw_init_options_init(some_identifier, nullptr, allocator));
   rcutils_reset_error();
 
-  rmw_init_options_t options = rmw_get_zero_initialized_init_options();
+  rmw_init_options_t options = rmw_get_default_init_options();
   rcutils_allocator_t invalid_allocator = rcutils_get_zero_initialized_allocator();
   // Cannot initialize using an invalid allocator.
   EXPECT_EQ(
@@ -49,7 +49,7 @@ TEST(RMWInitOptionsTest, init_w_invalid_args_fails) {
 
 
 TEST(RMWInitOptionsTest, init_twice_fails) {
-  rmw_init_options_t options = rmw_get_zero_initialized_init_options();
+  rmw_init_options_t options = rmw_get_default_init_options();
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
   ASSERT_EQ(RMW_RET_OK, rmw_init_options_init(some_identifier, &options, allocator)) <<
@@ -70,7 +70,7 @@ TEST(RMWInitOptionsTest, init_twice_fails) {
 
 
 TEST(RMWInitOptionsTest, init) {
-  rmw_init_options_t options = rmw_get_zero_initialized_init_options();
+  rmw_init_options_t options = rmw_get_default_init_options();
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
 
   ASSERT_EQ(RMW_RET_OK, rmw_init_options_init(some_identifier, &options, allocator)) <<
@@ -90,7 +90,7 @@ TEST(RMWInitOptionsTest, init) {
 TEST(RMWInitOptionsTest, copy_w_invalid_args_fails) {
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
   rmw_init_options_t not_initialized_options = rmw_get_zero_initialized_init_options();
-  rmw_init_options_t initialized_options = rmw_get_zero_initialized_init_options();
+  rmw_init_options_t initialized_options = rmw_get_default_init_options();
 
   ASSERT_EQ(
     RMW_RET_OK,
@@ -146,7 +146,7 @@ TEST(RMWInitOptionsTest, copy_w_invalid_args_fails) {
 
 TEST(RMWInitOptionsTest, copy) {
   rcutils_allocator_t allocator = rcutils_get_default_allocator();
-  rmw_init_options_t preset_options = rmw_get_zero_initialized_init_options();
+  rmw_init_options_t preset_options = rmw_get_default_init_options();
 
   rcutils_reset_error();
   ASSERT_EQ(RMW_RET_OK, rmw_init_options_init(some_identifier, &preset_options, allocator)) <<
@@ -191,7 +191,7 @@ TEST(RMWInitOptionsTest, bad_alloc_on_copy) {
   rcutils_allocator_t failing_allocator = rcutils_get_default_allocator();
   failing_allocator.allocate = failing_allocate;
 
-  rmw_init_options_t preset_options = rmw_get_zero_initialized_init_options();
+  rmw_init_options_t preset_options = rmw_get_default_init_options();
   ASSERT_EQ(
     RMW_RET_OK,
     rmw_init_options_init(some_identifier, &preset_options, failing_allocator)) <<
@@ -217,7 +217,7 @@ TEST(RMWInitOptionsTest, fini_w_invalid_args_fails) {
   EXPECT_EQ(RMW_RET_INVALID_ARGUMENT, rmw_init_options_fini(some_identifier, nullptr));
   rcutils_reset_error();
 
-  rmw_init_options_t options = rmw_get_zero_initialized_init_options();
+  rmw_init_options_t options = rmw_get_default_init_options();
   // Cannot finalize an options instance that has not been initialized.
   EXPECT_EQ(RMW_RET_INVALID_ARGUMENT, rmw_init_options_fini(some_identifier, &options));
   rcutils_reset_error();
