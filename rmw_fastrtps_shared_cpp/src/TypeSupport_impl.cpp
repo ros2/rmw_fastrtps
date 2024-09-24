@@ -179,9 +179,11 @@ uint32_t TypeSupport::calculate_serialized_size(
   uint32_t ser_size {0};
   if (ser_data->type == FASTDDS_SERIALIZED_DATA_TYPE_CDR_BUFFER) {
     auto ser = static_cast<eprosima::fastcdr::Cdr *>(ser_data->data);
-    ser_size = ser->get_serialized_data_length();
+    ser_size = static_cast<uint32_t>(ser->get_serialized_data_length());
   } else {
-    ser_size = this->getEstimatedSerializedSize(ser_data->data, ser_data->impl);
+    ser_size = static_cast<uint32_t>(this->getEstimatedSerializedSize(
+        ser_data->data,
+        ser_data->impl));
   }
   return ser_size;
 }
