@@ -129,8 +129,7 @@ __rmw_take_request(
         {
           // Get header
           rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(
-            // Keep the original request publisher guid
-            writer_guid,
+            request.sample_identity_.writer_guid(),
             request_header->request_id.writer_guid);
           request_header->request_id.sequence_number =
             ((int64_t)request.sample_identity_.sequence_number().high) <<
