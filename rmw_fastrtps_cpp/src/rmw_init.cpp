@@ -94,7 +94,7 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
   }
 
   auto restore_context = rcpputils::make_scope_exit(
-    [context]() {*context = rmw_get_zero_initialized_context();});
+    [context]() {*context = rmw_get_default_context();});
 
   context->instance_id = options->instance_id;
   context->implementation_identifier = eprosima_fastrtps_identifier;
@@ -110,7 +110,7 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     [context]() {delete context->impl;});
 
   context->impl->is_shutdown = false;
-  context->options = rmw_get_zero_initialized_init_options();
+  context->options = rmw_get_default_init_options();
   rmw_ret_t ret = rmw_init_options_copy(options, &context->options);
   if (RMW_RET_OK != ret) {
     return ret;

@@ -36,7 +36,7 @@ class TestNativeEntities : public ::testing::Test
 protected:
   void SetUp() override
   {
-    rmw_init_options_t options = rmw_get_zero_initialized_init_options();
+    rmw_init_options_t options = rmw_get_default_init_options();
     rmw_ret_t ret = rmw_init_options_init(&options, rcutils_get_default_allocator());
     ASSERT_EQ(RMW_RET_OK, ret) << rcutils_get_error_string().str;
     OSRF_TESTING_TOOLS_CPP_SCOPE_EXIT(
@@ -65,7 +65,7 @@ protected:
     EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
   }
 
-  rmw_context_t context{rmw_get_zero_initialized_context()};
+  rmw_context_t context{rmw_get_default_context()};
   rmw_node_t * node{nullptr};
 };
 
