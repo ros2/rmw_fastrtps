@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.0.2 (2024-10-03)
+------------------
 * Use client's reader guid for service introspection event gid (`#781 <https://github.com/ros2/rmw_fastrtps/issues/781>`_)
 * Revert "Unique Client GID for Service Introspectino Event. (`#779 <https://github.com/ros2/rmw_fastrtps/issues/779>`_)" (`#780 <https://github.com/ros2/rmw_fastrtps/issues/780>`_)
 * Unique Client GID for Service Introspectino Event. (`#779 <https://github.com/ros2/rmw_fastrtps/issues/779>`_)
