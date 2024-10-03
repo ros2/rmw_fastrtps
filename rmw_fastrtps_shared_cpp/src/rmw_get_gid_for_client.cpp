@@ -38,7 +38,10 @@ __rmw_get_gid_for_client(
   RMW_CHECK_ARGUMENT_FOR_NULL(gid, RMW_RET_INVALID_ARGUMENT);
 
   const auto * info = static_cast<const CustomClientInfo *>(client->data);
-  copy_from_fastrtps_guid_to_byte_array(info->writer_guid_, gid->data);
+  // Use client's reader guid instead of writer guid for service event,
+  // because service server uses client's reader guid for the event.
+  // Service event message requires gid must be unique during transaction.
+  copy_from_fastrtps_guid_to_byte_array(info->reader_guid_, gid->data);
   gid->implementation_identifier = identifier;
   return RMW_RET_OK;
 }
