@@ -125,9 +125,9 @@ __rmw_subscription_set_content_filter(
       expression_parameters.push_back(options->expression_parameters.data[i]);
     }
 
-    ReturnCode_t ret =
+    eprosima::fastdds::dds::ReturnCode_t ret =
       filtered_topic->set_filter_expression(options->filter_expression, expression_parameters);
-    if (ret != ReturnCode_t::RETCODE_OK) {
+    if (ret != eprosima::fastdds::dds::RETCODE_OK) {
       RMW_SET_ERROR_MSG(
         "failed to set_filter_expression");
       return RMW_RET_ERROR;
@@ -230,8 +230,9 @@ __rmw_subscription_get_content_filter(
     return RMW_RET_ERROR;
   }
   std::vector<std::string> expression_parameters;
-  ReturnCode_t ret = filtered_topic->get_expression_parameters(expression_parameters);
-  if (ret != ReturnCode_t::RETCODE_OK) {
+  eprosima::fastdds::dds::ReturnCode_t ret =
+    filtered_topic->get_expression_parameters(expression_parameters);
+  if (ret != eprosima::fastdds::dds::RETCODE_OK) {
     RMW_SET_ERROR_MSG(
       "failed to get_expression_parameters");
     return RMW_RET_ERROR;
