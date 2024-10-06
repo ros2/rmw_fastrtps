@@ -43,4 +43,28 @@ rmw_get_subscriptions_info_by_topic(
   return rmw_fastrtps_shared_cpp::__rmw_get_subscriptions_info_by_topic(
     eprosima_fastrtps_identifier, node, allocator, topic_name, no_mangle, subscriptions_info);
 }
+
+rmw_ret_t
+rmw_get_clients_info_by_service(
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * service_name,
+  bool no_mangle,
+  rmw_topic_endpoint_info_array_t * clients_info)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_get_clients_info_by_service(
+    eprosima_fastrtps_identifier, node, allocator, service_name, no_mangle, clients_info);
+}
+
+rmw_ret_t
+rmw_get_servers_info_by_service(
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * service_name,
+  bool no_mangle,
+  rmw_topic_endpoint_info_array_t * servers_info)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_get_servers_info_by_service(
+    eprosima_fastrtps_identifier, node, allocator, service_name, no_mangle, servers_info);
+}
 }  // extern "C"
