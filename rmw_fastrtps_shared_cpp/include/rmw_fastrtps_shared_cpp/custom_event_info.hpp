@@ -70,11 +70,11 @@ public:
   virtual void update_inconsistent_topic(uint32_t total_count, uint32_t total_count_change) = 0;
 
 protected:
-  eprosima::fastdds::dds::GuardCondition event_guard[RMW_EVENT_INVALID];
+  eprosima::fastdds::dds::GuardCondition event_guard[RMW_EVENT_TYPE_MAX];
 
-  rmw_event_callback_t on_new_event_cb_[RMW_EVENT_INVALID] = {nullptr};
+  rmw_event_callback_t on_new_event_cb_[RMW_EVENT_TYPE_MAX] = {nullptr};
 
-  const void * user_data_[RMW_EVENT_INVALID] = {nullptr};
+  const void * user_data_[RMW_EVENT_TYPE_MAX] = {nullptr};
 
   std::mutex on_new_event_m_;
 
