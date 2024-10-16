@@ -33,9 +33,9 @@
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 
-#include "fastdds/rtps/common/Guid.h"
-#include "fastdds/rtps/common/InstanceHandle.h"
-#include "fastdds/rtps/common/SampleIdentity.h"
+#include "fastdds/rtps/common/Guid.hpp"
+#include "fastdds/rtps/common/InstanceHandle.hpp"
+#include "fastdds/rtps/common/SampleIdentity.hpp"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
@@ -62,8 +62,8 @@ typedef struct CustomClientInfo
   eprosima::fastdds::dds::Topic * response_topic_{nullptr};
 
   ClientListener * listener_{nullptr};
-  eprosima::fastrtps::rtps::GUID_t writer_guid_;
-  eprosima::fastrtps::rtps::GUID_t reader_guid_;
+  eprosima::fastdds::rtps::GUID_t writer_guid_;
+  eprosima::fastdds::rtps::GUID_t reader_guid_;
 
   const char * typesupport_identifier_{nullptr};
   ClientPubListener * pub_listener_{nullptr};
@@ -73,7 +73,7 @@ typedef struct CustomClientInfo
 
 typedef struct CustomClientResponse
 {
-  eprosima::fastrtps::rtps::SampleIdentity sample_identity_;
+  eprosima::fastdds::rtps::SampleIdentity sample_identity_;
   std::unique_ptr<eprosima::fastcdr::FastBuffer> buffer_;
 } CustomClientResponse;
 
@@ -109,9 +109,9 @@ public:
       return;
     }
     if (info.current_count_change == 1) {
-      publishers_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
+      publishers_.insert(eprosima::fastdds::rtps::iHandle2GUID(info.last_publication_handle));
     } else if (info.current_count_change == -1) {
-      publishers_.erase(eprosima::fastrtps::rtps::iHandle2GUID(info.last_publication_handle));
+      publishers_.erase(eprosima::fastdds::rtps::iHandle2GUID(info.last_publication_handle));
     } else {
       return;
     }
@@ -160,7 +160,7 @@ public:
 private:
   CustomClientInfo * info_;
 
-  std::set<eprosima::fastrtps::rtps::GUID_t> publishers_;
+  std::set<eprosima::fastdds::rtps::GUID_t> publishers_;
 
   rmw_event_callback_t on_new_response_cb_{nullptr};
 
@@ -186,9 +186,9 @@ public:
       return;
     }
     if (info.current_count_change == 1) {
-      subscriptions_.insert(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
+      subscriptions_.insert(eprosima::fastdds::rtps::iHandle2GUID(info.last_subscription_handle));
     } else if (info.current_count_change == -1) {
-      subscriptions_.erase(eprosima::fastrtps::rtps::iHandle2GUID(info.last_subscription_handle));
+      subscriptions_.erase(eprosima::fastdds::rtps::iHandle2GUID(info.last_subscription_handle));
     } else {
       return;
     }
@@ -197,7 +197,7 @@ public:
 
 private:
   CustomClientInfo * info_;
-  std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_;
+  std::set<eprosima::fastdds::rtps::GUID_t> subscriptions_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_CLIENT_INFO_HPP_

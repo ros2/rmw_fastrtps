@@ -14,20 +14,22 @@
 
 #include "rmw_dds_common/time_utils.hpp"
 
+#include "fastdds/rtps/common/Time_t.hpp"
+
 #include "time_utils.hpp"
 
 namespace rmw_fastrtps_shared_cpp
 {
 
-eprosima::fastrtps::Duration_t
+eprosima::fastdds::dds::Duration_t
 rmw_time_to_fastrtps(const rmw_time_t & time)
 {
   if (rmw_time_equal(time, RMW_DURATION_INFINITE)) {
-    return eprosima::fastrtps::rtps::c_RTPSTimeInfinite.to_duration_t();
+    return eprosima::fastdds::rtps::c_RTPSTimeInfinite.to_duration_t();
   }
 
   rmw_time_t clamped_time = rmw_dds_common::clamp_rmw_time_to_dds_time(time);
-  return eprosima::fastrtps::Duration_t(
+  return eprosima::fastdds::dds::Duration_t(
     static_cast<int32_t>(clamped_time.sec),
     static_cast<uint32_t>(clamped_time.nsec));
 }
