@@ -337,6 +337,7 @@ bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
 {
   assert(members);
   assert(ros_message);
+  assert(ihandle);
 
   // get estimated serialized size in case key is unbounded
   if (this->key_is_unbounded_) {
@@ -1129,6 +1130,7 @@ bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
   const void * impl) const
 {
   assert(ros_message);
+  assert(ihandle);
   assert(members_);
 
   bool ret = false;
