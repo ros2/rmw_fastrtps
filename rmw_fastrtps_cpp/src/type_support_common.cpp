@@ -151,6 +151,7 @@ bool TypeSupport::get_key_hash_from_ros_message(
   const void * impl) const
 {
   assert(ros_message);
+  assert(ihandle);
   (void)impl;
 
   // retrieve estimated serialized size in case key is unbounded
