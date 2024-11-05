@@ -131,7 +131,7 @@ create_datareader(
 * Max samples per instance is set to history depth if KEEP_LAST
 * else UNLIMITED.
 *
-* \param[in]       history_qos       History entitiy QoS.
+* \param[in]       history_qos      History entitiy QoS.
 * \param[in, out]  res_limits_qos   Resource limits entitiy QoS.
 *
 */
