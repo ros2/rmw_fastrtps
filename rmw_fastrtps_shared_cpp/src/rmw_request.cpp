@@ -31,6 +31,8 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
+#include "tracetools/tracetools.h"
+
 namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
@@ -63,6 +65,12 @@ __rmw_send_request(
     returnedValue = RMW_RET_OK;
     *sequence_id = ((int64_t)wparams.sample_identity().sequence_number().high) << 32 |
       wparams.sample_identity().sequence_number().low;
+    // This would ideally go before the write() call, but we can only get the sequence number after
+    TRACETOOLS_TRACEPOINT(
+      rmw_send_request,
+      static_cast<const void *>(client),
+      static_cast<const void *>(ros_request),
+      *sequence_id);
   } else {
     RMW_SET_ERROR_MSG("cannot publish data");
   }
@@ -144,7 +152,13 @@ __rmw_take_request(
     delete request.buffer_;
   }
 
-
+  TRACETOOLS_TRACEPOINT(
+    rmw_take_request,
+    static_cast<const void *>(service),
+    static_cast<const void *>(ros_request),
+    request_header->request_id.writer_guid,
+    request_header->request_id.sequence_number,
+    *taken);
   return RMW_RET_OK;
 }
 

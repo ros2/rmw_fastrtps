@@ -29,6 +29,8 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
+#include "tracetools/tracetools.h"
+
 namespace rmw_fastrtps_shared_cpp
 {
 rmw_ret_t
@@ -93,6 +95,13 @@ __rmw_take_response(
     }
   }
 
+  TRACETOOLS_TRACEPOINT(
+    rmw_take_response,
+    static_cast<const void *>(client),
+    static_cast<const void *>(ros_response),
+    request_header->request_id.sequence_number,
+    request_header->source_timestamp,
+    *taken);
   return RMW_RET_OK;
 }
 
@@ -155,6 +164,16 @@ __rmw_send_response(
     }
   }
 
+  eprosima::fastrtps::Time_t timestamp;
+  eprosima::fastrtps::Time_t::now(timestamp);
+  wparams.source_timestamp(timestamp);
+  TRACETOOLS_TRACEPOINT(
+    rmw_send_response,
+    static_cast<const void *>(service),
+    static_cast<const void *>(ros_response),
+    request_header->writer_guid,
+    request_header->sequence_number,
+    wparams.source_timestamp().to_ns());
   rmw_fastrtps_shared_cpp::SerializedData data;
   data.type = FASTRTPS_SERIALIZED_DATA_TYPE_ROS_MESSAGE;
   data.data = const_cast<void *>(ros_response);
