@@ -419,11 +419,6 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
         type_name = "double";
         break;
       }
-    case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_LONG_DOUBLE:
-      {
-        type_name = "longdouble";
-        break;
-      }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
       {
         type_name = "char";
