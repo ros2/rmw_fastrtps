@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Keep reference to `DomainParticipantFactory` (`#770 <https://github.com/ros2/rmw_fastrtps/issues/770>`_)
+* Contributors: Miguel Company
+
 9.0.2 (2024-10-03)
 ------------------
 * Use client's reader guid for service introspection event gid (`#781 <https://github.com/ros2/rmw_fastrtps/issues/781>`_)
