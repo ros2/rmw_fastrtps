@@ -45,6 +45,8 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
+namespace xtypes = eprosima::fastdds::dds::xtypes;
+
 TypeSupport::TypeSupport(
   const rosidl_message_type_support_t * type_supports
 )
@@ -189,24 +191,24 @@ uint32_t TypeSupport::calculate_serialized_size(
 }
 
 // TODO(iuhilnehc-ynos): add the following content into new files named TypeObject?
-using CommonStructMember = eprosima::fastdds::dds::xtypes::CommonStructMember;
-using CompleteMemberDetail = eprosima::fastdds::dds::xtypes::CompleteMemberDetail;
-using CompleteStructHeader = eprosima::fastdds::dds::xtypes::CompleteStructHeader;
-using CompleteStructMember = eprosima::fastdds::dds::xtypes::CompleteStructMember;
-using CompleteStructMemberSeq = eprosima::fastdds::dds::xtypes::CompleteStructMemberSeq;
-using CompleteStructType = eprosima::fastdds::dds::xtypes::CompleteStructType;
-using CompleteTypeDetail = eprosima::fastdds::dds::xtypes::CompleteTypeDetail;
-using ITypeObjectRegistry = eprosima::fastdds::dds::xtypes::ITypeObjectRegistry;
-using MemberId = eprosima::fastdds::dds::xtypes::MemberId;
-using MinimalStructType = eprosima::fastdds::dds::xtypes::MinimalStructType;
-using MinimalStructMember = eprosima::fastdds::dds::xtypes::MinimalStructMember;
+using CommonStructMember = xtypes::CommonStructMember;
+using CompleteMemberDetail = xtypes::CompleteMemberDetail;
+using CompleteStructHeader = xtypes::CompleteStructHeader;
+using CompleteStructMember = xtypes::CompleteStructMember;
+using CompleteStructMemberSeq = xtypes::CompleteStructMemberSeq;
+using CompleteStructType = xtypes::CompleteStructType;
+using CompleteTypeDetail = xtypes::CompleteTypeDetail;
+using ITypeObjectRegistry = xtypes::ITypeObjectRegistry;
+using MemberId = xtypes::MemberId;
+using MinimalStructType = xtypes::MinimalStructType;
+using MinimalStructMember = xtypes::MinimalStructMember;
 using SerializedPayload_t = eprosima::fastdds::rtps::SerializedPayload_t;
-using StructMemberFlag = eprosima::fastdds::dds::xtypes::StructMemberFlag;
-using StructTypeFlag = eprosima::fastdds::dds::xtypes::StructTypeFlag;
-using TypeIdentifier = eprosima::fastdds::dds::xtypes::TypeIdentifier;
-using TypeIdentifierPair = eprosima::fastdds::dds::xtypes::TypeIdentifierPair;
-using TypeObject = eprosima::fastdds::dds::xtypes::TypeObject;
-using TypeObjectUtils = eprosima::fastdds::dds::xtypes::TypeObjectUtils;
+using StructMemberFlag = xtypes::StructMemberFlag;
+using StructTypeFlag = xtypes::StructTypeFlag;
+using TypeIdentifier = xtypes::TypeIdentifier;
+using TypeIdentifierPair = xtypes::TypeIdentifierPair;
+using TypeObject = xtypes::TypeObject;
+using TypeObjectUtils = xtypes::TypeObjectUtils;
 
 const rosidl_message_type_support_t *
 get_type_support_introspection(const rosidl_message_type_support_t * type_supports)
@@ -277,7 +279,7 @@ TypeIdentifierPair register_type_identifiers(
   }
 
   StructTypeFlag struct_flags {TypeObjectUtils::build_struct_type_flag(
-      eprosima::fastdds::dds::xtypes::ExtensibilityKind::FINAL,
+      xtypes::ExtensibilityKind::FINAL,
       false, false)};
   CompleteTypeDetail detail {TypeObjectUtils::build_complete_type_detail({}, {}, type_name)};
   CompleteStructHeader header {TypeObjectUtils::build_complete_struct_header({}, detail)};
@@ -292,7 +294,7 @@ TypeIdentifierPair register_type_identifiers(
     TypeIdentifierPair type_ids;
     type_ids.type_identifier1(pair.first);
     StructMemberFlag member_flags {TypeObjectUtils::build_struct_member_flag(
-        eprosima::fastdds::dds::xtypes::TryConstructFailAction::DISCARD,
+        xtypes::TryConstructFailAction::DISCARD,
         false, false, false, false)};
     MemberId member_id {static_cast<MemberId>(i)};
     bool common_var {false};
@@ -453,17 +455,17 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
             type_name, type_identifiers))
         {
           if (255 < member->string_upper_bound_) {
-            eprosima::fastdds::dds::xtypes::LBound bound =
-              static_cast<eprosima::fastdds::dds::xtypes::LBound>(member->string_upper_bound_);
-            eprosima::fastdds::dds::xtypes::StringLTypeDefn string_ldefn =
+            xtypes::LBound bound =
+              static_cast<xtypes::LBound>(member->string_upper_bound_);
+            xtypes::StringLTypeDefn string_ldefn =
               TypeObjectUtils::build_string_l_type_defn(bound);
             TypeObjectUtils::build_and_register_l_string_type_identifier(
               string_ldefn,
               type_name, type_identifiers);
           } else {
-            eprosima::fastdds::dds::xtypes::SBound bound =
-              static_cast<eprosima::fastdds::dds::xtypes::SBound>(member->string_upper_bound_);
-            eprosima::fastdds::dds::xtypes::StringSTypeDefn string_sdefn =
+            xtypes::SBound bound =
+              static_cast<xtypes::SBound>(member->string_upper_bound_);
+            xtypes::StringSTypeDefn string_sdefn =
               TypeObjectUtils::build_string_s_type_defn(bound);
             TypeObjectUtils::build_and_register_s_string_type_identifier(
               string_sdefn,
@@ -498,21 +500,19 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
           get_type_identifiers(
             array_type_name, type_identifiers))
         {
-          eprosima::fastdds::dds::xtypes::TypeIdentifierPair element_type_identifiers;
+          xtypes::TypeIdentifierPair element_type_identifiers;
           if (eprosima::fastdds::dds::RETCODE_OK ==
             eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry()
             .get_type_identifiers(
               type_name, element_type_identifiers))
           {
-            eprosima::fastdds::dds::xtypes::EquivalenceKind equiv_kind {eprosima::fastdds::dds::
-              xtypes
-              ::EK_COMPLETE};
-            if (eprosima::fastdds::dds::xtypes::TK_NONE ==
+            xtypes::EquivalenceKind equiv_kind {xtypes::EK_COMPLETE};
+            if (xtypes::TK_NONE ==
               element_type_identifiers.type_identifier2()._d())
             {
-              equiv_kind = eprosima::fastdds::dds::xtypes::EK_BOTH;
+              equiv_kind = xtypes::EK_BOTH;
             }
-            eprosima::fastdds::dds::xtypes::PlainCollectionHeader header {TypeObjectUtils::
+            xtypes::PlainCollectionHeader header {TypeObjectUtils::
               build_plain_collection_header(equiv_kind, 0)};
             bool ec = false;
             TypeIdentifier * element_identifier = {new TypeIdentifier(
@@ -520,11 +520,11 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
                   element_type_identifiers,
                   ec))};
             if (255 < member->array_size_) {
-              eprosima::fastdds::dds::xtypes::LBoundSeq array_bound_seq;
+              xtypes::LBoundSeq array_bound_seq;
               TypeObjectUtils::add_array_dimension(
                 array_bound_seq,
-                static_cast<eprosima::fastdds::dds::xtypes::LBound>(member->array_size_));
-              eprosima::fastdds::dds::xtypes::PlainArrayLElemDefn array_ldefn {TypeObjectUtils::
+                static_cast<xtypes::LBound>(member->array_size_));
+              xtypes::PlainArrayLElemDefn array_ldefn {TypeObjectUtils::
                 build_plain_array_l_elem_defn(
                   header, array_bound_seq,
                   eprosima::fastcdr::external<TypeIdentifier>(element_identifier))};
@@ -533,11 +533,11 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
                 array_type_name,
                 type_identifiers);
             } else {
-              eprosima::fastdds::dds::xtypes::SBoundSeq array_bound_seq;
+              xtypes::SBoundSeq array_bound_seq;
               TypeObjectUtils::add_array_dimension(
                 array_bound_seq,
-                static_cast<eprosima::fastdds::dds::xtypes::SBound>(member->array_size_));
-              eprosima::fastdds::dds::xtypes::PlainArraySElemDefn array_sdefn {TypeObjectUtils::
+                static_cast<xtypes::SBound>(member->array_size_));
+              xtypes::PlainArraySElemDefn array_sdefn {TypeObjectUtils::
                 build_plain_array_s_elem_defn(
                   header, array_bound_seq,
                   eprosima::fastcdr::external<TypeIdentifier>(element_identifier))};
@@ -555,30 +555,27 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
           get_type_identifiers(
             sequence_type_name, type_identifiers))
         {
-          eprosima::fastdds::dds::xtypes::TypeIdentifierPair element_type_identifiers;
+          xtypes::TypeIdentifierPair element_type_identifiers;
           if (eprosima::fastdds::dds::RETCODE_OK ==
             eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry()
             .get_type_identifiers(
               type_name, element_type_identifiers))
           {
-            eprosima::fastdds::dds::xtypes::EquivalenceKind equiv_kind {eprosima::fastdds::dds::
-              xtypes
-              ::
-              EK_COMPLETE};
-            if (eprosima::fastdds::dds::xtypes::TK_NONE ==
+            xtypes::EquivalenceKind equiv_kind {xtypes::EK_COMPLETE};
+            if (xtypes::TK_NONE ==
               element_type_identifiers.type_identifier2()._d())
             {
-              equiv_kind = eprosima::fastdds::dds::xtypes::EK_BOTH;
+              equiv_kind = xtypes::EK_BOTH;
             }
-            eprosima::fastdds::dds::xtypes::PlainCollectionHeader header {TypeObjectUtils::
+            xtypes::PlainCollectionHeader header {TypeObjectUtils::
               build_plain_collection_header(equiv_kind, 0)};
             bool ec = false;
             TypeIdentifier * element_identifier = {new TypeIdentifier(
                 TypeObjectUtils::retrieve_complete_type_identifier(
                   element_type_identifiers,
                   ec))};
-            eprosima::fastdds::dds::xtypes::SBound bound {0};
-            eprosima::fastdds::dds::xtypes::PlainSequenceSElemDefn seq_sdefn {TypeObjectUtils::
+            xtypes::SBound bound {0};
+            xtypes::PlainSequenceSElemDefn seq_sdefn {TypeObjectUtils::
               build_plain_sequence_s_elem_defn(
                 header, bound,
                 eprosima::fastcdr::external<TypeIdentifier>(element_identifier))};
