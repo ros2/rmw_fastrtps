@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.0.3 (2024-11-20)
+------------------
 * Keep reference to `DomainParticipantFactory` (`#770 <https://github.com/ros2/rmw_fastrtps/issues/770>`_)
 * Contributors: Miguel Company
 
