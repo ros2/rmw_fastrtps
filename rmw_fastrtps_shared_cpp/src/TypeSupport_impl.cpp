@@ -340,98 +340,87 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
   TypeIdentifierPair type_identifiers;
   std::string name = member->name_;
 
+  xtypes::ITypeObjectRegistry& type_object_registry =
+    eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry();
   std::string type_name;
   switch (member->type_id_) {
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_FLOAT:
       {
         type_name = "_float";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_DOUBLE:
       {
         type_name = "_double";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_CHAR:
       {
         type_name = "_char";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_WCHAR:
       {
         type_name = "_wchar_t";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOLEAN:
       {
         type_name = "_bool";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_OCTET:
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT8:
       {
         type_name = "_uint8_t";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT8:
       {
         type_name = "_int8_t";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT16:
       {
         type_name = "_uint16_t";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT16:
       {
         type_name = "_int16_t";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT32:
       {
         type_name = "_uint32_t";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT32:
       {
         type_name = "_int32_t";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_UINT64:
       {
         type_name = "_uint64_t";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_INT64:
       {
         type_name = "_int64_t";
-        eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-        get_type_identifiers(type_name, type_identifiers);
+        type_object_registry.get_type_identifiers(type_name, type_identifiers);
         break;
       }
     case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_STRING:
@@ -450,8 +439,7 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
         }
 
         if (eprosima::fastdds::dds::RETCODE_OK !=
-          eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-          get_type_identifiers(
+          type_object_registry.get_type_identifiers(
             type_name, type_identifiers))
         {
           if (255 < member->string_upper_bound_) {
@@ -496,15 +484,12 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
         std::string array_type_name {"anonymous_array_" + type_name + "_" + std::to_string(
             member->array_size_)};
         if (eprosima::fastdds::dds::RETCODE_OK !=
-          eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-          get_type_identifiers(
+          type_object_registry.get_type_identifiers(
             array_type_name, type_identifiers))
         {
           xtypes::TypeIdentifierPair element_type_identifiers;
           if (eprosima::fastdds::dds::RETCODE_OK ==
-            eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry()
-            .get_type_identifiers(
-              type_name, element_type_identifiers))
+            type_object_registry.get_type_identifiers(type_name, element_type_identifiers))
           {
             xtypes::EquivalenceKind equiv_kind {xtypes::EK_COMPLETE};
             if (xtypes::TK_NONE ==
@@ -551,15 +536,11 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
       } else {
         std::string sequence_type_name {"anonymous_sequence_" + type_name + "_unbounded"};
         if (eprosima::fastdds::dds::RETCODE_OK !=
-          eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry().
-          get_type_identifiers(
-            sequence_type_name, type_identifiers))
+          type_object_registry.get_type_identifiers(sequence_type_name, type_identifiers))
         {
           xtypes::TypeIdentifierPair element_type_identifiers;
           if (eprosima::fastdds::dds::RETCODE_OK ==
-            eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry()
-            .get_type_identifiers(
-              type_name, element_type_identifiers))
+            type_object_registry.get_type_identifiers(type_name, element_type_identifiers))
           {
             xtypes::EquivalenceKind equiv_kind {xtypes::EK_COMPLETE};
             if (xtypes::TK_NONE ==
