@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.1.0 (2024-11-25)
+------------------
 * Drop support for float128. (`#788 <https://github.com/ros2/rmw_fastrtps/issues/788>`_)
 * Contributors: Chris Lalancette
 
