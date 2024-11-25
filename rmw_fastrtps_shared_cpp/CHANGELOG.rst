@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Drop support for float128. (`#788 <https://github.com/ros2/rmw_fastrtps/issues/788>`_)
+* Contributors: Chris Lalancette
+
 9.0.3 (2024-11-20)
 ------------------
 * Keep reference to `DomainParticipantFactory` (`#770 <https://github.com/ros2/rmw_fastrtps/issues/770>`_)
