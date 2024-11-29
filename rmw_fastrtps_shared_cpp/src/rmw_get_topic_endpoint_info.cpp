@@ -123,4 +123,71 @@ __rmw_get_subscriptions_info_by_topic(
     allocator,
     subscriptions_info);
 }
+
+rmw_ret_t
+__rmw_get_clients_info_by_service(
+  const char * identifier,
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * service_name,
+  bool no_mangle,
+  rmw_topic_endpoint_info_array_t * clients_info)
+{
+  rmw_ret_t ret = __validate_arguments(
+    identifier,
+    node,
+    allocator,
+    service_name,
+    clients_info);
+  if (ret != RMW_RET_OK) {
+    return ret;
+  }
+  auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
+  std::string mangled_rp_topic_name = service_name;
+  DemangleFunction demangle_type = _identity_demangle;
+  if (!no_mangle) {
+    mangled_rp_topic_name = \
+      _mangle_topic_name(ros_service_response_prefix, service_name, "Reply").to_string();
+    demangle_type = _demangle_if_ros_type;
+  }
+  return common_context->graph_cache.get_readers_info_by_topic(
+    mangled_rp_topic_name,
+    demangle_type,
+    allocator,
+    clients_info);
+}
+
+rmw_ret_t
+__rmw_get_servers_info_by_service(
+  const char * identifier,
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * service_name,
+  bool no_mangle,
+  rmw_topic_endpoint_info_array_t * servers_info)
+{
+  rmw_ret_t ret = __validate_arguments(
+    identifier,
+    node,
+    allocator,
+    service_name,
+    servers_info);
+  if (ret != RMW_RET_OK) {
+    return ret;
+  }
+  auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
+  std::string mangled_rp_topic_name = service_name;
+  DemangleFunction demangle_type = _identity_demangle;
+  if (!no_mangle) {
+    mangled_rp_topic_name = \
+      _mangle_topic_name(ros_service_response_prefix, service_name, "Reply").to_string();
+    demangle_type = _demangle_if_ros_type;
+  }
+
+  return common_context->graph_cache.get_writers_info_by_topic(
+    mangled_rp_topic_name,
+    demangle_type,
+    allocator,
+    servers_info);
+}
 }  // namespace rmw_fastrtps_shared_cpp
