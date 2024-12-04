@@ -18,10 +18,11 @@ namespace rmw_fastrtps_dynamic_cpp
 {
 
 TypeSupportProxy::TypeSupportProxy(rmw_fastrtps_shared_cpp::TypeSupport * inner_type)
+: rmw_fastrtps_shared_cpp::TypeSupport(inner_type->ros_message_type_supports())
 {
-  setName(inner_type->getName());
-  m_typeSize = inner_type->m_typeSize;
-  is_plain_ = inner_type->is_plain();
+  set_name(inner_type->get_name());
+  max_serialized_type_size = inner_type->max_serialized_type_size;
+  is_plain_ = inner_type->is_plain(eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION);
   max_size_bound_ = inner_type->is_bounded();
 }
 

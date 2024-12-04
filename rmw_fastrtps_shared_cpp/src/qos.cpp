@@ -39,9 +39,9 @@ is_rmw_duration_unspecified(const rmw_time_t & time)
 }
 
 rmw_time_t
-dds_duration_to_rmw(const eprosima::fastrtps::Duration_t & duration)
+dds_duration_to_rmw(const eprosima::fastdds::dds::Duration_t & duration)
 {
-  if (duration == eprosima::fastrtps::rtps::c_RTPSTimeInfinite) {
+  if (duration == eprosima::fastdds::rtps::c_RTPSTimeInfinite) {
     return RMW_DURATION_INFINITE;
   }
   rmw_time_t result = {(uint64_t)duration.seconds, (uint64_t)duration.nanosec};
@@ -143,7 +143,7 @@ bool fill_entity_qos_from_profile(
     //   a8691a40be6b8460b01edde36ad8563170a3a35a/include/fastrtps/qos/QosPolicies.h#L223-L232
     double period_in_ns = entity_qos.liveliness().lease_duration.to_ns() * 2.0 / 3.0;
     double period_in_s = RCUTILS_NS_TO_S(period_in_ns);
-    entity_qos.liveliness().announcement_period = eprosima::fastrtps::Duration_t(period_in_s);
+    entity_qos.liveliness().announcement_period = eprosima::fastdds::dds::Duration_t(period_in_s);
   }
 
   return true;
@@ -184,8 +184,8 @@ get_datareader_qos(
   if (fill_data_entity_qos_from_profile(qos_policies, type_hash, datareader_qos)) {
     // The type support in the RMW implementation is always XCDR1.
     constexpr auto rep = eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION;
-    datareader_qos.type_consistency().representation.clear();
-    datareader_qos.type_consistency().representation.m_value.push_back(rep);
+    datareader_qos.representation().clear();
+    datareader_qos.representation().m_value.push_back(rep);
     return true;
   }
 
@@ -222,37 +222,6 @@ is_valid_qos(const rmw_qos_profile_t & /* qos_policies */)
 {
   return true;
 }
-
-template<typename AttributeT>
-void
-dds_attributes_to_rmw_qos(
-  const AttributeT & dds_qos,
-  rmw_qos_profile_t * qos)
-{
-  switch (dds_qos.topic.historyQos.kind) {
-    case eprosima::fastrtps::KEEP_LAST_HISTORY_QOS:
-      qos->history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
-      break;
-    case eprosima::fastrtps::KEEP_ALL_HISTORY_QOS:
-      qos->history = RMW_QOS_POLICY_HISTORY_KEEP_ALL;
-      break;
-    default:
-      qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
-      break;
-  }
-  qos->depth = static_cast<size_t>(dds_qos.topic.historyQos.depth);
-  rtps_qos_to_rmw_qos(dds_qos.qos, qos);
-}
-
-template
-void dds_attributes_to_rmw_qos<eprosima::fastrtps::PublisherAttributes>(
-  const eprosima::fastrtps::PublisherAttributes & dds_qos,
-  rmw_qos_profile_t * qos);
-
-template
-void dds_attributes_to_rmw_qos<eprosima::fastrtps::SubscriberAttributes>(
-  const eprosima::fastrtps::SubscriberAttributes & dds_qos,
-  rmw_qos_profile_t * qos);
 
 template
 void dds_qos_to_rmw_qos<eprosima::fastdds::dds::DataWriterQos>(
