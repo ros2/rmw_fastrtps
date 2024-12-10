@@ -15,26 +15,26 @@
 #include "gtest/gtest.h"
 
 #include "fastdds/rtps/common/EntityId_t.hpp"
-#include "fastdds/rtps/common/Guid.h"
+#include "fastdds/rtps/common/Guid.hpp"
 #include "fastdds/rtps/common/GuidPrefix_t.hpp"
 
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 
-using rmw_fastrtps_shared_cpp::copy_from_byte_array_to_fastrtps_guid;
-using rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array;
+using rmw_fastrtps_shared_cpp::copy_from_byte_array_to_fastdds_guid;
+using rmw_fastrtps_shared_cpp::copy_from_fastdds_guid_to_byte_array;
 
 static constexpr size_t byte_array_size =
-  eprosima::fastrtps::rtps::GuidPrefix_t::size +
-  eprosima::fastrtps::rtps::EntityId_t::size;
+  eprosima::fastdds::rtps::GuidPrefix_t::size +
+  eprosima::fastdds::rtps::EntityId_t::size;
 
 TEST(GUIDUtilsTest, bad_arguments) {
 #ifndef NDEBUG
-  eprosima::fastrtps::rtps::GUID_t guid;
+  eprosima::fastdds::rtps::GUID_t guid;
   uint8_t byte_array[byte_array_size] = {0};
   uint8_t * null_byte_array = nullptr;
-  EXPECT_DEATH(copy_from_byte_array_to_fastrtps_guid(byte_array, nullptr), "");
-  EXPECT_DEATH(copy_from_byte_array_to_fastrtps_guid(null_byte_array, &guid), "");
-  EXPECT_DEATH(copy_from_fastrtps_guid_to_byte_array(guid, null_byte_array), "");
+  EXPECT_DEATH(copy_from_byte_array_to_fastdds_guid(byte_array, nullptr), "");
+  EXPECT_DEATH(copy_from_byte_array_to_fastdds_guid(null_byte_array, &guid), "");
+  EXPECT_DEATH(copy_from_fastdds_guid_to_byte_array(guid, null_byte_array), "");
 #endif
 }
 
@@ -42,21 +42,21 @@ TEST(GUIDUtilsTest, byte_array_to_guid_and_back) {
   uint8_t input_byte_array[byte_array_size] = {0};
   input_byte_array[0] = 0xA5;
   input_byte_array[byte_array_size - 1] = 0x4B;
-  eprosima::fastrtps::rtps::GUID_t guid;
-  copy_from_byte_array_to_fastrtps_guid(input_byte_array, &guid);
+  eprosima::fastdds::rtps::GUID_t guid;
+  copy_from_byte_array_to_fastdds_guid(input_byte_array, &guid);
   uint8_t output_byte_array[byte_array_size] = {0};
-  copy_from_fastrtps_guid_to_byte_array(guid, output_byte_array);
+  copy_from_fastdds_guid_to_byte_array(guid, output_byte_array);
   EXPECT_EQ(0, memcmp(input_byte_array, output_byte_array, byte_array_size));
 }
 
 TEST(GUIDUtilsTest, guid_to_byte_array_and_back) {
-  eprosima::fastrtps::rtps::GuidPrefix_t prefix;
+  eprosima::fastdds::rtps::GuidPrefix_t prefix;
   prefix.value[0] = 0xD2;
-  prefix.value[eprosima::fastrtps::rtps::GuidPrefix_t::size - 1] = 0x3E;
-  eprosima::fastrtps::rtps::GUID_t input_guid{prefix, 1234};
+  prefix.value[eprosima::fastdds::rtps::GuidPrefix_t::size - 1] = 0x3E;
+  eprosima::fastdds::rtps::GUID_t input_guid{prefix, 1234};
   uint8_t byte_array[byte_array_size] = {0};
-  copy_from_fastrtps_guid_to_byte_array(input_guid, byte_array);
-  eprosima::fastrtps::rtps::GUID_t output_guid;
-  copy_from_byte_array_to_fastrtps_guid(byte_array, &output_guid);
+  copy_from_fastdds_guid_to_byte_array(input_guid, byte_array);
+  eprosima::fastdds::rtps::GUID_t output_guid;
+  copy_from_byte_array_to_fastdds_guid(byte_array, &output_guid);
   EXPECT_EQ(input_guid, output_guid);
 }

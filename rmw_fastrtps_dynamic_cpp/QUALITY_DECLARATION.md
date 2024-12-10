@@ -120,7 +120,6 @@ Results of the nightly linter tests can be found [here](https://ci.ros2.org/view
 ### Direct Runtime ROS Dependencies [5.i]/[5.ii]
 
 `rmw_fastrtps_dynamic_cpp` has the following runtime ROS dependencies:
-* `fastrtps_cmake_module`: [QUALITY DECLARATION](https://github.com/ros2/rosidl_typesupport_fastrtps/blob/master/fastrtps_cmake_module/QUALITY_DECLARATION.md)
 * `rcpputils`: [QUALITY DECLARATION](https://github.com/ros2/rcpputils/blob/master/QUALITY_DECLARATION.md)
 * `rcutils`: [QUALITY DECLARATION](https://github.com/ros2/rcutils/blob/master/QUALITY_DECLARATION.md)
 * `rmw`: [QUALITY DECLARATION](https://github.com/ros2/rmw/blob/master/rmw/QUALITY_DECLARATION.md)
