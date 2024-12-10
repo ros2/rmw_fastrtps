@@ -340,7 +340,7 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
   TypeIdentifierPair type_identifiers;
   std::string name = member->name_;
 
-  xtypes::ITypeObjectRegistry& type_object_registry =
+  xtypes::ITypeObjectRegistry & type_object_registry =
     eprosima::fastdds::dds::DomainParticipantFactory::get_instance()->type_object_registry();
   std::string type_name;
   switch (member->type_id_) {
@@ -590,8 +590,7 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
           type_object_registry.get_type_identifiers(type_name, element_type_identifiers))
         {
           xtypes::EquivalenceKind equiv_kind {xtypes::EK_COMPLETE};
-          if (xtypes::TK_NONE == element_type_identifiers.type_identifier2()._d())
-          {
+          if (xtypes::TK_NONE == element_type_identifiers.type_identifier2()._d()) {
             equiv_kind = xtypes::EK_BOTH;
           }
           xtypes::PlainCollectionHeader header {TypeObjectUtils::
