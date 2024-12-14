@@ -42,6 +42,7 @@
 
 #include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/names.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
@@ -50,6 +51,8 @@
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
+
+#include "tracetools/tracetools.h"
 
 #include "./type_support_common.hpp"
 
@@ -458,6 +461,11 @@ rmw_create_client(
   cleanup_datawriter.cancel();
   cleanup_datareader.cancel();
   cleanup_info.cancel();
+  if (TRACETOOLS_TRACEPOINT_ENABLED(rmw_client_init)) {
+    rmw_gid_t gid{};
+    rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(info->reader_guid_, gid.data);
+    TRACETOOLS_DO_TRACEPOINT(rmw_client_init, static_cast<const void *>(rmw_client), gid.data);
+  }
   return rmw_client;
 }
 
