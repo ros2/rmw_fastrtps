@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "fastdds/rtps/common/Guid.h"
+#include "fastdds/rtps/common/Guid.hpp"
 
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
@@ -45,7 +45,7 @@ __rmw_compare_gids_equal(
   RMW_CHECK_ARGUMENT_FOR_NULL(result, RMW_RET_INVALID_ARGUMENT);
 
   *result =
-    memcmp(gid1->data, gid2->data, sizeof(eprosima::fastrtps::rtps::GUID_t)) == 0;
+    memcmp(gid1->data, gid2->data, sizeof(eprosima::fastdds::rtps::GUID_t)) == 0;
 
   return RMW_RET_OK;
 }

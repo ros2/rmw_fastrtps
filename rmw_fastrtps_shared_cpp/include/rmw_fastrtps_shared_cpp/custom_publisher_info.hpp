@@ -28,8 +28,8 @@
 #include "fastdds/dds/topic/Topic.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 
-#include "fastdds/rtps/common/Guid.h"
-#include "fastdds/rtps/common/InstanceHandle.h"
+#include "fastdds/rtps/common/Guid.hpp"
+#include "fastdds/rtps/common/InstanceHandle.hpp"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rmw/rmw.h"
@@ -122,7 +122,7 @@ public:
    * \param[in] guid The GUID of the newly-matched subscription to track.
    */
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void track_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid);
+  void track_unique_subscription(eprosima::fastdds::rtps::GUID_t guid);
 
   /// Remove a GUID from the internal set of unique subscriptions matched to this publisher.
   /**
@@ -132,7 +132,7 @@ public:
    * \param[in] guid The GUID of the newly-unmatched subscription to track.
    */
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void untrack_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid);
+  void untrack_unique_subscription(eprosima::fastdds::rtps::GUID_t guid);
 
   /// Return the number of unique subscriptions matched to this publisher.
   /**
@@ -162,7 +162,7 @@ public:
 private:
   CustomPublisherInfo * publisher_info_ = nullptr;
 
-  std::set<eprosima::fastrtps::rtps::GUID_t> subscriptions_
+  std::set<eprosima::fastdds::rtps::GUID_t> subscriptions_
   RCPPUTILS_TSA_GUARDED_BY(subscriptions_mutex_);
 
   mutable std::mutex subscriptions_mutex_;
