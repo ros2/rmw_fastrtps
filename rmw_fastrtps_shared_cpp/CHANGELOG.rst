@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.2.0 (2024-12-20)
+------------------
 * Instrument client/service for end-to-end request/response tracking (`#787 <https://github.com/ros2/rmw_fastrtps/issues/787>`_)
 * Contributors: Christophe Bedard
 
