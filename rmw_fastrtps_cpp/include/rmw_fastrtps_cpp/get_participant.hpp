@@ -34,6 +34,14 @@ RMW_FASTRTPS_CPP_PUBLIC
 eprosima::fastdds::dds::DomainParticipant *
 get_domain_participant(rmw_node_t * node);
 
+/**
+ * This function returns `NULL` when either the node handle is `NULL` or when the
+ * node handle is from a different rmw implementation.
+ *
+ * \return rmw_ret_t non `NULL` value if successful, otherwise `NULL`
+ */
+rmw_ret_t rmw_notify_participant_dynamic_network_interface(rmw_context_t * context);
+
 }  // namespace rmw_fastrtps_cpp
 
 #endif  // RMW_FASTRTPS_CPP__GET_PARTICIPANT_HPP_
