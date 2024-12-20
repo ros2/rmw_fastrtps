@@ -64,6 +64,58 @@ void * TypeSupport::createData()
   return new eprosima::fastcdr::FastBuffer();
 }
 
+bool TypeSupport::getKey(
+  void * data,
+  eprosima::fastrtps::rtps::InstanceHandle_t * ihandle,
+  bool force_md5)
+{
+  assert(data);
+
+  bool ret = false;
+
+  if (!m_isGetKeyDefined) {
+    return ret;
+  }
+
+  auto ser_data = static_cast<SerializedData *>(data);
+
+  switch (ser_data->type) {
+    case FASTRTPS_SERIALIZED_DATA_TYPE_ROS_MESSAGE:
+      {
+        std::lock_guard lock(this->mtx_);
+        ret =
+          this->get_key_hash_from_ros_message(ser_data->data, ihandle, force_md5, ser_data->impl);
+        break;
+      }
+
+    case FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER:
+      {
+        // TODO(MiguelCompany): In order to support keys in rmw_publish_serialized_message,
+        // we would need a get_key_hash_from_payload method
+        break;
+      }
+
+    case FASTRTPS_SERIALIZED_DATA_TYPE_DYNAMIC_MESSAGE:
+      {
+        auto m_type = std::make_shared<eprosima::fastrtps::types::DynamicPubSubType>();
+
+        // Retrieves the key (ihandle) from the dynamic data stored in data->data
+        return m_type->getKey(
+          static_cast<eprosima::fastrtps::types::DynamicData *>(ser_data->data),
+          ihandle,
+          force_md5);
+
+        break;
+      }
+    default:
+      {
+        break;
+      }
+  }
+
+  return ret;
+}
+
 bool TypeSupport::serialize(
   void * data, eprosima::fastrtps::rtps::SerializedPayload_t * payload)
 {

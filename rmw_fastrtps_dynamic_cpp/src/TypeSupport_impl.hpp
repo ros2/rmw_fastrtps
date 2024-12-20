@@ -65,6 +65,7 @@ TypeSupport<MembersType>::TypeSupport(const void * ros_type_support)
   m_isGetKeyDefined = false;
   max_size_bound_ = false;
   is_plain_ = false;
+  key_is_unbounded_ = false;
 }
 
 // C++ specialization
@@ -197,11 +198,35 @@ bool TypeSupport<MembersType>::serializeROSmessage(
   const MembersType * members,
   const void * ros_message) const
 {
+  return serializeROSmessage(ser, members, ros_message, false);
+}
+
+template<typename MembersType>
+bool TypeSupport<MembersType>::serializeKeyROSmessage(
+  eprosima::fastcdr::Cdr & ser,
+  const MembersType * members,
+  const void * ros_message) const
+{
+  return serializeROSmessage(ser, members, ros_message, true);
+}
+
+template<typename MembersType>
+bool TypeSupport<MembersType>::serializeROSmessage(
+  eprosima::fastcdr::Cdr & ser,
+  const MembersType * members,
+  const void * ros_message,
+  bool compute_key) const
+{
   assert(members);
   assert(ros_message);
 
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     const auto member = members->members_ + i;
+
+    if (compute_key && !member->is_key_ && members->has_any_key_member_) {
+      continue;
+    }
+
     void * field = const_cast<char *>(static_cast<const char *>(ros_message)) + member->offset_;
     switch (member->type_id_) {
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
@@ -255,7 +280,7 @@ bool TypeSupport<MembersType>::serializeROSmessage(
         {
           auto sub_members = static_cast<const MembersType *>(member->members_->data);
           if (!member->is_array_) {
-            serializeROSmessage(ser, sub_members, field);
+            serializeROSmessage(ser, sub_members, field, compute_key);
           } else {
             size_t array_size = 0;
 
@@ -277,13 +302,66 @@ bool TypeSupport<MembersType>::serializeROSmessage(
               return false;
             }
             for (size_t index = 0; index < array_size; ++index) {
-              serializeROSmessage(ser, sub_members, member->get_function(field, index));
+              serializeROSmessage(
+                ser, sub_members, member->get_function(field, index),
+                compute_key);
             }
           }
         }
         break;
       default:
         throw std::runtime_error("unknown type");
+    }
+  }
+
+  return true;
+}
+
+template<typename MembersType>
+bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
+  const MembersType * members,
+  void * ros_message,
+  eprosima::fastrtps::rtps::InstanceHandle_t * ihandle,
+  bool force_md5) const
+{
+  assert(members);
+  assert(ros_message);
+  assert(ihandle);
+
+  // get estimated serialized size in case key is unbounded
+  if (this->key_is_unbounded_) {
+    this->key_max_serialized_size_ =
+      (std::max) (this->key_max_serialized_size_,
+      this->getEstimatedSerializedKeySize(members, ros_message));
+    key_buffer_.reserve(this->key_max_serialized_size_);
+  }
+
+  eprosima::fastcdr::FastBuffer buffer(
+    reinterpret_cast<char *>(this->key_buffer_.data()),
+    this->key_max_serialized_size_);
+
+  eprosima::fastcdr::Cdr ser(
+    buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN, eprosima::fastcdr::CdrVersion::XCDRv1);
+
+  // serialize
+  serializeKeyROSmessage(ser, members_, ros_message);
+
+  // check for md5
+  if (force_md5 || this->key_max_serialized_size_ > 16) {
+    md5_.init();
+
+    md5_.update(
+      this->key_buffer_.data(),
+      static_cast<unsigned int>(ser.get_serialized_data_length()));
+
+    md5_.finalize();
+
+    for (uint8_t i = 0; i < 16; ++i) {
+      ihandle->value[i] = md5_.digest[i];
+    }
+  } else {
+    for (uint8_t i = 0; i < 16; ++i) {
+      ihandle->value[i] = this->key_buffer_[i];
     }
   }
 
@@ -460,6 +538,24 @@ size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
   const void * ros_message,
   size_t current_alignment) const
 {
+  return getEstimatedSerializedSize(members, ros_message, current_alignment, false);
+}
+
+template<typename MembersType>
+size_t TypeSupport<MembersType>::getEstimatedSerializedKeySize(
+  const MembersType * members,
+  const void * ros_message) const
+{
+  return getEstimatedSerializedSize(members, ros_message, 0, true);
+}
+
+template<typename MembersType>
+size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
+  const MembersType * members,
+  const void * ros_message,
+  size_t current_alignment,
+  bool compute_key) const
+{
   assert(members);
   assert(ros_message);
 
@@ -468,6 +564,11 @@ size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
   for (uint32_t i = 0; i < members->member_count_; ++i) {
     const auto member = members->members_ + i;
     void * field = const_cast<char *>(static_cast<const char *>(ros_message)) + member->offset_;
+
+    if (compute_key && !member->is_key_ && members->has_any_key_member_) {
+      continue;
+    }
+
     switch (member->type_id_) {
       case ::rosidl_typesupport_introspection_cpp::ROS_TYPE_BOOL:
         current_alignment = next_field_align<bool>(member, field, current_alignment);
@@ -514,7 +615,9 @@ size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
         {
           auto sub_members = static_cast<const MembersType *>(member->members_->data);
           if (!member->is_array_) {
-            current_alignment += getEstimatedSerializedSize(sub_members, field, current_alignment);
+            current_alignment += getEstimatedSerializedSize(
+              sub_members, field, current_alignment,
+              compute_key);
           } else {
             size_t array_size = 0;
 
@@ -539,7 +642,8 @@ size_t TypeSupport<MembersType>::getEstimatedSerializedSize(
               current_alignment += getEstimatedSerializedSize(
                 sub_members,
                 member->get_function(field, index),
-                current_alignment);
+                current_alignment,
+                compute_key);
             }
           }
         }
@@ -802,6 +906,24 @@ template<typename MembersType>
 size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
   const MembersType * members, size_t current_alignment)
 {
+  bool is_key_unbounded{false};  // unused
+  return calculateMaxSerializedSize(members, current_alignment, false, is_key_unbounded);
+}
+
+template<typename MembersType>
+size_t TypeSupport<MembersType>::calculateMaxSerializedKeySize(
+  const MembersType * members)
+{
+  return calculateMaxSerializedSize(members, 0, true, this->key_is_unbounded_);
+}
+
+template<typename MembersType>
+size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
+  const MembersType * members,
+  size_t current_alignment,
+  bool compute_key,
+  bool & is_key_unbounded)
+{
   assert(members);
 
   size_t initial_alignment = current_alignment;
@@ -813,6 +935,11 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
     const auto * member = members->members_ + i;
 
     size_t array_size = 1;
+
+    if (compute_key && !member->is_key_ && members->has_any_key_member_) {
+      continue;
+    }
+
     if (member->is_array_) {
       array_size = member->array_size_;
 
@@ -864,6 +991,11 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
         {
           this->max_size_bound_ = false;
           this->is_plain_ = false;
+
+          if (compute_key) {
+            is_key_unbounded = true;
+          }
+
           size_t character_size =
             (member->type_id_ == rosidl_typesupport_introspection_cpp::ROS_TYPE_WSTRING) ? 4 : 1;
           size_t extra_char =
@@ -879,7 +1011,9 @@ size_t TypeSupport<MembersType>::calculateMaxSerializedSize(
         {
           auto sub_members = static_cast<const MembersType *>(member->members_->data);
           for (size_t index = 0; index < array_size; ++index) {
-            size_t curr = calculateMaxSerializedSize(sub_members, current_alignment);
+            size_t curr = calculateMaxSerializedSize(
+              sub_members, current_alignment, compute_key,
+              is_key_unbounded);
             current_alignment += curr;
             last_member_size += curr;
           }
@@ -977,6 +1111,25 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
   }
 
   return true;
+}
+
+template<typename MembersType>
+bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
+  void * ros_message, eprosima::fastrtps::rtps::InstanceHandle_t * ihandle, bool force_md5,
+  const void * impl) const
+{
+  assert(ros_message);
+  assert(ihandle);
+  assert(members_);
+
+  bool ret = false;
+
+  (void)impl;
+  if (members_->member_count_ != 0) {
+    ret = TypeSupport::get_key_hash_from_ros_message(members_, ros_message, ihandle, force_md5);
+  }
+
+  return ret;
 }
 
 }  // namespace rmw_fastrtps_dynamic_cpp
