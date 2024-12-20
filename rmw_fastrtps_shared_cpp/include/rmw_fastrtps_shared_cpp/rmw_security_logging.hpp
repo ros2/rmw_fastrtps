@@ -15,7 +15,7 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__RMW_SECURITY_LOGGING_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__RMW_SECURITY_LOGGING_HPP_
 
-#include "fastdds/rtps/attributes/PropertyPolicy.h"
+#include "fastdds/rtps/attributes/PropertyPolicy.hpp"
 
 #include "rmw_fastrtps_shared_cpp/visibility_control.h"
 
@@ -26,6 +26,6 @@
  * \returns true if the requested configuration was applied (or no configuration was requested).
  */
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
-bool apply_security_logging_configuration(eprosima::fastrtps::rtps::PropertyPolicy & policy);
+bool apply_security_logging_configuration(eprosima::fastdds::rtps::PropertyPolicy & policy);
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__RMW_SECURITY_LOGGING_HPP_

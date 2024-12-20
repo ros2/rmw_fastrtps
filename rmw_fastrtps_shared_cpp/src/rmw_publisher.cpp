@@ -130,10 +130,10 @@ __rmw_publisher_wait_for_all_acked(
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
 
-  eprosima::fastrtps::Duration_t timeout = rmw_time_to_fastrtps(wait_timeout);
+  eprosima::fastdds::dds::Duration_t timeout = rmw_time_to_fastrtps(wait_timeout);
 
-  ReturnCode_t ret = info->data_writer_->wait_for_acknowledgments(timeout);
-  if (ReturnCode_t::RETCODE_OK == ret) {
+  eprosima::fastdds::dds::ReturnCode_t ret = info->data_writer_->wait_for_acknowledgments(timeout);
+  if (eprosima::fastdds::dds::RETCODE_OK == ret) {
     return RMW_RET_OK;
   }
 
@@ -177,7 +177,7 @@ __rmw_borrow_loaned_message(
   }
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  if (!info->data_writer_->loan_sample(*ros_message)) {
+  if (eprosima::fastdds::dds::RETCODE_OK != info->data_writer_->loan_sample(*ros_message)) {
     return RMW_RET_ERROR;
   }
 
@@ -202,7 +202,7 @@ __rmw_return_loaned_message_from_publisher(
   RMW_CHECK_ARGUMENT_FOR_NULL(loaned_message, RMW_RET_INVALID_ARGUMENT);
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  if (!info->data_writer_->discard_loan(loaned_message)) {
+  if (eprosima::fastdds::dds::RETCODE_OK != info->data_writer_->discard_loan(loaned_message)) {
     return RMW_RET_ERROR;
   }
 

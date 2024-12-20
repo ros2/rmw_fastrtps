@@ -19,9 +19,8 @@
 #include <string>
 
 #include "fastdds/dds/topic/TopicDataType.hpp"
-
-#include "fastdds/rtps/common/InstanceHandle.h"
-#include "fastdds/rtps/common/SerializedPayload.h"
+#include "fastdds/rtps/common/InstanceHandle.hpp"
+#include "fastdds/rtps/common/SerializedPayload.hpp"
 
 #include "fastcdr/FastBuffer.h"
 #include "fastcdr/Cdr.h"
@@ -37,9 +36,9 @@ namespace rmw_fastrtps_shared_cpp
 
 enum SerializedDataType
 {
-  FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER,
-  FASTRTPS_SERIALIZED_DATA_TYPE_DYNAMIC_MESSAGE,
-  FASTRTPS_SERIALIZED_DATA_TYPE_ROS_MESSAGE
+  FASTDDS_SERIALIZED_DATA_TYPE_CDR_BUFFER,
+  FASTDDS_SERIALIZED_DATA_TYPE_DYNAMIC_MESSAGE,
+  FASTDDS_SERIALIZED_DATA_TYPE_ROS_MESSAGE
 };
 
 // Publishers write method will receive a pointer to this struct
@@ -62,9 +61,9 @@ public:
     eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const = 0;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  bool getKey(
-    void * data,
-    eprosima::fastrtps::rtps::InstanceHandle_t * ihandle,
+  bool compute_key(
+    const void * const data,
+    eprosima::fastdds::rtps::InstanceHandle_t & ihandle,
     bool force_md5 = false) override
   {
     (void)data; (void)ihandle; (void)force_md5;
@@ -72,19 +71,35 @@ public:
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  bool serialize(void * data, eprosima::fastrtps::rtps::SerializedPayload_t * payload) override;
+  bool compute_key(
+    eprosima::fastdds::rtps::SerializedPayload_t & data,
+    eprosima::fastdds::rtps::InstanceHandle_t & ihandle,
+    bool force_md5 = false) override
+  {
+    (void)data; (void)ihandle; (void)force_md5;
+    return false;
+  }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  bool deserialize(eprosima::fastrtps::rtps::SerializedPayload_t * payload, void * data) override;
+  bool serialize(
+    const void * const data,
+    eprosima::fastdds::rtps::SerializedPayload_t & payload,
+    eprosima::fastdds::dds::DataRepresentationId_t data_representation) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  std::function<uint32_t()> getSerializedSizeProvider(void * data) override;
+  bool deserialize(eprosima::fastdds::rtps::SerializedPayload_t & payload, void * data) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void * createData() override;
+  uint32_t calculate_serialized_size(
+    const void * const data,
+    eprosima::fastdds::dds::DataRepresentationId_t data_representation)
+  override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void deleteData(void * data) override;
+  void * create_data() override;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void delete_data(void * data) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   inline bool is_bounded() const
@@ -96,18 +111,17 @@ public:
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  inline bool is_plain() const
-#ifdef TOPIC_DATA_TYPE_API_HAS_IS_PLAIN
-  override
-#endif
-  {
-    return is_plain_;
-  }
-
-  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   inline bool is_plain(eprosima::fastdds::dds::DataRepresentationId_t rep) const override
   {
     return is_plain_ && rep == eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION;
+  }
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC void register_type_object_representation() override;
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  inline const rosidl_message_type_support_t * ros_message_type_supports() const
+  {
+    return type_supports_;
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
@@ -115,16 +129,14 @@ public:
 
 protected:
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  TypeSupport();
+  TypeSupport(
+    const rosidl_message_type_support_t * type_supports
+  );
 
-  bool max_size_bound_;
-  bool is_plain_;
+  bool max_size_bound_ {false};
+  bool is_plain_ {false};
+  const rosidl_message_type_support_t * type_supports_ {nullptr};
 };
-
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
-bool register_type_object(
-  const rosidl_message_type_support_t * type_supports,
-  const std::string & type_name);
 
 }  // namespace rmw_fastrtps_shared_cpp
 

@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "fastdds/rtps/common/Guid.h"
+#include "fastdds/rtps/common/Guid.hpp"
 
 #include "rmw/types.h"
 
@@ -21,15 +21,15 @@
 
 rmw_gid_t
 rmw_fastrtps_shared_cpp::create_rmw_gid(
-  const char * identifier, const eprosima::fastrtps::rtps::GUID_t & guid)
+  const char * identifier, const eprosima::fastdds::rtps::GUID_t & guid)
 {
   rmw_gid_t rmw_gid = {};
   rmw_gid.implementation_identifier = identifier;
   static_assert(
-    sizeof(eprosima::fastrtps::rtps::GUID_t) <= RMW_GID_STORAGE_SIZE,
+    sizeof(eprosima::fastdds::rtps::GUID_t) <= RMW_GID_STORAGE_SIZE,
     "RMW_GID_STORAGE_SIZE insufficient to store the fastrtps GUID_t."
   );
-  rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(
+  rmw_fastrtps_shared_cpp::copy_from_fastdds_guid_to_byte_array(
     guid,
     rmw_gid.data);
   return rmw_gid;

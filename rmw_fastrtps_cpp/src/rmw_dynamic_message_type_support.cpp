@@ -76,13 +76,13 @@ rmw_serialization_support_init(
   rosidl_dynamic_typesupport_serialization_support_interface_t methods =
     rosidl_dynamic_typesupport_get_zero_initialized_serialization_support_interface();
 
-  ret = rosidl_dynamic_typesupport_fastrtps_init_serialization_support_impl(allocator, &impl);
+  ret = rosidl_dynamic_typesupport_fastdds_init_serialization_support_impl(allocator, &impl);
   if (ret != RCUTILS_RET_OK) {
     RMW_SET_ERROR_MSG_AND_APPEND_PREV_ERROR("Could not initialize serialization support impl");
     goto fail;
   }
 
-  ret = rosidl_dynamic_typesupport_fastrtps_init_serialization_support_interface(
+  ret = rosidl_dynamic_typesupport_fastdds_init_serialization_support_interface(
     allocator, &methods);
   if (ret != RCUTILS_RET_OK) {
     RMW_SET_ERROR_MSG_AND_APPEND_PREV_ERROR("could not initialize serialization support interface");

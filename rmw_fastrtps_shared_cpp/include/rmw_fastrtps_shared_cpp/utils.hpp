@@ -21,7 +21,7 @@
 #include "fastdds/dds/topic/TopicDescription.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 
-#include "fastrtps/types/TypesBase.h"
+#include "fastdds/dds/core/ReturnCode.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
@@ -40,7 +40,7 @@ namespace rmw_fastrtps_shared_cpp
 */
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
-cast_error_dds_to_rmw(eprosima::fastrtps::types::ReturnCode_t code);
+cast_error_dds_to_rmw(eprosima::fastdds::dds::ReturnCode_t code);
 
 /**
 * Tries to find already registered topic and type.

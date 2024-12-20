@@ -105,11 +105,13 @@ type_support_ptr TypeSupportRegistry::get_request_type_support(
       if (using_introspection_c_typesupport(ros_type_support->typesupport_identifier)) {
         auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(
           ros_type_support->data);
-        return new RequestTypeSupport_c(members, ros_type_support);
+        return new RequestTypeSupport_c(members, ros_type_support,
+        ros_type_support->request_typesupport);
       } else if (using_introspection_cpp_typesupport(ros_type_support->typesupport_identifier)) {
         auto members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers *>(
           ros_type_support->data);
-        return new RequestTypeSupport_cpp(members, ros_type_support);
+        return new RequestTypeSupport_cpp(members, ros_type_support,
+        ros_type_support->request_typesupport);
       }
       RMW_SET_ERROR_MSG("Unknown typesupport identifier");
       return nullptr;
@@ -126,11 +128,13 @@ type_support_ptr TypeSupportRegistry::get_response_type_support(
       if (using_introspection_c_typesupport(ros_type_support->typesupport_identifier)) {
         auto members = static_cast<const rosidl_typesupport_introspection_c__ServiceMembers *>(
           ros_type_support->data);
-        return new ResponseTypeSupport_c(members, ros_type_support);
+        return new ResponseTypeSupport_c(members, ros_type_support,
+        ros_type_support->response_typesupport);
       } else if (using_introspection_cpp_typesupport(ros_type_support->typesupport_identifier)) {
         auto members = static_cast<const rosidl_typesupport_introspection_cpp::ServiceMembers *>(
           ros_type_support->data);
-        return new ResponseTypeSupport_cpp(members, ros_type_support);
+        return new ResponseTypeSupport_cpp(members, ros_type_support,
+        ros_type_support->response_typesupport);
       }
       RMW_SET_ERROR_MSG("Unknown typesupport identifier");
       return nullptr;

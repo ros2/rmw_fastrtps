@@ -47,8 +47,9 @@ destroy_subscription(
     auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
 
     // Delete DataReader
-    ReturnCode_t ret = participant_info->subscriber_->delete_datareader(info->data_reader_);
-    if (ReturnCode_t::RETCODE_OK != ret) {
+    eprosima::fastdds::dds::ReturnCode_t ret =
+      participant_info->subscriber_->delete_datareader(info->data_reader_);
+    if (eprosima::fastdds::dds::RETCODE_OK != ret) {
       RMW_SET_ERROR_MSG("Failed to delete datareader");
       // This is the first failure on this function, and we have not changed state.
       // This means it should be safe to return an error
