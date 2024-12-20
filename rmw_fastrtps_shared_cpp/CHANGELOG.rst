@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Instrument client/service for end-to-end request/response tracking (`#787 <https://github.com/ros2/rmw_fastrtps/issues/787>`_)
+* Contributors: Christophe Bedard
+
 9.1.0 (2024-11-25)
 ------------------
 * Drop support for float128. (`#788 <https://github.com/ros2/rmw_fastrtps/issues/788>`_)
