@@ -131,6 +131,7 @@ TEST_F(GetDataReaderQoSTest, large_depth_conversion) {
   if (max_depth < std::numeric_limits<size_t>::max()) {
     qos_profile_.depth = max_depth + 1;
     EXPECT_FALSE(get_datareader_qos(qos_profile_, zero_type_hash, subscriber_qos_));
+    rmw_reset_error();
   }
 }
 
