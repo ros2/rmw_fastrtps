@@ -166,8 +166,8 @@ __rmw_send_response(
     }
   }
 
-  eprosima::fastrtps::Time_t timestamp;
-  eprosima::fastrtps::Time_t::now(timestamp);
+  eprosima::fastdds::dds::Time_t timestamp;
+  eprosima::fastdds::dds::Time_t::now(timestamp);
   wparams.source_timestamp(timestamp);
   TRACETOOLS_TRACEPOINT(
     rmw_send_response,

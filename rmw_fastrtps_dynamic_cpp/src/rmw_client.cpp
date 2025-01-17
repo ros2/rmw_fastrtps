@@ -494,7 +494,7 @@ rmw_create_client(
   cleanup_info.cancel();
   if (TRACETOOLS_TRACEPOINT_ENABLED(rmw_client_init)) {
     rmw_gid_t gid{};
-    rmw_fastrtps_shared_cpp::copy_from_fastrtps_guid_to_byte_array(info->reader_guid_, gid.data);
+    rmw_fastrtps_shared_cpp::copy_from_fastdds_guid_to_byte_array(info->reader_guid_, gid.data);
     TRACETOOLS_DO_TRACEPOINT(rmw_client_init, static_cast<const void *>(rmw_client), gid.data);
   }
   return rmw_client;
