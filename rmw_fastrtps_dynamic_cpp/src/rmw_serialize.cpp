@@ -45,6 +45,7 @@ rmw_serialize(
   auto data_length = tss->getEstimatedSerializedSize(ros_message, ts->data);
   if (serialized_message->buffer_capacity < data_length) {
     if (rmw_serialized_message_resize(serialized_message, data_length) != RMW_RET_OK) {
+      rmw_reset_error();
       RMW_SET_ERROR_MSG("unable to dynamically resize serialized message");
       type_registry.return_message_type_support(ts);
       return RMW_RET_ERROR;

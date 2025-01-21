@@ -295,7 +295,7 @@ rmw_create_service(
   // Same default topic QoS for both topics
   eprosima::fastdds::dds::TopicQos topic_qos = dds_participant->get_default_topic_qos();
   if (!get_topic_qos(adapted_qos_policies, topic_qos)) {
-    RMW_SET_ERROR_MSG("create_service() failed setting topic QoS");
+    // get_topic_qos already set the error
     return nullptr;
   }
 
