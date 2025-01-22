@@ -24,8 +24,8 @@
 
 using eprosima::fastdds::dds::DataReaderQos;
 using eprosima::fastdds::dds::DataWriterQos;
-static const eprosima::fastrtps::Duration_t InfiniteDuration =
-  eprosima::fastrtps::rtps::c_RTPSTimeInfinite.to_duration_t();
+static const eprosima::fastdds::dds::Duration_t InfiniteDuration =
+  eprosima::fastdds::rtps::c_RTPSTimeInfinite.to_duration_t();
 
 class DDSQosToRMWQosTest : public ::testing::Test
 {

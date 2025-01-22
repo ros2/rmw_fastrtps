@@ -29,8 +29,8 @@
 
 
 using eprosima::fastdds::dds::DataReaderQos;
-static const eprosima::fastrtps::Duration_t InfiniteDuration =
-  eprosima::fastrtps::rtps::c_RTPSTimeInfinite.to_duration_t();
+static const eprosima::fastdds::dds::Duration_t InfiniteDuration =
+  eprosima::fastdds::rtps::c_RTPSTimeInfinite.to_duration_t();
 
 static const rosidl_type_hash_t zero_type_hash = rosidl_get_zero_initialized_type_hash();
 
@@ -103,10 +103,10 @@ TEST_F(GetDataReaderQoSTest, nominal_conversion) {
     eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS,
     subscriber_qos_.history().kind);
   EXPECT_GE(10, subscriber_qos_.history().depth);
-  ASSERT_EQ(1, subscriber_qos_.type_consistency().representation.m_value.size());
+  ASSERT_EQ(1, subscriber_qos_.representation().m_value.size());
   EXPECT_EQ(
     eprosima::fastdds::dds::DataRepresentationId::XCDR_DATA_REPRESENTATION,
-    subscriber_qos_.type_consistency().representation.m_value[0]);
+    subscriber_qos_.representation().m_value[0]);
 }
 
 TEST_F(GetDataReaderQoSTest, large_depth_conversion) {

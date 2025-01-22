@@ -16,10 +16,10 @@
 #include <string>
 #include <vector>
 
-#include "fastdds/rtps/common/Property.h"
-#include "fastdds/rtps/attributes/PropertyPolicy.h"
+#include "fastdds/rtps/common/Property.hpp"
+#include "fastdds/rtps/attributes/PropertyPolicy.hpp"
 
-#include "fastrtps/config.h"
+#include "fastdds/config.hpp"
 #include "rcutils/filesystem.h"
 #include "rmw/error_handling.h"
 #include "rmw/security_options.h"
@@ -48,12 +48,12 @@ const char verbosity_property_name[] = "dds.sec.log.builtin.DDS_LogTopic.logging
 const char distribute_enable_property_name[] =
   "dds.sec.log.builtin.DDS_LogTopic.distribute";
 
-const eprosima::fastrtps::rtps::Property & lookup_property(
-  const eprosima::fastrtps::rtps::PropertySeq & properties, const std::string & property_name)
+const eprosima::fastdds::rtps::Property & lookup_property(
+  const eprosima::fastdds::rtps::PropertySeq & properties, const std::string & property_name)
 {
   auto iterator = std::find_if(
     properties.begin(), properties.end(),
-    [&property_name](const eprosima::fastrtps::rtps::Property & item) -> bool {
+    [&property_name](const eprosima::fastdds::rtps::Property & item) -> bool {
       return item.name() == property_name;
     });
 
@@ -64,26 +64,26 @@ const eprosima::fastrtps::rtps::Property & lookup_property(
   return *iterator;
 }
 
-const eprosima::fastrtps::rtps::Property & logging_plugin_property(
-  const eprosima::fastrtps::rtps::PropertySeq & properties)
+const eprosima::fastdds::rtps::Property & logging_plugin_property(
+  const eprosima::fastdds::rtps::PropertySeq & properties)
 {
   return lookup_property(properties, logging_plugin_property_name);
 }
 
-const eprosima::fastrtps::rtps::Property & log_file_property(
-  const eprosima::fastrtps::rtps::PropertySeq & properties)
+const eprosima::fastdds::rtps::Property & log_file_property(
+  const eprosima::fastdds::rtps::PropertySeq & properties)
 {
   return lookup_property(properties, log_file_property_name);
 }
 
-const eprosima::fastrtps::rtps::Property & verbosity_property(
-  const eprosima::fastrtps::rtps::PropertySeq & properties)
+const eprosima::fastdds::rtps::Property & verbosity_property(
+  const eprosima::fastdds::rtps::PropertySeq & properties)
 {
   return lookup_property(properties, verbosity_property_name);
 }
 
-const eprosima::fastrtps::rtps::Property & distribute_enable_property(
-  const eprosima::fastrtps::rtps::PropertySeq & properties)
+const eprosima::fastdds::rtps::Property & distribute_enable_property(
+  const eprosima::fastdds::rtps::PropertySeq & properties)
 {
   return lookup_property(properties, distribute_enable_property_name);
 }
@@ -124,7 +124,7 @@ public:
 
 TEST_F(SecurityLoggingTest, test_nothing_enabled)
 {
-  eprosima::fastrtps::rtps::PropertyPolicy policy;
+  eprosima::fastdds::rtps::PropertyPolicy policy;
   EXPECT_TRUE(apply_security_logging_configuration(policy));
   EXPECT_FALSE(rmw_error_is_set());
 
@@ -135,7 +135,7 @@ TEST_F(SecurityLoggingTest, test_log_to_file)
 {
   custom_setenv(log_file_variable_name, "/test.log");
 
-  eprosima::fastrtps::rtps::PropertyPolicy policy;
+  eprosima::fastdds::rtps::PropertyPolicy policy;
   EXPECT_TRUE(apply_security_logging_configuration(policy));
   EXPECT_FALSE(rmw_error_is_set());
 
@@ -154,7 +154,7 @@ TEST_F(SecurityLoggingTest, test_log_publish_true)
 {
   custom_setenv(log_publish_variable_name, "true");
 
-  eprosima::fastrtps::rtps::PropertyPolicy policy;
+  eprosima::fastdds::rtps::PropertyPolicy policy;
   EXPECT_TRUE(apply_security_logging_configuration(policy));
   EXPECT_FALSE(rmw_error_is_set());
 
@@ -173,7 +173,7 @@ TEST_F(SecurityLoggingTest, test_log_publish_false)
 {
   custom_setenv(log_publish_variable_name, "false");
 
-  eprosima::fastrtps::rtps::PropertyPolicy policy;
+  eprosima::fastdds::rtps::PropertyPolicy policy;
   EXPECT_TRUE(apply_security_logging_configuration(policy));
   EXPECT_FALSE(rmw_error_is_set());
 
@@ -192,7 +192,7 @@ TEST_F(SecurityLoggingTest, test_log_publish_invalid)
 {
   custom_setenv(log_publish_variable_name, "invalid");
 
-  eprosima::fastrtps::rtps::PropertyPolicy policy;
+  eprosima::fastdds::rtps::PropertyPolicy policy;
   EXPECT_FALSE(apply_security_logging_configuration(policy));
   EXPECT_TRUE(rmw_error_is_set());
   EXPECT_THAT(
@@ -205,7 +205,7 @@ TEST_F(SecurityLoggingTest, test_log_verbosity)
 {
   custom_setenv(log_verbosity_variable_name, "FATAL");
 
-  eprosima::fastrtps::rtps::PropertyPolicy policy;
+  eprosima::fastdds::rtps::PropertyPolicy policy;
   EXPECT_TRUE(apply_security_logging_configuration(policy));
   EXPECT_FALSE(rmw_error_is_set());
 
@@ -224,7 +224,7 @@ TEST_F(SecurityLoggingTest, test_log_verbosity_invalid)
 {
   custom_setenv(log_verbosity_variable_name, "INVALID_VERBOSITY");
 
-  eprosima::fastrtps::rtps::PropertyPolicy policy;
+  eprosima::fastdds::rtps::PropertyPolicy policy;
   EXPECT_FALSE(apply_security_logging_configuration(policy));
   EXPECT_TRUE(rmw_error_is_set());
   EXPECT_THAT(
@@ -241,7 +241,7 @@ TEST_F(SecurityLoggingTest, test_all)
   custom_setenv(log_publish_variable_name, "true");
   custom_setenv(log_verbosity_variable_name, "ERROR");
 
-  eprosima::fastrtps::rtps::PropertyPolicy policy;
+  eprosima::fastdds::rtps::PropertyPolicy policy;
   EXPECT_TRUE(apply_security_logging_configuration(policy));
   EXPECT_FALSE(rmw_error_is_set());
 
@@ -266,7 +266,7 @@ TEST_F(SecurityLoggingTest, test_apply_logging_fails)
 {
   custom_setenv(log_file_variable_name, "/test.log");
 
-  eprosima::fastrtps::rtps::PropertyPolicy policy;
+  eprosima::fastdds::rtps::PropertyPolicy policy;
   EXPECT_FALSE(apply_security_logging_configuration(policy));
   EXPECT_TRUE(rmw_error_is_set());
   EXPECT_THAT(rmw_get_error_string().str, HasSubstr("Please compile Fast DDS"));
