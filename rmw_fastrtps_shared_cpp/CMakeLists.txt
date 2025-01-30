@@ -40,6 +40,7 @@ find_package(rosidl_dynamic_typesupport REQUIRED)
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw_dds_common REQUIRED)
+find_package(rmw_security_common REQUIRED)
 find_package(rosidl_runtime_c REQUIRED)
 find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
@@ -110,6 +111,7 @@ target_link_libraries(rmw_fastrtps_shared_cpp PUBLIC
   rcutils::rcutils
   rmw::rmw
   rmw_dds_common::rmw_dds_common_library
+  rmw_security_common::rmw_security_common_library
   rosidl_dynamic_typesupport::rosidl_dynamic_typesupport
 )
 
@@ -131,7 +133,7 @@ ament_export_libraries(rmw_fastrtps_shared_cpp)
 # Export modern CMake targets
 ament_export_targets(rmw_fastrtps_shared_cpp)
 
-ament_export_dependencies(fastcdr rcpputils rcutils rmw rmw_dds_common rosidl_dynamic_typesupport)
+ament_export_dependencies(fastcdr rcpputils rcutils rmw rmw_dds_common rmw_security_common rosidl_dynamic_typesupport)
 
 if(BUILD_TESTING)
   find_package(ament_lint_auto REQUIRED)

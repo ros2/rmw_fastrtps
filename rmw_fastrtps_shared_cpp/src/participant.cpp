@@ -46,7 +46,7 @@
 #include "rmw_fastrtps_shared_cpp/rmw_security_logging.hpp"
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
 
-#include "rmw_dds_common/security.hpp"
+#include "rmw_security_common/security.hpp"
 
 // Private function to create Participant with QoS
 static CustomParticipantInfo *
@@ -316,19 +316,25 @@ rmw_fastrtps_shared_cpp::create_participant(
   if (security_options->security_root_path) {
     // if security_root_path provided, try to find the key and certificate files
 #if HAVE_SECURITY
-    std::unordered_map<std::string, std::string> security_files_paths;
-    if (rmw_dds_common::get_security_files(
-        true, "file://", security_options->security_root_path, security_files_paths))
+    rcutils_allocator_t allocator = rcutils_get_default_allocator();
+    rcutils_string_map_t security_files_paths = rcutils_get_zero_initialized_string_map();
+    rcutils_ret_t ret = rcutils_string_map_init(&security_files_paths, 0, allocator);
+
+    if (get_security_files_support_pkcs(
+        true, "file://", security_options->security_root_path, security_files_paths) == RMW_RET_OK)
     {
       eprosima::fastrtps::rtps::PropertyPolicy property_policy;
       property_policy.properties().emplace_back(
         "dds.sec.auth.plugin", "builtin.PKI-DH");
       property_policy.properties().emplace_back(
-        "dds.sec.auth.builtin.PKI-DH.identity_ca", security_files_paths["IDENTITY_CA"]);
+        "dds.sec.auth.builtin.PKI-DH.identity_ca",
+        std::string(rcutils_string_map_get(&security_files_paths, "IDENTITY_CA")));
       property_policy.properties().emplace_back(
-        "dds.sec.auth.builtin.PKI-DH.identity_certificate", security_files_paths["CERTIFICATE"]);
+        "dds.sec.auth.builtin.PKI-DH.identity_certificate",
+        std::string(rcutils_string_map_get(&security_files_paths, "CERTIFICATE")));
       property_policy.properties().emplace_back(
-        "dds.sec.auth.builtin.PKI-DH.private_key", security_files_paths["PRIVATE_KEY"]);
+        "dds.sec.auth.builtin.PKI-DH.private_key",
+        std::string(rcutils_string_map_get(&security_files_paths, "PRIVATE_KEY")));
       property_policy.properties().emplace_back(
         "dds.sec.crypto.plugin", "builtin.AES-GCM-GMAC");
 
@@ -344,9 +350,15 @@ rmw_fastrtps_shared_cpp::create_participant(
         "dds.sec.access.builtin.Access-Permissions.permissions",
         security_files_paths["PERMISSIONS"]);
 
-      if (security_files_paths.count("CRL") > 0) {
+      if (rcutils_string_map_key_exists(&security_files_paths, "CRL")) {
         property_policy.properties().emplace_back(
-          "dds.sec.auth.builtin.PKI-DH.identity_crl", security_files_paths["CRL"]);
+          "dds.sec.auth.builtin.PKI-DH.identity_crl",
+          std::string(rcutils_string_map_get(&security_files_paths, "CRL")));
+      }
+
+      ret = rcutils_string_map_fini(&security_files);
+      if (ret != RMW_RET_OK) {
+        RMW_SET_ERROR_MSG("Failed to fini string map for security");
       }
 
       // Configure security logging
