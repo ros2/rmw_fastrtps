@@ -320,6 +320,20 @@ rmw_fastrtps_shared_cpp::create_participant(
     rcutils_string_map_t security_files_paths = rcutils_get_zero_initialized_string_map();
     rcutils_ret_t ret = rcutils_string_map_init(&security_files_paths, 0, allocator);
 
+    if (ret != RMW_RET_OK) {
+      RMW_SET_ERROR_MSG("Failed to initialize string map for security");
+      return RMW_RET_ERROR;
+    }
+
+    auto scope_exit_ws = rcpputils::make_scope_exit(
+      [&security_files_paths]()
+      {
+        rcutils_ret_t ret = rcutils_string_map_fini(&security_files_paths);
+        if (ret != RMW_RET_OK) {
+          RMW_SET_ERROR_MSG("Failed to fini string map for security");
+        }
+      });
+
     if (get_security_files_support_pkcs(
         true, "file://", security_options->security_root_path, security_files_paths) == RMW_RET_OK)
     {
@@ -342,23 +356,18 @@ rmw_fastrtps_shared_cpp::create_participant(
         "dds.sec.access.plugin", "builtin.Access-Permissions");
       property_policy.properties().emplace_back(
         "dds.sec.access.builtin.Access-Permissions.permissions_ca",
-        security_files_paths["PERMISSIONS_CA"]);
+        std::string(rcutils_string_map_get(&security_files_paths, "PERMISSIONS_CA")));
       property_policy.properties().emplace_back(
         "dds.sec.access.builtin.Access-Permissions.governance",
-        security_files_paths["GOVERNANCE"]);
+        std::string(rcutils_string_map_get(&security_files_paths, "GOVERNANCE")));
       property_policy.properties().emplace_back(
         "dds.sec.access.builtin.Access-Permissions.permissions",
-        security_files_paths["PERMISSIONS"]);
+        std::string(rcutils_string_map_get(&security_files_paths, "PERMISSIONS")));
 
       if (rcutils_string_map_key_exists(&security_files_paths, "CRL")) {
         property_policy.properties().emplace_back(
           "dds.sec.auth.builtin.PKI-DH.identity_crl",
           std::string(rcutils_string_map_get(&security_files_paths, "CRL")));
-      }
-
-      ret = rcutils_string_map_fini(&security_files);
-      if (ret != RMW_RET_OK) {
-        RMW_SET_ERROR_MSG("Failed to fini string map for security");
       }
 
       // Configure security logging
