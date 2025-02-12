@@ -19,10 +19,10 @@
 #include <sstream>
 #include <utility>
 
-#include "fastdds/rtps/common/Property.h"
-#include "fastdds/rtps/attributes/PropertyPolicy.h"
+#include "fastdds/rtps/common/Property.hpp"
+#include "fastdds/rtps/attributes/PropertyPolicy.hpp"
 
-#include "fastrtps/config.h"
+#include "fastdds/config.hpp"
 
 #include "rcutils/env.h"
 #include "rcutils/filesystem.h"
@@ -105,8 +105,8 @@ bool validate_boolean(const std::string & str)
 }
 
 void add_property(
-  eprosima::fastrtps::rtps::PropertySeq & properties,
-  eprosima::fastrtps::rtps::Property && property)
+  eprosima::fastdds::rtps::PropertySeq & properties,
+  eprosima::fastdds::rtps::Property && property)
 {
   // Add property to vector. If property already exists, overwrite it.
   std::string property_name = property.name();
@@ -140,10 +140,10 @@ bool get_env(const std::string & variable_name, std::string & variable_value)
 
 #endif
 
-bool apply_security_logging_configuration(eprosima::fastrtps::rtps::PropertyPolicy & policy)
+bool apply_security_logging_configuration(eprosima::fastdds::rtps::PropertyPolicy & policy)
 {
 #if HAVE_SECURITY
-  eprosima::fastrtps::rtps::PropertySeq properties;
+  eprosima::fastdds::rtps::PropertySeq properties;
   std::string env_value;
 
   // Handle logging to file
@@ -153,7 +153,7 @@ bool apply_security_logging_configuration(eprosima::fastrtps::rtps::PropertyPoli
   if (!env_value.empty()) {
     add_property(
       properties,
-      eprosima::fastrtps::rtps::Property(
+      eprosima::fastdds::rtps::Property(
         log_file_property_name, env_value.c_str()));
   }
 
@@ -172,7 +172,7 @@ bool apply_security_logging_configuration(eprosima::fastrtps::rtps::PropertyPoli
 
     add_property(
       properties,
-      eprosima::fastrtps::rtps::Property(
+      eprosima::fastdds::rtps::Property(
         distribute_enable_property_name, env_value.c_str()));
   }
 
@@ -196,13 +196,13 @@ bool apply_security_logging_configuration(eprosima::fastrtps::rtps::PropertyPoli
 
     add_property(
       properties,
-      eprosima::fastrtps::rtps::Property(verbosity_property_name, verbosity.c_str()));
+      eprosima::fastdds::rtps::Property(verbosity_property_name, verbosity.c_str()));
   }
 
   if (!properties.empty()) {
     add_property(
       properties,
-      eprosima::fastrtps::rtps::Property(
+      eprosima::fastdds::rtps::Property(
         logging_plugin_property_name,
         "builtin.DDS_LogTopic"));
   }

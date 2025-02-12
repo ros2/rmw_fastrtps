@@ -41,7 +41,7 @@ __rmw_get_gid_for_client(
   // Use client's reader guid instead of writer guid for service event,
   // because service server uses client's reader guid for the event.
   // Service event message requires gid must be unique during transaction.
-  copy_from_fastrtps_guid_to_byte_array(info->reader_guid_, gid->data);
+  copy_from_fastdds_guid_to_byte_array(info->reader_guid_, gid->data);
   gid->implementation_identifier = identifier;
   return RMW_RET_OK;
 }

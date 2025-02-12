@@ -32,8 +32,8 @@
 #include "fastdds/dds/topic/ContentFilteredTopic.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 
-#include "fastdds/rtps/common/Guid.h"
-#include "fastdds/rtps/common/InstanceHandle.h"
+#include "fastdds/rtps/common/Guid.hpp"
+#include "fastdds/rtps/common/InstanceHandle.hpp"
 
 #include "rcpputils/thread_safety_annotations.hpp"
 
@@ -64,12 +64,12 @@ public:
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void on_requested_deadline_missed(
     eprosima::fastdds::dds::DataReader * reader,
-    const eprosima::fastrtps::RequestedDeadlineMissedStatus & status) override;
+    const eprosima::fastdds::dds::RequestedDeadlineMissedStatus & status) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void on_liveliness_changed(
     eprosima::fastdds::dds::DataReader * reader,
-    const eprosima::fastrtps::LivelinessChangedStatus & status) override;
+    const eprosima::fastdds::dds::LivelinessChangedStatus & status) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void on_sample_lost(
@@ -174,7 +174,7 @@ public:
    * \param[in] guid The GUID of the newly-matched publisher to track.
    */
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void track_unique_publisher(eprosima::fastrtps::rtps::GUID_t guid);
+  void track_unique_publisher(eprosima::fastdds::rtps::GUID_t guid);
 
   /// Remove a GUID from the internal set of unique publishers matched to this subscription.
   /**
@@ -184,7 +184,7 @@ public:
    * \param[in] guid The GUID of the newly-unmatched publisher to track.
    */
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
-  void untrack_unique_publisher(eprosima::fastrtps::rtps::GUID_t guid);
+  void untrack_unique_publisher(eprosima::fastdds::rtps::GUID_t guid);
 
   /// Return the number of unique publishers matched to this subscription.
   /**
@@ -252,7 +252,7 @@ private:
   eprosima::fastdds::dds::SubscriptionMatchedStatus matched_status_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
-  std::set<eprosima::fastrtps::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(
+  std::set<eprosima::fastdds::rtps::GUID_t> publishers_ RCPPUTILS_TSA_GUARDED_BY(
     publishers_mutex_);
 
   rmw_event_callback_t on_new_message_cb_{nullptr};
