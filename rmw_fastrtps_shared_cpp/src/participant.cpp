@@ -322,7 +322,7 @@ rmw_fastrtps_shared_cpp::create_participant(
 
     if (ret != RMW_RET_OK) {
       RMW_SET_ERROR_MSG("Failed to initialize string map for security");
-      return RMW_RET_ERROR;
+      return nullptr;
     }
 
     auto scope_exit_ws = rcpputils::make_scope_exit(
@@ -335,7 +335,7 @@ rmw_fastrtps_shared_cpp::create_participant(
       });
 
     if (get_security_files_support_pkcs(
-        true, "file://", security_options->security_root_path, security_files_paths) == RMW_RET_OK)
+        true, "file://", security_options->security_root_path, &security_files_paths) == RMW_RET_OK)
     {
       eprosima::fastdds::rtps::PropertyPolicy property_policy;
       property_policy.properties().emplace_back(
