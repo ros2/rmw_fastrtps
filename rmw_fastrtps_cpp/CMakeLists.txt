@@ -48,8 +48,6 @@ find_package(rosidl_runtime_c REQUIRED)
 find_package(rosidl_typesupport_fastrtps_c REQUIRED)
 find_package(rosidl_typesupport_fastrtps_cpp REQUIRED)
 
-include_directories(include)
-
 add_library(rmw_fastrtps_cpp
   src/get_client.cpp
   src/get_participant.cpp
@@ -113,6 +111,9 @@ target_link_libraries(rmw_fastrtps_cpp PRIVATE
   rosidl_typesupport_fastrtps_c::rosidl_typesupport_fastrtps_c
   tracetools::tracetools
 )
+target_include_directories(rmw_fastrtps_cpp PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
 configure_rmw_library(rmw_fastrtps_cpp)
 
@@ -124,6 +125,8 @@ target_compile_definitions(${PROJECT_NAME}
 # Export old-style CMake variables
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(rmw_fastrtps_cpp)
+# Export a modern CMake target
+ament_export_targets(rmw_fastrtps_cpp)
 
 ament_export_dependencies(fastcdr rmw rmw_fastrtps_shared_cpp rosidl_runtime_c rosidl_typesupport_fastrtps_cpp)
 
@@ -167,7 +170,7 @@ install(
 )
 
 install(
-  TARGETS rmw_fastrtps_cpp
+  TARGETS rmw_fastrtps_cpp EXPORT rmw_fastrtps_cpp
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
