@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.2.1 (2025-02-17)
+------------------
+* Changes to build against Fast DDS 3.0 (`#776 <https://github.com/ros2/rmw_fastrtps/issues/776>`_)
+* Fix some overwritten errors in rmw_fastrtps. (`#799 <https://github.com/ros2/rmw_fastrtps/issues/799>`_)
+* Contributors: Chris Lalancette, Miguel Company
+
 9.2.0 (2024-12-20)
 ------------------
 * Instrument client/service for end-to-end request/response tracking (`#787 <https://github.com/ros2/rmw_fastrtps/issues/787>`_)
