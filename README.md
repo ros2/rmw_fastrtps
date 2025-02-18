@@ -98,8 +98,8 @@ Furthermore, If `RMW_FASTRTPS_USE_QOS_FROM_XML` is set to 1, and [history memory
 
 There are two ways of telling a ROS 2 application which XML to use:
 
-1. Placing your XML file in the running directory under the name `DEFAULT_FASTRTPS_PROFILES.xml`.
-1. Setting environment variable `FASTRTPS_DEFAULT_PROFILES_FILE` to contain the path to your XML file (relative to the working directory).
+1. Placing your XML file in the running directory under the name `DEFAULT_FASTDDS_PROFILES.xml`.
+1. Setting environment variable `FASTDDS_DEFAULT_PROFILES_FILE` to contain the path to your XML file (relative to the working directory).
 
 To verify the actual QoS settings using rmw:
 
@@ -253,13 +253,13 @@ The following example configures Fast DDS to publish synchronously, to have a pr
     1. In one terminal
 
         ```bash
-        FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_xml_file> RMW_FASTRTPS_USE_QOS_FROM_XML=1 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ros2 run demo_nodes_cpp talker
+        FASTDDS_DEFAULT_PROFILES_FILE=<path_to_xml_file> RMW_FASTRTPS_USE_QOS_FROM_XML=1 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ros2 run demo_nodes_cpp talker
         ```
 
     1. In another terminal
 
         ```bash
-        FASTRTPS_DEFAULT_PROFILES_FILE=<path_to_xml_file> RMW_FASTRTPS_USE_QOS_FROM_XML=1 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ros2 run demo_nodes_cpp listener
+        FASTDDS_DEFAULT_PROFILES_FILE=<path_to_xml_file> RMW_FASTRTPS_USE_QOS_FROM_XML=1 RMW_IMPLEMENTATION=rmw_fastrtps_cpp ros2 run demo_nodes_cpp listener
         ```
 
 ### Change participant discovery options
