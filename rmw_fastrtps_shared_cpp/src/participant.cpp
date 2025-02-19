@@ -13,9 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <fstream>
 #include <memory>
-#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -163,7 +161,6 @@ rmw_fastrtps_shared_cpp::create_participant(
   // Note: FASTRTPS_DEFAULT_PROFILES_FILE value is processed but it is a deprecated variable. Use FASTDDS_DEFAULT_PROFILES_FILE instead.
   const char * env_value;
   const char * error_str;
-  eprosima::fastdds::dds::DomainParticipantQos domainParticipantQos;
   auto factory = eprosima::fastdds::dds::DomainParticipantFactory::get_shared_instance();
 
   error_str = rcutils_get_env("FASTRTPS_DEFAULT_PROFILES_FILE", &env_value);
@@ -183,7 +180,7 @@ rmw_fastrtps_shared_cpp::create_participant(
   }
   
   factory->load_profiles();
-  domainParticipantQos = factory->get_default_participant_qos();
+  auto domainParticipantQos = factory->get_default_participant_qos();
 
   // Configure discovery
   switch (discovery_options->automatic_discovery_range) {
