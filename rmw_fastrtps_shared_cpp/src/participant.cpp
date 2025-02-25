@@ -172,7 +172,9 @@ rmw_fastrtps_shared_cpp::create_participant(
     if (strcmp(env_value, "") != 0) {
       RCUTILS_LOG_WARN_NAMED(
         "rmw_fastrtps_shared_cpp",
-        "FASTRTPS_DEFAULT_PROFILES_FILE value is used for participant configuration, but it is deprecated and will no longer be supported. Use FASTDDS_DEFAULT_PROFILES_FILE instead.");
+        "FASTRTPS_DEFAULT_PROFILES_FILE value is used for participant configuration, "
+        "but it is deprecated and will no longer be supported. "
+        "Use FASTDDS_DEFAULT_PROFILES_FILE instead.");
       rcutils_reset_error();
       std::string env_value_str = std::string(env_value);
       factory->load_XML_profiles_file(env_value_str);
