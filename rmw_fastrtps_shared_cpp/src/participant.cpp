@@ -158,7 +158,8 @@ rmw_fastrtps_shared_cpp::create_participant(
   }
 
   // Load default XML profile.
-  // Note: FASTRTPS_DEFAULT_PROFILES_FILE value is processed but it is a deprecated variable. Use FASTDDS_DEFAULT_PROFILES_FILE instead.
+  // Note: FASTRTPS_DEFAULT_PROFILES_FILE value is processed but it is a deprecated variable.
+  // Use FASTDDS_DEFAULT_PROFILES_FILE instead.
   const char * env_value;
   const char * error_str;
   auto factory = eprosima::fastdds::dds::DomainParticipantFactory::get_shared_instance();
@@ -180,7 +181,7 @@ rmw_fastrtps_shared_cpp::create_participant(
       factory->load_XML_profiles_file(env_value_str);
     }
   }
-  
+
   factory->load_profiles();
   auto domainParticipantQos = factory->get_default_participant_qos();
 
