@@ -367,7 +367,7 @@ __create_dynamic_subscription(
   /////
   // Create DataReader
 
-  // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
+  // If the user defined an XML file via env "FASTDDS_DEFAULT_PROFILES_FILE", try to load
   // datareader which profile name matches with topic_name. If such profile does not exist,
   // then use the default Fast DDS QoS.
   eprosima::fastdds::dds::DataReaderQos reader_qos = subscriber->get_default_datareader_qos();
@@ -629,7 +629,7 @@ __create_subscription(
   /////
   // Create DataReader
 
-  // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
+  // If the user defined an XML file via env "FASTDDS_DEFAULT_PROFILES_FILE", try to load
   // datareader which profile name matches with topic_name. If such profile does not exist,
   // then use the default Fast DDS QoS.
   eprosima::fastdds::dds::DataReaderQos reader_qos = subscriber->get_default_datareader_qos();

@@ -298,7 +298,7 @@ rmw_create_client(
   /////
   // Create response DataReader
 
-  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill DataReader QoS with a subscriber profile
+  // If FASTDDS_DEFAULT_PROFILES_FILE defined, fill DataReader QoS with a subscriber profile
   // located based on topic name defined by _create_topic_name(). If no profile is found, a search
   // with profile_name "client" is attempted. Else, use the default Fast DDS QoS.
   eprosima::fastdds::dds::DataReaderQos reader_qos = subscriber->get_default_datareader_qos();
@@ -349,7 +349,7 @@ rmw_create_client(
       subscriber->delete_datareader(info->response_reader_);
     });
 
-  // If FASTRTPS_DEFAULT_PROFILES_FILE defined, fill DataWriter QoS with a publisher profile
+  // If FASTDDS_DEFAULT_PROFILES_FILE defined, fill DataWriter QoS with a publisher profile
   // located based on topic name defined by _create_topic_name(). If no profile is found, a search
   // with profile_name "client" is attempted. Else, use the default Fast DDS QoS.
   eprosima::fastdds::dds::DataWriterQos writer_qos = publisher->get_default_datawriter_qos();

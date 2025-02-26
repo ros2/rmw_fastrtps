@@ -238,7 +238,7 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   /////
   // Create DataWriter
 
-  // If the user defined an XML file via env "FASTRTPS_DEFAULT_PROFILES_FILE", try to load
+  // If the user defined an XML file via env "FASTDDS_DEFAULT_PROFILES_FILE", try to load
   // datawriter which profile name matches with topic_name. If such profile does not exist,
   // then use the default Fast DDS QoS.
   eprosima::fastdds::dds::DataWriterQos writer_qos = publisher->get_default_datawriter_qos();
