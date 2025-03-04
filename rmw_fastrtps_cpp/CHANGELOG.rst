@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.3.0 (2025-03-04)
+------------------
 * Add deprecation warning for FASTRTPS_DEFAULT_PROFILES_FILE (`#806 <https://github.com/ros2/rmw_fastrtps/issues/806>`_)
 * Contributors: Carlos Espinoza Curto
 
