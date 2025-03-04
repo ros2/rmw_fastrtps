@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add deprecation warning for FASTRTPS_DEFAULT_PROFILES_FILE (`#806 <https://github.com/ros2/rmw_fastrtps/issues/806>`_)
+* Contributors: Carlos Espinoza Curto
+
 9.2.1 (2025-02-17)
 ------------------
 * Use rmw_security_common (`#803 <https://github.com/ros2/rmw_fastrtps/issues/803>`_)
