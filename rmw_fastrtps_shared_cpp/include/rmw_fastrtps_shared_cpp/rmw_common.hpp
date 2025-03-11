@@ -578,6 +578,10 @@ RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 __rmw_feature_supported(rmw_feature_t feature);
 
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+bool
+__rmw_event_type_is_supported(rmw_event_type_t rmw_event_type);
+
 }  // namespace rmw_fastrtps_shared_cpp
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__RMW_COMMON_HPP_

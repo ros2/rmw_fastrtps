@@ -61,4 +61,10 @@ rmw_event_set_callback(
     callback,
     user_data);
 }
+
+bool
+rmw_event_type_is_supported(rmw_event_type_t rmw_event_type)
+{
+  return rmw_fastrtps_shared_cpp::__rmw_event_type_is_supported(rmw_event_type);
+}
 }  // extern "C"
