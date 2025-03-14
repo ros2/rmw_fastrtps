@@ -46,8 +46,6 @@ find_package(rosidl_runtime_c REQUIRED)
 find_package(rosidl_typesupport_introspection_c REQUIRED)
 find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 
-include_directories(include)
-
 add_library(rmw_fastrtps_dynamic_cpp
   src/client_service_common.cpp
   src/get_client.cpp
@@ -112,6 +110,9 @@ target_link_libraries(rmw_fastrtps_dynamic_cpp PRIVATE
   rmw_dds_common::rmw_dds_common_library
   tracetools::tracetools
 )
+target_include_directories(rmw_fastrtps_dynamic_cpp PUBLIC
+  "$<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>"
+  "$<INSTALL_INTERFACE:include/${PROJECT_NAME}>")
 
 configure_rmw_library(rmw_fastrtps_dynamic_cpp)
 
@@ -123,6 +124,8 @@ target_compile_definitions(${PROJECT_NAME}
 # Export old-style CMake variables
 ament_export_include_directories("include/${PROJECT_NAME}")
 ament_export_libraries(rmw_fastrtps_dynamic_cpp)
+# Export a modern CMake target
+ament_export_targets(rmw_fastrtps_dynamic_cpp)
 
 ament_export_dependencies(
   fastcdr
@@ -134,6 +137,7 @@ ament_export_dependencies(
   rosidl_typesupport_introspection_c
   rosidl_typesupport_introspection_cpp
 )
+
 
 register_rmw_implementation(
   "c:rosidl_typesupport_c:rosidl_typesupport_introspection_c"
@@ -175,7 +179,7 @@ install(
 )
 
 install(
-  TARGETS rmw_fastrtps_dynamic_cpp
+  TARGETS rmw_fastrtps_dynamic_cpp EXPORT rmw_fastrtps_dynamic_cpp
   ARCHIVE DESTINATION lib
   LIBRARY DESTINATION lib
   RUNTIME DESTINATION bin
