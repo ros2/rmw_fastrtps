@@ -325,7 +325,7 @@ rmw_create_service(
   }
 
   // Apply resource limits QoS if the type is keyed
-  if (request_fastdds_type->m_isGetKeyDefined &&
+  if (request_fastdds_type->is_compute_key_provided &&
     !participant_info->leave_middleware_default_qos)
   {
     rmw_fastrtps_shared_cpp::apply_qos_resource_limits_for_keys(
@@ -396,7 +396,7 @@ rmw_create_service(
   }
 
   // Apply resource limits QoS if the type is keyed
-  if (response_fastdds_type->m_isGetKeyDefined &&
+  if (response_fastdds_type->is_compute_key_provided &&
     !participant_info->leave_middleware_default_qos)
   {
     rmw_fastrtps_shared_cpp::apply_qos_resource_limits_for_keys(

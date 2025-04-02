@@ -332,7 +332,7 @@ template<typename MembersType>
 bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
   const MembersType * members,
   void * ros_message,
-  eprosima::fastrtps::rtps::InstanceHandle_t * ihandle,
+  eprosima::fastdds::rtps::InstanceHandle_t * ihandle,
   bool force_md5) const
 {
   assert(members);
@@ -1126,7 +1126,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
 
 template<typename MembersType>
 bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
-  void * ros_message, eprosima::fastrtps::rtps::InstanceHandle_t * ihandle, bool force_md5,
+  void * ros_message, eprosima::fastdds::rtps::InstanceHandle_t * ihandle, bool force_md5,
   const void * impl) const
 {
   assert(ros_message);

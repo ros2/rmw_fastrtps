@@ -273,7 +273,7 @@ create_subscription(
   }
 
   // Apply resource limits QoS if the type is keyed
-  if (fastdds_type->m_isGetKeyDefined &&
+  if (fastdds_type->is_compute_key_provided &&
     !participant_info->leave_middleware_default_qos)
   {
     rmw_fastrtps_shared_cpp::apply_qos_resource_limits_for_keys(
