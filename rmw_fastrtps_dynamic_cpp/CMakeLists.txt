@@ -30,7 +30,7 @@ if(SECURITY)
   find_package(OpenSSL REQUIRED)
 endif()
 
-find_package(ament_cmake_ros REQUIRED)
+find_package(ament_cmake_ros_core REQUIRED)
 
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
