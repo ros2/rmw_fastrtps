@@ -353,6 +353,15 @@ rmw_create_service(
     return nullptr;
   }
 
+  // Apply resource limits QoS if the type is keyed
+  if (request_fastdds_type->is_compute_key_provided &&
+    !participant_info->leave_middleware_default_qos)
+  {
+    rmw_fastrtps_shared_cpp::apply_qos_resource_limits_for_keys(
+      reader_qos.history(),
+      reader_qos.resource_limits());
+  }
+
   // Creates DataReader
   info->request_reader_ = subscriber->create_datareader(
     request_topic_desc,
@@ -413,6 +422,15 @@ rmw_create_service(
   {
     RMW_SET_ERROR_MSG("create_service() failed setting response DataWriter QoS");
     return nullptr;
+  }
+
+  // Apply resource limits QoS if the type is keyed
+  if (response_fastdds_type->is_compute_key_provided &&
+    !participant_info->leave_middleware_default_qos)
+  {
+    rmw_fastrtps_shared_cpp::apply_qos_resource_limits_for_keys(
+      writer_qos.history(),
+      writer_qos.resource_limits());
   }
 
   // Creates DataWriter

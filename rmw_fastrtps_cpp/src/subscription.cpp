@@ -392,6 +392,15 @@ __create_dynamic_subscription(
     return nullptr;
   }
 
+  // Apply resource limits QoS if the type is keyed
+  if (fastdds_type->is_compute_key_provided &&
+    !participant_info->leave_middleware_default_qos)
+  {
+    rmw_fastrtps_shared_cpp::apply_qos_resource_limits_for_keys(
+      reader_qos.history(),
+      reader_qos.resource_limits());
+  }
+
   info->datareader_qos_ = reader_qos;
 
   // create_datareader
@@ -652,6 +661,15 @@ __create_subscription(
   {
     RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
     return nullptr;
+  }
+
+  // Apply resource limits QoS if the type is keyed
+  if (fastdds_type->is_compute_key_provided &&
+    !participant_info->leave_middleware_default_qos)
+  {
+    rmw_fastrtps_shared_cpp::apply_qos_resource_limits_for_keys(
+      reader_qos.history(),
+      reader_qos.resource_limits());
   }
 
   info->datareader_qos_ = reader_qos;

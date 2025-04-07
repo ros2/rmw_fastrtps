@@ -17,6 +17,7 @@
 
 #include <cassert>
 #include <string>
+#include <vector>
 
 #include "fastdds/dds/topic/TopicDataType.hpp"
 #include "fastdds/rtps/common/InstanceHandle.hpp"
@@ -24,6 +25,7 @@
 
 #include "fastcdr/FastBuffer.h"
 #include "fastcdr/Cdr.h"
+#include "fastdds/utils/md5.hpp"
 
 #include "rcutils/logging_macros.h"
 
@@ -60,15 +62,17 @@ public:
   virtual bool deserializeROSmessage(
     eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const = 0;
 
+  virtual bool get_key_hash_from_ros_message(
+    void * ros_message,
+    eprosima::fastdds::rtps::InstanceHandle_t * ihandle,
+    bool force_md5,
+    const void * impl) const = 0;
+
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool compute_key(
     const void * const data,
     eprosima::fastdds::rtps::InstanceHandle_t & ihandle,
-    bool force_md5 = false) override
-  {
-    (void)data; (void)ihandle; (void)force_md5;
-    return false;
-  }
+    bool force_md5 = false) override;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   bool compute_key(
@@ -125,6 +129,12 @@ public:
   }
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  inline bool is_key_unbounded() const
+  {
+    return key_is_unbounded_;
+  }
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
   virtual ~TypeSupport() {}
 
 protected:
@@ -136,6 +146,11 @@ protected:
   bool max_size_bound_ {false};
   bool is_plain_ {false};
   const rosidl_message_type_support_t * type_supports_ {nullptr};
+  bool key_is_unbounded_ {false};
+  mutable size_t key_max_serialized_size_ {0};
+  mutable eprosima::fastdds::MD5 md5_;
+  mutable std::vector<uint8_t> key_buffer_;
+  mutable std::mutex mtx_;
 };
 
 }  // namespace rmw_fastrtps_shared_cpp
