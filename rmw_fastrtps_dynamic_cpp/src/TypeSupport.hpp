@@ -16,6 +16,7 @@
 #define TYPESUPPORT_HPP_
 
 #include <cassert>
+#include <cstddef>
 #include <string>
 
 #include "rosidl_runtime_c/string.h"

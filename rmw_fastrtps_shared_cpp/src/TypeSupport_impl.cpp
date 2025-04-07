@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <cassert>
+#include <mutex>
 #include <sstream>
 #include <string>
 #include <utility>

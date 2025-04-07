@@ -16,6 +16,8 @@
 #define TYPESUPPORT_IMPL_HPP_
 
 #include <cassert>
+#include <cstddef>
+#include <cstdint>
 #include <string>
 #include <vector>
 
@@ -1129,7 +1131,7 @@ bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
   void * ros_message,
   eprosima::fastdds::rtps::InstanceHandle_t * ihandle,
   bool force_md5,
-  const void * [[maybe_unused]] impl) const
+  const void * impl) const
 {
   assert(ros_message);
   assert(ihandle);
@@ -1137,6 +1139,7 @@ bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
 
   bool ret = false;
 
+  (void)impl;
   if (members_->member_count_ != 0) {
     ret = TypeSupport::get_key_hash_from_ros_message(members_, ros_message, ihandle, force_md5);
   }

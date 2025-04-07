@@ -16,6 +16,7 @@
 #define RMW_FASTRTPS_SHARED_CPP__TYPESUPPORT_HPP_
 
 #include <cassert>
+#include <cstddef>
 #include <string>
 #include <vector>
 
