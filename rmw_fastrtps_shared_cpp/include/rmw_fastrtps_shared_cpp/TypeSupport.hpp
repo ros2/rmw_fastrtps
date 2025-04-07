@@ -63,7 +63,9 @@ public:
     eprosima::fastcdr::Cdr & deser, void * ros_message, const void * impl) const = 0;
 
   virtual bool get_key_hash_from_ros_message(
-    void * ros_message, eprosima::fastdds::rtps::InstanceHandle_t * ihandle, bool force_md5,
+    void * ros_message,
+    eprosima::fastdds::rtps::InstanceHandle_t * ihandle,
+    bool force_md5,
     const void * impl) const = 0;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC

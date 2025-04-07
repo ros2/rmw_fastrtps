@@ -50,7 +50,9 @@ bool TypeSupportProxy::deserializeROSmessage(
 }
 
 bool TypeSupportProxy::get_key_hash_from_ros_message(
-  void * ros_message, eprosima::fastdds::rtps::InstanceHandle_t * ihandle, bool force_md5,
+  void * ros_message,
+  eprosima::fastdds::rtps::InstanceHandle_t * ihandle,
+  bool force_md5,
   const void * impl) const
 {
   auto type_impl = static_cast<const rmw_fastrtps_shared_cpp::TypeSupport *>(impl);

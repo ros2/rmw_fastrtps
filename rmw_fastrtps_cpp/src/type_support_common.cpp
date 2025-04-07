@@ -151,11 +151,10 @@ bool TypeSupport::get_key_hash_from_ros_message(
   void * ros_message,
   eprosima::fastdds::rtps::InstanceHandle_t * ihandle,
   bool force_md5,
-  const void * impl) const
+  const void * [[maybe_unused]] impl) const
 {
   assert(ros_message);
   assert(ihandle);
-  (void)impl;
 
   // retrieve estimated serialized size in case key is unbounded
   if (key_is_unbounded_) {
