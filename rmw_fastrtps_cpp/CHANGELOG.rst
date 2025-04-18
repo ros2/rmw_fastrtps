@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.3.2 (2025-04-18)
+------------------
+* Address RHEL warnings and missing includes. (`#819 <https://github.com/ros2/rmw_fastrtps/issues/819>`_)
+* Support topic instances (`#753 <https://github.com/ros2/rmw_fastrtps/issues/753>`_)
+* Switch to ament_cmake_ros_core package (`#818 <https://github.com/ros2/rmw_fastrtps/issues/818>`_)
+* Contributors: Miguel Company, Scott K Logan, Tomoya Fujita
+
 9.3.1 (2025-03-11)
 ------------------
 * Added rmw_event_type_is_supported (`#809 <https://github.com/ros2/rmw_fastrtps/issues/809>`_)
