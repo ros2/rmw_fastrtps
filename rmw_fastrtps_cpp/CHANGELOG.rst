@@ -2,6 +2,9 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.4.0 (2025-04-25)
+------------------
+
 9.3.2 (2025-04-18)
 ------------------
 * Address RHEL warnings and missing includes. (`#819 <https://github.com/ros2/rmw_fastrtps/issues/819>`_)
