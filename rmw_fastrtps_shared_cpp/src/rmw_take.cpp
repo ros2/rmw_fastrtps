@@ -331,7 +331,7 @@ _take_serialized_message(
     if (info_seq[0].valid_data) {
       if (subscription->options.ignore_local_publications) {
         auto sample_writer_guid =
-          eprosima::fastdds::rtps::iHandle2GUID(info_seq[0].publication_handle);
+          eprosima::fastrtps::rtps::iHandle2GUID(info_seq[0].publication_handle);
 
         if (sample_writer_guid.guidPrefix == info->data_reader_->guid().guidPrefix) {
           // This is a local publication. Ignore it
