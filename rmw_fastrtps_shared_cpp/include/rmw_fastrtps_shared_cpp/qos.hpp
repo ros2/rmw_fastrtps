@@ -176,24 +176,16 @@ rtps_qos_to_rmw_qos(
   }
   qos->liveliness_lease_duration = dds_duration_to_rmw(rtps_qos.liveliness.lease_duration);
 
-  if (rtps_qos.history.has_value())
-  {
-    if (rtps_qos.history->kind == eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS)
-    {
+  if (rtps_qos.history.has_value()) {
+    if (rtps_qos.history->kind == eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS) {
       qos->history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
-    }
-    else if (rtps_qos.history->kind == eprosima::fastdds::dds::KEEP_ALL_HISTORY_QOS)
-    {
+    } else if (rtps_qos.history->kind == eprosima::fastdds::dds::KEEP_ALL_HISTORY_QOS) {
       qos->history = RMW_QOS_POLICY_HISTORY_KEEP_ALL;
-    }
-    else
-    {
+    } else {
       qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
     }
     qos->depth = static_cast<size_t>(rtps_qos.history->depth);
-  }
-  else
-  {
+  } else {
     qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
   }
 }
