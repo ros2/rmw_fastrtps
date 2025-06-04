@@ -175,6 +175,23 @@ rtps_qos_to_rmw_qos(
       break;
   }
   qos->liveliness_lease_duration = dds_duration_to_rmw(rtps_qos.liveliness.lease_duration);
+
+  if (rtps_qos.history.has_value()) {
+    switch (rtps_qos.history->kind) {
+      case eprosima::fastdds::dds::KEEP_LAST_HISTORY_QOS:
+        qos->history = RMW_QOS_POLICY_HISTORY_KEEP_LAST;
+        break;
+      case eprosima::fastdds::dds::KEEP_ALL_HISTORY_QOS:
+        qos->history = RMW_QOS_POLICY_HISTORY_KEEP_ALL;
+        break;
+      default:
+        qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
+        break;
+    }
+    qos->depth = static_cast<size_t>(rtps_qos.history->depth);
+  } else {
+    qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
+  }
 }
 
 extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
