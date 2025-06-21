@@ -344,10 +344,11 @@ rmw_create_service(
     reader_qos.data_sharing().off();
   }
 
+  const rosidl_type_hash_t * ser_type_hash = type_supports->get_type_hash_func(type_supports);
   if (!get_datareader_qos(
       adapted_qos_policies,
       *type_supports->request_typesupport->get_type_hash_func(type_supports->request_typesupport),
-      reader_qos))
+      reader_qos, ser_type_hash))
   {
     RMW_SET_ERROR_MSG("create_service() failed setting request DataReader QoS");
     return nullptr;
@@ -418,7 +419,7 @@ rmw_create_service(
   if (!get_datawriter_qos(
       adapted_qos_policies,
       *type_supports->response_typesupport->get_type_hash_func(type_supports->response_typesupport),
-      writer_qos))
+      writer_qos, ser_type_hash))
   {
     RMW_SET_ERROR_MSG("create_service() failed setting response DataWriter QoS");
     return nullptr;

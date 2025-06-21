@@ -243,7 +243,13 @@ private:
           // We've handled the error, so clear it out.
           rmw_reset_error();
         }
-
+        rosidl_type_hash_t ser_type_hash;
+        rosidl_type_hash_t * ser_type_hash_ptr = nullptr;
+        if (RMW_RET_OK == rmw_dds_common::parse_sertype_hash_from_user_data(
+            userDataValue.data(), userDataValue.size(), ser_type_hash))
+        {
+          ser_type_hash_ptr = &ser_type_hash;
+        }
         context->graph_cache.add_entity(
           rmw_fastrtps_shared_cpp::create_rmw_gid(
             identifier_,
@@ -255,7 +261,8 @@ private:
             identifier_,
             proxyData.participant_guid),
           qos_profile,
-          is_reader);
+          is_reader,
+          ser_type_hash_ptr);
       } else {
         context->graph_cache.remove_entity(
           rmw_fastrtps_shared_cpp::create_rmw_gid(
