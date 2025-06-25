@@ -13,7 +13,9 @@
 // limitations under the License.
 
 #include <algorithm>
+#include <functional>
 #include <map>
+#include <memory>
 #include <string>
 #include <tuple>
 #include <vector>
@@ -59,7 +61,6 @@ static rmw_ret_t __validate_arguments(
   }
   return RMW_RET_OK;
 }
-
 
 rmw_ret_t
 __rmw_get_clients_info_by_service(

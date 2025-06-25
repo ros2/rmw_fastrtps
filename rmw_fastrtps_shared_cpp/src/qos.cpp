@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <limits>
+#include <string>
 #include <vector>
 
 #include "rcutils/logging_macros.h"
