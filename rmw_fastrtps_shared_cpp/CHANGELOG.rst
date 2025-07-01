@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.4.1 (2025-07-01)
+------------------
 * fix cmake deprecation (`#831 <https://github.com/ros2/rmw_fastrtps/issues/831>`_)
 * Retrieve `HistoryQoS` in discovery when available (`#829 <https://github.com/ros2/rmw_fastrtps/issues/829>`_)
 * check a local publication to ignore with serialized message. (`#823 <https://github.com/ros2/rmw_fastrtps/issues/823>`_)
