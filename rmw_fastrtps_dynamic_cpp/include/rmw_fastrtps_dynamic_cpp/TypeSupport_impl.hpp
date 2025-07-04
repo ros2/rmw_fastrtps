@@ -56,7 +56,7 @@ static void check_sequence_size(
   deser.setState(state);
   if (!correct_size) {
     throw eprosima::fastcdr::exception::NotEnoughMemoryException(
-      "Insufficent input buffer for sequence length");
+            "Insufficent input buffer for sequence length");
   }
 }
 
