@@ -51,9 +51,9 @@ static void check_sequence_size(
   const size_t size,
   eprosima::fastcdr::Cdr & deser)
 {
-  auto state = deser.get_state();
+  auto state = deser.getState();
   bool correct_size = deser.jump(size);
-  deser.set_state(state);
+  deser.setState(state);
   if (!correct_size) {
     throw eprosima::fastcdr::exception::NotEnoughMemoryException(
       "Insufficent input buffer for sequence length");
