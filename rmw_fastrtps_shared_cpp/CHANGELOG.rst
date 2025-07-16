@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* check a local publication to ignore with serialized message. (backport `#823 <https://github.com/ros2/rmw_fastrtps/issues/823>`_) (`#826 <https://github.com/ros2/rmw_fastrtps/issues/826>`_)
+* Contributors: mergify[bot]
+
 6.2.7 (2024-07-26)
 ------------------
 * Use unique mangled names when creating Content Filter Topics (`#762 <https://github.com/ros2/rmw_fastrtps/issues/762>`_) (`#768 <https://github.com/ros2/rmw_fastrtps/issues/768>`_)
