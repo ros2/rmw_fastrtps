@@ -43,6 +43,23 @@
 namespace rmw_fastrtps_dynamic_cpp
 {
 
+/*!
+ * Throws eprosima::fastcdr::exception::NotEnoughMemoryException if the remaining
+ * input buffer is insufficient to read the given size.
+ */
+static void check_sequence_size(
+  const size_t size,
+  eprosima::fastcdr::Cdr & deser)
+{
+  auto state = deser.get_state();
+  bool correct_size = deser.jump(size);
+  deser.set_state(state);
+  if (!correct_size) {
+    throw eprosima::fastcdr::exception::NotEnoughMemoryException(
+      "Insufficent input buffer for sequence length");
+  }
+}
+
 template<typename T>
 struct GenericCSequence;
 
@@ -716,6 +733,7 @@ inline void deserialize_field<std::wstring>(
       size = static_cast<uint32_t>(member->array_size_);
     } else {
       deser >> size;
+      check_sequence_size(size, deser);
       member->resize_function(field, size);
     }
     for (size_t i = 0; i < size; ++i) {
@@ -740,6 +758,7 @@ void deserialize_field(
     auto & data = *reinterpret_cast<typename GenericCSequence<T>::type *>(field);
     int32_t dsize = 0;
     deser >> dsize;
+    check_sequence_size(dsize, deser);
     GenericCSequence<T>::init(&data, dsize);
     deser.deserialize_array(reinterpret_cast<T *>(data.data), dsize);
   }
@@ -887,6 +906,7 @@ bool TypeSupport<MembersType>::deserializeROSmessage(
               uint32_t num_elems = 0;
               deser >> num_elems;
               array_size = static_cast<size_t>(num_elems);
+              check_sequence_size(array_size, deser);
 
               if (!member->resize_function) {
                 RMW_SET_ERROR_MSG("unexpected error: resize function is null");
