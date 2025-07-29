@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Check remaining size before resizing sequences (`#827 <https://github.com/ros2/rmw_fastrtps/issues/827>`_)
+* Contributors: Miguel Company
+
 9.4.1 (2025-07-01)
 ------------------
 * fix cmake deprecation (`#831 <https://github.com/ros2/rmw_fastrtps/issues/831>`_)
