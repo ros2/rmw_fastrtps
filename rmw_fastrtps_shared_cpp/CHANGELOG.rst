@@ -2,6 +2,18 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* check a local publication to ignore with serialized message. (backport `#823 <https://github.com/ros2/rmw_fastrtps/issues/823>`_) (`#825 <https://github.com/ros2/rmw_fastrtps/issues/825>`_)
+  * check a local publication to ignore with serialized message. (`#823 <https://github.com/ros2/rmw_fastrtps/issues/823>`_)
+  Co-authored-by: Barry Xu <barry.xu@sony.com>
+  (cherry picked from commit 8dc94e09b88e25e0a915bde55e17a27a1fccc42a)
+  * rewind the namespace from fastdds to fastrtps.
+  ---------
+  Co-authored-by: Tomoya Fujita <Tomoya.Fujita@sony.com>
+  Co-authored-by: Barry Xu <barry.xu@sony.com>
+* Contributors: mergify[bot]
+
 8.4.2 (2025-03-12)
 ------------------
 * Added rmw_event_type_is_supported (`#809 <https://github.com/ros2/rmw_fastrtps/issues/809>`_) (`#813 <https://github.com/ros2/rmw_fastrtps/issues/813>`_)
