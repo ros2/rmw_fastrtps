@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+8.4.3 (2025-08-14)
+------------------
 * Check remaining size before resizing sequences (`#827 <https://github.com/ros2/rmw_fastrtps/issues/827>`_) (`#835 <https://github.com/ros2/rmw_fastrtps/issues/835>`_)
   (cherry picked from commit 09e5a5f1b9504431bbc8970bb098438041041dbe)
   Co-authored-by: Miguel Company <miguelcompany@eprosima.com>
