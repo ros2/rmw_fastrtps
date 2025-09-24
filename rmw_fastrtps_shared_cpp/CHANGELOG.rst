@@ -2,6 +2,9 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+
 6.2.8 (2025-07-16)
 ------------------
 * check a local publication to ignore with serialized message. (backport `#823 <https://github.com/ros2/rmw_fastrtps/issues/823>`_) (`#826 <https://github.com/ros2/rmw_fastrtps/issues/826>`_)
