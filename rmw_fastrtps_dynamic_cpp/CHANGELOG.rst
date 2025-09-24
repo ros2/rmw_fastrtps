@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+6.2.9 (2025-09-24)
+------------------
 * Check remaining buffer size before resizing sequences (backport `#827 <https://github.com/ros2/rmw_fastrtps/issues/827>`_) (`#836 <https://github.com/ros2/rmw_fastrtps/issues/836>`_)
 * Contributors: mergify[bot]
 
