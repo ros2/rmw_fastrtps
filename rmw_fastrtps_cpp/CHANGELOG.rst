@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.3.3 (2025-09-24)
+------------------
 * fix cmake deprecation (`#831 <https://github.com/ros2/rmw_fastrtps/issues/831>`_) (`#832 <https://github.com/ros2/rmw_fastrtps/issues/832>`_)
 * Contributors: mergify[bot]
 
