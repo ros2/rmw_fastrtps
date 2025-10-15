@@ -176,10 +176,7 @@ rtps_qos_to_rmw_qos(
       qos->liveliness = RMW_QOS_POLICY_LIVELINESS_UNKNOWN;
       break;
   }
-<<<<<<< HEAD
   qos->liveliness_lease_duration = dds_duration_to_rmw(rtps_qos.m_liveliness.lease_duration);
-=======
-  qos->liveliness_lease_duration = dds_duration_to_rmw(rtps_qos.liveliness.lease_duration);
 
   if (rtps_qos.history.has_value()) {
     switch (rtps_qos.history->kind) {
@@ -197,7 +194,6 @@ rtps_qos_to_rmw_qos(
   } else {
     qos->history = RMW_QOS_POLICY_HISTORY_UNKNOWN;
   }
->>>>>>> e78f3f4 (Retrieve `HistoryQoS` in discovery when available (#829))
 }
 
 extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
