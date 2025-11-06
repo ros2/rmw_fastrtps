@@ -344,11 +344,12 @@ TypeIdentifierPair register_type_identifiers(
       continue;
     }
 
+    const auto struct_member = members->members_ + i;
     TypeIdentifierPair type_ids;
     type_ids.type_identifier1(pair.first);
     StructMemberFlag member_flags {TypeObjectUtils::build_struct_member_flag(
         xtypes::TryConstructFailAction::DISCARD,
-        false, false, false, false)};
+        false, false, struct_member->is_key_, false)};
     MemberId member_id {static_cast<MemberId>(i)};
     bool common_var {false};
     CommonStructMember member_common{TypeObjectUtils::build_common_struct_member(
