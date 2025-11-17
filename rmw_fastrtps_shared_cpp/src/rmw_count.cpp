@@ -155,8 +155,8 @@ __rmw_count_services(
   }
   RMW_CHECK_ARGUMENT_FOR_NULL(count, RMW_RET_INVALID_ARGUMENT);
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
-  const std::string mangled_rp_service_name =
-    _mangle_topic_name(ros_service_response_prefix, service_name, "Reply").to_string();
-  return common_context->graph_cache.get_writer_count(mangled_rp_service_name, count);
+  const std::string mangled_rq_service_name =
+    _mangle_topic_name(ros_service_requester_prefix, service_name, "Request").to_string();
+  return common_context->graph_cache.get_reader_count(mangled_rq_service_name, count);
 }
 }  // namespace rmw_fastrtps_shared_cpp

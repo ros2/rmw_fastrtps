@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <limits>
+#include <string>
 #include <vector>
 
 #include "rcutils/logging_macros.h"
@@ -154,7 +155,8 @@ bool
 fill_data_entity_qos_from_profile(
   const rmw_qos_profile_t & qos_policies,
   const rosidl_type_hash_t & type_hash,
-  DDSEntityQos & entity_qos)
+  DDSEntityQos & entity_qos,
+  const rosidl_type_hash_t * ser_type_hash = nullptr)
 {
   if (!fill_entity_qos_from_profile(qos_policies, entity_qos)) {
     return false;
@@ -169,6 +171,14 @@ fill_data_entity_qos_from_profile(
     // code won't overwrite it.
     rmw_reset_error();
   }
+  if (ser_type_hash) {
+    std::string typehash_str;
+    if (RMW_RET_OK ==
+      rmw_dds_common::encode_sertype_hash_for_user_data_qos(*ser_type_hash, typehash_str))
+    {
+      user_data_str += typehash_str;
+    }
+  }
   std::vector<uint8_t> user_data(user_data_str.begin(), user_data_str.end());
   entity_qos.user_data().resize(user_data.size());
   entity_qos.user_data().setValue(user_data);
@@ -179,9 +189,10 @@ bool
 get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
   const rosidl_type_hash_t & type_hash,
-  eprosima::fastdds::dds::DataReaderQos & datareader_qos)
+  eprosima::fastdds::dds::DataReaderQos & datareader_qos,
+  const rosidl_type_hash_t * ser_type_hash)
 {
-  if (fill_data_entity_qos_from_profile(qos_policies, type_hash, datareader_qos)) {
+  if (fill_data_entity_qos_from_profile(qos_policies, type_hash, datareader_qos, ser_type_hash)) {
     // The type support in the RMW implementation is always XCDR1.
     constexpr auto rep = eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION;
     datareader_qos.representation().clear();
@@ -196,9 +207,10 @@ bool
 get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
   const rosidl_type_hash_t & type_hash,
-  eprosima::fastdds::dds::DataWriterQos & datawriter_qos)
+  eprosima::fastdds::dds::DataWriterQos & datawriter_qos,
+  const rosidl_type_hash_t * ser_type_hash)
 {
-  if (fill_data_entity_qos_from_profile(qos_policies, type_hash, datawriter_qos)) {
+  if (fill_data_entity_qos_from_profile(qos_policies, type_hash, datawriter_qos, ser_type_hash)) {
     // The type support in the RMW implementation is always XCDR1.
     constexpr auto rep = eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION;
     datawriter_qos.representation().clear();

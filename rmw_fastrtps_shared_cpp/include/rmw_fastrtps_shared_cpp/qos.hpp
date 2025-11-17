@@ -36,14 +36,16 @@ bool
 get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
   const rosidl_type_hash_t & type_hash,
-  eprosima::fastdds::dds::DataReaderQos & reader_qos);
+  eprosima::fastdds::dds::DataReaderQos & reader_qos,
+  const rosidl_type_hash_t * ser_type_hash = nullptr);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
   const rosidl_type_hash_t & type_hash,
-  eprosima::fastdds::dds::DataWriterQos & writer_qos);
+  eprosima::fastdds::dds::DataWriterQos & writer_qos,
+  const rosidl_type_hash_t * ser_type_hash = nullptr);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool

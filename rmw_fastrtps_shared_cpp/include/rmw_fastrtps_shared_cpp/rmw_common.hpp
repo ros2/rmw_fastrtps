@@ -24,6 +24,7 @@
 #include "rmw/event.h"
 #include "rmw/features.h"
 #include "rmw/rmw.h"
+#include "rmw/service_endpoint_info_array.h"
 #include "rmw/topic_endpoint_info_array.h"
 #include "rmw/types.h"
 #include "rmw/names_and_types.h"
@@ -522,6 +523,26 @@ __rmw_get_subscriptions_info_by_topic(
   const char * topic_name,
   bool no_mangle,
   rmw_topic_endpoint_info_array_t * subscriptions_info);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_get_clients_info_by_service(
+  const char * identifier,
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * service_name,
+  bool no_mangle,
+  rmw_service_endpoint_info_array_t * clients_info);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_ret_t
+__rmw_get_servers_info_by_service(
+  const char * identifier,
+  const rmw_node_t * node,
+  rcutils_allocator_t * allocator,
+  const char * service_name,
+  bool no_mangle,
+  rmw_service_endpoint_info_array_t * servers_info);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
