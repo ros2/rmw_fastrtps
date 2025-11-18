@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.4.4 (2025-11-18)
+------------------
+* add : get clients, servers info (`#771 <https://github.com/ros2/rmw_fastrtps/issues/771>`_)
+* Refs `#23861 <https://github.com/ros2/rmw_fastrtps/issues/23861>`_. Use key annotation in TypeObject build (`#849 <https://github.com/ros2/rmw_fastrtps/issues/849>`_)
+* Contributors: Miguel Company, Minju, Lee
+
 9.4.3 (2025-10-20)
 ------------------
 

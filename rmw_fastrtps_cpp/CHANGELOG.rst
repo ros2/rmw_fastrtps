@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.4.4 (2025-11-18)
+------------------
+* add : get clients, servers info (`#771 <https://github.com/ros2/rmw_fastrtps/issues/771>`_)
+* Contributors: Minju, Lee
+
 9.4.3 (2025-10-20)
 ------------------
 * Do not include rosidl_typesupport\_{c,cpp} in rmw impl typesupport list (`#843 <https://github.com/ros2/rmw_fastrtps/issues/843>`_)
