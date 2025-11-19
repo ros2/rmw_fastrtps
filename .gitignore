@@ -1,0 +1,7 @@
+# Workspace folders
+build/
+install/
+log/
+
+# VS Code
+.vscode/
