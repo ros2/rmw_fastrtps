@@ -17,8 +17,6 @@
 
   <buildtool_depend>ament_cmake_ros_core</buildtool_depend>
 
-  <buildtool_export_depend>ament_cmake</buildtool_export_depend>
-
   <build_depend>fastcdr</build_depend>
   <build_depend>fastdds</build_depend>
   <build_depend>rcpputils</build_depend>
