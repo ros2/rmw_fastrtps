@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* fix: remove superflous buildtool_export_depend. (backport `#852 <https://github.com/ros2/rmw_fastrtps/issues/852>`_) (`#858 <https://github.com/ros2/rmw_fastrtps/issues/858>`_)
+* Contributors: mergify[bot]
+
 6.2.9 (2025-09-24)
 ------------------
 
