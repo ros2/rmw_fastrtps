@@ -45,6 +45,8 @@
 #include "rmw_fastrtps_cpp/publisher.hpp"
 #include "rmw_fastrtps_cpp/subscription.hpp"
 
+#include "rosidl_buffer_backend_registry/buffer_backend_loader.hpp"
+
 extern "C"
 {
 rmw_ret_t
@@ -116,6 +118,12 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     return ret;
   }
 
+  try {
+    rosidl_buffer_backend_registry::initialize_buffer_backends();
+  } catch (const std::exception &) {
+    // Non-fatal: buffer backends are optional.
+  }
+
   cleanup_impl.cancel();
   restore_context.cancel();
   return RMW_RET_OK;
@@ -135,6 +143,9 @@ rmw_shutdown(rmw_context_t * context)
     eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   context->impl->is_shutdown = true;
+
+  rosidl_buffer_backend_registry::shutdown_buffer_backends();
+
   return RMW_RET_OK;
 }
 

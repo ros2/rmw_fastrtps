@@ -17,6 +17,8 @@
 
 #include "./visibility_control.h"
 
+#include "fastdds/dds/subscriber/SampleInfo.hpp"
+
 #include "rcutils/allocator.h"
 #include "rcutils/types/string_array.h"
 
@@ -602,6 +604,13 @@ __rmw_feature_supported(rmw_feature_t feature);
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 __rmw_event_type_is_supported(rmw_event_type_t rmw_event_type);
+
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+void
+_assign_message_info(
+  const char * identifier,
+  rmw_message_info_t * message_info,
+  const eprosima::fastdds::dds::SampleInfo * sinfo);
 
 }  // namespace rmw_fastrtps_shared_cpp
 

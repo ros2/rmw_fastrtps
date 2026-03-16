@@ -15,16 +15,24 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 
+#include <atomic>
+#include <cstring>
+#include <memory>
 #include <mutex>
 #include <set>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "fastdds/dds/core/policy/QosPolicies.hpp"
 #include "fastdds/dds/core/status/BaseStatus.hpp"
 #include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
 #include "fastdds/dds/core/status/IncompatibleQosStatus.hpp"
 #include "fastdds/dds/core/status/PublicationMatchedStatus.hpp"
+#include "fastdds/dds/domain/DomainParticipant.hpp"
 #include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
+#include "fastdds/dds/publisher/Publisher.hpp"
 #include "fastdds/dds/topic/Topic.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 
@@ -33,6 +41,7 @@
 
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rmw/rmw.h"
+#include "rmw/topic_endpoint_info.h"
 
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
 
@@ -72,6 +81,17 @@ private:
   RMWPublisherEvent * publisher_event_;
 };
 
+/// Per-subscriber endpoint created for buffer-aware publishing.
+struct BufferPublisherEndpoint
+{
+  std::string key;
+  eprosima::fastdds::dds::DataWriter * data_writer{nullptr};
+  eprosima::fastdds::dds::Topic * topic{nullptr};
+  rmw_gid_t target_subscriber_gid{};
+  rmw_topic_endpoint_info_t subscriber_endpoint_info{};
+  std::unordered_map<std::string, std::string> backend_aux_info;
+};
+
 typedef struct CustomPublisherInfo : public CustomEventInfo
 {
   virtual ~CustomPublisherInfo() = default;
@@ -85,6 +105,22 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   const char * typesupport_identifier_{nullptr};
 
   eprosima::fastdds::dds::Topic * topic_{nullptr};
+
+  // Buffer-aware publisher fields
+  bool is_buffer_aware_{false};
+  std::unordered_map<std::string, std::string> backend_aux_info_;
+  rmw_topic_endpoint_info_t local_endpoint_info_{};
+  std::mutex buffer_mutex_;
+  std::vector<std::shared_ptr<BufferPublisherEndpoint>> buffer_endpoints_;
+  std::set<std::string> pending_buffer_endpoints_;
+  /// Shared flag set to false before destruction so discovery callbacks that
+  /// captured a raw pointer to this object can detect the invalidation.
+  std::shared_ptr<std::atomic<bool>> buffer_alive_flag_{
+    std::make_shared<std::atomic<bool>>(true)};
+
+  // DDS objects needed to create dynamic DataWriters
+  eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
+  eprosima::fastdds::dds::Publisher * dds_publisher_{nullptr};
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *

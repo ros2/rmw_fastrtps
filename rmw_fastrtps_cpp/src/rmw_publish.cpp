@@ -12,16 +12,100 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <vector>
+
 #include "fastcdr/Cdr.h"
 #include "fastcdr/FastBuffer.h"
 
+#include "fastdds/rtps/common/Time_t.hpp"
+
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/macros.hpp"
 #include "rmw/rmw.h"
 
+#include "rcutils/logging_macros.h"
+
+#include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
+
+#include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"
+
+#include "tracetools/tracetools.h"
+
+namespace
+{
+
+/// Publish to per-subscriber buffer endpoints. Returns true if there are
+/// non-buffer-aware subscribers on the main topic that still need to be
+/// served via the normal DataWriter.
+bool
+publish_to_buffer_endpoints(
+  CustomPublisherInfo * info,
+  const void * ros_message,
+  const rmw_publisher_t * publisher)
+{
+  auto callbacks = static_cast<const message_type_support_callbacks_t *>(info->type_support_impl_);
+
+  std::lock_guard<std::mutex> lock(info->buffer_mutex_);
+
+  size_t total_matched = info->publisher_event_->subscription_count();
+  size_t buffer_count = info->buffer_endpoints_.size() + info->pending_buffer_endpoints_.size();
+  bool has_non_buffer_subscribers = (total_matched > buffer_count);
+
+  if (info->buffer_endpoints_.empty()) {
+    return has_non_buffer_subscribers;
+  }
+
+  eprosima::fastdds::dds::Time_t stamp;
+  eprosima::fastdds::dds::Time_t::now(stamp);
+  TRACETOOLS_TRACEPOINT(rmw_publish, publisher, ros_message, stamp.to_ns());
+
+  for (const auto & endpoint : info->buffer_endpoints_) {
+    uint32_t serialized_size = callbacks->get_serialized_size(ros_message);
+    size_t buffer_size = serialized_size + 4096;
+    std::vector<uint8_t> buffer_data(buffer_size);
+
+    eprosima::fastcdr::FastBuffer fast_buffer(
+      reinterpret_cast<char *>(buffer_data.data()), buffer_size);
+    eprosima::fastcdr::Cdr ser(
+      fast_buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
+      eprosima::fastcdr::CdrVersion::XCDRv1);
+    ser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
+
+    bool ok = callbacks->cdr_serialize_with_endpoint(
+      ros_message, ser, endpoint->subscriber_endpoint_info);
+
+    if (!ok) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Buffer-aware serialize failed for endpoint '%s'", endpoint->key.c_str());
+      continue;
+    }
+
+    // Write the CDR buffer to this endpoint's DataWriter
+    rmw_fastrtps_shared_cpp::SerializedData data;
+    data.type = rmw_fastrtps_shared_cpp::FASTDDS_SERIALIZED_DATA_TYPE_CDR_BUFFER;
+    data.data = &ser;
+    data.impl = nullptr;
+
+    if (eprosima::fastdds::dds::RETCODE_OK !=
+      endpoint->data_writer->write_w_timestamp(
+        &data, eprosima::fastdds::dds::HANDLE_NIL, stamp))
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Buffer-aware write failed for endpoint '%s'", endpoint->key.c_str());
+    }
+  }
+
+  return has_non_buffer_subscribers;
+}
+
+}  // namespace
 
 extern "C"
 {
@@ -31,6 +115,27 @@ rmw_publish(
   const void * ros_message,
   rmw_publisher_allocation_t * allocation)
 {
+  (void) allocation;
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    publisher, "publisher handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    publisher, publisher->implementation_identifier, eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    ros_message, "ros message handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+
+  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
+  if (info->is_buffer_aware_) {
+    bool needs_main_publish = publish_to_buffer_endpoints(info, ros_message, publisher);
+    if (needs_main_publish) {
+      return rmw_fastrtps_shared_cpp::__rmw_publish(
+        eprosima_fastrtps_identifier, publisher, ros_message, allocation);
+    }
+    return RMW_RET_OK;
+  }
+
   return rmw_fastrtps_shared_cpp::__rmw_publish(
     eprosima_fastrtps_identifier, publisher, ros_message, allocation);
 }

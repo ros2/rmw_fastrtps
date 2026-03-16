@@ -47,6 +47,9 @@
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/publisher.hpp"
 
+#include "rosidl_buffer_backend_registry/buffer_backend_registry.hpp"
+#include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"
+
 #include "tracetools/tracetools.h"
 
 #include "type_support_common.hpp"
@@ -250,10 +253,24 @@ rmw_fastrtps_cpp::create_publisher(
     writer_qos.data_sharing().off();
   }
 
-  // Get QoS from RMW
+  // Detect buffer-aware message type
+  bool has_buffer_fields = callbacks->has_buffer_fields;
+  std::unordered_map<std::string, std::string> backend_aux_info;
+  if (has_buffer_fields) {
+    backend_aux_info =
+      rosidl_buffer_backend_registry::BufferBackendRegistry::get_instance().get_all_aux_info();
+    // CPU serialization is always implicitly supported by buffer-aware publishers.
+    // Advertise "cpu" so subscribers can discover this publisher via user_data.
+    if (backend_aux_info.find("cpu") == backend_aux_info.end()) {
+      backend_aux_info["cpu"] = "";
+    }
+  }
+
+  // Get QoS from RMW, optionally encoding buffer backend info in user_data
   if (!get_datawriter_qos(
       *qos_policies, *type_supports->get_type_hash_func(type_supports),
-      writer_qos))
+      writer_qos, nullptr,
+      has_buffer_fields ? &backend_aux_info : nullptr))
   {
     RMW_SET_ERROR_MSG("create_publisher() failed setting data writer QoS");
     return nullptr;
@@ -322,6 +339,23 @@ rmw_fastrtps_cpp::create_publisher(
   memcpy(const_cast<char *>(rmw_publisher->topic_name), topic_name, strlen(topic_name) + 1);
 
   rmw_publisher->options = *publisher_options;
+
+  // Buffer-aware publisher setup
+  info->is_buffer_aware_ = has_buffer_fields;
+  if (has_buffer_fields) {
+    info->backend_aux_info_ = backend_aux_info;
+    info->participant_ = dds_participant;
+    info->dds_publisher_ = publisher;
+
+    info->local_endpoint_info_ = rmw_get_zero_initialized_topic_endpoint_info();
+    info->local_endpoint_info_.endpoint_type = RMW_ENDPOINT_PUBLISHER;
+    std::memcpy(
+      info->local_endpoint_info_.endpoint_gid,
+      info->publisher_gid.data, RMW_GID_STORAGE_SIZE);
+
+    rosidl_buffer_backend_registry::BufferBackendRegistry::get_instance().notify_endpoint_created(
+      info->local_endpoint_info_);
+  }
 
   cleanup_rmw_publisher.cancel();
   cleanup_datawriter.cancel();

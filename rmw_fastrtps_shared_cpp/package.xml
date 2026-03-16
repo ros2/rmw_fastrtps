@@ -29,6 +29,7 @@
   <build_depend>rosidl_typesupport_introspection_c</build_depend>
   <build_depend>rosidl_typesupport_introspection_cpp</build_depend>
   <build_depend>tracetools</build_depend>
+  <build_depend>rosidl_buffer_backend_registry</build_depend>
 
   <build_export_depend>rosidl_dynamic_typesupport</build_export_depend>
   <build_export_depend>fastcdr</build_export_depend>

@@ -16,6 +16,9 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
 
+#include <string>
+#include <unordered_map>
+
 #include <fastdds/dds/core/policy/QosPolicies.hpp>
 #include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
 #include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
@@ -37,7 +40,8 @@ get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
   const rosidl_type_hash_t & type_hash,
   eprosima::fastdds::dds::DataReaderQos & reader_qos,
-  const rosidl_type_hash_t * ser_type_hash = nullptr);
+  const rosidl_type_hash_t * ser_type_hash = nullptr,
+  const std::unordered_map<std::string, std::string> * buffer_backends = nullptr);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
@@ -45,7 +49,20 @@ get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
   const rosidl_type_hash_t & type_hash,
   eprosima::fastdds::dds::DataWriterQos & writer_qos,
-  const rosidl_type_hash_t * ser_type_hash = nullptr);
+  const rosidl_type_hash_t * ser_type_hash = nullptr,
+  const std::unordered_map<std::string, std::string> * buffer_backends = nullptr);
+
+/// Encode buffer backend info as a string for inclusion in DDS user_data.
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+std::string
+encode_buffer_backends_for_user_data(
+  const std::unordered_map<std::string, std::string> & backends);
+
+/// Parse buffer backend info from DDS user_data bytes.
+/// Returns empty map if the sentinel prefix is not found.
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+std::unordered_map<std::string, std::string>
+parse_buffer_backends_from_user_data(const uint8_t * data, size_t size);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool

@@ -29,6 +29,7 @@
 #include "rmw_fastrtps_cpp/subscription.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/participant.hpp"
 #include "rmw_fastrtps_shared_cpp/publisher.hpp"
 #include "rmw_fastrtps_shared_cpp/subscription.hpp"
@@ -37,6 +38,8 @@
 #include "rosidl_typesupport_cpp/message_type_support.hpp"
 
 #include "rmw_fastrtps_shared_cpp/listener_thread.hpp"
+
+#include "buffer_endpoint_registry.hpp"
 
 using rmw_dds_common::msg::ParticipantEntitiesInfo;
 
@@ -176,6 +179,31 @@ init_context_impl(
   if (RMW_RET_OK != ret) {
     return ret;
   }
+
+  // Hook buffer endpoint discovery into the DDS participant listener.
+  participant_info->listener_->set_buffer_discovery_callback(
+    [](const rmw_gid_t & gid, const std::string & dds_topic_name,
+    const std::unordered_map<std::string, std::string> & backends, bool is_reader)
+    {
+      auto & registry = rmw_fastrtps_cpp::BufferEndpointRegistry::get_instance();
+      rmw_fastrtps_cpp::BufferEndpointInfo info;
+      info.gid = gid;
+      info.topic_name = _strip_ros_prefix_if_exists(dds_topic_name);
+      info.backend_aux_info = backends;
+
+      RCUTILS_LOG_DEBUG_NAMED(
+        "rmw_fastrtps_cpp",
+        "DDS discovery: buffer-aware %s on topic '%s' (DDS: '%s'), %zu backend(s)",
+        is_reader ? "subscriber" : "publisher",
+        info.topic_name.c_str(), dds_topic_name.c_str(),
+        backends.size());
+
+      if (is_reader) {
+        registry.notify_subscriber_discovered(info);
+      } else {
+        registry.notify_publisher_discovered(info);
+      }
+    });
 
   common_context->graph_cache.set_on_change_callback(
     [guard_condition = graph_guard_condition.get()]()

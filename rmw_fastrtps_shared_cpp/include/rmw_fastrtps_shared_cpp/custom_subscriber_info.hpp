@@ -16,15 +16,20 @@
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_SUBSCRIBER_INFO_HPP_
 
 #include <algorithm>
+#include <atomic>
+#include <cstring>
 #include <limits>
 #include <memory>
 #include <mutex>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <utility>
+#include <vector>
 
 #include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
 #include "fastdds/dds/core/status/LivelinessChangedStatus.hpp"
+#include "fastdds/dds/core/condition/GuardCondition.hpp"
 #include "fastdds/dds/core/status/SubscriptionMatchedStatus.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/DataReaderListener.hpp"
@@ -39,6 +44,7 @@
 
 #include "rmw/impl/cpp/macros.hpp"
 #include "rmw/event_callback_type.h"
+#include "rmw/topic_endpoint_info.h"
 
 #include "rmw_dds_common/context.hpp"
 
@@ -90,6 +96,19 @@ namespace rmw_fastrtps_shared_cpp
 struct LoanManager;
 }  // namespace rmw_fastrtps_shared_cpp
 
+/// Per-publisher endpoint created for buffer-aware subscriptions.
+struct BufferSubscriptionEndpoint
+{
+  std::string key;
+  eprosima::fastdds::dds::DataReader * data_reader{nullptr};
+  eprosima::fastdds::dds::Topic * topic{nullptr};
+  bool owns_topic{true};
+  std::shared_ptr<eprosima::fastdds::dds::DataReaderListener> listener;
+  rmw_gid_t publisher_gid{};
+  rmw_topic_endpoint_info_t publisher_endpoint_info{};
+  std::unordered_map<std::string, std::string> backend_aux_info;
+};
+
 struct CustomSubscriberInfo : public CustomEventInfo
 {
   virtual ~CustomSubscriberInfo() = default;
@@ -112,6 +131,21 @@ struct CustomSubscriberInfo : public CustomEventInfo
   eprosima::fastdds::dds::Topic * topic_ {nullptr};
   eprosima::fastdds::dds::ContentFilteredTopic * filtered_topic_ {nullptr};
   eprosima::fastdds::dds::DataReaderQos datareader_qos_;
+
+  // Buffer-aware subscription fields
+  bool is_buffer_aware_{false};
+  std::vector<std::string> my_backend_types_;
+  rmw_topic_endpoint_info_t local_endpoint_info_{};
+  std::mutex buffer_mutex_;
+  std::vector<std::shared_ptr<BufferSubscriptionEndpoint>> buffer_endpoints_;
+  std::set<std::string> pending_buffer_endpoints_;
+  /// Shared flag set to false before destruction so discovery callbacks that
+  /// captured a raw pointer to this object can detect the invalidation.
+  std::shared_ptr<std::atomic<bool>> buffer_alive_flag_{
+    std::make_shared<std::atomic<bool>>(true)};
+  /// Guard condition triggered when per-publisher DataReaders receive data.
+  /// Used by rmw_wait to detect data on buffer-aware subscriptions.
+  std::unique_ptr<eprosima::fastdds::dds::GuardCondition> buffer_data_guard_;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *
@@ -195,6 +229,10 @@ public:
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void update_data_available();
+
+  /// Notify that buffer data is available (bypasses main DataReader unread check).
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void notify_buffer_data_available(size_t count);
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void update_requested_deadline_missed(uint32_t total_count, uint32_t total_count_change);
