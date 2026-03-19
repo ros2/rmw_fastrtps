@@ -139,8 +139,8 @@ typedef struct CustomParticipantInfo
 /// Callback type for when a buffer-aware endpoint is discovered via DDS.
 /// Parameters: gid, topic_name, backend_aux_info, is_reader.
 using BufferDiscoveryCallback = std::function<void (
-    const rmw_gid_t &, const std::string &,
-    const std::unordered_map<std::string, std::string> &, bool)>;
+      const rmw_gid_t &, const std::string &,
+      const std::unordered_map<std::string, std::string> &, bool)>;
 
 class ParticipantListener : public eprosima::fastdds::dds::DomainParticipantListener
 {

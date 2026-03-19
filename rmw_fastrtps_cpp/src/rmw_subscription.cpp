@@ -173,20 +173,20 @@ rmw_create_subscription(
         }
 
         auto gid_to_hex = [](const rmw_gid_t & gid, size_t bytes = 8) -> std::string {
-            static const char hex_chars[] = "0123456789abcdef";
-            std::string result;
-            result.reserve(bytes * 2);
-            for (size_t i = 0; i < bytes && i < RMW_GID_STORAGE_SIZE; ++i) {
-              result += hex_chars[(gid.data[i] >> 4) & 0xF];
-              result += hex_chars[gid.data[i] & 0xF];
-            }
-            return result;
-          };
+          static const char hex_chars[] = "0123456789abcdef";
+          std::string result;
+          result.reserve(bytes * 2);
+          for (size_t i = 0; i < bytes && i < RMW_GID_STORAGE_SIZE; ++i) {
+            result += hex_chars[(gid.data[i] >> 4) & 0xF];
+            result += hex_chars[gid.data[i] & 0xF];
+          }
+          return result;
+        };
 
         std::string pub_hex = gid_to_hex(pub_info.gid);
         std::string sub_hex = gid_to_hex(info->subscription_gid_);
         std::string unique_topic = info->topic_name_mangled_ +
-          "/_buf/" + pub_hex + "_" + sub_hex;
+        "/_buf/" + pub_hex + "_" + sub_hex;
 
         {
           std::lock_guard<std::mutex> lock(info->buffer_mutex_);
@@ -225,7 +225,7 @@ rmw_create_subscription(
         // this topic on the same DDS participant. Reuse it if it exists.
         eprosima::fastdds::dds::Topic * topic = nullptr;
         auto * existing_desc =
-          info->dds_participant_->lookup_topicdescription(unique_topic);
+        info->dds_participant_->lookup_topicdescription(unique_topic);
         if (existing_desc) {
           topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(existing_desc);
           if (topic) {
@@ -234,7 +234,7 @@ rmw_create_subscription(
         }
         if (!topic) {
           eprosima::fastdds::dds::TopicQos topic_qos =
-            info->dds_participant_->get_default_topic_qos();
+          info->dds_participant_->get_default_topic_qos();
           topic = info->dds_participant_->create_topic(
             unique_topic,
             info->type_support_.get_type_name(),
@@ -255,9 +255,9 @@ rmw_create_subscription(
           "Buffer subscription: creating DataReader for '%s'", unique_topic.c_str());
 
         eprosima::fastdds::dds::DataReaderQos reader_qos =
-          info->subscriber_->get_default_datareader_qos();
+        info->subscriber_->get_default_datareader_qos();
         reader_qos.endpoint().history_memory_policy =
-          eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+        eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
         reader_qos.data_sharing().off();
         reader_qos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
         reader_qos.history() = info->datareader_qos_.history();

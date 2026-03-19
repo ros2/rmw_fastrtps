@@ -95,7 +95,7 @@ void BufferEndpointRegistry::unregister_callbacks(const rmw_gid_t & gid)
         entries.erase(
           std::remove_if(
             entries.begin(), entries.end(),
-            [&gid](const CallbackEntry & e) { return gid_equal(e.registrant_gid, gid); }),
+            [&gid](const CallbackEntry & e) {return gid_equal(e.registrant_gid, gid);}),
           entries.end());
       }
     };

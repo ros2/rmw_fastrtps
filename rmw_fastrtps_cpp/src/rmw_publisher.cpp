@@ -145,20 +145,20 @@ rmw_create_publisher(
         }
 
         auto gid_to_hex = [](const rmw_gid_t & gid, size_t bytes = 8) -> std::string {
-            static const char hex_chars[] = "0123456789abcdef";
-            std::string result;
-            result.reserve(bytes * 2);
-            for (size_t i = 0; i < bytes && i < RMW_GID_STORAGE_SIZE; ++i) {
-              result += hex_chars[(gid.data[i] >> 4) & 0xF];
-              result += hex_chars[gid.data[i] & 0xF];
-            }
-            return result;
-          };
+          static const char hex_chars[] = "0123456789abcdef";
+          std::string result;
+          result.reserve(bytes * 2);
+          for (size_t i = 0; i < bytes && i < RMW_GID_STORAGE_SIZE; ++i) {
+            result += hex_chars[(gid.data[i] >> 4) & 0xF];
+            result += hex_chars[gid.data[i] & 0xF];
+          }
+          return result;
+        };
 
         std::string pub_hex = gid_to_hex(info->publisher_gid);
         std::string sub_hex = gid_to_hex(sub_info.gid);
         std::string unique_topic = info->topic_->get_name() +
-          "/_buf/" + pub_hex + "_" + sub_hex;
+        "/_buf/" + pub_hex + "_" + sub_hex;
 
         {
           std::lock_guard<std::mutex> lock(info->buffer_mutex_);
@@ -194,7 +194,7 @@ rmw_create_publisher(
           sub_info.gid.data, RMW_GID_STORAGE_SIZE);
 
         eprosima::fastdds::dds::TopicQos topic_qos =
-          info->participant_->get_default_topic_qos();
+        info->participant_->get_default_topic_qos();
         auto * topic = info->participant_->create_topic(
           unique_topic,
           info->type_support_.get_type_name(),
@@ -214,10 +214,10 @@ rmw_create_publisher(
           "Buffer publisher: creating DataWriter for '%s'", unique_topic.c_str());
 
         eprosima::fastdds::dds::DataWriterQos writer_qos =
-          info->dds_publisher_->get_default_datawriter_qos();
+        info->dds_publisher_->get_default_datawriter_qos();
         writer_qos.publish_mode().kind = eprosima::fastdds::dds::SYNCHRONOUS_PUBLISH_MODE;
         writer_qos.endpoint().history_memory_policy =
-          eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+        eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
         writer_qos.data_sharing().off();
         writer_qos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
         writer_qos.history() = info->data_writer_->get_qos().history();

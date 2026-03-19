@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__BUFFER_ENDPOINT_REGISTRY_HPP_
-#define RMW_FASTRTPS_CPP__BUFFER_ENDPOINT_REGISTRY_HPP_
+#ifndef BUFFER_ENDPOINT_REGISTRY_HPP_
+#define BUFFER_ENDPOINT_REGISTRY_HPP_
 
 #include <functional>
 #include <mutex>
@@ -95,4 +95,4 @@ private:
 
 }  // namespace rmw_fastrtps_cpp
 
-#endif  // RMW_FASTRTPS_CPP__BUFFER_ENDPOINT_REGISTRY_HPP_
+#endif  // BUFFER_ENDPOINT_REGISTRY_HPP_
