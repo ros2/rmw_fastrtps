@@ -45,7 +45,7 @@
 #include "rmw_fastrtps_cpp/publisher.hpp"
 #include "rmw_fastrtps_cpp/subscription.hpp"
 
-#include "rosidl_buffer_backend_registry/buffer_backend_loader.hpp"
+#include "buffer_backend_loader.hpp"
 
 extern "C"
 {
@@ -119,7 +119,7 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
   }
 
   try {
-    rosidl_buffer_backend_registry::initialize_buffer_backends();
+    rmw_fastrtps_cpp::initialize_buffer_backends();
   } catch (const std::exception &) {
     // Non-fatal: buffer backends are optional.
   }
@@ -144,7 +144,7 @@ rmw_shutdown(rmw_context_t * context)
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
   context->impl->is_shutdown = true;
 
-  rosidl_buffer_backend_registry::shutdown_buffer_backends();
+  rmw_fastrtps_cpp::shutdown_buffer_backends();
 
   return RMW_RET_OK;
 }
