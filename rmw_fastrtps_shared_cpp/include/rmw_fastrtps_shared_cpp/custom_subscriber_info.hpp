@@ -106,7 +106,7 @@ struct BufferSubscriptionEndpoint
   std::shared_ptr<eprosima::fastdds::dds::DataReaderListener> listener;
   rmw_gid_t publisher_gid{};
   rmw_topic_endpoint_info_t publisher_endpoint_info{};
-  std::unordered_map<std::string, std::string> backend_aux_info;
+  std::unordered_map<std::string, std::string> backend_metadata;
 };
 
 struct CustomSubscriberInfo : public CustomEventInfo

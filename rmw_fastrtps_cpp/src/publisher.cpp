@@ -255,14 +255,14 @@ rmw_fastrtps_cpp::create_publisher(
 
   // Detect buffer-aware message type
   bool has_buffer_fields = callbacks->has_buffer_fields;
-  std::unordered_map<std::string, std::string> backend_aux_info;
+  std::unordered_map<std::string, std::string> backend_metadata;
   if (has_buffer_fields) {
-    backend_aux_info =
-      rosidl_buffer_backend_registry::BufferBackendRegistry::get_instance().get_all_aux_info();
+    backend_metadata =
+      rosidl_buffer_backend_registry::BufferBackendRegistry::get_instance().get_all_backend_metadata();
     // CPU serialization is always implicitly supported by buffer-aware publishers.
     // Advertise "cpu" so subscribers can discover this publisher via user_data.
-    if (backend_aux_info.find("cpu") == backend_aux_info.end()) {
-      backend_aux_info["cpu"] = "";
+    if (backend_metadata.find("cpu") == backend_metadata.end()) {
+      backend_metadata["cpu"] = "";
     }
   }
 
@@ -270,7 +270,7 @@ rmw_fastrtps_cpp::create_publisher(
   if (!get_datawriter_qos(
       *qos_policies, *type_supports->get_type_hash_func(type_supports),
       writer_qos, nullptr,
-      has_buffer_fields ? &backend_aux_info : nullptr))
+      has_buffer_fields ? &backend_metadata : nullptr))
   {
     RMW_SET_ERROR_MSG("create_publisher() failed setting data writer QoS");
     return nullptr;
@@ -343,7 +343,7 @@ rmw_fastrtps_cpp::create_publisher(
   // Buffer-aware publisher setup
   info->is_buffer_aware_ = has_buffer_fields;
   if (has_buffer_fields) {
-    info->backend_aux_info_ = backend_aux_info;
+    info->backend_metadata_ = backend_metadata;
     info->participant_ = dds_participant;
     info->dds_publisher_ = publisher;
 

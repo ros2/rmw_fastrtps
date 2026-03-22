@@ -31,8 +31,8 @@ struct BufferEndpointInfo
 {
   rmw_gid_t gid{};
   std::string topic_name;
-  /// Backend type -> aux info string (empty map means CPU-only).
-  std::unordered_map<std::string, std::string> backend_aux_info;
+  /// Backend type -> backend metadata string (empty map means CPU-only).
+  std::unordered_map<std::string, std::string> backend_metadata;
 };
 
 /// Callback invoked when a buffer-aware endpoint is discovered.

@@ -213,7 +213,7 @@ rmw_create_subscription(
         auto endpoint = std::make_shared<BufferSubscriptionEndpoint>();
         endpoint->key = unique_topic;
         endpoint->publisher_gid = pub_info.gid;
-        endpoint->backend_aux_info = pub_info.backend_aux_info;
+        endpoint->backend_metadata = pub_info.backend_metadata;
 
         endpoint->publisher_endpoint_info = rmw_get_zero_initialized_topic_endpoint_info();
         endpoint->publisher_endpoint_info.endpoint_type = RMW_ENDPOINT_PUBLISHER;

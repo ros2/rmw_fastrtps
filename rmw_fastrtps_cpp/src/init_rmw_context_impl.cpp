@@ -189,7 +189,7 @@ init_context_impl(
       rmw_fastrtps_cpp::BufferEndpointInfo info;
       info.gid = gid;
       info.topic_name = _strip_ros_prefix_if_exists(dds_topic_name);
-      info.backend_aux_info = backends;
+      info.backend_metadata = backends;
 
       RCUTILS_LOG_DEBUG_NAMED(
         "rmw_fastrtps_cpp",

@@ -668,7 +668,7 @@ __create_subscription(
 
   if (has_buffer_fields) {
     auto all_backends =
-      rosidl_buffer_backend_registry::BufferBackendRegistry::get_instance().get_all_aux_info();
+      rosidl_buffer_backend_registry::BufferBackendRegistry::get_instance().get_all_backend_metadata();
 
     // Parse acceptable_buffer_backends option (comma-separated) to filter
     std::vector<std::string> requested_list;

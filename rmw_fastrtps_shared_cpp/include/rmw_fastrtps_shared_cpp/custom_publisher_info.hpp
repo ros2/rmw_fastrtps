@@ -89,7 +89,7 @@ struct BufferPublisherEndpoint
   eprosima::fastdds::dds::Topic * topic{nullptr};
   rmw_gid_t target_subscriber_gid{};
   rmw_topic_endpoint_info_t subscriber_endpoint_info{};
-  std::unordered_map<std::string, std::string> backend_aux_info;
+  std::unordered_map<std::string, std::string> backend_metadata;
 };
 
 typedef struct CustomPublisherInfo : public CustomEventInfo
@@ -108,7 +108,7 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
 
   // Buffer-aware publisher fields
   bool is_buffer_aware_{false};
-  std::unordered_map<std::string, std::string> backend_aux_info_;
+  std::unordered_map<std::string, std::string> backend_metadata_;
   rmw_topic_endpoint_info_t local_endpoint_info_{};
   std::mutex buffer_mutex_;
   std::vector<std::shared_ptr<BufferPublisherEndpoint>> buffer_endpoints_;
