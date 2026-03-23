@@ -458,6 +458,7 @@ __create_dynamic_subscription(
   rmw_subscription->options = *subscription_options;
   rmw_fastrtps_shared_cpp::__init_subscription_for_loans(rmw_subscription);
   rmw_subscription->is_cft_enabled = info->filtered_topic_ != nullptr;
+  rmw_subscription->is_cft_supported = true;
 
   cleanup_rmw_subscription.cancel();
   cleanup_datareader.cancel();
@@ -729,6 +730,7 @@ __create_subscription(
   rmw_subscription->options = *subscription_options;
   rmw_fastrtps_shared_cpp::__init_subscription_for_loans(rmw_subscription);
   rmw_subscription->is_cft_enabled = info->filtered_topic_ != nullptr;
+  rmw_subscription->is_cft_supported = true;
 
   cleanup_rmw_subscription.cancel();
   cleanup_datareader.cancel();
