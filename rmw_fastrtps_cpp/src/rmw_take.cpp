@@ -22,7 +22,12 @@
 #include "fastcdr/FastBuffer.h"
 
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
+#include "fastdds/dds/subscriber/Subscriber.hpp"
 #include "fastdds/dds/core/StackAllocatedSequence.hpp"
+#include "fastdds/dds/core/condition/GuardCondition.hpp"
+#include "fastdds/dds/core/status/StatusMask.hpp"
+#include "fastdds/dds/domain/DomainParticipant.hpp"
+#include "fastdds/dds/topic/Topic.hpp"
 
 #include "rcutils/logging_macros.h"
 
@@ -39,6 +44,117 @@
 namespace
 {
 
+class BufferDataReaderListener final : public eprosima::fastdds::dds::DataReaderListener
+{
+public:
+  BufferDataReaderListener(
+    eprosima::fastdds::dds::GuardCondition * guard,
+    RMWSubscriptionEvent * event)
+  : guard_(guard), event_(event) {}
+
+  void on_data_available(eprosima::fastdds::dds::DataReader * reader) override
+  {
+    if (guard_) {
+      guard_->set_trigger_value(true);
+    }
+    auto unread = reader->get_unread_count();
+    if (event_) {
+      event_->notify_buffer_data_available(unread > 0 ? static_cast<size_t>(unread) : 1);
+    }
+  }
+
+private:
+  eprosima::fastdds::dds::GuardCondition * guard_;
+  RMWSubscriptionEvent * event_;
+};
+
+void
+create_pending_buffer_readers(CustomSubscriberInfo * info)
+{
+  auto & state = *info->buffer_state_;
+  std::vector<PendingBufferSubscription> pending;
+  {
+    std::lock_guard<std::mutex> lock(state.mutex);
+    if (state.pending.empty()) {
+      return;
+    }
+    pending = std::move(state.pending);
+    state.pending.clear();
+  }
+
+  std::vector<std::shared_ptr<BufferSubscriptionEndpoint>> new_endpoints;
+  for (auto & p : pending) {
+    auto endpoint = std::make_shared<BufferSubscriptionEndpoint>();
+    endpoint->key = p.unique_topic;
+    endpoint->publisher_gid = p.publisher_gid;
+    endpoint->publisher_endpoint_info = p.publisher_endpoint_info;
+    endpoint->backend_metadata = std::move(p.backend_metadata);
+
+    eprosima::fastdds::dds::Topic * topic = nullptr;
+    auto * existing_desc =
+      info->dds_participant_->lookup_topicdescription(p.unique_topic);
+    if (existing_desc) {
+      topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(existing_desc);
+      if (topic) {
+        endpoint->owns_topic = false;
+      }
+    }
+    if (!topic) {
+      eprosima::fastdds::dds::TopicQos topic_qos =
+        info->dds_participant_->get_default_topic_qos();
+      topic = info->dds_participant_->create_topic(
+        p.unique_topic, info->type_support_.get_type_name(), topic_qos);
+    }
+    if (!topic) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Failed to create per-publisher topic '%s'", p.unique_topic.c_str());
+      continue;
+    }
+    endpoint->topic = topic;
+
+    eprosima::fastdds::dds::DataReaderQos reader_qos =
+      info->subscriber_->get_default_datareader_qos();
+    reader_qos.endpoint().history_memory_policy =
+      eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+    reader_qos.data_sharing().off();
+    reader_qos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
+    reader_qos.history() = info->datareader_qos_.history();
+    constexpr auto rep = eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION;
+    reader_qos.representation().clear();
+    reader_qos.representation().m_value.push_back(rep);
+
+    auto buffer_listener = std::make_shared<BufferDataReaderListener>(
+      info->buffer_data_guard_.get(), info->subscription_event_);
+    auto * data_reader = info->subscriber_->create_datareader(
+      topic, reader_qos, buffer_listener.get(),
+      eprosima::fastdds::dds::StatusMask::data_available());
+    if (!data_reader) {
+      if (endpoint->owns_topic) {
+        info->dds_participant_->delete_topic(topic);
+      }
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Failed to create per-publisher DataReader for '%s'", p.unique_topic.c_str());
+      continue;
+    }
+    endpoint->data_reader = data_reader;
+    endpoint->listener = buffer_listener;
+
+    RCUTILS_LOG_INFO_NAMED(
+      "rmw_fastrtps_cpp",
+      "Buffer subscription: created per-pub endpoint '%s'", p.unique_topic.c_str());
+    new_endpoints.push_back(std::move(endpoint));
+  }
+
+  if (!new_endpoints.empty()) {
+    std::lock_guard<std::mutex> lock(state.mutex);
+    for (auto & ep : new_endpoints) {
+      state.endpoints.push_back(std::move(ep));
+    }
+  }
+}
+
 rmw_ret_t
 take_buffer_aware(
   const rmw_subscription_t * subscription,
@@ -51,11 +167,12 @@ take_buffer_aware(
   auto callbacks = static_cast<const message_type_support_callbacks_t *>(
     info->type_support_impl_);
 
-  std::lock_guard<std::mutex> lock(info->buffer_mutex_);
+  create_pending_buffer_readers(info);
 
-  for (const auto & endpoint : info->buffer_endpoints_) {
-    // Receive raw CDR bytes -- the standard deserializeROSmessage cannot handle
-    // the buffer-aware CDR format produced by cdr_serialize_with_endpoint.
+  auto & state = *info->buffer_state_;
+  std::lock_guard<std::mutex> lock(state.mutex);
+
+  for (const auto & endpoint : state.endpoints) {
     eprosima::fastcdr::FastBuffer receive_buffer;
     rmw_fastrtps_shared_cpp::SerializedData data;
     data.type = rmw_fastrtps_shared_cpp::FASTDDS_SERIALIZED_DATA_TYPE_CDR_BUFFER;
@@ -101,11 +218,7 @@ take_buffer_aware(
         eprosima_fastrtps_identifier, message_info, &info_seq[0]);
     }
 
-    // Re-arm the guard condition if any buffer endpoint still has unread
-    // data.  DDS on_data_available only fires on a status *transition*, so
-    // if we took one sample while more remain, the guard would stay false
-    // and rmw_wait would never wake up for the remaining samples.
-    for (const auto & ep : info->buffer_endpoints_) {
+    for (const auto & ep : state.endpoints) {
       if (ep->data_reader->get_unread_count() > 0) {
         info->buffer_data_guard_->set_trigger_value(true);
         break;

@@ -39,6 +39,74 @@
 namespace
 {
 
+void
+create_pending_buffer_writers(CustomPublisherInfo * info)
+{
+  auto & state = *info->buffer_state_;
+  std::vector<PendingBufferPublisher> pending;
+  {
+    std::lock_guard<std::mutex> lock(state.mutex);
+    if (state.pending.empty()) {
+      return;
+    }
+    pending = std::move(state.pending);
+    state.pending.clear();
+  }
+
+  std::vector<std::shared_ptr<BufferPublisherEndpoint>> new_endpoints;
+  for (auto & p : pending) {
+    auto endpoint = std::make_shared<BufferPublisherEndpoint>();
+    endpoint->key = p.unique_topic;
+    endpoint->target_subscriber_gid = p.target_subscriber_gid;
+    endpoint->subscriber_endpoint_info = p.subscriber_endpoint_info;
+    endpoint->backend_metadata = std::move(p.backend_metadata);
+
+    eprosima::fastdds::dds::TopicQos topic_qos =
+      info->participant_->get_default_topic_qos();
+    auto * topic = info->participant_->create_topic(
+      p.unique_topic, info->type_support_.get_type_name(), topic_qos);
+    if (!topic) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Failed to create per-subscriber topic '%s'", p.unique_topic.c_str());
+      continue;
+    }
+    endpoint->topic = topic;
+
+    eprosima::fastdds::dds::DataWriterQos writer_qos =
+      info->dds_publisher_->get_default_datawriter_qos();
+    writer_qos.publish_mode().kind = eprosima::fastdds::dds::SYNCHRONOUS_PUBLISH_MODE;
+    writer_qos.endpoint().history_memory_policy =
+      eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+    writer_qos.data_sharing().off();
+    writer_qos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
+    writer_qos.history() = info->data_writer_->get_qos().history();
+
+    auto * data_writer = info->dds_publisher_->create_datawriter(
+      topic, writer_qos, nullptr);
+    if (!data_writer) {
+      info->participant_->delete_topic(topic);
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Failed to create per-subscriber DataWriter for '%s'", p.unique_topic.c_str());
+      continue;
+    }
+    endpoint->data_writer = data_writer;
+
+    RCUTILS_LOG_INFO_NAMED(
+      "rmw_fastrtps_cpp",
+      "Buffer publisher: created per-sub endpoint '%s'", p.unique_topic.c_str());
+    new_endpoints.push_back(std::move(endpoint));
+  }
+
+  if (!new_endpoints.empty()) {
+    std::lock_guard<std::mutex> lock(state.mutex);
+    for (auto & ep : new_endpoints) {
+      state.endpoints.push_back(std::move(ep));
+    }
+  }
+}
+
 /// Publish to per-subscriber buffer endpoints. Returns true if there are
 /// non-buffer-aware subscribers on the main topic that still need to be
 /// served via the normal DataWriter.
@@ -48,15 +116,18 @@ publish_to_buffer_endpoints(
   const void * ros_message,
   const rmw_publisher_t * publisher)
 {
-  auto callbacks = static_cast<const message_type_support_callbacks_t *>(info->type_support_impl_);
+  create_pending_buffer_writers(info);
 
-  std::lock_guard<std::mutex> lock(info->buffer_mutex_);
+  auto callbacks = static_cast<const message_type_support_callbacks_t *>(info->type_support_impl_);
+  auto & state = *info->buffer_state_;
+
+  std::lock_guard<std::mutex> lock(state.mutex);
 
   size_t total_matched = info->publisher_event_->subscription_count();
-  size_t buffer_count = info->buffer_endpoints_.size() + info->pending_buffer_endpoints_.size();
+  size_t buffer_count = state.endpoints.size() + state.pending.size();
   bool has_non_buffer_subscribers = (total_matched > buffer_count);
 
-  if (info->buffer_endpoints_.empty()) {
+  if (state.endpoints.empty()) {
     return has_non_buffer_subscribers;
   }
 
@@ -64,7 +135,7 @@ publish_to_buffer_endpoints(
   eprosima::fastdds::dds::Time_t::now(stamp);
   TRACETOOLS_TRACEPOINT(rmw_publish, publisher, ros_message, stamp.to_ns());
 
-  for (const auto & endpoint : info->buffer_endpoints_) {
+  for (const auto & endpoint : state.endpoints) {
     uint32_t serialized_size = callbacks->get_serialized_size(ros_message);
     size_t buffer_size = serialized_size + 4096;
     std::vector<uint8_t> buffer_data(buffer_size);
@@ -86,7 +157,6 @@ publish_to_buffer_endpoints(
       continue;
     }
 
-    // Write the CDR buffer to this endpoint's DataWriter
     rmw_fastrtps_shared_cpp::SerializedData data;
     data.type = rmw_fastrtps_shared_cpp::FASTDDS_SERIALIZED_DATA_TYPE_CDR_BUFFER;
     data.data = &ser;

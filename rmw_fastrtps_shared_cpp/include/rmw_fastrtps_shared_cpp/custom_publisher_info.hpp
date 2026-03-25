@@ -92,6 +92,26 @@ struct BufferPublisherEndpoint
   std::unordered_map<std::string, std::string> backend_metadata;
 };
 
+/// Metadata queued by the discovery callback for lazy DataWriter creation.
+struct PendingBufferPublisher
+{
+  std::string unique_topic;
+  rmw_gid_t target_subscriber_gid{};
+  rmw_topic_endpoint_info_t subscriber_endpoint_info{};
+  std::unordered_map<std::string, std::string> backend_metadata;
+};
+
+/// Mutable buffer state shared between the discovery callback and the
+/// publish/destroy paths.  Managed via shared_ptr so the callback can
+/// safely outlive the CustomPublisherInfo that created it.
+struct BufferPublisherState
+{
+  std::atomic<bool> alive{true};
+  std::mutex mutex;
+  std::vector<std::shared_ptr<BufferPublisherEndpoint>> endpoints;
+  std::vector<PendingBufferPublisher> pending;
+};
+
 typedef struct CustomPublisherInfo : public CustomEventInfo
 {
   virtual ~CustomPublisherInfo() = default;
@@ -110,13 +130,8 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   bool is_buffer_aware_{false};
   std::unordered_map<std::string, std::string> backend_metadata_;
   rmw_topic_endpoint_info_t local_endpoint_info_{};
-  std::mutex buffer_mutex_;
-  std::vector<std::shared_ptr<BufferPublisherEndpoint>> buffer_endpoints_;
-  std::set<std::string> pending_buffer_endpoints_;
-  /// Shared flag set to false before destruction so discovery callbacks that
-  /// captured a raw pointer to this object can detect the invalidation.
-  std::shared_ptr<std::atomic<bool>> buffer_alive_flag_{
-    std::make_shared<std::atomic<bool>>(true)};
+  std::shared_ptr<BufferPublisherState> buffer_state_{
+    std::make_shared<BufferPublisherState>()};
 
   // DDS objects needed to create dynamic DataWriters
   eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};

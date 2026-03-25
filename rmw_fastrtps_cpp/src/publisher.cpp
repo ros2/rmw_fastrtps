@@ -258,7 +258,8 @@ rmw_fastrtps_cpp::create_publisher(
   std::unordered_map<std::string, std::string> backend_metadata;
   if (has_buffer_fields) {
     backend_metadata =
-      rosidl_buffer_backend_registry::BufferBackendRegistry::get_instance().get_all_backend_metadata();
+      rosidl_buffer_backend_registry::BufferBackendRegistry::get_instance()
+      .get_all_backend_metadata();
     // CPU serialization is always implicitly supported by buffer-aware publishers.
     // Advertise "cpu" so subscribers can discover this publisher via user_data.
     if (backend_metadata.find("cpu") == backend_metadata.end()) {

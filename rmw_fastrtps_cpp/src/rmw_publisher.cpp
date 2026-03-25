@@ -134,13 +134,15 @@ rmw_create_publisher(
 
   // Register buffer-aware subscriber discovery callback
   if (info->is_buffer_aware_) {
-    auto alive = info->buffer_alive_flag_;
+    auto state = info->buffer_state_;
+    auto pub_gid = info->publisher_gid;
+    std::string base_topic = info->topic_->get_name();
     auto & buf_registry = rmw_fastrtps_cpp::BufferEndpointRegistry::get_instance();
     buf_registry.register_subscriber_discovery_callback(
       publisher->topic_name,
       info->publisher_gid,
-      [info, alive](const rmw_fastrtps_cpp::BufferEndpointInfo & sub_info) {
-        if (!alive->load()) {
+      [state, pub_gid, base_topic](const rmw_fastrtps_cpp::BufferEndpointInfo & sub_info) {
+        if (!state->alive.load()) {
           return;
         }
 
@@ -155,94 +157,45 @@ rmw_create_publisher(
           return result;
         };
 
-        std::string pub_hex = gid_to_hex(info->publisher_gid);
+        std::string pub_hex = gid_to_hex(pub_gid);
         std::string sub_hex = gid_to_hex(sub_info.gid);
-        std::string unique_topic = info->topic_->get_name() +
+        std::string unique_topic = base_topic +
         "/_buf/" + pub_hex + "_" + sub_hex;
 
         {
-          std::lock_guard<std::mutex> lock(info->buffer_mutex_);
-          for (const auto & ep : info->buffer_endpoints_) {
+          std::lock_guard<std::mutex> lock(state->mutex);
+          if (!state->alive.load()) {
+            return;
+          }
+          for (const auto & ep : state->endpoints) {
             if (std::memcmp(ep->target_subscriber_gid.data, sub_info.gid.data,
               RMW_GID_STORAGE_SIZE) == 0)
             {
-              RCUTILS_LOG_DEBUG_NAMED(
-                "rmw_fastrtps_cpp",
-                "Buffer publisher: subscriber already known, skipping");
               return;
             }
           }
-          if (!info->pending_buffer_endpoints_.insert(unique_topic).second) {
-            return;
+          for (const auto & p : state->pending) {
+            if (p.unique_topic == unique_topic) {
+              return;
+            }
           }
+
+          PendingBufferPublisher pending;
+          pending.unique_topic = unique_topic;
+          pending.target_subscriber_gid = sub_info.gid;
+          pending.subscriber_endpoint_info = rmw_get_zero_initialized_topic_endpoint_info();
+          pending.subscriber_endpoint_info.endpoint_type = RMW_ENDPOINT_SUBSCRIPTION;
+          std::memcpy(
+            pending.subscriber_endpoint_info.endpoint_gid,
+            sub_info.gid.data, RMW_GID_STORAGE_SIZE);
+          pending.backend_metadata = sub_info.backend_metadata;
+          state->pending.push_back(std::move(pending));
         }
 
         RCUTILS_LOG_INFO_NAMED(
           "rmw_fastrtps_cpp",
-          "Buffer publisher: subscriber discovered, computing compatibility for '%s'",
+          "Buffer publisher: subscriber discovered, queued '%s'",
           unique_topic.c_str());
-
-        auto endpoint = std::make_shared<BufferPublisherEndpoint>();
-        endpoint->key = unique_topic;
-        endpoint->target_subscriber_gid = sub_info.gid;
-        endpoint->backend_metadata = sub_info.backend_metadata;
-
-        endpoint->subscriber_endpoint_info = rmw_get_zero_initialized_topic_endpoint_info();
-        endpoint->subscriber_endpoint_info.endpoint_type = RMW_ENDPOINT_SUBSCRIPTION;
-        std::memcpy(
-          endpoint->subscriber_endpoint_info.endpoint_gid,
-          sub_info.gid.data, RMW_GID_STORAGE_SIZE);
-
-        eprosima::fastdds::dds::TopicQos topic_qos =
-        info->participant_->get_default_topic_qos();
-        auto * topic = info->participant_->create_topic(
-          unique_topic,
-          info->type_support_.get_type_name(),
-          topic_qos);
-        if (!topic) {
-          RCUTILS_LOG_ERROR_NAMED(
-            "rmw_fastrtps_cpp",
-            "Failed to create per-subscriber topic '%s'", unique_topic.c_str());
-          std::lock_guard<std::mutex> lock(info->buffer_mutex_);
-          info->pending_buffer_endpoints_.erase(unique_topic);
-          return;
-        }
-        endpoint->topic = topic;
-
-        RCUTILS_LOG_INFO_NAMED(
-          "rmw_fastrtps_cpp",
-          "Buffer publisher: creating DataWriter for '%s'", unique_topic.c_str());
-
-        eprosima::fastdds::dds::DataWriterQos writer_qos =
-        info->dds_publisher_->get_default_datawriter_qos();
-        writer_qos.publish_mode().kind = eprosima::fastdds::dds::SYNCHRONOUS_PUBLISH_MODE;
-        writer_qos.endpoint().history_memory_policy =
-        eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-        writer_qos.data_sharing().off();
-        writer_qos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
-        writer_qos.history() = info->data_writer_->get_qos().history();
-
-        auto * data_writer = info->dds_publisher_->create_datawriter(
-          topic, writer_qos, nullptr);
-        if (!data_writer) {
-          info->participant_->delete_topic(topic);
-          RCUTILS_LOG_ERROR_NAMED(
-            "rmw_fastrtps_cpp",
-            "Failed to create per-subscriber DataWriter for '%s'", unique_topic.c_str());
-          std::lock_guard<std::mutex> lock(info->buffer_mutex_);
-          info->pending_buffer_endpoints_.erase(unique_topic);
-          return;
-        }
-        endpoint->data_writer = data_writer;
-
-        {
-          std::lock_guard<std::mutex> lock(info->buffer_mutex_);
-          info->buffer_endpoints_.push_back(endpoint);
-          info->pending_buffer_endpoints_.erase(unique_topic);
-        }
-        RCUTILS_LOG_INFO_NAMED(
-          "rmw_fastrtps_cpp",
-          "Buffer publisher: created per-sub endpoint '%s'", unique_topic.c_str());
       });
   }
 
@@ -335,17 +288,19 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
   if (info && info->is_buffer_aware_) {
-    info->buffer_alive_flag_->store(false);
+    auto & state = *info->buffer_state_;
+    std::vector<std::shared_ptr<BufferPublisherEndpoint>> endpoints_to_destroy;
+    {
+      std::lock_guard<std::mutex> lock(state.mutex);
+      state.alive.store(false);
+      endpoints_to_destroy = std::move(state.endpoints);
+      state.endpoints.clear();
+      state.pending.clear();
+    }
 
     rmw_fastrtps_cpp::BufferEndpointRegistry::get_instance().unregister_callbacks(
       info->publisher_gid);
 
-    std::vector<std::shared_ptr<BufferPublisherEndpoint>> endpoints_to_destroy;
-    {
-      std::lock_guard<std::mutex> lock(info->buffer_mutex_);
-      endpoints_to_destroy = std::move(info->buffer_endpoints_);
-      info->buffer_endpoints_.clear();
-    }
     for (auto & endpoint : endpoints_to_destroy) {
       if (endpoint->data_writer) {
         info->dds_publisher_->delete_datawriter(endpoint->data_writer);
