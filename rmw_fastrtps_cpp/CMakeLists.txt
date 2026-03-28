@@ -150,7 +150,7 @@ if(BUILD_TESTING)
     rcutils::rcutils
     rmw::rmw
     rmw_fastrtps_cpp
-    ${test_msgs_TARGETS}
+    test_msgs::test_msgs
   )
 
   ament_add_gtest(test_logging test/test_logging.cpp)
