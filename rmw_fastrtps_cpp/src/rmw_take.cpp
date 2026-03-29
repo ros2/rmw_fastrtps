@@ -36,6 +36,7 @@
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
+#include "buffer_backend_context.hpp"
 
 #include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"
 
@@ -202,8 +203,25 @@ take_buffer_aware(
       receive_buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::CdrVersion::XCDRv1);
     deser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
-    bool deser_ok = callbacks->cdr_deserialize_with_endpoint(
-      deser, ros_message, endpoint->publisher_endpoint_info);
+    auto * backend_context =
+      static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(info->serialization_context_);
+    if (!backend_context) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Buffer-aware deserialize missing buffer backend context");
+      continue;
+    }
+    bool deser_ok = false;
+    try {
+      deser_ok = callbacks->cdr_deserialize_with_endpoint(
+        deser, ros_message, endpoint->publisher_endpoint_info,
+        backend_context->serialization_context);
+    } catch (const std::exception & e) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Buffer-aware deserialize threw for endpoint '%s': %s",
+        endpoint->key.c_str(), e.what());
+    }
 
     if (!deser_ok) {
       RCUTILS_LOG_ERROR_NAMED(

@@ -38,18 +38,18 @@ struct BufferEndpointInfo
 /// Callback invoked when a buffer-aware endpoint is discovered.
 using BufferEndpointDiscoveryCallback = std::function<void (const BufferEndpointInfo &)>;
 
-/// Per-process registry for buffer-aware endpoint discovery callbacks.
+/// Per-context registry for buffer-aware endpoint discovery callbacks.
 ///
 /// When a buffer-aware publisher is created, it registers a "subscriber discovered"
 /// callback on the topic so it can create per-subscriber DataWriters.  Symmetrically,
 /// buffer-aware subscribers register a "publisher discovered" callback.
 ///
 /// The DDS ParticipantListener discovery path feeds newly discovered endpoints
-/// into this registry so the appropriate callbacks fire.
+/// into the owning context's registry so the appropriate callbacks fire.
 class BufferEndpointRegistry
 {
 public:
-  static BufferEndpointRegistry & get_instance();
+  BufferEndpointRegistry() = default;
 
   /// Register a callback for when a buffer-aware subscriber is discovered on a topic.
   void register_subscriber_discovery_callback(
@@ -73,8 +73,6 @@ public:
   void notify_publisher_discovered(const BufferEndpointInfo & info);
 
 private:
-  BufferEndpointRegistry() = default;
-
   struct CallbackEntry
   {
     rmw_gid_t registrant_gid{};

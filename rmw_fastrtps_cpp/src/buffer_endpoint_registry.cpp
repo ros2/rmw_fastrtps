@@ -31,12 +31,6 @@ bool gid_equal(const rmw_gid_t & a, const rmw_gid_t & b)
 }
 }  // namespace
 
-BufferEndpointRegistry & BufferEndpointRegistry::get_instance()
-{
-  static BufferEndpointRegistry instance;
-  return instance;
-}
-
 void BufferEndpointRegistry::register_subscriber_discovery_callback(
   const std::string & topic_name,
   const rmw_gid_t & publisher_gid,

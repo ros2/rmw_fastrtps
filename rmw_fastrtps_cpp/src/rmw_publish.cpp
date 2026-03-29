@@ -31,6 +31,7 @@
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
+#include "buffer_backend_context.hpp"
 
 #include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"
 
@@ -147,8 +148,25 @@ publish_to_buffer_endpoints(
       eprosima::fastcdr::CdrVersion::XCDRv1);
     ser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
 
-    bool ok = callbacks->cdr_serialize_with_endpoint(
-      ros_message, ser, endpoint->subscriber_endpoint_info);
+    auto * backend_context =
+      static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(info->serialization_context_);
+    if (!backend_context) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Buffer-aware serialize missing buffer backend context");
+      continue;
+    }
+    bool ok = false;
+    try {
+      ok = callbacks->cdr_serialize_with_endpoint(
+        ros_message, ser, endpoint->subscriber_endpoint_info,
+        backend_context->serialization_context);
+    } catch (const std::exception & e) {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Buffer-aware serialize threw for endpoint '%s': %s",
+        endpoint->key.c_str(), e.what());
+    }
 
     if (!ok) {
       RCUTILS_LOG_ERROR_NAMED(

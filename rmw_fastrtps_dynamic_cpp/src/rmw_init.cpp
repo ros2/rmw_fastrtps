@@ -111,6 +111,8 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     [context]() {delete context->impl;});
 
   context->impl->is_shutdown = false;
+  context->impl->buffer_serialization_context = nullptr;
+  context->impl->buffer_endpoint_registry = nullptr;
   context->options = rmw_get_zero_initialized_init_options();
   rmw_ret_t ret = rmw_init_options_copy(options, &context->options);
   if (RMW_RET_OK != ret) {

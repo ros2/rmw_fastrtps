@@ -130,6 +130,7 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   bool is_buffer_aware_{false};
   std::unordered_map<std::string, std::string> backend_metadata_;
   rmw_topic_endpoint_info_t local_endpoint_info_{};
+  const void * serialization_context_{nullptr};
   std::shared_ptr<BufferPublisherState> buffer_state_{
     std::make_shared<BufferPublisherState>()};
 

@@ -57,7 +57,8 @@
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/subscription.hpp"
 
-#include "rosidl_buffer_backend_registry/buffer_backend_registry.hpp"
+#include "buffer_backend_context.hpp"
+#include "rosidl_buffer_backend_registry/backend_utils.hpp"
 #include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"
 
 #include "tracetools/tracetools.h"
@@ -667,9 +668,14 @@ __create_subscription(
   std::vector<std::string> my_backend_types;
 
   if (has_buffer_fields) {
-    auto all_backends =
-      rosidl_buffer_backend_registry::BufferBackendRegistry::get_instance()
-      .get_all_backend_metadata();
+    std::unordered_map<std::string, std::string> all_backends;
+    auto * backend_context =
+      static_cast<rmw_fastrtps_cpp::BufferBackendContext *>(
+      participant_info->buffer_serialization_context_);
+    if (backend_context) {
+      all_backends = rosidl_buffer_backend_registry::get_all_backend_metadata(
+        backend_context->backend_instances);
+    }
 
     // Parse acceptable_buffer_backends option (comma-separated) to filter
     std::vector<std::string> requested_list;
@@ -814,6 +820,7 @@ __create_subscription(
   // Buffer-aware subscription setup
   info->is_buffer_aware_ = has_buffer_fields;
   if (has_buffer_fields) {
+    info->serialization_context_ = participant_info->buffer_serialization_context_;
     info->my_backend_types_ = std::move(my_backend_types);
     info->local_endpoint_info_ = rmw_get_zero_initialized_topic_endpoint_info();
     info->local_endpoint_info_.endpoint_type = RMW_ENDPOINT_SUBSCRIPTION;
@@ -824,8 +831,13 @@ __create_subscription(
     info->buffer_data_guard_ =
       std::make_unique<eprosima::fastdds::dds::GuardCondition>();
 
-    rosidl_buffer_backend_registry::BufferBackendRegistry::get_instance().notify_endpoint_created(
-      info->local_endpoint_info_);
+    auto * backend_context =
+      static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(
+      info->serialization_context_);
+    if (backend_context) {
+      rosidl_buffer_backend_registry::notify_endpoint_created(
+        backend_context->backend_instances, info->local_endpoint_info_);
+    }
   }
 
   cleanup_rmw_subscription.cancel();

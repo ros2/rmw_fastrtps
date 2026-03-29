@@ -47,7 +47,8 @@
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/publisher.hpp"
 
-#include "rosidl_buffer_backend_registry/buffer_backend_registry.hpp"
+#include "buffer_backend_context.hpp"
+#include "rosidl_buffer_backend_registry/backend_utils.hpp"
 #include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"
 
 #include "tracetools/tracetools.h"
@@ -257,9 +258,13 @@ rmw_fastrtps_cpp::create_publisher(
   bool has_buffer_fields = callbacks->has_buffer_fields;
   std::unordered_map<std::string, std::string> backend_metadata;
   if (has_buffer_fields) {
-    backend_metadata =
-      rosidl_buffer_backend_registry::BufferBackendRegistry::get_instance()
-      .get_all_backend_metadata();
+    auto * backend_context =
+      static_cast<rmw_fastrtps_cpp::BufferBackendContext *>(
+      participant_info->buffer_serialization_context_);
+    if (backend_context) {
+      backend_metadata = rosidl_buffer_backend_registry::get_all_backend_metadata(
+        backend_context->backend_instances);
+    }
     // CPU serialization is always implicitly supported by buffer-aware publishers.
     // Advertise "cpu" so subscribers can discover this publisher via user_data.
     if (backend_metadata.find("cpu") == backend_metadata.end()) {
@@ -344,6 +349,7 @@ rmw_fastrtps_cpp::create_publisher(
   // Buffer-aware publisher setup
   info->is_buffer_aware_ = has_buffer_fields;
   if (has_buffer_fields) {
+    info->serialization_context_ = participant_info->buffer_serialization_context_;
     info->backend_metadata_ = backend_metadata;
     info->participant_ = dds_participant;
     info->dds_publisher_ = publisher;
@@ -354,8 +360,13 @@ rmw_fastrtps_cpp::create_publisher(
       info->local_endpoint_info_.endpoint_gid,
       info->publisher_gid.data, RMW_GID_STORAGE_SIZE);
 
-    rosidl_buffer_backend_registry::BufferBackendRegistry::get_instance().notify_endpoint_created(
-      info->local_endpoint_info_);
+    auto * backend_context =
+      static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(
+      info->serialization_context_);
+    if (backend_context) {
+      rosidl_buffer_backend_registry::notify_endpoint_created(
+        backend_context->backend_instances, info->local_endpoint_info_);
+    }
   }
 
   cleanup_rmw_publisher.cancel();

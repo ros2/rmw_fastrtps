@@ -174,6 +174,10 @@ init_context_impl(
 
   context->impl->common = common_context.get();
   context->impl->participant_info = participant_info.get();
+  participant_info->buffer_serialization_context_ = context->impl->buffer_serialization_context;
+  auto * buffer_endpoint_registry =
+    static_cast<rmw_fastrtps_cpp::BufferEndpointRegistry *>(
+    context->impl->buffer_endpoint_registry);
 
   rmw_ret_t ret = rmw_fastrtps_shared_cpp::run_listener_thread(context);
   if (RMW_RET_OK != ret) {
@@ -182,10 +186,12 @@ init_context_impl(
 
   // Hook buffer endpoint discovery into the DDS participant listener.
   participant_info->listener_->set_buffer_discovery_callback(
-    [](const rmw_gid_t & gid, const std::string & dds_topic_name,
+    [buffer_endpoint_registry](const rmw_gid_t & gid, const std::string & dds_topic_name,
     const std::unordered_map<std::string, std::string> & backends, bool is_reader)
     {
-      auto & registry = rmw_fastrtps_cpp::BufferEndpointRegistry::get_instance();
+      if (!buffer_endpoint_registry) {
+        return;
+      }
       rmw_fastrtps_cpp::BufferEndpointInfo info;
       info.gid = gid;
       info.topic_name = _strip_ros_prefix_if_exists(dds_topic_name);
@@ -199,9 +205,9 @@ init_context_impl(
         backends.size());
 
       if (is_reader) {
-        registry.notify_subscriber_discovered(info);
+        buffer_endpoint_registry->notify_subscriber_discovered(info);
       } else {
-        registry.notify_publisher_discovered(info);
+        buffer_endpoint_registry->notify_publisher_discovered(info);
       }
     });
 

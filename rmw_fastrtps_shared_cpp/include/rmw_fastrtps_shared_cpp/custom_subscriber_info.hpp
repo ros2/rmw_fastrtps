@@ -156,6 +156,7 @@ struct CustomSubscriberInfo : public CustomEventInfo
   bool is_buffer_aware_{false};
   std::vector<std::string> my_backend_types_;
   rmw_topic_endpoint_info_t local_endpoint_info_{};
+  const void * serialization_context_{nullptr};
   std::shared_ptr<BufferSubscriptionState> buffer_state_{
     std::make_shared<BufferSubscriptionState>()};
   /// Guard condition triggered when per-publisher DataReaders receive data.

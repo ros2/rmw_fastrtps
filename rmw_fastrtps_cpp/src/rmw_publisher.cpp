@@ -14,7 +14,10 @@
 // limitations under the License.
 
 #include <cstdio>
+#include <set>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
@@ -42,7 +45,9 @@
 #include "rmw_dds_common/context.hpp"
 #include "rmw_dds_common/msg/participant_entities_info.hpp"
 
+#include "buffer_backend_context.hpp"
 #include "buffer_endpoint_registry.hpp"
+#include "rosidl_buffer_backend_registry/backend_utils.hpp"
 
 extern "C"
 {
@@ -137,66 +142,95 @@ rmw_create_publisher(
     auto state = info->buffer_state_;
     auto pub_gid = info->publisher_gid;
     std::string base_topic = info->topic_->get_name();
-    auto & buf_registry = rmw_fastrtps_cpp::BufferEndpointRegistry::get_instance();
-    buf_registry.register_subscriber_discovery_callback(
-      publisher->topic_name,
-      info->publisher_gid,
-      [state, pub_gid, base_topic](const rmw_fastrtps_cpp::BufferEndpointInfo & sub_info) {
-        if (!state->alive.load()) {
-          return;
-        }
-
-        auto gid_to_hex = [](const rmw_gid_t & gid, size_t bytes = 8) -> std::string {
-          static const char hex_chars[] = "0123456789abcdef";
-          std::string result;
-          result.reserve(bytes * 2);
-          for (size_t i = 0; i < bytes && i < RMW_GID_STORAGE_SIZE; ++i) {
-            result += hex_chars[(gid.data[i] >> 4) & 0xF];
-            result += hex_chars[gid.data[i] & 0xF];
-          }
-          return result;
-        };
-
-        std::string pub_hex = gid_to_hex(pub_gid);
-        std::string sub_hex = gid_to_hex(sub_info.gid);
-        std::string unique_topic = base_topic +
-        "/_buf/" + pub_hex + "_" + sub_hex;
-
-        {
-          std::lock_guard<std::mutex> lock(state->mutex);
+    auto * backend_context =
+      static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(info->serialization_context_);
+    auto * buf_registry = static_cast<rmw_fastrtps_cpp::BufferEndpointRegistry *>(
+      node->context->impl->buffer_endpoint_registry);
+    if (buf_registry) {
+      buf_registry->register_subscriber_discovery_callback(
+        publisher->topic_name,
+        info->publisher_gid,
+        [state, pub_gid, base_topic, backend_context](
+          const rmw_fastrtps_cpp::BufferEndpointInfo & sub_info) {
           if (!state->alive.load()) {
             return;
           }
-          for (const auto & ep : state->endpoints) {
-            if (std::memcmp(ep->target_subscriber_gid.data, sub_info.gid.data,
+
+          auto gid_to_hex = [](const rmw_gid_t & gid, size_t bytes = 8) -> std::string {
+            static const char hex_chars[] = "0123456789abcdef";
+            std::string result;
+            result.reserve(bytes * 2);
+            for (size_t i = 0; i < bytes && i < RMW_GID_STORAGE_SIZE; ++i) {
+              result += hex_chars[(gid.data[i] >> 4) & 0xF];
+              result += hex_chars[gid.data[i] & 0xF];
+            }
+            return result;
+          };
+
+          std::string pub_hex = gid_to_hex(pub_gid);
+          std::string sub_hex = gid_to_hex(sub_info.gid);
+          std::string unique_topic = base_topic +
+          "/_buf/" + pub_hex + "_" + sub_hex;
+
+          {
+            std::lock_guard<std::mutex> lock(state->mutex);
+            if (!state->alive.load()) {
+              return;
+            }
+            for (const auto & ep : state->endpoints) {
+              if (std::memcmp(ep->target_subscriber_gid.data, sub_info.gid.data,
               RMW_GID_STORAGE_SIZE) == 0)
-            {
-              return;
+              {
+                return;
+              }
             }
-          }
-          for (const auto & p : state->pending) {
-            if (p.unique_topic == unique_topic) {
-              return;
+            for (const auto & p : state->pending) {
+              if (p.unique_topic == unique_topic) {
+                return;
+              }
             }
-          }
 
-          PendingBufferPublisher pending;
-          pending.unique_topic = unique_topic;
-          pending.target_subscriber_gid = sub_info.gid;
-          pending.subscriber_endpoint_info = rmw_get_zero_initialized_topic_endpoint_info();
-          pending.subscriber_endpoint_info.endpoint_type = RMW_ENDPOINT_SUBSCRIPTION;
-          std::memcpy(
-            pending.subscriber_endpoint_info.endpoint_gid,
+            rmw_topic_endpoint_info_t discovered_endpoint_info =
+            rmw_get_zero_initialized_topic_endpoint_info();
+            discovered_endpoint_info.endpoint_type = RMW_ENDPOINT_SUBSCRIPTION;
+            std::memcpy(
+            discovered_endpoint_info.endpoint_gid,
             sub_info.gid.data, RMW_GID_STORAGE_SIZE);
-          pending.backend_metadata = sub_info.backend_metadata;
-          state->pending.push_back(std::move(pending));
-        }
 
-        RCUTILS_LOG_INFO_NAMED(
+            if (backend_context) {
+              std::vector<rmw_topic_endpoint_info_t> existing_endpoints;
+              existing_endpoints.reserve(state->endpoints.size() + state->pending.size());
+              for (const auto & ep : state->endpoints) {
+                existing_endpoints.push_back(ep->subscriber_endpoint_info);
+              }
+              for (const auto & p : state->pending) {
+                existing_endpoints.push_back(p.subscriber_endpoint_info);
+              }
+
+              std::unordered_map<std::string,
+              std::vector<std::set<uint32_t>>> backend_endpoint_groups;
+              (void)rosidl_buffer_backend_registry::notify_endpoint_discovered(
+              backend_context->backend_instances,
+              discovered_endpoint_info,
+              existing_endpoints,
+              backend_endpoint_groups,
+              sub_info.backend_metadata);
+            }
+
+            PendingBufferPublisher pending;
+            pending.unique_topic = unique_topic;
+            pending.target_subscriber_gid = sub_info.gid;
+            pending.subscriber_endpoint_info = discovered_endpoint_info;
+            pending.backend_metadata = sub_info.backend_metadata;
+            state->pending.push_back(std::move(pending));
+          }
+
+          RCUTILS_LOG_INFO_NAMED(
           "rmw_fastrtps_cpp",
           "Buffer publisher: subscriber discovered, queued '%s'",
           unique_topic.c_str());
-      });
+        });
+    }
   }
 
   cleanup_publisher.cancel();
@@ -298,8 +332,11 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       state.pending.clear();
     }
 
-    rmw_fastrtps_cpp::BufferEndpointRegistry::get_instance().unregister_callbacks(
-      info->publisher_gid);
+    auto * buf_registry = static_cast<rmw_fastrtps_cpp::BufferEndpointRegistry *>(
+      node->context->impl->buffer_endpoint_registry);
+    if (buf_registry) {
+      buf_registry->unregister_callbacks(info->publisher_gid);
+    }
 
     for (auto & endpoint : endpoints_to_destroy) {
       if (endpoint->data_writer) {

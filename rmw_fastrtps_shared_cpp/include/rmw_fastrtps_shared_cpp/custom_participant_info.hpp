@@ -111,6 +111,7 @@ typedef struct CustomParticipantInfo
 
   eprosima::fastdds::dds::Publisher * publisher_{nullptr};
   eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
+  void * buffer_serialization_context_{nullptr};
 
   // Protects creation and destruction of topics, readers and writers
   mutable std::mutex entity_creation_mutex_;
