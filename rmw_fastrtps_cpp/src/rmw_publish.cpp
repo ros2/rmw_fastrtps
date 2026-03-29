@@ -138,7 +138,7 @@ publish_to_buffer_endpoints(
 
   for (const auto & endpoint : state.endpoints) {
     uint32_t serialized_size = callbacks->get_serialized_size(ros_message);
-    size_t buffer_size = serialized_size + 4096;
+    size_t buffer_size = serialized_size + 4;  // +4 for CDR encapsulation header
     std::vector<uint8_t> buffer_data(buffer_size);
 
     eprosima::fastcdr::FastBuffer fast_buffer(
@@ -166,6 +166,7 @@ publish_to_buffer_endpoints(
         "rmw_fastrtps_cpp",
         "Buffer-aware serialize threw for endpoint '%s': %s",
         endpoint->key.c_str(), e.what());
+      continue;
     }
 
     if (!ok) {
