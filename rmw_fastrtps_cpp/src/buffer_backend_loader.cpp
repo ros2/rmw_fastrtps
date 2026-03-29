@@ -69,7 +69,8 @@ void initialize_buffer_backends(BufferBackendContext & context)
       };
     ops.from_descriptor_with_endpoint = [backend_ptr](
       const void * descriptor,
-      const rmw_topic_endpoint_info_t & endpoint_info) -> std::shared_ptr<void> {
+      const rmw_topic_endpoint_info_t & endpoint_info)
+      -> std::unique_ptr<void, void (*)(void *)> {
         return backend_ptr->from_descriptor_with_endpoint(descriptor, endpoint_info);
       };
 
