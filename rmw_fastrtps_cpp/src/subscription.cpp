@@ -19,6 +19,7 @@
 #include <utility>
 #include <vector>
 
+#include "fastdds/dds/core/condition/GuardCondition.hpp"
 #include "fastdds/dds/domain/DomainParticipant.hpp"
 #include "fastdds/dds/subscriber/Subscriber.hpp"
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
@@ -66,6 +67,35 @@
 #include "type_support_common.hpp"
 
 using PropertyPolicyHelper = eprosima::fastdds::rtps::PropertyPolicyHelper;
+
+namespace
+{
+
+class CpuChannelDataReaderListener final : public eprosima::fastdds::dds::DataReaderListener
+{
+public:
+  CpuChannelDataReaderListener(
+    eprosima::fastdds::dds::GuardCondition * guard,
+    RMWSubscriptionEvent * event)
+  : guard_(guard), event_(event) {}
+
+  void on_data_available(eprosima::fastdds::dds::DataReader * reader) override
+  {
+    if (guard_) {
+      guard_->set_trigger_value(true);
+    }
+    auto unread = reader->get_unread_count();
+    if (event_) {
+      event_->notify_buffer_data_available(unread > 0 ? static_cast<size_t>(unread) : 1);
+    }
+  }
+
+private:
+  eprosima::fastdds::dds::GuardCondition * guard_;
+  RMWSubscriptionEvent * event_;
+};
+
+}  // namespace
 
 namespace rmw_fastrtps_cpp
 {
@@ -666,6 +696,7 @@ __create_subscription(
   bool has_buffer_fields = callbacks->has_buffer_fields;
   std::unordered_map<std::string, std::string> filtered_backends;
   std::vector<std::string> my_backend_types;
+  bool cpu_only = false;
 
   if (has_buffer_fields) {
     std::unordered_map<std::string, std::string> all_backends;
@@ -711,7 +742,7 @@ __create_subscription(
     }
 
     // NULL, empty, or only "cpu" entries: CPU-only (backward compat default)
-    bool cpu_only = !use_all && (requested_list.empty() ||
+    cpu_only = !use_all && (requested_list.empty() ||
       std::all_of(requested_list.begin(), requested_list.end(),
       [](const std::string & n) {return n == "cpu";}));
 
@@ -819,6 +850,7 @@ __create_subscription(
 
   // Buffer-aware subscription setup
   info->is_buffer_aware_ = has_buffer_fields;
+  info->is_cpu_only_ = has_buffer_fields && cpu_only;
   if (has_buffer_fields) {
     info->serialization_context_ = participant_info->buffer_serialization_context_;
     info->my_backend_types_ = std::move(my_backend_types);
@@ -830,6 +862,44 @@ __create_subscription(
 
     info->buffer_data_guard_ =
       std::make_unique<eprosima::fastdds::dds::GuardCondition>();
+
+    // For CPU-only subscriptions, create a DataReader on the shared CPU channel.
+    // This allows publishers to write once for all CPU-only subscribers.
+    if (cpu_only) {
+      std::string cpu_topic_name = topic_name_mangled + "/_buf_cpu";
+      auto * existing_desc = dds_participant->lookup_topicdescription(cpu_topic_name);
+      if (existing_desc) {
+        info->cpu_topic_ = dynamic_cast<eprosima::fastdds::dds::Topic *>(existing_desc);
+      }
+      if (!info->cpu_topic_) {
+        eprosima::fastdds::dds::TopicQos cpu_tqos = dds_participant->get_default_topic_qos();
+        if (!get_topic_qos(*qos_policies, cpu_tqos)) {
+          RMW_SET_ERROR_MSG("create_subscription() failed setting CPU channel topic QoS");
+          return nullptr;
+        }
+        info->cpu_topic_ = dds_participant->create_topic(
+          cpu_topic_name, type_name, cpu_tqos);
+      }
+      if (!info->cpu_topic_) {
+        RMW_SET_ERROR_MSG("create_subscription() failed to create CPU channel topic");
+        return nullptr;
+      }
+
+      eprosima::fastdds::dds::DataReaderQos cpu_rqos = info->datareader_qos_;
+      info->cpu_data_reader_listener_ =
+        std::make_shared<CpuChannelDataReaderListener>(
+        info->buffer_data_guard_.get(), info->subscription_event_);
+      info->cpu_data_reader_ = subscriber->create_datareader(
+        info->cpu_topic_, cpu_rqos, info->cpu_data_reader_listener_.get(),
+        eprosima::fastdds::dds::StatusMask::data_available());
+      if (!info->cpu_data_reader_) {
+        info->cpu_data_reader_listener_.reset();
+        dds_participant->delete_topic(info->cpu_topic_);
+        info->cpu_topic_ = nullptr;
+        RMW_SET_ERROR_MSG("create_subscription() failed to create CPU channel DataReader");
+        return nullptr;
+      }
+    }
 
     auto * backend_context =
       static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(

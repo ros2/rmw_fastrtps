@@ -108,8 +108,11 @@ struct BufferPublisherState
 {
   std::atomic<bool> alive{true};
   std::mutex mutex;
+  /// Per-subscriber (peer-to-peer) endpoints for non-CPU-only subscribers.
   std::vector<std::shared_ptr<BufferPublisherEndpoint>> endpoints;
   std::vector<PendingBufferPublisher> pending;
+  /// GIDs of discovered CPU-only subscribers served by the shared CPU channel.
+  std::vector<rmw_gid_t> cpu_only_subscribers;
 };
 
 typedef struct CustomPublisherInfo : public CustomEventInfo
@@ -133,6 +136,10 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   const void * serialization_context_{nullptr};
   std::shared_ptr<BufferPublisherState> buffer_state_{
     std::make_shared<BufferPublisherState>()};
+
+  // CPU-only shared channel (one writer serves all CPU-only subscribers)
+  eprosima::fastdds::dds::DataWriter * cpu_data_writer_{nullptr};
+  eprosima::fastdds::dds::Topic * cpu_topic_{nullptr};
 
   // DDS objects needed to create dynamic DataWriters
   eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};

@@ -108,10 +108,12 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
   }
 }
 
-/// Publish to per-subscriber buffer endpoints. Returns true if there are
-/// non-buffer-aware subscribers on the main topic that still need to be
-/// served via the normal DataWriter.
-bool
+/// Publish to buffer-aware channels.  Only called when all matched
+/// subscribers are backend-aware (no legacy endpoints).
+///
+/// - Write once to the shared CPU channel for all CPU-only subscribers.
+/// - Write per-endpoint to peer-to-peer channels for non-CPU subscribers.
+void
 publish_to_buffer_endpoints(
   CustomPublisherInfo * info,
   const void * ros_message,
@@ -124,18 +126,28 @@ publish_to_buffer_endpoints(
 
   std::lock_guard<std::mutex> lock(state.mutex);
 
-  size_t total_matched = info->publisher_event_->subscription_count();
-  size_t buffer_count = state.endpoints.size() + state.pending.size();
-  bool has_non_buffer_subscribers = (total_matched > buffer_count);
-
-  if (state.endpoints.empty()) {
-    return has_non_buffer_subscribers;
-  }
-
   eprosima::fastdds::dds::Time_t stamp;
   eprosima::fastdds::dds::Time_t::now(stamp);
   TRACETOOLS_TRACEPOINT(rmw_publish, publisher, ros_message, stamp.to_ns());
 
+  // Publish to the shared CPU channel for all CPU-only subscribers.
+  if (!state.cpu_only_subscribers.empty() && info->cpu_data_writer_) {
+    rmw_fastrtps_shared_cpp::SerializedData cpu_data;
+    cpu_data.type = rmw_fastrtps_shared_cpp::FASTDDS_SERIALIZED_DATA_TYPE_ROS_MESSAGE;
+    cpu_data.data = const_cast<void *>(ros_message);
+    cpu_data.impl = info->type_support_impl_;
+
+    if (eprosima::fastdds::dds::RETCODE_OK !=
+      info->cpu_data_writer_->write_w_timestamp(
+        &cpu_data, eprosima::fastdds::dds::HANDLE_NIL, stamp))
+    {
+      RCUTILS_LOG_ERROR_NAMED(
+        "rmw_fastrtps_cpp",
+        "Failed to write to CPU channel DataWriter");
+    }
+  }
+
+  // Publish to per-subscriber peer-to-peer endpoints for non-CPU subscribers.
   for (const auto & endpoint : state.endpoints) {
     uint32_t serialized_size = callbacks->get_serialized_size(ros_message);
     size_t buffer_size = serialized_size + 4;  // +4 for CDR encapsulation header
@@ -190,8 +202,6 @@ publish_to_buffer_endpoints(
         "Buffer-aware write failed for endpoint '%s'", endpoint->key.c_str());
     }
   }
-
-  return has_non_buffer_subscribers;
 }
 
 }  // namespace
@@ -217,12 +227,26 @@ rmw_publish(
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
   if (info->is_buffer_aware_) {
-    bool needs_main_publish = publish_to_buffer_endpoints(info, ros_message, publisher);
-    if (needs_main_publish) {
-      return rmw_fastrtps_shared_cpp::__rmw_publish(
-        eprosima_fastrtps_identifier, publisher, ros_message, allocation);
+    // Check whether any non-backend-aware (legacy) subscribers exist.
+    // If so, skip buffer channels entirely and fall through to the main
+    // DataWriter so old RMW endpoints receive the message.  Buffer-aware
+    // endpoints will also receive it via their main DataReader fallback.
+    size_t total_matched = info->publisher_event_->subscription_count();
+    size_t buffer_aware_count;
+    {
+      std::lock_guard<std::mutex> lock(info->buffer_state_->mutex);
+      auto & st = *info->buffer_state_;
+      buffer_aware_count =
+        st.endpoints.size() + st.pending.size() + st.cpu_only_subscribers.size();
     }
-    return RMW_RET_OK;
+
+    if (total_matched <= buffer_aware_count) {
+      publish_to_buffer_endpoints(info, ros_message, publisher);
+      return RMW_RET_OK;
+    }
+    // Legacy subscribers present — publish via main (legacy) DataWriter.
+    return rmw_fastrtps_shared_cpp::__rmw_publish(
+      eprosima_fastrtps_identifier, publisher, ros_message, allocation);
   }
 
   return rmw_fastrtps_shared_cpp::__rmw_publish(

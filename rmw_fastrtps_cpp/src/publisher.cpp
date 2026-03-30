@@ -367,6 +367,34 @@ rmw_fastrtps_cpp::create_publisher(
       rosidl_buffer_backend_registry::notify_endpoint_created(
         backend_context->backend_instances, info->local_endpoint_info_);
     }
+
+    // Create CPU-only shared channel DataWriter.
+    // All CPU-only subscribers share this single channel instead of
+    // individual peer-to-peer endpoints.
+    std::string cpu_topic_name = topic_name_mangled + "/_buf_cpu";
+    eprosima::fastdds::dds::TopicQos cpu_topic_qos = dds_participant->get_default_topic_qos();
+    if (!get_topic_qos(*qos_policies, cpu_topic_qos)) {
+      RMW_SET_ERROR_MSG("create_publisher() failed setting CPU channel topic QoS");
+      return nullptr;
+    }
+    info->cpu_topic_ = participant_info->find_or_create_topic(
+      cpu_topic_name, type_name, cpu_topic_qos, nullptr);
+    if (!info->cpu_topic_) {
+      RMW_SET_ERROR_MSG("create_publisher() failed to create CPU channel topic");
+      return nullptr;
+    }
+
+    eprosima::fastdds::dds::DataWriterQos cpu_writer_qos = info->data_writer_->get_qos();
+    info->cpu_data_writer_ = publisher->create_datawriter(
+      info->cpu_topic_, cpu_writer_qos, nullptr);
+    if (!info->cpu_data_writer_) {
+      participant_info->delete_topic(info->cpu_topic_, nullptr);
+      info->cpu_topic_ = nullptr;
+      RMW_SET_ERROR_MSG("create_publisher() failed to create CPU channel DataWriter");
+      return nullptr;
+    }
+    info->cpu_data_writer_->get_statuscondition().set_enabled_statuses(
+      eprosima::fastdds::dds::StatusMask::none());
   }
 
   cleanup_rmw_publisher.cancel();

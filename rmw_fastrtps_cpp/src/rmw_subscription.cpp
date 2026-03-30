@@ -130,8 +130,10 @@ rmw_create_subscription(
   info->node_ = node;
   info->common_context_ = common_context;
 
-  // Register buffer-aware publisher discovery callback
-  if (info->is_buffer_aware_) {
+  // Register buffer-aware publisher discovery callback.
+  // CPU-only subscriptions use the shared CPU channel and don't need
+  // per-publisher peer-to-peer endpoints, so skip the callback for them.
+  if (info->is_buffer_aware_ && !info->is_cpu_only_) {
     auto state = info->buffer_state_;
     auto sub_gid = info->subscription_gid_;
     std::string base_topic = info->topic_name_mangled_;
@@ -322,6 +324,17 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
       if (endpoint->topic && endpoint->owns_topic) {
         info->dds_participant_->delete_topic(endpoint->topic);
       }
+    }
+
+    // Clean up the shared CPU channel DataReader and Topic.
+    if (info->cpu_data_reader_) {
+      info->subscriber_->delete_datareader(info->cpu_data_reader_);
+      info->cpu_data_reader_ = nullptr;
+    }
+    info->cpu_data_reader_listener_.reset();
+    if (info->cpu_topic_) {
+      info->dds_participant_->delete_topic(info->cpu_topic_);
+      info->cpu_topic_ = nullptr;
     }
   }
 

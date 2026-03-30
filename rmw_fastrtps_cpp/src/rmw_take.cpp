@@ -168,6 +168,40 @@ take_buffer_aware(
   auto callbacks = static_cast<const message_type_support_callbacks_t *>(
     info->type_support_impl_);
 
+  // For CPU-only subscriptions, try the shared CPU channel DataReader first.
+  // The message was serialized with standard type-support serialization (ROS_MESSAGE),
+  // so we use the normal take path via the standard FastDDS deserialization.
+  if (info->cpu_data_reader_) {
+    rmw_fastrtps_shared_cpp::SerializedData cpu_recv_data;
+    cpu_recv_data.type = rmw_fastrtps_shared_cpp::FASTDDS_SERIALIZED_DATA_TYPE_ROS_MESSAGE;
+    cpu_recv_data.data = ros_message;
+    cpu_recv_data.impl = info->type_support_impl_;
+
+    eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> cpu_vals;
+    const_cast<void **>(cpu_vals.buffer())[0] = &cpu_recv_data;
+    eprosima::fastdds::dds::SampleInfoSeq cpu_info_seq{1};
+
+    auto cpu_ret = info->cpu_data_reader_->take(cpu_vals, cpu_info_seq, 1);
+    if (cpu_ret == eprosima::fastdds::dds::RETCODE_OK && cpu_info_seq[0].valid_data) {
+      *taken = true;
+      if (message_info) {
+        rmw_fastrtps_shared_cpp::_assign_message_info(
+          eprosima_fastrtps_identifier, message_info, &cpu_info_seq[0]);
+      }
+      cpu_vals.length(0);
+      cpu_info_seq.length(0);
+
+      // Re-arm guard if more data remains on the CPU channel.
+      if (info->cpu_data_reader_->get_unread_count() > 0 && info->buffer_data_guard_) {
+        info->buffer_data_guard_->set_trigger_value(true);
+      }
+      return RMW_RET_OK;
+    }
+    cpu_vals.length(0);
+    cpu_info_seq.length(0);
+  }
+
+  // For non-CPU-only subscriptions, try per-publisher peer-to-peer endpoints.
   create_pending_buffer_readers(info);
 
   auto & state = *info->buffer_state_;
@@ -236,6 +270,7 @@ take_buffer_aware(
         eprosima_fastrtps_identifier, message_info, &info_seq[0]);
     }
 
+    // Re-arm guard if more data remains on any buffer endpoint.
     for (const auto & ep : state.endpoints) {
       if (ep->data_reader->get_unread_count() > 0) {
         info->buffer_data_guard_->set_trigger_value(true);

@@ -156,27 +156,19 @@ rmw_create_publisher(
             return;
           }
 
-          auto gid_to_hex = [](const rmw_gid_t & gid, size_t bytes = 8) -> std::string {
-            static const char hex_chars[] = "0123456789abcdef";
-            std::string result;
-            result.reserve(bytes * 2);
-            for (size_t i = 0; i < bytes && i < RMW_GID_STORAGE_SIZE; ++i) {
-              result += hex_chars[(gid.data[i] >> 4) & 0xF];
-              result += hex_chars[gid.data[i] & 0xF];
-            }
-            return result;
-          };
-
-          std::string pub_hex = gid_to_hex(pub_gid);
-          std::string sub_hex = gid_to_hex(sub_info.gid);
-          std::string unique_topic = base_topic +
-          "/_buf/" + pub_hex + "_" + sub_hex;
+          // Detect whether the discovered subscriber is CPU-only.
+          // CPU-only subscribers advertise only {"cpu": ""} in their backend_metadata.
+          bool sub_is_cpu_only = (sub_info.backend_metadata.size() == 1 &&
+          sub_info.backend_metadata.count("cpu") == 1) ||
+          sub_info.backend_metadata.empty();
 
           {
             std::lock_guard<std::mutex> lock(state->mutex);
             if (!state->alive.load()) {
               return;
             }
+
+            // Check for duplicate in existing p2p endpoints or CPU-only list.
             for (const auto & ep : state->endpoints) {
               if (std::memcmp(ep->target_subscriber_gid.data, sub_info.gid.data,
               RMW_GID_STORAGE_SIZE) == 0)
@@ -184,11 +176,48 @@ rmw_create_publisher(
                 return;
               }
             }
-            for (const auto & p : state->pending) {
-              if (p.unique_topic == unique_topic) {
+            for (const auto & g : state->cpu_only_subscribers) {
+              if (std::memcmp(g.data, sub_info.gid.data, RMW_GID_STORAGE_SIZE) == 0) {
                 return;
               }
             }
+
+            if (sub_is_cpu_only) {
+              // CPU-only subscriber: track its GID; the shared CPU channel
+              // DataWriter will serve it -- no per-subscriber endpoint needed.
+              state->cpu_only_subscribers.push_back(sub_info.gid);
+              RCUTILS_LOG_INFO_NAMED(
+                "rmw_fastrtps_cpp",
+                "Buffer publisher: CPU-only subscriber discovered on '%s', "
+                "served by shared CPU channel",
+                base_topic.c_str());
+              return;
+            }
+
+            // Non-CPU subscriber: create a peer-to-peer endpoint.
+            for (const auto & p : state->pending) {
+              if (std::memcmp(p.target_subscriber_gid.data, sub_info.gid.data,
+              RMW_GID_STORAGE_SIZE) == 0)
+              {
+                return;
+              }
+            }
+
+            auto gid_to_hex = [](const rmw_gid_t & gid, size_t bytes = 8) -> std::string {
+              static const char hex_chars[] = "0123456789abcdef";
+              std::string result;
+              result.reserve(bytes * 2);
+              for (size_t i = 0; i < bytes && i < RMW_GID_STORAGE_SIZE; ++i) {
+                result += hex_chars[(gid.data[i] >> 4) & 0xF];
+                result += hex_chars[gid.data[i] & 0xF];
+              }
+              return result;
+            };
+
+            std::string pub_hex = gid_to_hex(pub_gid);
+            std::string sub_hex = gid_to_hex(sub_info.gid);
+            std::string unique_topic = base_topic +
+            "/_buf/" + pub_hex + "_" + sub_hex;
 
             rmw_topic_endpoint_info_t discovered_endpoint_info =
             rmw_get_zero_initialized_topic_endpoint_info();
@@ -223,12 +252,12 @@ rmw_create_publisher(
             pending.subscriber_endpoint_info = discovered_endpoint_info;
             pending.backend_metadata = sub_info.backend_metadata;
             state->pending.push_back(std::move(pending));
-          }
 
-          RCUTILS_LOG_INFO_NAMED(
-          "rmw_fastrtps_cpp",
-          "Buffer publisher: subscriber discovered, queued '%s'",
-          unique_topic.c_str());
+            RCUTILS_LOG_INFO_NAMED(
+              "rmw_fastrtps_cpp",
+              "Buffer publisher: non-CPU subscriber discovered, queued '%s'",
+              unique_topic.c_str());
+          }
         });
     }
   }
@@ -330,6 +359,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       endpoints_to_destroy = std::move(state.endpoints);
       state.endpoints.clear();
       state.pending.clear();
+      state.cpu_only_subscribers.clear();
     }
 
     auto * buf_registry = static_cast<rmw_fastrtps_cpp::BufferEndpointRegistry *>(
@@ -345,6 +375,18 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       if (endpoint->topic) {
         info->participant_->delete_topic(endpoint->topic);
       }
+    }
+
+    // Clean up the shared CPU channel DataWriter and Topic.
+    if (info->cpu_data_writer_) {
+      info->dds_publisher_->delete_datawriter(info->cpu_data_writer_);
+      info->cpu_data_writer_ = nullptr;
+    }
+    if (info->cpu_topic_) {
+      auto * participant_info =
+        static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
+      participant_info->delete_topic(info->cpu_topic_, nullptr);
+      info->cpu_topic_ = nullptr;
     }
   }
 

@@ -154,6 +154,7 @@ struct CustomSubscriberInfo : public CustomEventInfo
 
   // Buffer-aware subscription fields
   bool is_buffer_aware_{false};
+  bool is_cpu_only_{false};
   std::vector<std::string> my_backend_types_;
   rmw_topic_endpoint_info_t local_endpoint_info_{};
   const void * serialization_context_{nullptr};
@@ -162,6 +163,11 @@ struct CustomSubscriberInfo : public CustomEventInfo
   /// Guard condition triggered when per-publisher DataReaders receive data.
   /// Used by rmw_wait to detect data on buffer-aware subscriptions.
   std::unique_ptr<eprosima::fastdds::dds::GuardCondition> buffer_data_guard_;
+
+  // CPU-only shared channel reader (when acceptable_buffer_backends is CPU-only)
+  eprosima::fastdds::dds::DataReader * cpu_data_reader_{nullptr};
+  eprosima::fastdds::dds::Topic * cpu_topic_{nullptr};
+  std::shared_ptr<eprosima::fastdds::dds::DataReaderListener> cpu_data_reader_listener_;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *
