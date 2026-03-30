@@ -13,6 +13,7 @@
 // limitations under the License.
 
 #include <limits>
+#include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
@@ -161,18 +162,17 @@ encode_buffer_backends_for_user_data(
   if (backends.empty()) {
     return {};
   }
-  std::string result = BUFFER_BACKEND_SENTINEL;
+  std::ostringstream ss;
+  ss << BUFFER_BACKEND_SENTINEL;
   bool first = true;
   for (const auto & [name, aux] : backends) {
     if (!first) {
-      result += ';';
+      ss << ';';
     }
-    result += name;
-    result += '=';
-    result += aux;
+    ss << name << '=' << aux;
     first = false;
   }
-  return result;
+  return ss.str();
 }
 
 std::unordered_map<std::string, std::string>
@@ -191,23 +191,18 @@ parse_buffer_backends_from_user_data(const uint8_t * data, size_t size)
   if (backends_str.empty()) {
     return result;
   }
-  size_t start = 0;
-  while (start < backends_str.size()) {
-    size_t sep = backends_str.find(';', start);
-    std::string entry = backends_str.substr(
-      start, sep == std::string::npos ? std::string::npos : sep - start);
-    if (!entry.empty()) {
-      size_t eq = entry.find('=');
-      std::string name = entry.substr(0, eq);
-      std::string aux = (eq == std::string::npos) ? "" : entry.substr(eq + 1);
-      if (!name.empty()) {
-        result[name] = aux;
-      }
+  std::istringstream ss(backends_str);
+  std::string entry;
+  while (std::getline(ss, entry, ';')) {
+    if (entry.empty()) {
+      continue;
     }
-    if (sep == std::string::npos) {
-      break;
+    size_t eq = entry.find('=');
+    std::string name = entry.substr(0, eq);
+    std::string aux = (eq == std::string::npos) ? "" : entry.substr(eq + 1);
+    if (!name.empty()) {
+      result[name] = aux;
     }
-    start = sep + 1;
   }
   return result;
 }

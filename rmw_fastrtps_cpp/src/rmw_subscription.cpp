@@ -173,9 +173,16 @@ rmw_create_subscription(
               return;
             }
             for (const auto & ep : state->endpoints) {
-              if (std::memcmp(ep->publisher_gid.data, pub_info.gid.data,
-              RMW_GID_STORAGE_SIZE) == 0)
-              {
+              bool equal = false;
+              rmw_ret_t ret = rmw_compare_gids_equal(
+                &ep->publisher_gid, &pub_info.gid, &equal);
+              if (RMW_RET_OK != ret) {
+                RCUTILS_LOG_ERROR_NAMED(
+                  "rmw_fastrtps_cpp",
+                  "Buffer subscription: rmw_compare_gids_equal failed during duplicate check");
+                continue;
+              }
+              if (equal) {
                 return;
               }
             }
