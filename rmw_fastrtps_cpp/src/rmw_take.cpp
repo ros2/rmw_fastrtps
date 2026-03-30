@@ -114,13 +114,10 @@ create_pending_buffer_readers(CustomSubscriberInfo * info)
     }
     endpoint->topic = topic;
 
-    eprosima::fastdds::dds::DataReaderQos reader_qos =
-      info->subscriber_->get_default_datareader_qos();
+    eprosima::fastdds::dds::DataReaderQos reader_qos = info->data_reader_->get_qos();
     reader_qos.endpoint().history_memory_policy =
       eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
     reader_qos.data_sharing().off();
-    reader_qos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
-    reader_qos.history() = info->datareader_qos_.history();
     constexpr auto rep = eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION;
     reader_qos.representation().clear();
     reader_qos.representation().m_value.push_back(rep);

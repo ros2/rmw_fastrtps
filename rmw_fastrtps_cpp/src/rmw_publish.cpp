@@ -74,14 +74,11 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
     }
     endpoint->topic = topic;
 
-    eprosima::fastdds::dds::DataWriterQos writer_qos =
-      info->dds_publisher_->get_default_datawriter_qos();
+    eprosima::fastdds::dds::DataWriterQos writer_qos = info->data_writer_->get_qos();
     writer_qos.publish_mode().kind = eprosima::fastdds::dds::SYNCHRONOUS_PUBLISH_MODE;
     writer_qos.endpoint().history_memory_policy =
       eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
     writer_qos.data_sharing().off();
-    writer_qos.reliability().kind = eprosima::fastdds::dds::RELIABLE_RELIABILITY_QOS;
-    writer_qos.history() = info->data_writer_->get_qos().history();
 
     auto * data_writer = info->dds_publisher_->create_datawriter(
       topic, writer_qos, nullptr);
