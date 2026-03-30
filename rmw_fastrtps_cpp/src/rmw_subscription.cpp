@@ -29,6 +29,7 @@
 #include "rmw_dds_common/qos.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
@@ -151,19 +152,8 @@ rmw_create_subscription(
             return;
           }
 
-          auto gid_to_hex = [](const rmw_gid_t & gid, size_t bytes = 8) -> std::string {
-            static const char hex_chars[] = "0123456789abcdef";
-            std::string result;
-            result.reserve(bytes * 2);
-            for (size_t i = 0; i < bytes && i < RMW_GID_STORAGE_SIZE; ++i) {
-              result += hex_chars[(gid.data[i] >> 4) & 0xF];
-              result += hex_chars[gid.data[i] & 0xF];
-            }
-            return result;
-          };
-
-          std::string pub_hex = gid_to_hex(pub_info.gid);
-          std::string sub_hex = gid_to_hex(sub_gid);
+          std::string pub_hex = rmw_fastrtps_shared_cpp::gid_to_hex(pub_info.gid);
+          std::string sub_hex = rmw_fastrtps_shared_cpp::gid_to_hex(sub_gid);
           std::string unique_topic = base_topic +
           "/_buf/" + pub_hex + "_" + sub_hex;
 
