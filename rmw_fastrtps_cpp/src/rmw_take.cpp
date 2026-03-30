@@ -101,8 +101,7 @@ create_pending_buffer_readers(CustomSubscriberInfo * info)
       }
     }
     if (!topic) {
-      eprosima::fastdds::dds::TopicQos topic_qos =
-        info->dds_participant_->get_default_topic_qos();
+      eprosima::fastdds::dds::TopicQos topic_qos = info->topic_->get_qos();
       topic = info->dds_participant_->create_topic(
         p.unique_topic, info->type_support_.get_type_name(), topic_qos);
     }
@@ -142,6 +141,14 @@ create_pending_buffer_readers(CustomSubscriberInfo * info)
     RCUTILS_LOG_INFO_NAMED(
       "rmw_fastrtps_cpp",
       "Buffer subscription: created per-pub endpoint '%s'", p.unique_topic.c_str());
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_fastrtps_cpp",
+      "Buffer subscription endpoint '%s': reliability=%d, durability=%d, history=%d depth=%d",
+      p.unique_topic.c_str(),
+      reader_qos.reliability().kind,
+      reader_qos.durability().kind,
+      reader_qos.history().kind,
+      reader_qos.history().depth);
     new_endpoints.push_back(std::move(endpoint));
   }
 

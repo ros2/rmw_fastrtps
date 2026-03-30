@@ -26,6 +26,7 @@
 #include "fastdds/rtps/attributes/ResourceManagement.hpp"
 
 #include "rcutils/error_handling.h"
+#include "rcutils/logging_macros.h"
 #include "rcutils/macros.h"
 
 #include "rmw/allocators.h"
@@ -395,6 +396,10 @@ rmw_fastrtps_cpp::create_publisher(
     }
     info->cpu_data_writer_->get_statuscondition().set_enabled_statuses(
       eprosima::fastdds::dds::StatusMask::none());
+
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_fastrtps_cpp",
+      "Created buffer-aware publisher on '%s'", topic_name);
   }
 
   cleanup_rmw_publisher.cancel();

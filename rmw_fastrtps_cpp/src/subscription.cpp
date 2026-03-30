@@ -34,6 +34,7 @@
 
 #include "rcutils/allocator.h"
 #include "rcutils/error_handling.h"
+#include "rcutils/logging_macros.h"
 #include "rcutils/macros.h"
 #include "rcutils/strdup.h"
 #include "rosidl_dynamic_typesupport/dynamic_message_type_support_struct.h"
@@ -901,6 +902,11 @@ __create_subscription(
       rosidl_buffer_backend_registry::notify_endpoint_created(
         backend_context->backend_instances, info->local_endpoint_info_);
     }
+
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_fastrtps_cpp",
+      "Created buffer-aware subscription on '%s' (mode: %s)",
+      topic_name, cpu_only ? "cpu-only" : "accelerated");
   }
 
   cleanup_rmw_subscription.cancel();

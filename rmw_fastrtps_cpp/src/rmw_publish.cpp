@@ -62,8 +62,7 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
     endpoint->subscriber_endpoint_info = p.subscriber_endpoint_info;
     endpoint->backend_metadata = std::move(p.backend_metadata);
 
-    eprosima::fastdds::dds::TopicQos topic_qos =
-      info->participant_->get_default_topic_qos();
+    eprosima::fastdds::dds::TopicQos topic_qos = info->topic_->get_qos();
     auto * topic = info->participant_->create_topic(
       p.unique_topic, info->type_support_.get_type_name(), topic_qos);
     if (!topic) {
@@ -94,6 +93,14 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
     RCUTILS_LOG_INFO_NAMED(
       "rmw_fastrtps_cpp",
       "Buffer publisher: created per-sub endpoint '%s'", p.unique_topic.c_str());
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_fastrtps_cpp",
+      "Buffer publisher endpoint '%s': reliability=%d, durability=%d, history=%d depth=%d",
+      p.unique_topic.c_str(),
+      writer_qos.reliability().kind,
+      writer_qos.durability().kind,
+      writer_qos.history().kind,
+      writer_qos.history().depth);
     new_endpoints.push_back(std::move(endpoint));
   }
 
