@@ -23,6 +23,11 @@
 namespace rmw_fastrtps_shared_cpp
 {
 
+/// Check if unique network flows should be used for ROS discovery info.
+RMW_FASTRTPS_SHARED_CPP_LOCAL
+bool
+use_unique_network_flows_for_ros_discovery_info();
+
 /// Increment `rmw_context_impl_t` reference count, destroying it if the count reaches zero.
 /**
  * Function that should be called when destroying a node.

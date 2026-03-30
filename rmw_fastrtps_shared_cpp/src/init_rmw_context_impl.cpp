@@ -16,6 +16,8 @@
 
 #include <cassert>
 
+#include "rcutils/env.h"
+
 #include "rmw/error_handling.h"
 #include "rmw/init.h"
 
@@ -29,6 +31,25 @@
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 
 #include "rmw_fastrtps_shared_cpp/listener_thread.hpp"
+
+bool
+rmw_fastrtps_shared_cpp::use_unique_network_flows_for_ros_discovery_info()
+{
+  const char * env_value = nullptr;
+  const char * error_str = rcutils_get_env(
+    "RMW_FASTRTPS_USE_UNIQUE_NETWORK_FLOWS_FOR_ROS_DISCOVERY_INFO", &env_value);
+
+  if (error_str != NULL) {
+    RCUTILS_LOG_WARN_NAMED(
+      "rmw_fastrtps_shared_cpp",
+      "Error getting env var RMW_FASTRTPS_USE_UNIQUE_NETWORK_FLOWS_FOR_ROS_DISCOVERY_INFO: %s. "
+      "Using default behavior.",
+      error_str);
+    return true;
+  }
+
+  return env_value == nullptr || strcmp(env_value, "0") != 0;
+}
 
 rmw_ret_t
 rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(

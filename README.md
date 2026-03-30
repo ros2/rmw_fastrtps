@@ -63,6 +63,8 @@ It is important to note that this mode typically yields higher throughput rates 
 
 If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` behave as if it were set to `SYNCHRONOUS`.
 
+For the internal `ros_discovery_info` graph subscription, `rmw_fastrtps` requests unique network flow endpoints by default. Set `RMW_FASTRTPS_USE_UNIQUE_NETWORK_FLOWS_FOR_ROS_DISCOVERY_INFO=0` to disable that request and allow endpoint XML or Fast DDS XML specific locators, such as multicast locators, to be used instead.
+
 ### Full QoS configuration
 
 Fast DDS QoS policies can be fully configured through a combination of the [rmw QoS profile] API, and the [Fast DDS XML] file's QoS elements. Configuration depends on the environment variable `RMW_FASTRTPS_USE_QOS_FROM_XML`.

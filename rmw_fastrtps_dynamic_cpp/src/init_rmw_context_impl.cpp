@@ -27,6 +27,7 @@
 #include "rmw_fastrtps_dynamic_cpp/identifier.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/init_rmw_context_impl.hpp"
 #include "rmw_fastrtps_shared_cpp/listener_thread.hpp"
 #include "rmw_fastrtps_shared_cpp/participant.hpp"
 #include "rmw_fastrtps_shared_cpp/publisher.hpp"
@@ -50,9 +51,12 @@ init_context_impl(
 
   // Avoid receiving graph updates from our own publication
   subscription_options.ignore_local_publications = true;
-  // Improve graph discovery by using a unique listening port for its subscription
+  // Improve graph discovery by using a unique listening port for its subscription,
+  // unless disabled by the user
   subscription_options.require_unique_network_flow_endpoints =
-    RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
+    rmw_fastrtps_shared_cpp::use_unique_network_flows_for_ros_discovery_info() ?
+    RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED :
+    RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED;
 
   std::unique_ptr<rmw_dds_common::Context> common_context(
     new(std::nothrow) rmw_dds_common::Context());
