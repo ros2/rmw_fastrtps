@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.4.5 (2026-03-30)
+------------------
+* Added tracepoint to loaned take (`#868 <https://github.com/ros2/rmw_fastrtps/issues/868>`_)
+* fix: remove superflous buildtool_export_depend. (`#852 <https://github.com/ros2/rmw_fastrtps/issues/852>`_)
+* Contributors: Oren Bell PhD, Tomoya Fujita
+
 9.4.4 (2025-11-18)
 ------------------
 * add : get clients, servers info (`#771 <https://github.com/ros2/rmw_fastrtps/issues/771>`_)
