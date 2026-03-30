@@ -17,6 +17,7 @@
 #include <cstring>
 #include <memory>
 
+#include "rcutils/logging_macros.h"
 #include "rcutils/strdup.h"
 #include "rcutils/types.h"
 
@@ -140,8 +141,11 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
 
   try {
     rmw_fastrtps_cpp::initialize_buffer_backends(*buffer_context);
-  } catch (const std::exception &) {
+  } catch (const std::exception & e) {
     // Non-fatal: buffer backends are optional.
+    RCUTILS_LOG_INFO_NAMED(
+      "rmw_fastrtps_cpp",
+      "Buffer backends not available: %s", e.what());
   }
 
   cleanup_impl.cancel();

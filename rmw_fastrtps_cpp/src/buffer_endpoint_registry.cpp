@@ -15,21 +15,13 @@
 #include "buffer_endpoint_registry.hpp"
 
 #include <algorithm>
-#include <cstring>
 #include <vector>
 
 #include "rcutils/logging_macros.h"
+#include "rmw/rmw.h"
 
 namespace rmw_fastrtps_cpp
 {
-
-namespace
-{
-bool gid_equal(const rmw_gid_t & a, const rmw_gid_t & b)
-{
-  return std::memcmp(a.data, b.data, RMW_GID_STORAGE_SIZE) == 0;
-}
-}  // namespace
 
 void BufferEndpointRegistry::register_subscriber_discovery_callback(
   const std::string & topic_name,
@@ -89,7 +81,17 @@ void BufferEndpointRegistry::unregister_callbacks(const rmw_gid_t & gid)
         entries.erase(
           std::remove_if(
             entries.begin(), entries.end(),
-            [&gid](const CallbackEntry & e) {return gid_equal(e.registrant_gid, gid);}),
+            [&gid](const CallbackEntry & e) {
+              bool equal = false;
+              rmw_ret_t ret = rmw_compare_gids_equal(&e.registrant_gid, &gid, &equal);
+              if (RMW_RET_OK != ret) {
+                RCUTILS_LOG_ERROR_NAMED(
+                  "rmw_fastrtps_cpp",
+                  "BufferEndpointRegistry: rmw_compare_gids_equal failed in unregister_callbacks");
+                return false;
+              }
+              return equal;
+            }),
           entries.end());
       }
     };
@@ -105,7 +107,15 @@ void BufferEndpointRegistry::notify_subscriber_discovered(const BufferEndpointIn
     std::lock_guard<std::mutex> lock(mutex_);
 
     for (const auto & existing : known_subscribers_) {
-      if (gid_equal(existing.gid, info.gid)) {
+      bool equal = false;
+      rmw_ret_t ret = rmw_compare_gids_equal(&existing.gid, &info.gid, &equal);
+      if (RMW_RET_OK != ret) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rmw_fastrtps_cpp",
+          "BufferEndpointRegistry: rmw_compare_gids_equal failed in notify_subscriber_discovered");
+        continue;
+      }
+      if (equal) {
         RCUTILS_LOG_DEBUG_NAMED(
           "rmw_fastrtps_cpp",
           "BufferEndpointRegistry: subscriber on '%s' already known, skipping",
@@ -144,7 +154,15 @@ void BufferEndpointRegistry::notify_publisher_discovered(const BufferEndpointInf
     std::lock_guard<std::mutex> lock(mutex_);
 
     for (const auto & existing : known_publishers_) {
-      if (gid_equal(existing.gid, info.gid)) {
+      bool equal = false;
+      rmw_ret_t ret = rmw_compare_gids_equal(&existing.gid, &info.gid, &equal);
+      if (RMW_RET_OK != ret) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rmw_fastrtps_cpp",
+          "BufferEndpointRegistry: rmw_compare_gids_equal failed in notify_publisher_discovered");
+        continue;
+      }
+      if (equal) {
         RCUTILS_LOG_DEBUG_NAMED(
           "rmw_fastrtps_cpp",
           "BufferEndpointRegistry: publisher on '%s' already known, skipping",

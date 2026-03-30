@@ -170,14 +170,29 @@ rmw_create_publisher(
 
             // Check for duplicate in existing p2p endpoints or CPU-only list.
             for (const auto & ep : state->endpoints) {
-              if (std::memcmp(ep->target_subscriber_gid.data, sub_info.gid.data,
-              RMW_GID_STORAGE_SIZE) == 0)
-              {
+              bool equal = false;
+              rmw_ret_t ret = rmw_compare_gids_equal(
+                &ep->target_subscriber_gid, &sub_info.gid, &equal);
+              if (RMW_RET_OK != ret) {
+                RCUTILS_LOG_ERROR_NAMED(
+                  "rmw_fastrtps_cpp",
+                  "Buffer publisher: rmw_compare_gids_equal failed during duplicate check");
+                continue;
+              }
+              if (equal) {
                 return;
               }
             }
             for (const auto & g : state->cpu_only_subscribers) {
-              if (std::memcmp(g.data, sub_info.gid.data, RMW_GID_STORAGE_SIZE) == 0) {
+              bool equal = false;
+              rmw_ret_t ret = rmw_compare_gids_equal(&g, &sub_info.gid, &equal);
+              if (RMW_RET_OK != ret) {
+                RCUTILS_LOG_ERROR_NAMED(
+                  "rmw_fastrtps_cpp",
+                  "Buffer publisher: rmw_compare_gids_equal failed during duplicate check");
+                continue;
+              }
+              if (equal) {
                 return;
               }
             }
@@ -196,9 +211,16 @@ rmw_create_publisher(
 
             // Non-CPU subscriber: create a peer-to-peer endpoint.
             for (const auto & p : state->pending) {
-              if (std::memcmp(p.target_subscriber_gid.data, sub_info.gid.data,
-              RMW_GID_STORAGE_SIZE) == 0)
-              {
+              bool equal = false;
+              rmw_ret_t ret = rmw_compare_gids_equal(
+                &p.target_subscriber_gid, &sub_info.gid, &equal);
+              if (RMW_RET_OK != ret) {
+                RCUTILS_LOG_ERROR_NAMED(
+                  "rmw_fastrtps_cpp",
+                  "Buffer publisher: rmw_compare_gids_equal failed during pending check");
+                continue;
+              }
+              if (equal) {
                 return;
               }
             }
@@ -239,11 +261,11 @@ rmw_create_publisher(
               std::unordered_map<std::string,
               std::vector<std::set<uint32_t>>> backend_endpoint_groups;
               (void)rosidl_buffer_backend_registry::notify_endpoint_discovered(
-              backend_context->backend_instances,
-              discovered_endpoint_info,
-              existing_endpoints,
-              backend_endpoint_groups,
-              sub_info.backend_metadata);
+                backend_context->backend_instances,
+                discovered_endpoint_info,
+                existing_endpoints,
+                backend_endpoint_groups,
+                sub_info.backend_metadata);
             }
 
             PendingBufferPublisher pending;

@@ -45,6 +45,7 @@
 #include "rmw/validate_full_topic_name.h"
 
 #include "rcpputils/scope_exit.hpp"
+#include "rcpputils/split.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
@@ -713,22 +714,14 @@ __create_subscription(
     if (subscription_options->acceptable_buffer_backends &&
       strlen(subscription_options->acceptable_buffer_backends) > 0)
     {
-      std::string acceptable(subscription_options->acceptable_buffer_backends);
-      size_t start = 0;
-      while (start < acceptable.size()) {
-        size_t end = acceptable.find(',', start);
-        std::string token = acceptable.substr(
-          start, end == std::string::npos ? std::string::npos : end - start);
+      auto tokens = rcpputils::split(
+        subscription_options->acceptable_buffer_backends, ',', true);
+      for (auto & token : tokens) {
         auto begin_it = token.find_first_not_of(" \t");
         auto end_it = token.find_last_not_of(" \t");
         if (begin_it != std::string::npos) {
-          token = token.substr(begin_it, end_it - begin_it + 1);
+          requested_list.push_back(token.substr(begin_it, end_it - begin_it + 1));
         }
-        if (!token.empty()) {
-          requested_list.push_back(token);
-        }
-        if (end == std::string::npos) {break;}
-        start = end + 1;
       }
     }
 
