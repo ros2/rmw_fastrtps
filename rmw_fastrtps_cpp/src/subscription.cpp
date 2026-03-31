@@ -50,6 +50,7 @@
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/names.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
@@ -857,9 +858,8 @@ __create_subscription(
     info->buffer_data_guard_ =
       std::make_unique<eprosima::fastdds::dds::GuardCondition>();
 
-    // For CPU-only subscriptions, create a DataReader on the shared CPU channel.
-    // This allows publishers to write once for all CPU-only subscribers.
     if (cpu_only) {
+      // CPU-only: create a DataReader on the shared CPU channel.
       std::string cpu_topic_name = topic_name_mangled + "/_buf_cpu";
       auto * existing_desc = dds_participant->lookup_topicdescription(cpu_topic_name);
       if (existing_desc) {
@@ -891,6 +891,40 @@ __create_subscription(
         dds_participant->delete_topic(info->cpu_topic_);
         info->cpu_topic_ = nullptr;
         RMW_SET_ERROR_MSG("create_subscription() failed to create CPU channel DataReader");
+        return nullptr;
+      }
+    } else {
+      // Accelerated: single shared DataReader for all buffer-aware publishers.
+      std::string sub_hex = rmw_fastrtps_shared_cpp::gid_to_hex(info->subscription_gid_);
+      std::string accel_topic_name = topic_name_mangled + "/_buf/" + sub_hex;
+
+      eprosima::fastdds::dds::TopicQos accel_tqos = info->topic_->get_qos();
+      info->accel_topic_ = dds_participant->create_topic(
+        accel_topic_name, type_name, accel_tqos);
+      if (!info->accel_topic_) {
+        RMW_SET_ERROR_MSG("create_subscription() failed to create accelerated channel topic");
+        return nullptr;
+      }
+
+      eprosima::fastdds::dds::DataReaderQos accel_rqos = info->datareader_qos_;
+      accel_rqos.endpoint().history_memory_policy =
+        eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+      accel_rqos.data_sharing().off();
+      constexpr auto rep = eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION;
+      accel_rqos.representation().clear();
+      accel_rqos.representation().m_value.push_back(rep);
+
+      info->accel_data_reader_listener_ =
+        std::make_shared<CpuChannelDataReaderListener>(
+        info->buffer_data_guard_.get(), info->subscription_event_);
+      info->accel_data_reader_ = subscriber->create_datareader(
+        info->accel_topic_, accel_rqos, info->accel_data_reader_listener_.get(),
+        eprosima::fastdds::dds::StatusMask::data_available());
+      if (!info->accel_data_reader_) {
+        info->accel_data_reader_listener_.reset();
+        dds_participant->delete_topic(info->accel_topic_);
+        info->accel_topic_ = nullptr;
+        RMW_SET_ERROR_MSG("create_subscription() failed to create accelerated channel DataReader");
         return nullptr;
       }
     }

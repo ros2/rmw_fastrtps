@@ -40,7 +40,9 @@
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/subscription.hpp"
 
+#include "buffer_backend_context.hpp"
 #include "buffer_endpoint_registry.hpp"
+#include "rosidl_buffer_backend_registry/backend_utils.hpp"
 
 extern "C"
 {
@@ -133,19 +135,20 @@ rmw_create_subscription(
 
   // Register buffer-aware publisher discovery callback.
   // CPU-only subscriptions use the shared CPU channel and don't need
-  // per-publisher peer-to-peer endpoints, so skip the callback for them.
+  // per-publisher metadata tracking, so skip the callback for them.
   if (info->is_buffer_aware_ && !info->is_cpu_only_) {
     auto state = info->buffer_state_;
-    auto sub_gid = info->subscription_gid_;
-    std::string base_topic = info->topic_name_mangled_;
-    auto * guard = info->buffer_data_guard_.get();
+    auto local_endpoint_info = info->local_endpoint_info_;
+    auto * backend_context =
+      static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(
+      info->serialization_context_);
     auto * buf_registry = static_cast<rmw_fastrtps_cpp::BufferEndpointRegistry *>(
       node->context->impl->buffer_endpoint_registry);
     if (buf_registry) {
       buf_registry->register_publisher_discovery_callback(
         subscription->topic_name,
         info->subscription_gid_,
-        [state, sub_gid, base_topic, guard](
+        [state, local_endpoint_info, backend_context](
           const rmw_fastrtps_cpp::BufferEndpointInfo & pub_info)
         {
           if (!state->alive.load()) {
@@ -153,55 +156,49 @@ rmw_create_subscription(
           }
 
           std::string pub_hex = rmw_fastrtps_shared_cpp::gid_to_hex(pub_info.gid);
-          std::string sub_hex = rmw_fastrtps_shared_cpp::gid_to_hex(sub_gid);
-          std::string unique_topic = base_topic +
-          "/_buf/" + pub_hex + "_" + sub_hex;
 
           {
             std::lock_guard<std::mutex> lock(state->mutex);
             if (!state->alive.load()) {
               return;
             }
-            for (const auto & ep : state->endpoints) {
-              bool equal = false;
-              rmw_ret_t ret = rmw_compare_gids_equal(
-                &ep->publisher_gid, &pub_info.gid, &equal);
-              if (RMW_RET_OK != ret) {
-                RCUTILS_LOG_ERROR_NAMED(
-                  "rmw_fastrtps_cpp",
-                  "Buffer subscription: rmw_compare_gids_equal failed during duplicate check");
-                continue;
-              }
-              if (equal) {
-                return;
-              }
-            }
-            for (const auto & p : state->pending) {
-              if (p.unique_topic == unique_topic) {
-                return;
-              }
+            if (state->publisher_metadata.count(pub_hex) > 0) {
+              return;
             }
 
-            PendingBufferSubscription pending;
-            pending.unique_topic = unique_topic;
-            pending.publisher_gid = pub_info.gid;
-            pending.publisher_endpoint_info = rmw_get_zero_initialized_topic_endpoint_info();
-            pending.publisher_endpoint_info.endpoint_type = RMW_ENDPOINT_PUBLISHER;
+            PublisherBufferMetadata meta;
+            meta.publisher_gid = pub_info.gid;
+            meta.publisher_endpoint_info = rmw_get_zero_initialized_topic_endpoint_info();
+            meta.publisher_endpoint_info.endpoint_type = RMW_ENDPOINT_PUBLISHER;
             std::memcpy(
-            pending.publisher_endpoint_info.endpoint_gid,
-            pub_info.gid.data, RMW_GID_STORAGE_SIZE);
-            pending.backend_metadata = pub_info.backend_metadata;
-            state->pending.push_back(std::move(pending));
+              meta.publisher_endpoint_info.endpoint_gid,
+              pub_info.gid.data, RMW_GID_STORAGE_SIZE);
+            meta.backend_metadata = pub_info.backend_metadata;
 
-            if (guard) {
-              guard->set_trigger_value(true);
+            if (backend_context) {
+              std::vector<rmw_topic_endpoint_info_t> existing_endpoints;
+              existing_endpoints.reserve(state->publisher_metadata.size());
+              for (const auto & [hex, m] : state->publisher_metadata) {
+                existing_endpoints.push_back(m.publisher_endpoint_info);
+              }
+
+              std::unordered_map<std::string,
+              std::vector<std::set<uint32_t>>> backend_endpoint_groups;
+              (void)rosidl_buffer_backend_registry::notify_endpoint_discovered(
+                backend_context->backend_instances,
+                meta.publisher_endpoint_info,
+                existing_endpoints,
+                backend_endpoint_groups,
+                pub_info.backend_metadata);
             }
+
+            state->publisher_metadata[pub_hex] = std::move(meta);
           }
 
           RCUTILS_LOG_INFO_NAMED(
-          "rmw_fastrtps_cpp",
-          "Buffer subscription: publisher discovered, queued '%s'",
-          unique_topic.c_str());
+            "rmw_fastrtps_cpp",
+            "Buffer subscription: publisher discovered (gid: %s)",
+            pub_hex.c_str());
         });
     }
   }
@@ -298,14 +295,10 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
 
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   if (info && info->is_buffer_aware_) {
-    auto & state = *info->buffer_state_;
-    std::vector<std::shared_ptr<BufferSubscriptionEndpoint>> endpoints_to_destroy;
     {
-      std::lock_guard<std::mutex> lock(state.mutex);
-      state.alive.store(false);
-      endpoints_to_destroy = std::move(state.endpoints);
-      state.endpoints.clear();
-      state.pending.clear();
+      std::lock_guard<std::mutex> lock(info->buffer_state_->mutex);
+      info->buffer_state_->alive.store(false);
+      info->buffer_state_->publisher_metadata.clear();
     }
 
     auto * buf_registry = static_cast<rmw_fastrtps_cpp::BufferEndpointRegistry *>(
@@ -314,16 +307,16 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
       buf_registry->unregister_callbacks(info->subscription_gid_);
     }
 
-    for (auto & endpoint : endpoints_to_destroy) {
-      if (endpoint->data_reader) {
-        info->subscriber_->delete_datareader(endpoint->data_reader);
-      }
-      if (endpoint->topic && endpoint->owns_topic) {
-        info->dds_participant_->delete_topic(endpoint->topic);
-      }
+    if (info->accel_data_reader_) {
+      info->subscriber_->delete_datareader(info->accel_data_reader_);
+      info->accel_data_reader_ = nullptr;
+    }
+    info->accel_data_reader_listener_.reset();
+    if (info->accel_topic_) {
+      info->dds_participant_->delete_topic(info->accel_topic_);
+      info->accel_topic_ = nullptr;
     }
 
-    // Clean up the shared CPU channel DataReader and Topic.
     if (info->cpu_data_reader_) {
       info->subscriber_->delete_datareader(info->cpu_data_reader_);
       info->cpu_data_reader_ = nullptr;

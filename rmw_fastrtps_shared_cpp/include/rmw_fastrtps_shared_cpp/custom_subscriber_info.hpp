@@ -96,23 +96,9 @@ namespace rmw_fastrtps_shared_cpp
 struct LoanManager;
 }  // namespace rmw_fastrtps_shared_cpp
 
-/// Per-publisher endpoint created for buffer-aware subscriptions.
-struct BufferSubscriptionEndpoint
+/// Metadata about a discovered buffer-aware publisher, keyed by GID.
+struct PublisherBufferMetadata
 {
-  std::string key;
-  eprosima::fastdds::dds::DataReader * data_reader{nullptr};
-  eprosima::fastdds::dds::Topic * topic{nullptr};
-  bool owns_topic{true};
-  std::shared_ptr<eprosima::fastdds::dds::DataReaderListener> listener;
-  rmw_gid_t publisher_gid{};
-  rmw_topic_endpoint_info_t publisher_endpoint_info{};
-  std::unordered_map<std::string, std::string> backend_metadata;
-};
-
-/// Metadata queued by the discovery callback for lazy DataReader creation.
-struct PendingBufferSubscription
-{
-  std::string unique_topic;
   rmw_gid_t publisher_gid{};
   rmw_topic_endpoint_info_t publisher_endpoint_info{};
   std::unordered_map<std::string, std::string> backend_metadata;
@@ -125,8 +111,8 @@ struct BufferSubscriptionState
 {
   std::atomic<bool> alive{true};
   std::mutex mutex;
-  std::vector<std::shared_ptr<BufferSubscriptionEndpoint>> endpoints;
-  std::vector<PendingBufferSubscription> pending;
+  /// GID hex string -> publisher metadata, populated by discovery callback.
+  std::unordered_map<std::string, PublisherBufferMetadata> publisher_metadata;
 };
 
 struct CustomSubscriberInfo : public CustomEventInfo
@@ -160,7 +146,7 @@ struct CustomSubscriberInfo : public CustomEventInfo
   const void * serialization_context_{nullptr};
   std::shared_ptr<BufferSubscriptionState> buffer_state_{
     std::make_shared<BufferSubscriptionState>()};
-  /// Guard condition triggered when per-publisher DataReaders receive data.
+  /// Guard condition triggered when buffer channel DataReaders receive data.
   /// Used by rmw_wait to detect data on buffer-aware subscriptions.
   std::unique_ptr<eprosima::fastdds::dds::GuardCondition> buffer_data_guard_;
 
@@ -168,6 +154,11 @@ struct CustomSubscriberInfo : public CustomEventInfo
   eprosima::fastdds::dds::DataReader * cpu_data_reader_{nullptr};
   eprosima::fastdds::dds::Topic * cpu_topic_{nullptr};
   std::shared_ptr<eprosima::fastdds::dds::DataReaderListener> cpu_data_reader_listener_;
+
+  // Accelerated shared channel reader (all buffer-aware publishers write here)
+  eprosima::fastdds::dds::DataReader * accel_data_reader_{nullptr};
+  eprosima::fastdds::dds::Topic * accel_topic_{nullptr};
+  std::shared_ptr<eprosima::fastdds::dds::DataReaderListener> accel_data_reader_listener_;
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *

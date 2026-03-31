@@ -62,9 +62,19 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
     endpoint->subscriber_endpoint_info = p.subscriber_endpoint_info;
     endpoint->backend_metadata = std::move(p.backend_metadata);
 
-    eprosima::fastdds::dds::TopicQos topic_qos = info->topic_->get_qos();
-    auto * topic = info->participant_->create_topic(
-      p.unique_topic, info->type_support_.get_type_name(), topic_qos);
+    eprosima::fastdds::dds::Topic * topic = nullptr;
+    auto * existing_desc = info->participant_->lookup_topicdescription(p.unique_topic);
+    if (existing_desc) {
+      topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(existing_desc);
+      if (topic) {
+        endpoint->owns_topic = false;
+      }
+    }
+    if (!topic) {
+      eprosima::fastdds::dds::TopicQos topic_qos = info->topic_->get_qos();
+      topic = info->participant_->create_topic(
+        p.unique_topic, info->type_support_.get_type_name(), topic_qos);
+    }
     if (!topic) {
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_cpp",
@@ -82,7 +92,9 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
     auto * data_writer = info->dds_publisher_->create_datawriter(
       topic, writer_qos, nullptr);
     if (!data_writer) {
-      info->participant_->delete_topic(topic);
+      if (endpoint->owns_topic) {
+        info->participant_->delete_topic(topic);
+      }
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_cpp",
         "Failed to create per-subscriber DataWriter for '%s'", p.unique_topic.c_str());

@@ -87,6 +87,7 @@ struct BufferPublisherEndpoint
   std::string key;
   eprosima::fastdds::dds::DataWriter * data_writer{nullptr};
   eprosima::fastdds::dds::Topic * topic{nullptr};
+  bool owns_topic{true};
   rmw_gid_t target_subscriber_gid{};
   rmw_topic_endpoint_info_t subscriber_endpoint_info{};
   std::unordered_map<std::string, std::string> backend_metadata;

@@ -226,17 +226,15 @@ rmw_create_publisher(
               }
             }
 
-            std::string pub_hex = rmw_fastrtps_shared_cpp::gid_to_hex(pub_gid);
             std::string sub_hex = rmw_fastrtps_shared_cpp::gid_to_hex(sub_info.gid);
-            std::string unique_topic = base_topic +
-            "/_buf/" + pub_hex + "_" + sub_hex;
+            std::string unique_topic = base_topic + "/_buf/" + sub_hex;
 
             rmw_topic_endpoint_info_t discovered_endpoint_info =
             rmw_get_zero_initialized_topic_endpoint_info();
             discovered_endpoint_info.endpoint_type = RMW_ENDPOINT_SUBSCRIPTION;
             std::memcpy(
-            discovered_endpoint_info.endpoint_gid,
-            sub_info.gid.data, RMW_GID_STORAGE_SIZE);
+              discovered_endpoint_info.endpoint_gid,
+              sub_info.gid.data, RMW_GID_STORAGE_SIZE);
 
             if (backend_context) {
               std::vector<rmw_topic_endpoint_info_t> existing_endpoints;
@@ -384,7 +382,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       if (endpoint->data_writer) {
         info->dds_publisher_->delete_datawriter(endpoint->data_writer);
       }
-      if (endpoint->topic) {
+      if (endpoint->topic && endpoint->owns_topic) {
         info->participant_->delete_topic(endpoint->topic);
       }
     }
