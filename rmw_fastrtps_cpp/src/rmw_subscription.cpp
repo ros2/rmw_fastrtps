@@ -40,7 +40,9 @@
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/subscription.hpp"
 
+#include "buffer_backend_context.hpp"
 #include "buffer_endpoint_registry.hpp"
+#include "rosidl_buffer_backend_registry/backend_utils.hpp"
 
 extern "C"
 {
@@ -133,17 +135,20 @@ rmw_create_subscription(
 
   // Register buffer-aware publisher discovery callback.
   // CPU-only subscriptions use the shared CPU channel and don't need
-  // per-publisher peer-to-peer endpoints, so skip the callback for them.
+  // per-publisher metadata tracking, so skip the callback for them.
   if (info->is_buffer_aware_ && !info->is_cpu_only_) {
     auto state = info->buffer_state_;
     auto * guard = info->buffer_data_guard_.get();
+    auto * backend_context =
+      static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(
+      info->serialization_context_);
     auto * buf_registry = static_cast<rmw_fastrtps_cpp::BufferEndpointRegistry *>(
       node->context->impl->buffer_endpoint_registry);
     if (buf_registry) {
       buf_registry->register_publisher_discovery_callback(
         subscription->topic_name,
         info->subscription_gid_,
-        [state, guard](
+        [state, guard, backend_context](
           const rmw_fastrtps_cpp::BufferEndpointInfo & pub_info)
         {
           if (!state->alive.load()) {
@@ -169,6 +174,24 @@ rmw_create_subscription(
               meta.publisher_endpoint_info.endpoint_gid,
               pub_info.gid.data, RMW_GID_STORAGE_SIZE);
             meta.backend_metadata = pub_info.backend_metadata;
+
+            if (backend_context) {
+              std::vector<rmw_topic_endpoint_info_t> existing_endpoints;
+              existing_endpoints.reserve(state->publisher_metadata.size());
+              for (const auto & [hex, m] : state->publisher_metadata) {
+                existing_endpoints.push_back(m.publisher_endpoint_info);
+              }
+
+              std::unordered_map<std::string,
+              std::vector<std::set<uint32_t>>> backend_endpoint_groups;
+              (void)rosidl_buffer_backend_registry::notify_endpoint_discovered(
+                backend_context->backend_instances,
+                meta.publisher_endpoint_info,
+                existing_endpoints,
+                backend_endpoint_groups,
+                pub_info.backend_metadata);
+            }
+
             state->publisher_metadata[pub_hex] = std::move(meta);
 
             if (guard) {
