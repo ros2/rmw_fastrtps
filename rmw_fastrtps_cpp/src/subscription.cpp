@@ -861,19 +861,13 @@ __create_subscription(
     if (cpu_only) {
       // CPU-only: create a DataReader on the shared CPU channel.
       std::string cpu_topic_name = topic_name_mangled + "/_buf_cpu";
-      auto * existing_desc = dds_participant->lookup_topicdescription(cpu_topic_name);
-      if (existing_desc) {
-        info->cpu_topic_ = dynamic_cast<eprosima::fastdds::dds::Topic *>(existing_desc);
+      eprosima::fastdds::dds::TopicQos cpu_tqos = dds_participant->get_default_topic_qos();
+      if (!get_topic_qos(*qos_policies, cpu_tqos)) {
+        RMW_SET_ERROR_MSG("create_subscription() failed setting CPU channel topic QoS");
+        return nullptr;
       }
-      if (!info->cpu_topic_) {
-        eprosima::fastdds::dds::TopicQos cpu_tqos = dds_participant->get_default_topic_qos();
-        if (!get_topic_qos(*qos_policies, cpu_tqos)) {
-          RMW_SET_ERROR_MSG("create_subscription() failed setting CPU channel topic QoS");
-          return nullptr;
-        }
-        info->cpu_topic_ = dds_participant->create_topic(
-          cpu_topic_name, type_name, cpu_tqos);
-      }
+      info->cpu_topic_ = participant_info->find_or_create_topic(
+        cpu_topic_name, type_name, cpu_tqos, nullptr);
       if (!info->cpu_topic_) {
         RMW_SET_ERROR_MSG("create_subscription() failed to create CPU channel topic");
         return nullptr;
@@ -888,7 +882,7 @@ __create_subscription(
         eprosima::fastdds::dds::StatusMask::data_available());
       if (!info->cpu_data_reader_) {
         info->cpu_data_reader_listener_.reset();
-        dds_participant->delete_topic(info->cpu_topic_);
+        participant_info->delete_topic(info->cpu_topic_, nullptr);
         info->cpu_topic_ = nullptr;
         RMW_SET_ERROR_MSG("create_subscription() failed to create CPU channel DataReader");
         return nullptr;
