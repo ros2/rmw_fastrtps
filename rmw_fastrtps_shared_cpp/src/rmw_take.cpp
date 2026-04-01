@@ -620,6 +620,12 @@ __rmw_take_loaned_message_internal(
 
       info->loan_manager_->add_item(std::move(item));
 
+      TRACETOOLS_TRACEPOINT(
+        rmw_take,
+        static_cast<const void *>(subscription),
+        static_cast<const void *>(*loaned_message),
+        (message_info ? message_info->source_timestamp : 0LL),
+        *taken);
       return RMW_RET_OK;
     }
 
