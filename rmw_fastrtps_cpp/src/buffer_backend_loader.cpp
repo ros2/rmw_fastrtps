@@ -41,7 +41,7 @@ void initialize_buffer_backends(BufferBackendContext & context)
   auto & backend_ops = context.serialization_context.descriptor_ops;
   auto & serializers = context.serialization_context.descriptor_serializers;
   auto backend_names = registry.get_backend_names();
-  RCUTILS_LOG_INFO_NAMED(
+  RCUTILS_LOG_DEBUG_NAMED(
     kLoggerName, "Buffer backends: found %zu backend(s)", backend_names.size());
 
   for (const auto & backend_name : backend_names) {
@@ -53,7 +53,7 @@ void initialize_buffer_backends(BufferBackendContext & context)
     }
 
     std::string backend_type = backend->get_backend_type();
-    RCUTILS_LOG_INFO_NAMED(
+    RCUTILS_LOG_DEBUG_NAMED(
       kLoggerName, "Processing backend '%s' (type: %s)",
       backend_name.c_str(), backend_type.c_str());
 
@@ -145,7 +145,7 @@ void initialize_buffer_backends(BufferBackendContext & context)
       };
     serializers[backend_type] = std::move(desc_ser);
 
-    RCUTILS_LOG_INFO_NAMED(
+    RCUTILS_LOG_DEBUG_NAMED(
       kLoggerName, "  FastCDR descriptor serializers registered for '%s'",
       backend_type.c_str());
   }
