@@ -12,11 +12,14 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <iomanip>
 #include <limits>
 #include <sstream>
 #include <string>
 #include <unordered_map>
 #include <vector>
+
+#include "rmw/types.h"
 
 #include "rcutils/logging_macros.h"
 
@@ -205,6 +208,44 @@ parse_buffer_backends_from_user_data(const uint8_t * data, size_t size)
     }
   }
   return result;
+}
+
+std::string
+encode_endpoint_gid_for_user_data(const rmw_gid_t & gid, const char * tag)
+{
+  std::ostringstream ss;
+  ss << tag;
+  ss << std::hex << std::setfill('0');
+  for (size_t i = 0; i < RMW_GID_STORAGE_SIZE; ++i) {
+    ss << std::setw(2) << static_cast<unsigned>(gid.data[i]);
+  }
+  return ss.str();
+}
+
+bool
+parse_endpoint_gid_from_user_data(
+  const uint8_t * data, size_t size, const char * tag, rmw_gid_t & gid)
+{
+  size_t tag_len = strlen(tag);
+  if (!data || size < tag_len) {
+    return false;
+  }
+  std::string str(reinterpret_cast<const char *>(data), size);
+  auto pos = str.find(tag);
+  if (pos == std::string::npos) {
+    return false;
+  }
+  std::string hex_str = str.substr(pos + tag_len, RMW_GID_STORAGE_SIZE * 2);
+  if (hex_str.size() != RMW_GID_STORAGE_SIZE * 2) {
+    return false;
+  }
+  for (size_t i = 0; i < RMW_GID_STORAGE_SIZE; ++i) {
+    unsigned val = 0;
+    std::istringstream iss(hex_str.substr(i * 2, 2));
+    iss >> std::hex >> val;
+    gid.data[i] = static_cast<uint8_t>(val);
+  }
+  return true;
 }
 
 template<typename DDSEntityQos>

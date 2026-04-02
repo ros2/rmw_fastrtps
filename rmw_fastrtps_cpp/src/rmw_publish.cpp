@@ -27,6 +27,7 @@
 #include "rcutils/logging_macros.h"
 
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
+#include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
@@ -88,6 +89,14 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
     writer_qos.endpoint().history_memory_policy =
       eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
     writer_qos.data_sharing().off();
+
+    {
+      std::string main_gid_str =
+        encode_endpoint_gid_for_user_data(info->publisher_gid, "PGID:");
+      auto ud_vec = writer_qos.user_data().data_vec();
+      ud_vec.insert(ud_vec.end(), main_gid_str.begin(), main_gid_str.end());
+      writer_qos.user_data().setValue(ud_vec);
+    }
 
     auto * data_writer = info->dds_publisher_->create_datawriter(
       topic, writer_qos, nullptr);

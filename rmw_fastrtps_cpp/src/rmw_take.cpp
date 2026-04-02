@@ -29,8 +29,11 @@
 
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
+#include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
+
+#include "fastdds/dds/builtin/topic/PublicationBuiltinTopicData.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "buffer_backend_context.hpp"
@@ -163,6 +166,20 @@ take_buffer_aware(
   if (message_info) {
     rmw_fastrtps_shared_cpp::_assign_message_info(
       eprosima_fastrtps_identifier, message_info, &info_seq[0]);
+
+    eprosima::fastdds::rtps::PublicationBuiltinTopicData pub_data;
+    if (eprosima::fastdds::dds::RETCODE_OK ==
+      info->accel_data_reader_->get_matched_publication_data(
+        pub_data, info_seq[0].publication_handle))
+    {
+      rmw_gid_t main_gid{};
+      auto & ud = pub_data.user_data.data_vec();
+      if (parse_endpoint_gid_from_user_data(
+            ud.data(), ud.size(), "PGID:", main_gid)) {
+        std::memcpy(
+          message_info->publisher_gid.data, main_gid.data, RMW_GID_STORAGE_SIZE);
+      }
+    }
   }
 
   if (info->accel_data_reader_->get_unread_count() > 0 && info->buffer_data_guard_) {
