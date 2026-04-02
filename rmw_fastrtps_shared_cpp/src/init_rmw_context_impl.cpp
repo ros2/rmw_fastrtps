@@ -15,6 +15,7 @@
 #include "rmw_fastrtps_shared_cpp/init_rmw_context_impl.hpp"
 
 #include <cassert>
+#include <mutex>
 
 #include "rcutils/env.h"
 
@@ -32,8 +33,13 @@
 
 #include "rmw_fastrtps_shared_cpp/listener_thread.hpp"
 
-bool
-rmw_fastrtps_shared_cpp::use_unique_network_flows_for_ros_discovery_info()
+namespace
+{
+
+bool g_use_unique_network_flows = true;  // Default value
+std::once_flag g_init_flag;
+
+void initialize_unique_network_flows()
 {
   const char * env_value = nullptr;
   const char * error_str = rcutils_get_env(
@@ -45,10 +51,19 @@ rmw_fastrtps_shared_cpp::use_unique_network_flows_for_ros_discovery_info()
       "Error getting env var RMW_FASTRTPS_USE_UNIQUE_NETWORK_FLOWS_FOR_ROS_DISCOVERY_INFO: %s. "
       "Using default behavior.",
       error_str);
-    return true;
+    g_use_unique_network_flows = true;
+  } else {
+    g_use_unique_network_flows = (env_value == nullptr || strcmp(env_value, "0") != 0);
   }
+}
 
-  return env_value == nullptr || strcmp(env_value, "0") != 0;
+}  // anonymous namespace
+
+bool
+rmw_fastrtps_shared_cpp::use_unique_network_flows_for_ros_discovery_info()
+{
+  std::call_once(g_init_flag, initialize_unique_network_flows);
+  return g_use_unique_network_flows;
 }
 
 rmw_ret_t

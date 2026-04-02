@@ -24,7 +24,12 @@ namespace rmw_fastrtps_shared_cpp
 {
 
 /// Check if unique network flows should be used for ROS discovery info.
-RMW_FASTRTPS_SHARED_CPP_LOCAL
+///
+/// This function is thread-safe and caches the result of the environment variable
+/// check to avoid repeated lookups during concurrent context initialization.
+///
+/// \return true if unique network flows should be used, false otherwise
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 use_unique_network_flows_for_ros_discovery_info();
 

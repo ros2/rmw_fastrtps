@@ -54,3 +54,12 @@ ament_add_gtest(test_logging test_logging.cpp)
 if(TARGET test_logging)
   target_link_libraries(test_logging ${PROJECT_NAME} rmw::rmw)
 endif()
+
+ament_add_gtest(test_unique_network_flows test_unique_network_flows.cpp)
+if(TARGET test_unique_network_flows)
+  target_link_libraries(test_unique_network_flows
+    ${PROJECT_NAME}
+    rcutils::rcutils
+    rmw::rmw
+  )
+endif()
