@@ -175,7 +175,8 @@ take_buffer_aware(
       rmw_gid_t main_gid{};
       auto & ud = pub_data.user_data.data_vec();
       if (parse_endpoint_gid_from_user_data(
-            ud.data(), ud.size(), "PGID:", main_gid)) {
+            ud.data(), ud.size(), "PGID:", main_gid))
+      {
         std::memcpy(
           message_info->publisher_gid.data, main_gid.data, RMW_GID_STORAGE_SIZE);
       }
