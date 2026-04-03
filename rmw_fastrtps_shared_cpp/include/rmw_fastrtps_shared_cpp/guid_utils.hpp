@@ -90,7 +90,7 @@ struct hash_fastdds_guid
 };
 
 inline std::string
-gid_to_hex(const rmw_gid_t & gid, size_t bytes = 8)
+gid_to_hex(const rmw_gid_t & gid, size_t bytes = RMW_GID_STORAGE_SIZE)
 {
   static const char hex_chars[] = "0123456789abcdef";
   std::string result;
