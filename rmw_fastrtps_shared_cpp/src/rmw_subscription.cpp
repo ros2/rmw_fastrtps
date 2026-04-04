@@ -120,10 +120,8 @@ __rmw_subscription_set_content_filter(
       "current subscriber has no content filter topic");
     return RMW_RET_ERROR;
   } else if (filtered_topic && !filter_expression_empty) {
-    std::vector<std::string> expression_parameters;
-    for (size_t i = 0; i < options->expression_parameters.size; ++i) {
-      expression_parameters.push_back(options->expression_parameters.data[i]);
-    }
+    std::vector<std::string> expression_parameters =
+      rmw_fastrtps_shared_cpp::prepare_content_filter_parameters(options);
 
     eprosima::fastdds::dds::ReturnCode_t ret =
       filtered_topic->set_filter_expression(options->filter_expression, expression_parameters);

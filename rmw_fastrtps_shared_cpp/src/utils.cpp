@@ -102,10 +102,7 @@ create_content_filtered_topic(
   const rmw_subscription_content_filter_options_t * options,
   eprosima::fastdds::dds::ContentFilteredTopic ** content_filtered_topic)
 {
-  std::vector<std::string> expression_parameters;
-  for (size_t i = 0; i < options->expression_parameters.size; ++i) {
-    expression_parameters.push_back(options->expression_parameters.data[i]);
-  }
+  std::vector<std::string> expression_parameters = prepare_content_filter_parameters(options);
 
   auto topic = dynamic_cast<eprosima::fastdds::dds::Topic *>(topic_desc);
   static std::atomic<uint32_t> cft_counter{0};
