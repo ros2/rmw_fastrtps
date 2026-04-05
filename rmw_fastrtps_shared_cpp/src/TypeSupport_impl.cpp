@@ -552,7 +552,10 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
               equiv_kind = xtypes::EK_BOTH;
             }
             xtypes::PlainCollectionHeader header {TypeObjectUtils::
-              build_plain_collection_header(equiv_kind, 0)};
+              build_plain_collection_header(
+                equiv_kind,
+                TypeObjectUtils::build_collection_element_flag(
+                  xtypes::TryConstructFailAction::DISCARD, false))};
             bool ec = false;
             TypeIdentifier * element_identifier = {new TypeIdentifier(
                 TypeObjectUtils::retrieve_complete_type_identifier(
@@ -604,7 +607,10 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
               equiv_kind = xtypes::EK_BOTH;
             }
             xtypes::PlainCollectionHeader header {TypeObjectUtils::
-              build_plain_collection_header(equiv_kind, 0)};
+              build_plain_collection_header(
+                equiv_kind,
+                TypeObjectUtils::build_collection_element_flag(
+                  xtypes::TryConstructFailAction::DISCARD, false))};
             bool ec = false;
             TypeIdentifier * element_identifier = {new TypeIdentifier(
                 TypeObjectUtils::retrieve_complete_type_identifier(
@@ -648,7 +654,10 @@ MemberIdentifierName GetTypeIdentifier(const MembersType * members, uint32_t ind
             equiv_kind = xtypes::EK_BOTH;
           }
           xtypes::PlainCollectionHeader header {TypeObjectUtils::
-            build_plain_collection_header(equiv_kind, 0)};
+            build_plain_collection_header(
+              equiv_kind,
+              TypeObjectUtils::build_collection_element_flag(
+                xtypes::TryConstructFailAction::DISCARD, false))};
           bool ec = false;
           TypeIdentifier * element_identifier = {new TypeIdentifier(
               TypeObjectUtils::retrieve_complete_type_identifier(
