@@ -15,11 +15,13 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_
 
+#include <functional>
 #include <map>
 #include <memory>
 #include <mutex>
 #include <set>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -109,6 +111,7 @@ typedef struct CustomParticipantInfo
 
   eprosima::fastdds::dds::Publisher * publisher_{nullptr};
   eprosima::fastdds::dds::Subscriber * subscriber_{nullptr};
+  void * buffer_serialization_context_{nullptr};
 
   // Protects creation and destruction of topics, readers and writers
   mutable std::mutex entity_creation_mutex_;
@@ -134,6 +137,12 @@ typedef struct CustomParticipantInfo
     EventListenerInterface * event_listener);
 } CustomParticipantInfo;
 
+/// Callback type for when a buffer-aware endpoint is discovered via DDS.
+/// Parameters: gid, topic_name, backend_metadata, is_reader.
+using BufferDiscoveryCallback = std::function<void (
+      const rmw_gid_t &, const std::string &,
+      const std::unordered_map<std::string, std::string> &, bool)>;
+
 class ParticipantListener : public eprosima::fastdds::dds::DomainParticipantListener
 {
 public:
@@ -143,6 +152,12 @@ public:
   : context(context),
     identifier_(identifier)
   {}
+
+  void set_buffer_discovery_callback(BufferDiscoveryCallback cb)
+  {
+    std::lock_guard<std::mutex> lock(buffer_cb_mutex_);
+    buffer_discovery_cb_ = std::move(cb);
+  }
 
   void on_participant_discovery(
     eprosima::fastdds::dds::DomainParticipant * participant,
@@ -263,6 +278,26 @@ private:
           qos_profile,
           is_reader,
           ser_type_hash_ptr);
+
+        // Parse buffer backend info and invoke callback if present.
+        // Copy the callback outside the lock so buffer_cb_mutex_ is not held
+        // during the callback (which may acquire other mutexes or do DDS work).
+        auto buffer_backends = parse_buffer_backends_from_user_data(
+          userDataValue.data(), userDataValue.size());
+        if (!buffer_backends.empty()) {
+          BufferDiscoveryCallback cb_copy;
+          {
+            std::lock_guard<std::mutex> lock(buffer_cb_mutex_);
+            cb_copy = buffer_discovery_cb_;
+          }
+          if (cb_copy) {
+            cb_copy(
+              rmw_fastrtps_shared_cpp::create_rmw_gid(identifier_, proxyData.guid),
+              proxyData.topic_name.to_string(),
+              buffer_backends,
+              is_reader);
+          }
+        }
       } else {
         context->graph_cache.remove_entity(
           rmw_fastrtps_shared_cpp::create_rmw_gid(
@@ -275,6 +310,9 @@ private:
 
   rmw_dds_common::Context * context;
   const char * const identifier_;
+
+  std::mutex buffer_cb_mutex_;
+  BufferDiscoveryCallback buffer_discovery_cb_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_

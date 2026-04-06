@@ -15,16 +15,24 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_PUBLISHER_INFO_HPP_
 
+#include <atomic>
+#include <cstring>
+#include <memory>
 #include <mutex>
 #include <set>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "fastdds/dds/core/policy/QosPolicies.hpp"
 #include "fastdds/dds/core/status/BaseStatus.hpp"
 #include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
 #include "fastdds/dds/core/status/IncompatibleQosStatus.hpp"
 #include "fastdds/dds/core/status/PublicationMatchedStatus.hpp"
+#include "fastdds/dds/domain/DomainParticipant.hpp"
 #include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
+#include "fastdds/dds/publisher/Publisher.hpp"
 #include "fastdds/dds/topic/Topic.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 
@@ -33,6 +41,7 @@
 
 #include "rcpputils/thread_safety_annotations.hpp"
 #include "rmw/rmw.h"
+#include "rmw/topic_endpoint_info.h"
 
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
 
@@ -72,6 +81,41 @@ private:
   RMWPublisherEvent * publisher_event_;
 };
 
+/// Per-subscriber endpoint created for buffer-aware publishing.
+struct BufferPublisherEndpoint
+{
+  std::string key;
+  eprosima::fastdds::dds::DataWriter * data_writer{nullptr};
+  eprosima::fastdds::dds::Topic * topic{nullptr};
+  bool owns_topic{true};
+  rmw_gid_t target_subscriber_gid{};
+  rmw_topic_endpoint_info_t subscriber_endpoint_info{};
+  std::unordered_map<std::string, std::string> backend_metadata;
+};
+
+/// Metadata queued by the discovery callback for lazy DataWriter creation.
+struct PendingBufferPublisher
+{
+  std::string unique_topic;
+  rmw_gid_t target_subscriber_gid{};
+  rmw_topic_endpoint_info_t subscriber_endpoint_info{};
+  std::unordered_map<std::string, std::string> backend_metadata;
+};
+
+/// Mutable buffer state shared between the discovery callback and the
+/// publish/destroy paths.  Managed via shared_ptr so the callback can
+/// safely outlive the CustomPublisherInfo that created it.
+struct BufferPublisherState
+{
+  std::atomic<bool> alive{true};
+  std::mutex mutex;
+  /// Per-subscriber (peer-to-peer) endpoints for non-CPU-only subscribers.
+  std::vector<std::shared_ptr<BufferPublisherEndpoint>> endpoints;
+  std::vector<PendingBufferPublisher> pending;
+  /// GIDs of discovered CPU-only subscribers served by the shared CPU channel.
+  std::vector<rmw_gid_t> cpu_only_subscribers;
+};
+
 typedef struct CustomPublisherInfo : public CustomEventInfo
 {
   virtual ~CustomPublisherInfo() = default;
@@ -85,6 +129,22 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   const char * typesupport_identifier_{nullptr};
 
   eprosima::fastdds::dds::Topic * topic_{nullptr};
+
+  // Buffer-aware publisher fields
+  bool is_buffer_aware_{false};
+  std::unordered_map<std::string, std::string> backend_metadata_;
+  rmw_topic_endpoint_info_t local_endpoint_info_{};
+  const void * serialization_context_{nullptr};
+  std::shared_ptr<BufferPublisherState> buffer_state_{
+    std::make_shared<BufferPublisherState>()};
+
+  // CPU-only shared channel (one writer serves all CPU-only subscribers)
+  eprosima::fastdds::dds::DataWriter * cpu_data_writer_{nullptr};
+  eprosima::fastdds::dds::Topic * cpu_topic_{nullptr};
+
+  // DDS objects needed to create dynamic DataWriters
+  eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
+  eprosima::fastdds::dds::Publisher * dds_publisher_{nullptr};
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   EventListenerInterface *

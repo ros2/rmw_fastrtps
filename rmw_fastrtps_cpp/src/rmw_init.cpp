@@ -17,6 +17,7 @@
 #include <cstring>
 #include <memory>
 
+#include "rcutils/logging_macros.h"
 #include "rcutils/strdup.h"
 #include "rcutils/types.h"
 
@@ -44,6 +45,10 @@
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/publisher.hpp"
 #include "rmw_fastrtps_cpp/subscription.hpp"
+
+#include "buffer_backend_context.hpp"
+#include "buffer_backend_loader.hpp"
+#include "buffer_endpoint_registry.hpp"
 
 extern "C"
 {
@@ -110,10 +115,37 @@ rmw_init(const rmw_init_options_t * options, rmw_context_t * context)
     [context]() {delete context->impl;});
 
   context->impl->is_shutdown = false;
+  context->impl->buffer_serialization_context = nullptr;
+  context->impl->buffer_endpoint_registry = nullptr;
   context->options = rmw_get_zero_initialized_init_options();
   rmw_ret_t ret = rmw_init_options_copy(options, &context->options);
   if (RMW_RET_OK != ret) {
     return ret;
+  }
+
+  auto buffer_context = new (std::nothrow) rmw_fastrtps_cpp::BufferBackendContext();
+  if (nullptr == buffer_context) {
+    RMW_SET_ERROR_MSG("failed to allocate buffer backend context");
+    return RMW_RET_BAD_ALLOC;
+  }
+  context->impl->buffer_serialization_context = buffer_context;
+
+  auto buffer_endpoint_registry = new (std::nothrow) rmw_fastrtps_cpp::BufferEndpointRegistry();
+  if (nullptr == buffer_endpoint_registry) {
+    delete buffer_context;
+    context->impl->buffer_serialization_context = nullptr;
+    RMW_SET_ERROR_MSG("failed to allocate buffer endpoint registry");
+    return RMW_RET_BAD_ALLOC;
+  }
+  context->impl->buffer_endpoint_registry = buffer_endpoint_registry;
+
+  try {
+    rmw_fastrtps_cpp::initialize_buffer_backends(*buffer_context);
+  } catch (const std::exception & e) {
+    // Non-fatal: buffer backends are optional.
+    RCUTILS_LOG_INFO_NAMED(
+      "rmw_fastrtps_cpp",
+      "Buffer backends not available: %s", e.what());
   }
 
   cleanup_impl.cancel();
@@ -134,7 +166,15 @@ rmw_shutdown(rmw_context_t * context)
     context->implementation_identifier,
     eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
   context->impl->is_shutdown = true;
+
+  auto * buffer_context = static_cast<rmw_fastrtps_cpp::BufferBackendContext *>(
+    context->impl->buffer_serialization_context);
+  if (buffer_context) {
+    rmw_fastrtps_cpp::shutdown_buffer_backends(*buffer_context);
+  }
+
   return RMW_RET_OK;
 }
 
@@ -159,6 +199,21 @@ rmw_context_fini(rmw_context_t * context)
     RMW_SET_ERROR_MSG("Finalizing a context with active nodes");
     return RMW_RET_ERROR;
   }
+
+  auto * buffer_context = static_cast<rmw_fastrtps_cpp::BufferBackendContext *>(
+    context->impl->buffer_serialization_context);
+  if (buffer_context) {
+    delete buffer_context;
+    context->impl->buffer_serialization_context = nullptr;
+  }
+
+  auto * buffer_endpoint_registry = static_cast<rmw_fastrtps_cpp::BufferEndpointRegistry *>(
+    context->impl->buffer_endpoint_registry);
+  if (buffer_endpoint_registry) {
+    delete buffer_endpoint_registry;
+    context->impl->buffer_endpoint_registry = nullptr;
+  }
+
   rmw_ret_t ret = rmw_init_options_fini(&context->options);
   delete context->impl;
   *context = rmw_get_zero_initialized_context();

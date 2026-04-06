@@ -16,7 +16,12 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__QOS_HPP_
 
+#include <string>
+#include <unordered_map>
+
 #include <fastdds/dds/core/policy/QosPolicies.hpp>
+
+#include "rmw/types.h"
 #include <fastdds/dds/publisher/qos/DataWriterQos.hpp>
 #include <fastdds/dds/subscriber/qos/DataReaderQos.hpp>
 #include <fastdds/dds/topic/qos/TopicQos.hpp>
@@ -37,7 +42,8 @@ get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
   const rosidl_type_hash_t & type_hash,
   eprosima::fastdds::dds::DataReaderQos & reader_qos,
-  const rosidl_type_hash_t * ser_type_hash = nullptr);
+  const rosidl_type_hash_t * ser_type_hash = nullptr,
+  const std::unordered_map<std::string, std::string> * buffer_backends = nullptr);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
@@ -45,7 +51,31 @@ get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
   const rosidl_type_hash_t & type_hash,
   eprosima::fastdds::dds::DataWriterQos & writer_qos,
-  const rosidl_type_hash_t * ser_type_hash = nullptr);
+  const rosidl_type_hash_t * ser_type_hash = nullptr,
+  const std::unordered_map<std::string, std::string> * buffer_backends = nullptr);
+
+/// Encode buffer backend info as a string for inclusion in DDS user_data.
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+std::string
+encode_buffer_backends_for_user_data(
+  const std::unordered_map<std::string, std::string> & backends);
+
+/// Parse buffer backend info from DDS user_data bytes.
+/// Returns empty map if the sentinel prefix is not found.
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+std::unordered_map<std::string, std::string>
+parse_buffer_backends_from_user_data(const uint8_t * data, size_t size);
+
+/// Encode a GID with a sentinel tag for inclusion in DDS user_data.
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+std::string
+encode_endpoint_gid_for_user_data(const rmw_gid_t & gid, const char * tag);
+
+/// Parse a GID with the given sentinel tag from DDS user_data bytes.
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+bool
+parse_endpoint_gid_from_user_data(
+  const uint8_t * data, size_t size, const char * tag, rmw_gid_t & gid);
 
 RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool

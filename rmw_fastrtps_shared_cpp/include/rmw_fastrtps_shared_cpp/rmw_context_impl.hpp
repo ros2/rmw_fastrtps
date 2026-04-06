@@ -24,6 +24,10 @@ struct rmw_context_impl_s
   void * common;
   /// Pointer to `rmw_fastrtps_shared_cpp::CustomParticipantInfo`.
   void * participant_info;
+  /// Pointer to rmw_fastrtps_cpp::BufferBackendContext.
+  void * buffer_serialization_context;
+  /// Pointer to rmw_fastrtps_cpp::BufferEndpointRegistry.
+  void * buffer_endpoint_registry;
   /// Mutex used to protect initialization/destruction.
   std::mutex mutex;
   /// Reference count.

@@ -14,9 +14,12 @@
 
 #include <rosidl_dynamic_typesupport/identifier.h>
 
+#include <algorithm>
 #include <string>
 #include <utility>
+#include <vector>
 
+#include "fastdds/dds/core/condition/GuardCondition.hpp"
 #include "fastdds/dds/domain/DomainParticipant.hpp"
 #include "fastdds/dds/subscriber/Subscriber.hpp"
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
@@ -31,6 +34,7 @@
 
 #include "rcutils/allocator.h"
 #include "rcutils/error_handling.h"
+#include "rcutils/logging_macros.h"
 #include "rcutils/macros.h"
 #include "rcutils/strdup.h"
 #include "rosidl_dynamic_typesupport/dynamic_message_type_support_struct.h"
@@ -42,9 +46,11 @@
 #include "rmw/validate_full_topic_name.h"
 
 #include "rcpputils/scope_exit.hpp"
+#include "rcpputils/split.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/names.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
@@ -55,11 +61,44 @@
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/subscription.hpp"
 
+#include "buffer_backend_context.hpp"
+#include "rosidl_buffer_backend_registry/backend_utils.hpp"
+#include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"
+
 #include "tracetools/tracetools.h"
 
 #include "type_support_common.hpp"
 
 using PropertyPolicyHelper = eprosima::fastdds::rtps::PropertyPolicyHelper;
+
+namespace
+{
+
+class CpuChannelDataReaderListener final : public eprosima::fastdds::dds::DataReaderListener
+{
+public:
+  CpuChannelDataReaderListener(
+    eprosima::fastdds::dds::GuardCondition * guard,
+    RMWSubscriptionEvent * event)
+  : guard_(guard), event_(event) {}
+
+  void on_data_available(eprosima::fastdds::dds::DataReader * reader) override
+  {
+    if (guard_) {
+      guard_->set_trigger_value(true);
+    }
+    auto unread = reader->get_unread_count();
+    if (event_) {
+      event_->notify_buffer_data_available(unread > 0 ? static_cast<size_t>(unread) : 1);
+    }
+  }
+
+private:
+  eprosima::fastdds::dds::GuardCondition * guard_;
+  RMWSubscriptionEvent * event_;
+};
+
+}  // namespace
 
 namespace rmw_fastrtps_cpp
 {
@@ -656,9 +695,81 @@ __create_subscription(
     reader_qos.data_sharing().off();
   }
 
+  // Detect buffer-aware message type
+  bool has_buffer_fields = callbacks->has_buffer_fields;
+  std::unordered_map<std::string, std::string> filtered_backends;
+  std::vector<std::string> my_backend_types;
+  bool cpu_only = false;
+
+  if (has_buffer_fields) {
+    std::unordered_map<std::string, std::string> all_backends;
+    auto * backend_context =
+      static_cast<rmw_fastrtps_cpp::BufferBackendContext *>(
+      participant_info->buffer_serialization_context_);
+    if (backend_context) {
+      all_backends = rosidl_buffer_backend_registry::get_all_backend_metadata(
+        backend_context->backend_instances);
+    }
+
+    // Parse acceptable_buffer_backends option (comma-separated) to filter
+    std::vector<std::string> requested_list;
+    if (subscription_options->acceptable_buffer_backends &&
+      strlen(subscription_options->acceptable_buffer_backends) > 0)
+    {
+      auto tokens = rcpputils::split(
+        subscription_options->acceptable_buffer_backends, ',', true);
+      for (auto & token : tokens) {
+        auto begin_it = token.find_first_not_of(" \t");
+        auto end_it = token.find_last_not_of(" \t");
+        if (begin_it != std::string::npos) {
+          requested_list.push_back(token.substr(begin_it, end_it - begin_it + 1));
+        }
+      }
+    }
+
+    // "any": accept all installed backends
+    bool use_all = false;
+    for (const auto & name : requested_list) {
+      if (name == "any") {
+        use_all = true;
+        break;
+      }
+    }
+
+    // NULL, empty, or only "cpu" entries: CPU-only (backward compat default)
+    cpu_only = !use_all && (requested_list.empty() ||
+      std::all_of(requested_list.begin(), requested_list.end(),
+      [](const std::string & n) {return n == "cpu";}));
+
+    if (cpu_only) {
+      // CPU-only: advertise "cpu" as the only supported backend so the
+      // subscription stays on the buffer-aware per-endpoint route and
+      // passes the backends_compatible check with CPU-only publishers.
+      my_backend_types.push_back("cpu");
+      filtered_backends["cpu"] = "";
+    } else if (use_all) {
+      filtered_backends = all_backends;
+      for (const auto & [k, v] : all_backends) {
+        my_backend_types.push_back(k);
+      }
+    } else {
+      for (const auto & name : requested_list) {
+        if (name == "cpu") {
+          continue;
+        }
+        auto it = all_backends.find(name);
+        if (it != all_backends.end()) {
+          filtered_backends[it->first] = it->second;
+          my_backend_types.push_back(it->first);
+        }
+      }
+    }
+  }
+
   if (!get_datareader_qos(
       *qos_policies, *type_supports->get_type_hash_func(type_supports),
-      reader_qos))
+      reader_qos, nullptr,
+      has_buffer_fields ? &filtered_backends : nullptr))
   {
     RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
     return nullptr;
@@ -675,7 +786,7 @@ __create_subscription(
 
   info->datareader_qos_ = reader_qos;
 
-  // create_datareader
+  // Always create the base DataReader (serves as discovery placeholder even for buffer-aware)
   if (!rmw_fastrtps_shared_cpp::create_datareader(
       info->datareader_qos_,
       subscription_options,
@@ -731,6 +842,100 @@ __create_subscription(
   rmw_fastrtps_shared_cpp::__init_subscription_for_loans(rmw_subscription);
   rmw_subscription->is_cft_enabled = info->filtered_topic_ != nullptr;
   rmw_subscription->is_cft_supported = true;
+
+  // Buffer-aware subscription setup
+  info->is_buffer_aware_ = has_buffer_fields;
+  info->is_cpu_only_ = has_buffer_fields && cpu_only;
+  if (has_buffer_fields) {
+    info->serialization_context_ = participant_info->buffer_serialization_context_;
+    info->my_backend_types_ = std::move(my_backend_types);
+    info->local_endpoint_info_ = rmw_get_zero_initialized_topic_endpoint_info();
+    info->local_endpoint_info_.endpoint_type = RMW_ENDPOINT_SUBSCRIPTION;
+    std::memcpy(
+      info->local_endpoint_info_.endpoint_gid,
+      info->subscription_gid_.data, RMW_GID_STORAGE_SIZE);
+
+    info->buffer_data_guard_ =
+      std::make_unique<eprosima::fastdds::dds::GuardCondition>();
+
+    if (cpu_only) {
+      // CPU-only: create a DataReader on the shared CPU channel.
+      std::string cpu_topic_name = topic_name_mangled + "/_buf_cpu";
+      eprosima::fastdds::dds::TopicQos cpu_tqos = dds_participant->get_default_topic_qos();
+      if (!get_topic_qos(*qos_policies, cpu_tqos)) {
+        RMW_SET_ERROR_MSG("create_subscription() failed setting CPU channel topic QoS");
+        return nullptr;
+      }
+      info->cpu_topic_ = participant_info->find_or_create_topic(
+        cpu_topic_name, type_name, cpu_tqos, nullptr);
+      if (!info->cpu_topic_) {
+        RMW_SET_ERROR_MSG("create_subscription() failed to create CPU channel topic");
+        return nullptr;
+      }
+
+      eprosima::fastdds::dds::DataReaderQos cpu_rqos = info->datareader_qos_;
+      info->cpu_data_reader_listener_ =
+        std::make_shared<CpuChannelDataReaderListener>(
+        info->buffer_data_guard_.get(), info->subscription_event_);
+      info->cpu_data_reader_ = subscriber->create_datareader(
+        info->cpu_topic_, cpu_rqos, info->cpu_data_reader_listener_.get(),
+        eprosima::fastdds::dds::StatusMask::data_available());
+      if (!info->cpu_data_reader_) {
+        info->cpu_data_reader_listener_.reset();
+        participant_info->delete_topic(info->cpu_topic_, nullptr);
+        info->cpu_topic_ = nullptr;
+        RMW_SET_ERROR_MSG("create_subscription() failed to create CPU channel DataReader");
+        return nullptr;
+      }
+    } else {
+      // Accelerated: single shared DataReader for all buffer-aware publishers.
+      std::string sub_hex = rmw_fastrtps_shared_cpp::gid_to_hex(info->subscription_gid_);
+      std::string accel_topic_name = topic_name_mangled + "/_buf/" + sub_hex;
+
+      eprosima::fastdds::dds::TopicQos accel_tqos = info->topic_->get_qos();
+      info->accel_topic_ = dds_participant->create_topic(
+        accel_topic_name, type_name, accel_tqos);
+      if (!info->accel_topic_) {
+        RMW_SET_ERROR_MSG("create_subscription() failed to create accelerated channel topic");
+        return nullptr;
+      }
+
+      eprosima::fastdds::dds::DataReaderQos accel_rqos = info->datareader_qos_;
+      accel_rqos.endpoint().history_memory_policy =
+        eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+      accel_rqos.data_sharing().off();
+      constexpr auto rep = eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION;
+      accel_rqos.representation().clear();
+      accel_rqos.representation().m_value.push_back(rep);
+
+      info->accel_data_reader_listener_ =
+        std::make_shared<CpuChannelDataReaderListener>(
+        info->buffer_data_guard_.get(), info->subscription_event_);
+      info->accel_data_reader_ = subscriber->create_datareader(
+        info->accel_topic_, accel_rqos, info->accel_data_reader_listener_.get(),
+        eprosima::fastdds::dds::StatusMask::data_available());
+      if (!info->accel_data_reader_) {
+        info->accel_data_reader_listener_.reset();
+        dds_participant->delete_topic(info->accel_topic_);
+        info->accel_topic_ = nullptr;
+        RMW_SET_ERROR_MSG("create_subscription() failed to create accelerated channel DataReader");
+        return nullptr;
+      }
+    }
+
+    auto * backend_context =
+      static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(
+      info->serialization_context_);
+    if (backend_context) {
+      rosidl_buffer_backend_registry::notify_endpoint_created(
+        backend_context->backend_instances, info->local_endpoint_info_);
+    }
+
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_fastrtps_cpp",
+      "Created buffer-aware subscription on '%s' (mode: %s)",
+      topic_name, cpu_only ? "cpu-only" : "accelerated");
+  }
 
   cleanup_rmw_subscription.cancel();
   cleanup_datareader.cancel();

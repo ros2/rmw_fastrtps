@@ -85,6 +85,11 @@ static bool has_triggered_condition(
       {
         return true;
       }
+      if (custom_subscriber_info->buffer_data_guard_ &&
+        custom_subscriber_info->buffer_data_guard_->get_trigger_value())
+      {
+        return true;
+      }
     }
   }
 
@@ -160,6 +165,9 @@ __rmw_wait(
         auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
         attached_conditions.push_back(
           &custom_subscriber_info->data_reader_->get_statuscondition());
+        if (custom_subscriber_info->buffer_data_guard_) {
+          attached_conditions.push_back(custom_subscriber_info->buffer_data_guard_.get());
+        }
       }
     }
 
@@ -231,10 +239,20 @@ __rmw_wait(
       void * data = subscriptions->subscribers[i];
       auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
 
+      bool has_data = false;
       eprosima::fastdds::dds::SampleInfo sample_info;
-      if (eprosima::fastdds::dds::RETCODE_OK !=
+      if (eprosima::fastdds::dds::RETCODE_OK ==
         custom_subscriber_info->data_reader_->get_first_untaken_info(&sample_info))
       {
+        has_data = true;
+      }
+      if (!has_data && custom_subscriber_info->buffer_data_guard_ &&
+        custom_subscriber_info->buffer_data_guard_->get_trigger_value())
+      {
+        has_data = true;
+        custom_subscriber_info->buffer_data_guard_->set_trigger_value(false);
+      }
+      if (!has_data) {
         subscriptions->subscribers[i] = 0;
       }
     }

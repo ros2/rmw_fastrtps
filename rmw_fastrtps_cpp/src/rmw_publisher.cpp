@@ -13,7 +13,11 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdio>
+#include <set>
 #include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
@@ -21,22 +25,30 @@
 #include "rmw/rmw.h"
 
 #include "rcpputils/scope_exit.hpp"
+#include "rcutils/logging_macros.h"
 
 #include "rmw/impl/cpp/macros.hpp"
 
 #include "rmw_dds_common/qos.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
 #include "rmw_fastrtps_shared_cpp/publisher.hpp"
+#include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
+#include "rmw_fastrtps_shared_cpp/create_rmw_gid.hpp"
 
 #include "rmw_fastrtps_cpp/identifier.hpp"
 #include "rmw_fastrtps_cpp/publisher.hpp"
 
 #include "rmw_dds_common/context.hpp"
 #include "rmw_dds_common/msg/participant_entities_info.hpp"
+
+#include "buffer_backend_context.hpp"
+#include "buffer_endpoint_registry.hpp"
+#include "rosidl_buffer_backend_registry/backend_utils.hpp"
 
 extern "C"
 {
@@ -116,7 +128,7 @@ rmw_create_publisher(
     });
 
   auto common_context = static_cast<rmw_dds_common::Context *>(node->context->impl->common);
-  auto info = static_cast<const CustomPublisherInfo *>(publisher->data);
+  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
 
   // Update graph
   if (RMW_RET_OK != common_context->add_publisher_graph(
@@ -124,6 +136,140 @@ rmw_create_publisher(
       node->name, node->namespace_))
   {
     return nullptr;
+  }
+
+  // Register buffer-aware subscriber discovery callback
+  if (info->is_buffer_aware_) {
+    auto state = info->buffer_state_;
+    auto pub_gid = info->publisher_gid;
+    std::string base_topic = info->topic_->get_name();
+    auto * backend_context =
+      static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(info->serialization_context_);
+    auto * buf_registry = static_cast<rmw_fastrtps_cpp::BufferEndpointRegistry *>(
+      node->context->impl->buffer_endpoint_registry);
+    if (buf_registry) {
+      buf_registry->register_subscriber_discovery_callback(
+        publisher->topic_name,
+        info->publisher_gid,
+        [state, pub_gid, base_topic, backend_context](
+          const rmw_fastrtps_cpp::BufferEndpointInfo & sub_info) {
+          if (!state->alive.load()) {
+            return;
+          }
+
+          // Detect whether the discovered subscriber is CPU-only.
+          // CPU-only subscribers advertise only {"cpu": ""} in their backend_metadata.
+          bool sub_is_cpu_only = (sub_info.backend_metadata.size() == 1 &&
+          sub_info.backend_metadata.count("cpu") == 1) ||
+          sub_info.backend_metadata.empty();
+
+          {
+            std::lock_guard<std::mutex> lock(state->mutex);
+            if (!state->alive.load()) {
+              return;
+            }
+
+            // Check for duplicate in existing p2p endpoints or CPU-only list.
+            for (const auto & ep : state->endpoints) {
+              bool equal = false;
+              rmw_ret_t ret = rmw_compare_gids_equal(
+                &ep->target_subscriber_gid, &sub_info.gid, &equal);
+              if (RMW_RET_OK != ret) {
+                RCUTILS_LOG_ERROR_NAMED(
+                  "rmw_fastrtps_cpp",
+                  "Buffer publisher: rmw_compare_gids_equal failed during duplicate check");
+                continue;
+              }
+              if (equal) {
+                return;
+              }
+            }
+            for (const auto & g : state->cpu_only_subscribers) {
+              bool equal = false;
+              rmw_ret_t ret = rmw_compare_gids_equal(&g, &sub_info.gid, &equal);
+              if (RMW_RET_OK != ret) {
+                RCUTILS_LOG_ERROR_NAMED(
+                  "rmw_fastrtps_cpp",
+                  "Buffer publisher: rmw_compare_gids_equal failed during duplicate check");
+                continue;
+              }
+              if (equal) {
+                return;
+              }
+            }
+
+            if (sub_is_cpu_only) {
+              // CPU-only subscriber: track its GID; the shared CPU channel
+              // DataWriter will serve it -- no per-subscriber endpoint needed.
+              state->cpu_only_subscribers.push_back(sub_info.gid);
+              RCUTILS_LOG_INFO_NAMED(
+                "rmw_fastrtps_cpp",
+                "Buffer publisher: CPU-only subscriber discovered on '%s', "
+                "served by shared CPU channel",
+                base_topic.c_str());
+              return;
+            }
+
+            // Non-CPU subscriber: create a peer-to-peer endpoint.
+            for (const auto & p : state->pending) {
+              bool equal = false;
+              rmw_ret_t ret = rmw_compare_gids_equal(
+                &p.target_subscriber_gid, &sub_info.gid, &equal);
+              if (RMW_RET_OK != ret) {
+                RCUTILS_LOG_ERROR_NAMED(
+                  "rmw_fastrtps_cpp",
+                  "Buffer publisher: rmw_compare_gids_equal failed during pending check");
+                continue;
+              }
+              if (equal) {
+                return;
+              }
+            }
+
+            std::string sub_hex = rmw_fastrtps_shared_cpp::gid_to_hex(sub_info.gid);
+            std::string unique_topic = base_topic + "/_buf/" + sub_hex;
+
+            rmw_topic_endpoint_info_t discovered_endpoint_info =
+            rmw_get_zero_initialized_topic_endpoint_info();
+            discovered_endpoint_info.endpoint_type = RMW_ENDPOINT_SUBSCRIPTION;
+            std::memcpy(
+              discovered_endpoint_info.endpoint_gid,
+              sub_info.gid.data, RMW_GID_STORAGE_SIZE);
+
+            if (backend_context) {
+              std::vector<rmw_topic_endpoint_info_t> existing_endpoints;
+              existing_endpoints.reserve(state->endpoints.size() + state->pending.size());
+              for (const auto & ep : state->endpoints) {
+                existing_endpoints.push_back(ep->subscriber_endpoint_info);
+              }
+              for (const auto & p : state->pending) {
+                existing_endpoints.push_back(p.subscriber_endpoint_info);
+              }
+
+              std::unordered_map<std::string,
+              std::vector<std::set<uint32_t>>> backend_endpoint_groups;
+              (void)rosidl_buffer_backend_registry::notify_endpoint_discovered(
+                backend_context->backend_instances,
+                discovered_endpoint_info,
+                existing_endpoints,
+                backend_endpoint_groups,
+                sub_info.backend_metadata);
+            }
+
+            PendingBufferPublisher pending;
+            pending.unique_topic = unique_topic;
+            pending.target_subscriber_gid = sub_info.gid;
+            pending.subscriber_endpoint_info = discovered_endpoint_info;
+            pending.backend_metadata = sub_info.backend_metadata;
+            state->pending.push_back(std::move(pending));
+
+            RCUTILS_LOG_INFO_NAMED(
+              "rmw_fastrtps_cpp",
+              "Buffer publisher: non-CPU subscriber discovered, queued '%s'",
+              unique_topic.c_str());
+          }
+        });
+    }
   }
 
   cleanup_publisher.cancel();
@@ -212,6 +358,47 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
     publisher->implementation_identifier,
     eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
+  auto info = static_cast<CustomPublisherInfo *>(publisher->data);
+  if (info && info->is_buffer_aware_) {
+    auto & state = *info->buffer_state_;
+    std::vector<std::shared_ptr<BufferPublisherEndpoint>> endpoints_to_destroy;
+    {
+      std::lock_guard<std::mutex> lock(state.mutex);
+      state.alive.store(false);
+      endpoints_to_destroy = std::move(state.endpoints);
+      state.endpoints.clear();
+      state.pending.clear();
+      state.cpu_only_subscribers.clear();
+    }
+
+    auto * buf_registry = static_cast<rmw_fastrtps_cpp::BufferEndpointRegistry *>(
+      node->context->impl->buffer_endpoint_registry);
+    if (buf_registry) {
+      buf_registry->unregister_callbacks(info->publisher_gid);
+    }
+
+    for (auto & endpoint : endpoints_to_destroy) {
+      if (endpoint->data_writer) {
+        info->dds_publisher_->delete_datawriter(endpoint->data_writer);
+      }
+      if (endpoint->topic && endpoint->owns_topic) {
+        info->participant_->delete_topic(endpoint->topic);
+      }
+    }
+
+    // Clean up the shared CPU channel DataWriter and Topic.
+    if (info->cpu_data_writer_) {
+      info->dds_publisher_->delete_datawriter(info->cpu_data_writer_);
+      info->cpu_data_writer_ = nullptr;
+    }
+    if (info->cpu_topic_) {
+      auto * participant_info =
+        static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
+      participant_info->delete_topic(info->cpu_topic_, nullptr);
+      info->cpu_topic_ = nullptr;
+    }
+  }
 
   return rmw_fastrtps_shared_cpp::__rmw_destroy_publisher(
     eprosima_fastrtps_identifier, node, publisher);

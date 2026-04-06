@@ -402,6 +402,15 @@ void RMWSubscriptionEvent::update_data_available()
   }
 }
 
+void RMWSubscriptionEvent::notify_buffer_data_available(size_t count)
+{
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
+
+  if (on_new_message_cb_ && count > 0) {
+    on_new_message_cb_(new_message_user_data_, count);
+  }
+}
+
 void RMWSubscriptionEvent::update_requested_deadline_missed(
   uint32_t total_count, uint32_t total_count_change)
 {
