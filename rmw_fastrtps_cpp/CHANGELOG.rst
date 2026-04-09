@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.4.6 (2026-04-09)
+------------------
+* Add support for rosidl::Buffer-aware per-endpoint pub/sub (`#867 <https://github.com/ros2/rmw_fastrtps/issues/867>`_)
+* Contributors: CY Chen
+
 9.4.5 (2026-03-30)
 ------------------
 * Use new aggregate rosidl target instead of _TARGETS (`#870 <https://github.com/ros2/rmw_fastrtps/issues/870>`_)
