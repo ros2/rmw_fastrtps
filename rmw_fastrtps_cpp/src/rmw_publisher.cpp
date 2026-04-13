@@ -141,7 +141,6 @@ rmw_create_publisher(
   // Register buffer-aware subscriber discovery callback
   if (info->is_buffer_aware_) {
     auto state = info->buffer_state_;
-    auto pub_gid = info->publisher_gid;
     std::string base_topic = info->topic_->get_name();
     auto * backend_context =
       static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(info->serialization_context_);
@@ -151,7 +150,7 @@ rmw_create_publisher(
       buf_registry->register_subscriber_discovery_callback(
         publisher->topic_name,
         info->publisher_gid,
-        [state, pub_gid, base_topic, backend_context](
+        [state, base_topic, backend_context](
           const rmw_fastrtps_cpp::BufferEndpointInfo & sub_info) {
           if (!state->alive.load()) {
             return;
