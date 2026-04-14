@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.4.7 (2026-04-14)
+------------------
+
+* Remove warning when compiling with ``lcang`` (`#876 <https://github.com/ros2/rmw_fastrtps/issues/876>`_)
+
+* Contributors: Alejandro Hernández Cordero
+
 9.4.6 (2026-04-09)
 ------------------
 * Add support for rosidl::Buffer-aware per-endpoint pub/sub (`#867 <https://github.com/ros2/rmw_fastrtps/issues/867>`_)
