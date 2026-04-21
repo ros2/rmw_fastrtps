@@ -154,9 +154,10 @@ create_datareader(
         subscriber->get_participant()->get_qos(participant_qos);
 
         // Check if locators are explicitly specified at endpoint level.
-        bool has_explicit_locators = !datareader_qos.endpoint().unicast_locator_list.empty() ||
-                                    !datareader_qos.endpoint().multicast_locator_list.empty() ||
-                                    !datareader_qos.endpoint().remote_locator_list.empty();
+        bool has_explicit_locators =
+          !datareader_qos.endpoint().unicast_locator_list.empty() ||
+          !datareader_qos.endpoint().multicast_locator_list.empty() ||
+          !datareader_qos.endpoint().remote_locator_list.empty();
 
         // Also consider participant defaults as explicit user intent. This covers
         // scenarios where only default multicast locators are configured and unique
@@ -170,30 +171,33 @@ create_datareader(
         if (has_explicit_locators) {
           if (strict_unique_flows_required) {
             RMW_SET_ERROR_MSG(
-              "RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED cannot be used when endpoint or participant "
-              "default locators are explicitly configured");
+              "RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED cannot be used when "
+              "endpoint or participant default locators are explicitly configured");
             return false;
           } else {
             RCUTILS_LOG_WARN_NAMED(
               "rmw_fastrtps_shared_cpp",
-              "RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED is ignored when endpoint or participant "
-              "default locators are explicitly configured");
+              "RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED is ignored when "
+              "endpoint or participant default locators are explicitly configured");
           }
         }
 
         // Check if Endpoint Discovery Protocol (EDP) is configured as STATIC
         bool is_edp_static =
-          participant_qos.wire_protocol().builtin.discovery_config.use_STATIC_EndpointDiscoveryProtocol;
+          participant_qos.wire_protocol().builtin.discovery_config.
+          use_STATIC_EndpointDiscoveryProtocol;
 
         if (is_edp_static) {
           if (strict_unique_flows_required) {
             RMW_SET_ERROR_MSG(
-              "RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED cannot be used with static endpoint discovery");
+              "RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED cannot be used with "
+              "static endpoint discovery");
             return false;
           } else {
             RCUTILS_LOG_WARN_NAMED(
               "rmw_fastrtps_shared_cpp",
-              "RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED is ignored with static endpoint discovery");
+              "RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED is ignored with "
+              "static endpoint discovery");
           }
         }
 
@@ -201,7 +205,8 @@ create_datareader(
         if (nullptr ==
           PropertyPolicyHelper::find_property(
             updated_qos.properties(),
-            "fastdds.unique_network_flows")) {
+            "fastdds.unique_network_flows"))
+        {
           // For STRICTLY_REQUIRED: always request unique flows (Fast-DDS will enforce it)
           // For OPTIONALLY_REQUIRED: only request if no locators are explicitly configured and not
           //   using static endpoint discovery
@@ -209,8 +214,7 @@ create_datareader(
             strict_unique_flows_required ||
             (!has_explicit_locators && !is_edp_static);
 
-          if (should_request_unique_flows)
-          {
+          if (should_request_unique_flows) {
             updated_qos.properties().properties().emplace_back("fastdds.unique_network_flows", "");
           }
         }

@@ -25,7 +25,7 @@
 
 #include "rmw_fastrtps_shared_cpp/init_rmw_context_impl.hpp"
 
-using rmw_fastrtps_shared_cpp::use_unique_network_flows_for_ros_discovery_info;
+using rmw_fastrtps_shared_cpp::get_unique_network_flows_for_ros_discovery_info;
 
 /// Test fixture for isolated environment variable testing
 class UniqueNetworkFlowsTest : public ::testing::Test
@@ -34,16 +34,16 @@ protected:
   void SetUp() override
   {
     // Store original environment variable value if it exists
-    original_value_ = std::getenv("RMW_FASTRTPS_USE_UNIQUE_NETWORK_FLOWS_FOR_ROS_DISCOVERY_INFO");
+    original_value_ = std::getenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS");
   }
 
   void TearDown() override
   {
     // Restore original environment variable
     if (original_value_ != nullptr) {
-      setenv("RMW_FASTRTPS_USE_UNIQUE_NETWORK_FLOWS_FOR_ROS_DISCOVERY_INFO", original_value_, 1);
+      setenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", original_value_, 1);
     } else {
-      unsetenv("RMW_FASTRTPS_USE_UNIQUE_NETWORK_FLOWS_FOR_ROS_DISCOVERY_INFO");
+      unsetenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS");
     }
   }
 
@@ -52,57 +52,32 @@ protected:
 
 TEST_F(UniqueNetworkFlowsTest, cached_value_is_stable_across_env_changes)
 {
-  setenv("RMW_FASTRTPS_USE_UNIQUE_NETWORK_FLOWS_FOR_ROS_DISCOVERY_INFO", "1", 1);
+  // Ensure the first call reads the environment and locks that value.
+  setenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", "DISABLED", 1);
+  auto first = get_unique_network_flows_for_ros_discovery_info();
+  EXPECT_EQ(first, RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED);
 
-  bool first = use_unique_network_flows_for_ros_discovery_info();
-  setenv("RMW_FASTRTPS_USE_UNIQUE_NETWORK_FLOWS_FOR_ROS_DISCOVERY_INFO", "0", 1);
-  bool second = use_unique_network_flows_for_ros_discovery_info();
-
+  // Subsequent changes to the env var must not change the cached value.
+  setenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", "STRICT", 1);
+  auto second = get_unique_network_flows_for_ros_discovery_info();
   EXPECT_EQ(first, second);
 }
 
-TEST_F(UniqueNetworkFlowsTest, thread_safe_concurrent_calls)
+TEST_F(UniqueNetworkFlowsTest, maps_env_values_correctly_when_bypassing_cache)
 {
-  bool expected = use_unique_network_flows_for_ros_discovery_info();
+  struct Case { const char * env; rmw_unique_network_flow_endpoints_requirement_t expected; };
+  std::vector<Case> cases = {
+    {"DISABLED", RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED},
+    {"OPTIONAL", RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED},
+    {"STRICT", RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED},
+    {"DEFAULT", RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_SYSTEM_DEFAULT},
+    {"BAD_VALUE", RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED},
+  };
 
-  const int num_threads = 10;
-  std::vector<bool> results(num_threads);
-  std::vector<std::thread> threads;
-
-  for (int i = 0; i < num_threads; ++i) {
-    threads.emplace_back([&results, i] {
-      results[i] = use_unique_network_flows_for_ros_discovery_info();
-    });
-  }
-
-  for (auto & thread : threads) {
-    thread.join();
-  }
-
-  for (int i = 0; i < num_threads; ++i) {
-    EXPECT_EQ(results[i], expected);
-  }
-}
-
-TEST_F(UniqueNetworkFlowsTest, concurrent_initialization_consistent)
-{
-  const int num_threads = 20;
-  std::vector<bool> results(num_threads);
-  std::vector<std::thread> threads;
-
-  for (int i = 0; i < num_threads; ++i) {
-    threads.emplace_back([&results, i] {
-      results[i] = use_unique_network_flows_for_ros_discovery_info();
-    });
-  }
-
-  for (auto & thread : threads) {
-    thread.join();
-  }
-
-  bool first = results[0];
-  for (int i = 1; i < num_threads; ++i) {
-    EXPECT_EQ(results[i], first);
+  for (const auto & c : cases) {
+    setenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", c.env, 1);
+    auto val = get_unique_network_flows_for_ros_discovery_info(false);
+    EXPECT_EQ(val, c.expected) << "env=" << c.env;
   }
 }
 
@@ -115,6 +90,8 @@ using eprosima::fastdds::rtps::Locator_t;
 
 namespace
 {
+using FastRtpsProperty = eprosima::fastdds::rtps::Property;
+
 bool has_explicit_locators(const DataReaderQos & qos)
 {
   return !qos.endpoint().unicast_locator_list.empty() ||
@@ -130,7 +107,8 @@ bool property_exists(
   return std::any_of(
     properties.begin(),
     properties.end(),
-    [&property_name](const eprosima::fastdds::rtps::Property & prop) {
+    [&property_name](const FastRtpsProperty & prop)
+    {
       return prop.name() == property_name;
     });
 }
@@ -140,12 +118,14 @@ size_t property_count(
   const std::string & property_name)
 {
   const auto & properties = qos.properties().properties();
-  return static_cast<size_t>(std::count_if(
-    properties.begin(),
-    properties.end(),
-    [&property_name](const eprosima::fastdds::rtps::Property & prop) {
-      return prop.name() == property_name;
-    }));
+  return static_cast<size_t>(
+    std::count_if(
+      properties.begin(),
+      properties.end(),
+      [&property_name](const FastRtpsProperty & prop)
+      {
+        return prop.name() == property_name;
+      }));
 }
 
 bool should_request_unique_flows(

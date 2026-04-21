@@ -54,9 +54,7 @@ init_context_impl(
   // Improve graph discovery by using a unique listening port for its subscription,
   // unless disabled by the user
   subscription_options.require_unique_network_flow_endpoints =
-    rmw_fastrtps_shared_cpp::use_unique_network_flows_for_ros_discovery_info() ?
-    RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED :
-    RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED;
+    rmw_fastrtps_shared_cpp::get_unique_network_flows_for_ros_discovery_info();
 
   std::unique_ptr<rmw_dds_common::Context> common_context(
     new(std::nothrow) rmw_dds_common::Context());

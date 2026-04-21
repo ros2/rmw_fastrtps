@@ -36,34 +36,68 @@
 namespace
 {
 
-bool g_use_unique_network_flows = true;  // Default value
+rmw_unique_network_flow_endpoints_requirement_t g_unique_network_flows_for_ros_discovery_info =
+  RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
 std::once_flag g_init_flag;
 
-void initialize_unique_network_flows()
+static rmw_unique_network_flow_endpoints_requirement_t
+read_unique_network_flows_from_env()
 {
   const char * env_value = nullptr;
   const char * error_str = rcutils_get_env(
-    "RMW_FASTRTPS_USE_UNIQUE_NETWORK_FLOWS_FOR_ROS_DISCOVERY_INFO", &env_value);
+    "RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", &env_value);
 
-  if (error_str != NULL) {
+  if (error_str != nullptr) {
     RCUTILS_LOG_WARN_NAMED(
       "rmw_fastrtps_shared_cpp",
-      "Error getting env var RMW_FASTRTPS_USE_UNIQUE_NETWORK_FLOWS_FOR_ROS_DISCOVERY_INFO: %s. "
+      "Error getting env var RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS: %s. "
       "Using default behavior.",
       error_str);
-    g_use_unique_network_flows = true;
-  } else {
-    g_use_unique_network_flows = (env_value == nullptr || strcmp(env_value, "0") != 0);
+    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
   }
+
+  if (env_value == nullptr) {
+    RCUTILS_LOG_WARN_NAMED(
+      "rmw_fastrtps_shared_cpp",
+      "Invalid value for env var RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS: null. "
+      "Using default behavior.");
+    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
+  }
+
+  if (strcmp(env_value, "DISABLED") == 0) {
+    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED;
+  } else if (strcmp(env_value, "OPTIONAL") == 0) {
+    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
+  } else if (strcmp(env_value, "STRICT") == 0) {
+    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED;
+  } else if (strcmp(env_value, "DEFAULT") == 0) {
+    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_SYSTEM_DEFAULT;
+  }
+
+  RCUTILS_LOG_WARN_NAMED(
+    "rmw_fastrtps_shared_cpp",
+    "Invalid value for env var RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS: %s. "
+    "Using default behavior.",
+    env_value);
+  return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
+}
+
+void initialize_unique_network_flows()
+{
+  g_unique_network_flows_for_ros_discovery_info = read_unique_network_flows_from_env();
 }
 
 }  // anonymous namespace
 
-bool
-rmw_fastrtps_shared_cpp::use_unique_network_flows_for_ros_discovery_info()
+rmw_unique_network_flow_endpoints_requirement_t
+rmw_fastrtps_shared_cpp::get_unique_network_flows_for_ros_discovery_info(bool use_cached)
 {
-  std::call_once(g_init_flag, initialize_unique_network_flows);
-  return g_use_unique_network_flows;
+  if (use_cached) {
+    std::call_once(g_init_flag, initialize_unique_network_flows);
+    return g_unique_network_flows_for_ros_discovery_info;
+  }
+  // When bypassing the cache, use the shared helper so logic is consistent.
+  return read_unique_network_flows_from_env();
 }
 
 rmw_ret_t

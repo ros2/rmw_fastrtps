@@ -63,7 +63,12 @@ It is important to note that this mode typically yields higher throughput rates 
 
 If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` behave as if it were set to `SYNCHRONOUS`.
 
-For the internal `ros_discovery_info` graph subscription, `rmw_fastrtps` requests unique network flow endpoints by default. Set `RMW_FASTRTPS_USE_UNIQUE_NETWORK_FLOWS_FOR_ROS_DISCOVERY_INFO=0` to disable that request and allow endpoint XML or Fast DDS XML specific locators, such as multicast locators, to be used instead.
+For the internal `ros_discovery_info` graph subscription, `rmw_fastrtps` requests unique network flow endpoints by default. The `RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS` environment variable can be used to change the unique network flows request mode. The admissible values are:
+
+* `DISABLED`: Unique network flow endpoints not required.
+* `STRICT`: Unique network flow endpoins strictly required. This can result in an error if the `ros_discovery_info` graph subscription is configured with a conflicting option, such as static endpoint discovery or custom locators.
+* `OPTIONAL`: Unique network flow endpoints optionally required and will not be used if the `ros_discovery_info` graph subscription is configured with a conflicting option, such as static endpoint discovery or custom locators.
+* `DEFAULT`: Unique network flow endpoints requirement decided by system.
 
 ### Full QoS configuration
 
