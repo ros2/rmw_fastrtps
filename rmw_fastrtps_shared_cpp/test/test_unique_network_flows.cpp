@@ -81,6 +81,14 @@ TEST_F(UniqueNetworkFlowsTest, maps_env_values_correctly_when_bypassing_cache)
   }
 }
 
+TEST_F(UniqueNetworkFlowsTest, returns_optionally_required_when_env_unset)
+{
+  // Ensure the env var is not set and bypass the cache to read directly from env
+  unsetenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS");
+  auto val = get_unique_network_flows_for_ros_discovery_info(false);
+  EXPECT_EQ(val, RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED);
+}
+
 // ============================================================================
 // DataReader QoS Tests - Unique Network Flow Endpoints Functionality
 // ============================================================================
