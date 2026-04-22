@@ -23,6 +23,8 @@
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
 #include "fastdds/rtps/common/Locator.hpp"
 
+#include "rcutils/env.h"
+
 #include "rmw_fastrtps_shared_cpp/init_rmw_context_impl.hpp"
 
 using rmw_fastrtps_shared_cpp::get_unique_network_flows_for_ros_discovery_info;
@@ -34,31 +36,55 @@ protected:
   void SetUp() override
   {
     // Store original environment variable value if it exists
-    original_value_ = std::getenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS");
+    get_env(original_value_);
   }
 
   void TearDown() override
   {
     // Restore original environment variable
-    if (original_value_ != nullptr) {
-      setenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", original_value_, 1);
+    if (original_value_.has_value()) {
+      set_env(original_value_.value());
     } else {
-      unsetenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS");
+      unset_env();
     }
   }
 
-  const char * original_value_;
+  void set_env(const std::string & value)
+  {
+    ASSERT_EQ(
+      rcutils_set_env("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", value.c_str()),
+      true);
+  }
+
+  void get_env(std::optional<std::string> & value) const
+  {
+    const char * env_value;
+    const char * error_str;
+    error_str = rcutils_get_env("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", &env_value);
+    ASSERT_EQ(error_str, nullptr) << "Error getting env var: " << error_str;
+    value = env_value ? std::optional<std::string>(env_value) : std::nullopt;
+  }
+
+  void unset_env()
+  {
+    ASSERT_EQ(
+      rcutils_set_env_overwrite("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", nullptr,
+                                true),
+      true);
+  }
+
+  std::optional<std::string> original_value_;
 };
 
 TEST_F(UniqueNetworkFlowsTest, cached_value_is_stable_across_env_changes)
 {
   // Ensure the first call reads the environment and locks that value.
-  setenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", "DISABLED", 1);
+  set_env("DISABLED");
   auto first = get_unique_network_flows_for_ros_discovery_info();
   EXPECT_EQ(first, RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED);
 
   // Subsequent changes to the env var must not change the cached value.
-  setenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", "STRICT", 1);
+  set_env("STRICT");
   auto second = get_unique_network_flows_for_ros_discovery_info();
   EXPECT_EQ(first, second);
 }
@@ -75,7 +101,7 @@ TEST_F(UniqueNetworkFlowsTest, maps_env_values_correctly_when_bypassing_cache)
   };
 
   for (const auto & c : cases) {
-    setenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", c.env, 1);
+    set_env(c.env);
     auto val = get_unique_network_flows_for_ros_discovery_info(false);
     EXPECT_EQ(val, c.expected) << "env=" << c.env;
   }
@@ -84,7 +110,7 @@ TEST_F(UniqueNetworkFlowsTest, maps_env_values_correctly_when_bypassing_cache)
 TEST_F(UniqueNetworkFlowsTest, returns_optionally_required_when_env_unset)
 {
   // Ensure the env var is not set and bypass the cache to read directly from env
-  unsetenv("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS");
+  unset_env();
   auto val = get_unique_network_flows_for_ros_discovery_info(false);
   EXPECT_EQ(val, RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED);
 }
