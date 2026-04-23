@@ -68,8 +68,7 @@ protected:
   void unset_env()
   {
     ASSERT_EQ(
-      rcutils_set_env_overwrite("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", nullptr,
-                                true),
+      rcutils_set_env("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", nullptr),
       true);
   }
 
