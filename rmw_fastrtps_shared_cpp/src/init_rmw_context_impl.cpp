@@ -37,8 +37,12 @@
 namespace
 {
 
-rmw_unique_network_flow_endpoints_requirement_t g_unique_network_flows_for_ros_discovery_info =
+static const rmw_unique_network_flow_endpoints_requirement_t
+  DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS =
   RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
+
+rmw_unique_network_flow_endpoints_requirement_t g_unique_network_flows_for_ros_discovery_info =
+  DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS;
 std::once_flag g_init_flag;
 
 static rmw_unique_network_flow_endpoints_requirement_t
@@ -54,25 +58,23 @@ read_unique_network_flows_from_env()
       "Error getting env var RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS: %s. "
       "Using default behavior.",
       error_str);
-    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
-  }
-
-  if (env_value == nullptr) {
+    return DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS;
+  } else if (env_value == nullptr) {
     RCUTILS_LOG_WARN_NAMED(
       "rmw_fastrtps_shared_cpp",
       "Invalid value for env var RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS: null. "
       "Using default behavior.");
-    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
-  }
-
-  if (strcmp(env_value, "DISABLED") == 0) {
+    return DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS;
+  } else if (env_value[0] == '\0') {
+    return DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS;
+  } else if (strcmp(env_value, "DEFAULT") == 0) {
+    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_SYSTEM_DEFAULT;
+  } else if (strcmp(env_value, "DISABLED") == 0) {
     return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED;
   } else if (strcmp(env_value, "OPTIONAL") == 0) {
     return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
   } else if (strcmp(env_value, "STRICT") == 0) {
     return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED;
-  } else if (strcmp(env_value, "DEFAULT") == 0) {
-    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_SYSTEM_DEFAULT;
   }
 
   RCUTILS_LOG_WARN_NAMED(
@@ -80,7 +82,7 @@ read_unique_network_flows_from_env()
     "Invalid value for env var RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS: %s. "
     "Using default behavior.",
     env_value);
-  return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
+  return DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS;
 }
 
 void initialize_unique_network_flows()
