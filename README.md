@@ -68,7 +68,7 @@ For the internal `ros_discovery_info` graph subscription, `rmw_fastrtps` request
 * `DISABLED`: Unique network flow endpoints not required.
 * `STRICT`: Unique network flow endpoins strictly required. This can result in an error if the `ros_discovery_info` graph subscription is configured with a conflicting option, such as static endpoint discovery or custom locators.
 * `OPTIONAL`: Unique network flow endpoints optionally required and will not be used if the `ros_discovery_info` graph subscription is configured with a conflicting option, such as static endpoint discovery or custom locators.
-* `DEFAULT`: Unique network flow endpoints requirement decided by system.
+* `SYSTEM_DEFAULT`: Unique network flow endpoints requirement decided by system.
 
 ### Full QoS configuration
 

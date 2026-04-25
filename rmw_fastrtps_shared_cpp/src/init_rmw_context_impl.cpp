@@ -67,7 +67,7 @@ read_unique_network_flows_from_env()
     return DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS;
   } else if (env_value[0] == '\0') {
     return DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS;
-  } else if (strcmp(env_value, "DEFAULT") == 0) {
+  } else if (strcmp(env_value, "SYSTEM_DEFAULT") == 0) {
     return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_SYSTEM_DEFAULT;
   } else if (strcmp(env_value, "DISABLED") == 0) {
     return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED;
