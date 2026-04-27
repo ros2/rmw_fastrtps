@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cstdlib>
+#include <optional>
 #include <string>
 #include <thread>
 #include <vector>
@@ -24,10 +25,27 @@
 #include "fastdds/rtps/common/Locator.hpp"
 
 #include "rcutils/env.h"
+#include "rcutils/logging.h"
 
 #include "rmw_fastrtps_shared_cpp/init_rmw_context_impl.hpp"
 
 using rmw_fastrtps_shared_cpp::get_unique_network_flows_for_ros_discovery_info;
+
+namespace
+{
+int g_log_count = 0;
+
+void counting_log_handler(
+  const rcutils_log_location_t *,
+  int,
+  const char *,
+  rcutils_time_point_value_t,
+  const char *,
+  va_list *)
+{
+  ++g_log_count;
+}
+}  // namespace
 
 /// Test fixture for isolated environment variable testing
 class UniqueNetworkFlowsTest : public ::testing::Test
@@ -62,7 +80,7 @@ protected:
     const char * error_str;
     error_str = rcutils_get_env("RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", &env_value);
     ASSERT_EQ(error_str, nullptr) << "Error getting env var: " << error_str;
-    value = env_value ? std::optional<std::string>(env_value) : std::nullopt;
+    value = (*env_value != '\0') ? std::optional<std::string>(env_value) : std::nullopt;
   }
 
   void unset_env()
@@ -112,6 +130,32 @@ TEST_F(UniqueNetworkFlowsTest, returns_optionally_required_when_env_unset)
   unset_env();
   auto val = get_unique_network_flows_for_ros_discovery_info(false);
   EXPECT_EQ(val, RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED);
+}
+
+TEST_F(UniqueNetworkFlowsTest, no_logs_emitted_for_valid_and_unset_env_values)
+{
+  struct Case { const char * env; rmw_unique_network_flow_endpoints_requirement_t expected; };
+  const std::vector<Case> cases = {
+    {"DISABLED", RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED},
+    {"OPTIONAL", RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED},
+    {"STRICT", RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED},
+    {"SYSTEM_DEFAULT", RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_SYSTEM_DEFAULT},
+  };
+
+  auto saved_handler = rcutils_logging_get_output_handler();
+  g_log_count = 0;
+  rcutils_logging_set_output_handler(counting_log_handler);
+
+  for (const auto & c : cases) {
+    set_env(c.env);
+    EXPECT_EQ(get_unique_network_flows_for_ros_discovery_info(false), c.expected)
+      << "env=" << c.env;
+  }
+  unset_env();
+  get_unique_network_flows_for_ros_discovery_info(false);
+
+  rcutils_logging_set_output_handler(saved_handler);
+  EXPECT_EQ(g_log_count, 0) << "unexpected warning(s) for valid/unset env var value";
 }
 
 // ============================================================================
