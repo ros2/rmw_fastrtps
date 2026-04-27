@@ -176,7 +176,7 @@ create_datareader(
               "endpoint or participant default locators are explicitly configured");
             return false;
           } else {
-            RCUTILS_LOG_WARN_NAMED(
+            RCUTILS_LOG_INFO_NAMED(
               "rmw_fastrtps_shared_cpp",
               "RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED is ignored when "
               "endpoint or participant default locators are explicitly configured");
@@ -195,7 +195,7 @@ create_datareader(
               "static endpoint discovery");
             return false;
           } else {
-            RCUTILS_LOG_WARN_NAMED(
+            RCUTILS_LOG_INFO_NAMED(
               "rmw_fastrtps_shared_cpp",
               "RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED is ignored with "
               "static endpoint discovery");
