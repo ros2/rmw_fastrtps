@@ -179,7 +179,7 @@ bool TypeSupport::get_key_hash_from_ros_message(
 
   const size_t max_serialized_key_length = 16;
 
-  auto ser_length = ser.get_serialized_data_length();
+  const auto ser_length = ser.get_serialized_data_length();
 
   // check for md5
   if (force_md5 || key_max_serialized_size_ > max_serialized_key_length) {
