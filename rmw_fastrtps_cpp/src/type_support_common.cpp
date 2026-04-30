@@ -75,7 +75,7 @@ void TypeSupport::set_members(const message_type_support_callbacks_t * members)
 
     key_max_serialized_size_ = key_callbacks_->max_serialized_size_key(key_is_unbounded_);
     if (!key_is_unbounded_) {
-      key_buffer_.reserve(key_max_serialized_size_);
+      key_buffer_.resize(key_max_serialized_size_);
     }
   }
 }
@@ -165,7 +165,7 @@ bool TypeSupport::get_key_hash_from_ros_message(
     key_max_serialized_size_ = (std::max) (
       key_max_serialized_size_,
       key_callbacks_->get_serialized_size_key(ros_message));
-    key_buffer_.reserve(key_max_serialized_size_);
+    key_buffer_.resize(key_max_serialized_size_);
   }
 
   eprosima::fastcdr::FastBuffer fast_buffer(

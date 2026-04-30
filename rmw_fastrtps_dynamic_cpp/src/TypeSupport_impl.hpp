@@ -385,7 +385,7 @@ bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
     this->key_max_serialized_size_ =
       (std::max) (this->key_max_serialized_size_,
       this->getEstimatedSerializedKeySize(members, ros_message));
-    key_buffer_.reserve(this->key_max_serialized_size_);
+    key_buffer_.resize(this->key_max_serialized_size_);
   }
 
   eprosima::fastcdr::FastBuffer buffer(
