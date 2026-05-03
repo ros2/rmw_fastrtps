@@ -65,7 +65,7 @@ MessageTypeSupport<MembersType>::MessageTypeSupport(
   if (this->members_->has_any_key_member_) {
     this->key_max_serialized_size_ = this->calculateMaxSerializedKeySize(members);
     this->is_compute_key_provided = true;
-    this->key_buffer_.reserve(this->key_max_serialized_size_);
+    this->key_buffer_.resize(this->key_max_serialized_size_);
   }
 
   // Account for RTPS submessage alignment
