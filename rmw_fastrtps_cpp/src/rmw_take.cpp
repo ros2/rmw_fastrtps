@@ -393,6 +393,12 @@ rmw_take_serialized_message_with_info(
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     subscription, subscription->implementation_identifier, eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    serialized_message, "serialized message handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    taken, "taken handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
 
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   if (info->is_buffer_aware_) {
