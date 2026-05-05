@@ -18,6 +18,7 @@
 #include <cassert>
 #include <cstddef>
 #include <cstdint>
+#include <cstring>
 #include <string>
 #include <vector>
 
@@ -363,7 +364,7 @@ bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
     this->key_max_serialized_size_ =
       (std::max) (this->key_max_serialized_size_,
       this->getEstimatedSerializedKeySize(members, ros_message));
-    key_buffer_.reserve(this->key_max_serialized_size_);
+    key_buffer_.resize(this->key_max_serialized_size_);
   }
 
   eprosima::fastcdr::FastBuffer buffer(
@@ -376,22 +377,24 @@ bool TypeSupport<MembersType>::get_key_hash_from_ros_message(
   // serialize
   serializeKeyROSmessage(ser, members_, ros_message);
 
-  // check for md5
+  const size_t max_serialized_key_length = 16;
+
+  const auto ser_length = ser.get_serialized_data_length();
+
   if (force_md5 || this->key_max_serialized_size_ > 16) {
     md5_.init();
 
-    md5_.update(
-      this->key_buffer_.data(),
-      static_cast<unsigned int>(ser.get_serialized_data_length()));
+    md5_.update(key_buffer_.data(), static_cast<unsigned int>(ser_length));
 
     md5_.finalize();
 
-    for (uint8_t i = 0; i < 16; ++i) {
+    for (uint8_t i = 0; i < max_serialized_key_length; ++i) {
       ihandle->value[i] = md5_.digest[i];
     }
   } else {
-    for (uint8_t i = 0; i < 16; ++i) {
-      ihandle->value[i] = this->key_buffer_[i];
+    memset(ihandle->value, 0, max_serialized_key_length);
+    for (uint8_t i = 0; i < ser_length; ++i) {
+      ihandle->value[i] = key_buffer_[i];
     }
   }
 
