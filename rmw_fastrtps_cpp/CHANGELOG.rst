@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.5.0 (2026-05-07)
+------------------
 * Fix rmw_take_serialized. (`#881 <https://github.com/ros2/rmw_fastrtps/issues/881>`_)
 * Fix UB in accessing the keys (`#879 <https://github.com/ros2/rmw_fastrtps/issues/879>`_)
 * Contributors: Chris Lalancette

@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.5.0 (2026-05-07)
+------------------
 * Change the buffer-aware BUFBE: -> bufbe. (`#880 <https://github.com/ros2/rmw_fastrtps/issues/880>`_)
 * Contributors: Chris Lalancette
 
