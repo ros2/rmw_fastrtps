@@ -190,6 +190,75 @@ take_buffer_aware(
   return RMW_RET_OK;
 }
 
+// Serialized counterpart of take_buffer_aware. Reads raw CDR bytes from the
+// shared-CPU-channel DataReader that buffer-aware publishers use to serve
+// CPU-only subscribers (which is what foxglove_bridge / ros2 bag record /
+// any rclcpp generic subscription is, since those don't declare a buffer
+// backend). Bytes from the accel reader carry buffer descriptors that only
+// make sense after backend resolution, so they are not forwarded here -
+// callers using rmw_take_serialized_message can't resolve those.
+rmw_ret_t
+take_buffer_aware_serialized(
+  const rmw_subscription_t * subscription,
+  rmw_serialized_message_t * serialized_message,
+  bool * taken,
+  rmw_message_info_t * message_info)
+{
+  *taken = false;
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+
+  if (!info->cpu_data_reader_) {
+    return RMW_RET_OK;
+  }
+
+  eprosima::fastcdr::FastBuffer receive_buffer;
+  rmw_fastrtps_shared_cpp::SerializedData data;
+  data.type = rmw_fastrtps_shared_cpp::FASTDDS_SERIALIZED_DATA_TYPE_CDR_BUFFER;
+  data.data = &receive_buffer;
+  data.impl = nullptr;
+
+  eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> data_values;
+  const_cast<void **>(data_values.buffer())[0] = &data;
+  eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
+
+  auto reset = rcpputils::make_scope_exit(
+    [&]() {
+      data_values.length(0);
+      info_seq.length(0);
+    });
+
+  auto ret_code = info->cpu_data_reader_->take(data_values, info_seq, 1);
+  if (ret_code != eprosima::fastdds::dds::RETCODE_OK) {
+    return RMW_RET_OK;
+  }
+  if (!info_seq[0].valid_data) {
+    return RMW_RET_OK;
+  }
+
+  auto buffer_size = static_cast<size_t>(receive_buffer.getBufferSize());
+  if (serialized_message->buffer_capacity < buffer_size) {
+    auto rret = rmw_serialized_message_resize(serialized_message, buffer_size);
+    if (rret != RMW_RET_OK) {
+      return rret;
+    }
+  }
+  serialized_message->buffer_length = buffer_size;
+  std::memcpy(serialized_message->buffer, receive_buffer.getBuffer(), buffer_size);
+
+  if (message_info) {
+    rmw_fastrtps_shared_cpp::_assign_message_info(
+      eprosima_fastrtps_identifier, message_info, &info_seq[0]);
+  }
+
+  *taken = true;
+
+  if (info->cpu_data_reader_->get_unread_count() > 0 && info->buffer_data_guard_) {
+    info->buffer_data_guard_->set_trigger_value(true);
+  }
+
+  return RMW_RET_OK;
+}
+
 }  // namespace
 
 extern "C"
@@ -280,6 +349,32 @@ rmw_take_serialized_message(
   bool * taken,
   rmw_subscription_allocation_t * allocation)
 {
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    subscription, "subscription handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription, subscription->implementation_identifier, eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    serialized_message, "serialized message handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    taken, "taken handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  if (info->is_buffer_aware_) {
+    rmw_ret_t ret = take_buffer_aware_serialized(
+      subscription, serialized_message, taken, nullptr);
+    if (ret != RMW_RET_OK || *taken) {
+      return ret;
+    }
+    // No data from buffer endpoints; fall back to the main DataReader for
+    // messages published by non-buffer-aware publishers (e.g. cross-RMW).
+    return rmw_fastrtps_shared_cpp::__rmw_take_serialized_message(
+      eprosima_fastrtps_identifier, subscription, serialized_message, taken, allocation);
+  }
+
   return rmw_fastrtps_shared_cpp::__rmw_take_serialized_message(
     eprosima_fastrtps_identifier, subscription, serialized_message, taken, allocation);
 }
@@ -292,6 +387,31 @@ rmw_take_serialized_message_with_info(
   rmw_message_info_t * message_info,
   rmw_subscription_allocation_t * allocation)
 {
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    subscription, "subscription handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription, subscription->implementation_identifier, eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    serialized_message, "serialized message handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    taken, "taken handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  if (info->is_buffer_aware_) {
+    rmw_ret_t ret = take_buffer_aware_serialized(
+      subscription, serialized_message, taken, message_info);
+    if (ret != RMW_RET_OK || *taken) {
+      return ret;
+    }
+    return rmw_fastrtps_shared_cpp::__rmw_take_serialized_message_with_info(
+      eprosima_fastrtps_identifier, subscription, serialized_message, taken, message_info,
+      allocation);
+  }
+
   return rmw_fastrtps_shared_cpp::__rmw_take_serialized_message_with_info(
     eprosima_fastrtps_identifier, subscription, serialized_message, taken, message_info,
     allocation);
