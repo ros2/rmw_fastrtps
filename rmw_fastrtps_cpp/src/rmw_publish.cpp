@@ -111,12 +111,10 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
     }
     endpoint->data_writer = data_writer;
 
-    RCUTILS_LOG_INFO_NAMED(
-      "rmw_fastrtps_cpp",
-      "Buffer publisher: created per-sub endpoint '%s'", p.unique_topic.c_str());
     RCUTILS_LOG_DEBUG_NAMED(
       "rmw_fastrtps_cpp",
-      "Buffer publisher endpoint '%s': reliability=%d, durability=%d, history=%d depth=%d",
+      "Buffer publisher: created per-sub endpoint '%s': "
+      "reliability=%d, durability=%d, history=%d depth=%d",
       p.unique_topic.c_str(),
       writer_qos.reliability().kind,
       writer_qos.durability().kind,
