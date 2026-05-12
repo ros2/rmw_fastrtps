@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.5.1 (2026-05-13)
+------------------
+* Clean up logs for the rosidl::Buffer path (`#886 <https://github.com/ros2/rmw_fastrtps//issues/886>`_)
+* Contributors: CY Chen
+
 9.5.0 (2026-05-07)
 ------------------
 * Fix rmw_take_serialized. (`#881 <https://github.com/ros2/rmw_fastrtps/issues/881>`_)
