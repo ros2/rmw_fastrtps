@@ -199,7 +199,7 @@ rmw_create_subscription(
             }
           }
 
-          RCUTILS_LOG_INFO_NAMED(
+          RCUTILS_LOG_DEBUG_NAMED(
             "rmw_fastrtps_cpp",
             "Buffer subscription: publisher discovered, recorded '%s'",
             pub_hex.c_str());
