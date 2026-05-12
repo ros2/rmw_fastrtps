@@ -2,6 +2,13 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.4.8 (2026-05-13)
+------------------
+* Clean up logs for the rosidl::Buffer path (`#886 <https://github.com/ros2/rmw_fastrtps//issues/886>`_) (`#887 <https://github.com/ros2/rmw_fastrtps//issues/887>`_)
+* Change the buffer-aware BUFBE: -> bufbe. (backport `#880 <https://github.com/ros2/rmw_fastrtps//issues/880>`_) (`#884 <https://github.com/ros2/rmw_fastrtps//issues/884>`_)
+* Fix UB in accessing the keys (`#879 <https://github.com/ros2/rmw_fastrtps//issues/879>`_) (`#882 <https://github.com/ros2/rmw_fastrtps//issues/882>`_)
+* Contributors: mergify[bot]
+
 9.4.7 (2026-04-14)
 ------------------
 

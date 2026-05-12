@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.4.8 (2026-05-13)
+------------------
+* Change the buffer-aware BUFBE: -> bufbe. (backport `#880 <https://github.com/ros2/rmw_fastrtps//issues/880>`_) (`#884 <https://github.com/ros2/rmw_fastrtps//issues/884>`_)
+* Contributors: mergify[bot]
+
 9.4.6 (2026-04-09)
 ------------------
 * feat: set collection header element_flags TryConstructFailAction::DISCARD instead of 0 (`#875 <https://github.com/ros2/rmw_fastrtps/issues/875>`_)
