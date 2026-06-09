@@ -72,6 +72,11 @@ public:
   /// Notify that a buffer-aware publisher has been discovered.
   void notify_publisher_discovered(const BufferEndpointInfo & info);
 
+  /// Return known buffer-aware endpoints for a topic.
+  std::vector<BufferEndpointInfo> get_endpoints_by_topic(
+    const std::string & topic_name,
+    bool is_reader) const;
+
 private:
   struct CallbackEntry
   {
@@ -79,7 +84,7 @@ private:
     BufferEndpointDiscoveryCallback callback;
   };
 
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
 
   /// topic_name -> list of (publisher_gid, callback) entries that want subscriber notifications.
   std::unordered_map<std::string, std::vector<CallbackEntry>> subscriber_callbacks_;

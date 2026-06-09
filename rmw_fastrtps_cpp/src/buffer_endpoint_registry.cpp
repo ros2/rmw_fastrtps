@@ -194,4 +194,20 @@ void BufferEndpointRegistry::notify_publisher_discovered(const BufferEndpointInf
   }
 }
 
+std::vector<BufferEndpointInfo>
+BufferEndpointRegistry::get_endpoints_by_topic(
+  const std::string & topic_name,
+  bool is_reader) const
+{
+  std::vector<BufferEndpointInfo> result;
+  std::lock_guard<std::mutex> lock(mutex_);
+  const auto & endpoints = is_reader ? known_subscribers_ : known_publishers_;
+  for (const auto & info : endpoints) {
+    if (info.topic_name == topic_name) {
+      result.push_back(info);
+    }
+  }
+  return result;
+}
+
 }  // namespace rmw_fastrtps_cpp
