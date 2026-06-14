@@ -108,6 +108,14 @@ bool RMWPublisherEvent::take_event(
 {
   assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
 
+  // NOTE: the DataWriter status queries below (get_*_status) acquire the writer's
+  // internal mutex. Fast-DDS may invoke this publisher's listener callbacks -- which
+  // take on_new_event_m_ -- while holding that writer mutex. To avoid a lock-order
+  // inversion (ABBA deadlock) with the writer's threads, on_new_event_m_ must NOT be
+  // held across a writer get_*_status() call. Each case that queries the writer releases
+  // the lock around the query, copies into a local, then re-acquires and adopts the
+  // value only if a listener update has not arrived in the meantime. (Symmetric to the
+  // subscription-side fix in custom_subscriber_info.cpp.)
   rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   switch (event_type) {
@@ -117,7 +125,14 @@ bool RMWPublisherEvent::take_event(
         if (liveliness_changed_) {
           liveliness_changed_ = false;
         } else {
-          publisher_info_->data_writer_->get_liveliness_lost_status(liveliness_lost_status_);
+          eprosima::fastdds::dds::LivelinessLostStatus current;
+          lock_mutex.unlock();
+          publisher_info_->data_writer_->get_liveliness_lost_status(current);
+          lock_mutex.lock();
+          if (!liveliness_changed_) {
+            liveliness_lost_status_ = current;
+          }
+          liveliness_changed_ = false;
         }
         rmw_data->total_count = liveliness_lost_status_.total_count;
         rmw_data->total_count_change = liveliness_lost_status_.total_count_change;
@@ -130,8 +145,14 @@ bool RMWPublisherEvent::take_event(
         if (deadline_changed_) {
           deadline_changed_ = false;
         } else {
-          publisher_info_->data_writer_->get_offered_deadline_missed_status(
-            offered_deadline_missed_status_);
+          eprosima::fastdds::dds::OfferedDeadlineMissedStatus current;
+          lock_mutex.unlock();
+          publisher_info_->data_writer_->get_offered_deadline_missed_status(current);
+          lock_mutex.lock();
+          if (!deadline_changed_) {
+            offered_deadline_missed_status_ = current;
+          }
+          deadline_changed_ = false;
         }
         rmw_data->total_count = offered_deadline_missed_status_.total_count;
         rmw_data->total_count_change = offered_deadline_missed_status_.total_count_change;
@@ -144,8 +165,14 @@ bool RMWPublisherEvent::take_event(
         if (incompatible_qos_changed_) {
           incompatible_qos_changed_ = false;
         } else {
-          publisher_info_->data_writer_->get_offered_incompatible_qos_status(
-            incompatible_qos_status_);
+          eprosima::fastdds::dds::OfferedIncompatibleQosStatus current;
+          lock_mutex.unlock();
+          publisher_info_->data_writer_->get_offered_incompatible_qos_status(current);
+          lock_mutex.lock();
+          if (!incompatible_qos_changed_) {
+            incompatible_qos_status_ = current;
+          }
+          incompatible_qos_changed_ = false;
         }
         rmw_data->total_count = incompatible_qos_status_.total_count;
         rmw_data->total_count_change = incompatible_qos_status_.total_count_change;
@@ -157,6 +184,9 @@ bool RMWPublisherEvent::take_event(
       break;
     case RMW_EVENT_PUBLISHER_INCOMPATIBLE_TYPE:
       {
+        // get_inconsistent_topic_status() operates on the Topic, not the DataWriter, so
+        // it does not take the writer mutex and is not part of the writer-mutex inversion;
+        // left querying under the lock unchanged.
         auto rmw_data = static_cast<rmw_incompatible_type_status_t *>(event_info);
         if (inconsistent_topic_changed_) {
           inconsistent_topic_changed_ = false;
@@ -174,7 +204,9 @@ bool RMWPublisherEvent::take_event(
         auto rmw_data = static_cast<rmw_matched_status_t *>(event_info);
 
         eprosima::fastdds::dds::PublicationMatchedStatus matched_status;
+        lock_mutex.unlock();
         publisher_info_->data_writer_->get_publication_matched_status(matched_status);
+        lock_mutex.lock();
 
         rmw_data->total_count = static_cast<size_t>(matched_status.total_count);
         rmw_data->current_count = static_cast<size_t>(matched_status.current_count);
