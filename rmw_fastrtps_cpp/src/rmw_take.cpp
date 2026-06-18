@@ -137,9 +137,8 @@ take_buffer_aware(
   }
 
   eprosima::fastcdr::Cdr deser(
-    receive_buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
-    eprosima::fastcdr::CdrVersion::XCDRv1);
-  deser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
+    receive_buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN);
+  deser.read_encapsulation();
 
   auto * backend_context =
     static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(info->serialization_context_);
