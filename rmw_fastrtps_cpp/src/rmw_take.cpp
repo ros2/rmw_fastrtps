@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+#include <unordered_map>
+
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
 #include "rmw/impl/cpp/macros.hpp"
@@ -42,8 +45,26 @@
 
 #include "rcpputils/scope_exit.hpp"
 
+#include "tracetools/tracetools.h"
+
 namespace
 {
+
+
+std::string
+select_backend_name(const std::unordered_map<std::string, std::string> & backend_metadata)
+{
+  for (const auto & entry : backend_metadata) {
+    if (entry.first != "cpu") {
+      return entry.first;
+    }
+  }
+  if (backend_metadata.find("cpu") != backend_metadata.end()) {
+    return "cpu";
+  }
+  return "unknown";
+}
+
 
 rmw_ret_t
 take_buffer_aware(
@@ -56,6 +77,7 @@ take_buffer_aware(
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   auto callbacks = static_cast<const message_type_support_callbacks_t *>(
     info->type_support_impl_);
+  rmw_gid_t zero_gid{};
 
   // CPU-only path: take from the shared CPU channel DataReader.
   if (info->cpu_data_reader_) {
@@ -71,6 +93,7 @@ take_buffer_aware(
     auto cpu_ret = info->cpu_data_reader_->take(cpu_vals, cpu_info_seq, 1);
     if (cpu_ret == eprosima::fastdds::dds::RETCODE_OK && cpu_info_seq[0].valid_data) {
       *taken = true;
+      int64_t source_timestamp = cpu_info_seq[0].source_timestamp.to_ns();
       if (message_info) {
         rmw_fastrtps_shared_cpp::_assign_message_info(
           eprosima_fastrtps_identifier, message_info, &cpu_info_seq[0]);
@@ -81,6 +104,23 @@ take_buffer_aware(
       if (info->cpu_data_reader_->get_unread_count() > 0 && info->buffer_data_guard_) {
         info->buffer_data_guard_->set_trigger_value(true);
       }
+      TRACETOOLS_TRACEPOINT(
+        rmw_buffer_take,
+        static_cast<const void *>(subscription),
+        static_cast<const void *>(ros_message),
+        subscription->topic_name,
+        zero_gid.data,
+        "cpu",
+        "cpu_vector",
+        static_cast<size_t>(0),
+        true,
+        "ok");
+      TRACETOOLS_TRACEPOINT(
+        rmw_take,
+        static_cast<const void *>(subscription),
+        static_cast<const void *>(ros_message),
+        source_timestamp,
+        true);
       return RMW_RET_OK;
     }
     cpu_vals.length(0);
@@ -114,6 +154,17 @@ take_buffer_aware(
     });
 
   if (!info_seq[0].valid_data) {
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_take,
+      static_cast<const void *>(subscription),
+      static_cast<const void *>(ros_message),
+      subscription->topic_name,
+      zero_gid.data,
+      "unknown",
+      "endpoint_cdr",
+      static_cast<size_t>(receive_buffer.getBufferSize()),
+      false,
+      "invalid_sample");
     return RMW_RET_OK;
   }
 
@@ -127,12 +178,14 @@ take_buffer_aware(
   rmw_topic_endpoint_info_t pub_endpoint_info = rmw_get_zero_initialized_topic_endpoint_info();
   pub_endpoint_info.endpoint_type = RMW_ENDPOINT_PUBLISHER;
   std::memcpy(pub_endpoint_info.endpoint_gid, writer_gid.data, RMW_GID_STORAGE_SIZE);
+  std::string selected_backend = "unknown";
 
   {
     std::lock_guard<std::mutex> lock(info->buffer_state_->mutex);
     auto it = info->buffer_state_->publisher_metadata.find(writer_hex);
     if (it != info->buffer_state_->publisher_metadata.end()) {
       pub_endpoint_info = it->second.publisher_endpoint_info;
+      selected_backend = select_backend_name(it->second.backend_metadata);
     }
   }
 
@@ -147,6 +200,17 @@ take_buffer_aware(
     RCUTILS_LOG_ERROR_NAMED(
       "rmw_fastrtps_cpp",
       "Buffer-aware deserialize missing buffer backend context");
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_take,
+      static_cast<const void *>(subscription),
+      static_cast<const void *>(ros_message),
+      subscription->topic_name,
+      writer_gid.data,
+      selected_backend.c_str(),
+      "endpoint_cdr",
+      static_cast<size_t>(receive_buffer.getBufferSize()),
+      false,
+      "missing_backend_context");
     return RMW_RET_OK;
   }
 
@@ -159,6 +223,17 @@ take_buffer_aware(
     RCUTILS_LOG_ERROR_NAMED(
       "rmw_fastrtps_cpp",
       "Buffer-aware deserialize failed for publisher '%s'", writer_hex.c_str());
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_take,
+      static_cast<const void *>(subscription),
+      static_cast<const void *>(ros_message),
+      subscription->topic_name,
+      writer_gid.data,
+      selected_backend.c_str(),
+      "endpoint_cdr",
+      static_cast<size_t>(receive_buffer.getBufferSize()),
+      false,
+      "deserialize_failed");
     return RMW_RET_OK;
   }
 
@@ -187,6 +262,24 @@ take_buffer_aware(
     info->buffer_data_guard_->set_trigger_value(true);
   }
 
+  TRACETOOLS_TRACEPOINT(
+    rmw_buffer_take,
+    static_cast<const void *>(subscription),
+    static_cast<const void *>(ros_message),
+    subscription->topic_name,
+    writer_gid.data,
+    selected_backend.c_str(),
+    "endpoint_cdr",
+    static_cast<size_t>(receive_buffer.getBufferSize()),
+    true,
+    "ok");
+  TRACETOOLS_TRACEPOINT(
+    rmw_take,
+    static_cast<const void *>(subscription),
+    static_cast<const void *>(ros_message),
+    info_seq[0].source_timestamp.to_ns(),
+    true);
+
   return RMW_RET_OK;
 }
 
@@ -206,6 +299,7 @@ take_buffer_aware_serialized(
 {
   *taken = false;
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  rmw_gid_t zero_gid{};
 
   if (!info->cpu_data_reader_) {
     return RMW_RET_OK;
@@ -232,6 +326,17 @@ take_buffer_aware_serialized(
     return RMW_RET_OK;
   }
   if (!info_seq[0].valid_data) {
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_take,
+      static_cast<const void *>(subscription),
+      static_cast<const void *>(serialized_message),
+      subscription->topic_name,
+      zero_gid.data,
+      "cpu",
+      "cpu_vector",
+      static_cast<size_t>(receive_buffer.getBufferSize()),
+      false,
+      "invalid_sample");
     return RMW_RET_OK;
   }
 
@@ -239,6 +344,17 @@ take_buffer_aware_serialized(
   if (serialized_message->buffer_capacity < buffer_size) {
     auto rret = rmw_serialized_message_resize(serialized_message, buffer_size);
     if (rret != RMW_RET_OK) {
+      TRACETOOLS_TRACEPOINT(
+        rmw_buffer_take,
+        static_cast<const void *>(subscription),
+        static_cast<const void *>(serialized_message),
+        subscription->topic_name,
+        zero_gid.data,
+        "cpu",
+        "cpu_vector",
+        buffer_size,
+        false,
+        "resize_failed");
       return rret;
     }
   }
@@ -255,6 +371,24 @@ take_buffer_aware_serialized(
   if (info->cpu_data_reader_->get_unread_count() > 0 && info->buffer_data_guard_) {
     info->buffer_data_guard_->set_trigger_value(true);
   }
+
+  TRACETOOLS_TRACEPOINT(
+    rmw_buffer_take,
+    static_cast<const void *>(subscription),
+    static_cast<const void *>(serialized_message),
+    subscription->topic_name,
+    zero_gid.data,
+    "cpu",
+    "cpu_vector",
+    buffer_size,
+    true,
+    "ok");
+  TRACETOOLS_TRACEPOINT(
+    rmw_take,
+    static_cast<const void *>(subscription),
+    static_cast<const void *>(serialized_message),
+    info_seq[0].source_timestamp.to_ns(),
+    true);
 
   return RMW_RET_OK;
 }
@@ -291,8 +425,21 @@ rmw_take(
     }
     // No data from buffer endpoints; fall back to the main DataReader for
     // messages published by non-buffer-aware publishers (e.g. cross-RMW).
-    return rmw_fastrtps_shared_cpp::__rmw_take(
+    rmw_ret_t fallback_ret = rmw_fastrtps_shared_cpp::__rmw_take(
       eprosima_fastrtps_identifier, subscription, ros_message, taken, allocation);
+    rmw_gid_t zero_gid{};
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_take,
+      static_cast<const void *>(subscription),
+      static_cast<const void *>(ros_message),
+      subscription->topic_name,
+      zero_gid.data,
+      "legacy",
+      "legacy_fallback",
+      static_cast<size_t>(0),
+      fallback_ret == RMW_RET_OK && *taken,
+      fallback_ret == RMW_RET_OK ? "legacy_fallback" : "legacy_fallback_failed");
+    return fallback_ret;
   }
 
   return rmw_fastrtps_shared_cpp::__rmw_take(
@@ -320,8 +467,21 @@ rmw_take_with_info(
     if (ret != RMW_RET_OK || *taken) {
       return ret;
     }
-    return rmw_fastrtps_shared_cpp::__rmw_take_with_info(
+    rmw_ret_t fallback_ret = rmw_fastrtps_shared_cpp::__rmw_take_with_info(
       eprosima_fastrtps_identifier, subscription, ros_message, taken, message_info, allocation);
+    rmw_gid_t zero_gid{};
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_take,
+      static_cast<const void *>(subscription),
+      static_cast<const void *>(ros_message),
+      subscription->topic_name,
+      zero_gid.data,
+      "legacy",
+      "legacy_fallback",
+      static_cast<size_t>(0),
+      fallback_ret == RMW_RET_OK && *taken,
+      fallback_ret == RMW_RET_OK ? "legacy_fallback" : "legacy_fallback_failed");
+    return fallback_ret;
   }
 
   return rmw_fastrtps_shared_cpp::__rmw_take_with_info(
@@ -371,8 +531,21 @@ rmw_take_serialized_message(
     }
     // No data from buffer endpoints; fall back to the main DataReader for
     // messages published by non-buffer-aware publishers (e.g. cross-RMW).
-    return rmw_fastrtps_shared_cpp::__rmw_take_serialized_message(
+    rmw_ret_t fallback_ret = rmw_fastrtps_shared_cpp::__rmw_take_serialized_message(
       eprosima_fastrtps_identifier, subscription, serialized_message, taken, allocation);
+    rmw_gid_t zero_gid{};
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_take,
+      static_cast<const void *>(subscription),
+      static_cast<const void *>(serialized_message),
+      subscription->topic_name,
+      zero_gid.data,
+      "legacy",
+      "legacy_fallback",
+      static_cast<size_t>(0),
+      fallback_ret == RMW_RET_OK && *taken,
+      fallback_ret == RMW_RET_OK ? "legacy_fallback" : "legacy_fallback_failed");
+    return fallback_ret;
   }
 
   return rmw_fastrtps_shared_cpp::__rmw_take_serialized_message(
@@ -407,9 +580,22 @@ rmw_take_serialized_message_with_info(
     if (ret != RMW_RET_OK || *taken) {
       return ret;
     }
-    return rmw_fastrtps_shared_cpp::__rmw_take_serialized_message_with_info(
+    rmw_ret_t fallback_ret = rmw_fastrtps_shared_cpp::__rmw_take_serialized_message_with_info(
       eprosima_fastrtps_identifier, subscription, serialized_message, taken, message_info,
       allocation);
+    rmw_gid_t zero_gid{};
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_take,
+      static_cast<const void *>(subscription),
+      static_cast<const void *>(serialized_message),
+      subscription->topic_name,
+      zero_gid.data,
+      "legacy",
+      "legacy_fallback",
+      static_cast<size_t>(0),
+      fallback_ret == RMW_RET_OK && *taken,
+      fallback_ret == RMW_RET_OK ? "legacy_fallback" : "legacy_fallback_failed");
+    return fallback_ret;
   }
 
   return rmw_fastrtps_shared_cpp::__rmw_take_serialized_message_with_info(

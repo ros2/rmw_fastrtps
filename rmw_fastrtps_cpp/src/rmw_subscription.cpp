@@ -16,6 +16,7 @@
 #include <cstdio>
 #include <cstring>
 #include <string>
+#include <unordered_map>
 #include <utility>
 
 #include "rmw/allocators.h"
@@ -43,6 +44,27 @@
 #include "buffer_backend_context.hpp"
 #include "buffer_endpoint_registry.hpp"
 #include "rosidl_buffer_backend_registry/backend_utils.hpp"
+
+#include "tracetools/tracetools.h"
+
+
+namespace
+{
+
+std::string
+join_backend_names(const std::unordered_map<std::string, std::string> & backend_metadata)
+{
+  std::string names;
+  for (const auto & entry : backend_metadata) {
+    if (!names.empty()) {
+      names += ",";
+    }
+    names += entry.first;
+  }
+  return names;
+}
+
+}  // namespace
 
 extern "C"
 {
@@ -138,6 +160,7 @@ rmw_create_subscription(
   // per-publisher metadata tracking, so skip the callback for them.
   if (info->is_buffer_aware_ && !info->is_cpu_only_) {
     auto state = info->buffer_state_;
+    std::string ros_topic = subscription->topic_name;
     auto * guard = info->buffer_data_guard_.get();
     auto * backend_context =
       static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(
@@ -148,7 +171,7 @@ rmw_create_subscription(
       buf_registry->register_publisher_discovery_callback(
         subscription->topic_name,
         info->subscription_gid_,
-        [state, guard, backend_context](
+        [state, guard, backend_context, subscription, ros_topic](
           const rmw_fastrtps_cpp::BufferEndpointInfo & pub_info)
         {
           if (!state->alive.load()) {
@@ -156,6 +179,7 @@ rmw_create_subscription(
           }
 
           std::string pub_hex = rmw_fastrtps_shared_cpp::gid_to_hex(pub_info.gid);
+          auto backend_names = join_backend_names(pub_info.backend_metadata);
 
           {
             std::lock_guard<std::mutex> lock(state->mutex);
@@ -163,6 +187,17 @@ rmw_create_subscription(
               return;
             }
             if (state->publisher_metadata.count(pub_hex) > 0) {
+              TRACETOOLS_TRACEPOINT(
+                rmw_buffer_endpoint_discovered,
+                static_cast<const void *>(subscription),
+                pub_info.gid.data,
+                ros_topic.c_str(),
+                "publisher",
+                "accelerated",
+                pub_info.backend_metadata.size(),
+                backend_names.c_str(),
+                "ignored",
+                "duplicate_publisher");
               return;
             }
 
@@ -194,6 +229,17 @@ rmw_create_subscription(
 
             state->publisher_metadata[pub_hex] = std::move(meta);
 
+            TRACETOOLS_TRACEPOINT(
+              rmw_buffer_endpoint_discovered,
+              static_cast<const void *>(subscription),
+              pub_info.gid.data,
+              ros_topic.c_str(),
+              "publisher",
+              "accelerated",
+              pub_info.backend_metadata.size(),
+              backend_names.c_str(),
+              "accepted",
+              backend_context ? "metadata_recorded" : "metadata_recorded_no_backend_context");
             if (guard) {
               guard->set_trigger_value(true);
             }

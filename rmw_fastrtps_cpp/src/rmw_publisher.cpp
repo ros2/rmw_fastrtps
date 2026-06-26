@@ -50,6 +50,27 @@
 #include "buffer_endpoint_registry.hpp"
 #include "rosidl_buffer_backend_registry/backend_utils.hpp"
 
+#include "tracetools/tracetools.h"
+
+
+namespace
+{
+
+std::string
+join_backend_names(const std::unordered_map<std::string, std::string> & backend_metadata)
+{
+  std::string names;
+  for (const auto & entry : backend_metadata) {
+    if (!names.empty()) {
+      names += ",";
+    }
+    names += entry.first;
+  }
+  return names;
+}
+
+}  // namespace
+
 extern "C"
 {
 rmw_ret_t
@@ -142,6 +163,7 @@ rmw_create_publisher(
   if (info->is_buffer_aware_) {
     auto state = info->buffer_state_;
     std::string base_topic = info->topic_->get_name();
+    std::string ros_topic = publisher->topic_name;
     auto * backend_context =
       static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(info->serialization_context_);
     auto * buf_registry = static_cast<rmw_fastrtps_cpp::BufferEndpointRegistry *>(
@@ -150,7 +172,7 @@ rmw_create_publisher(
       buf_registry->register_subscriber_discovery_callback(
         publisher->topic_name,
         info->publisher_gid,
-        [state, base_topic, backend_context](
+        [state, base_topic, ros_topic, backend_context, publisher](
           const rmw_fastrtps_cpp::BufferEndpointInfo & sub_info) {
           if (!state->alive.load()) {
             return;
@@ -161,6 +183,7 @@ rmw_create_publisher(
           bool sub_is_cpu_only = (sub_info.backend_metadata.size() == 1 &&
           sub_info.backend_metadata.count("cpu") == 1) ||
           sub_info.backend_metadata.empty();
+          auto backend_names = join_backend_names(sub_info.backend_metadata);
 
           {
             std::lock_guard<std::mutex> lock(state->mutex);
@@ -180,6 +203,17 @@ rmw_create_publisher(
                 continue;
               }
               if (equal) {
+                TRACETOOLS_TRACEPOINT(
+                  rmw_buffer_endpoint_discovered,
+                  static_cast<const void *>(publisher),
+                  sub_info.gid.data,
+                  ros_topic.c_str(),
+                  "subscription",
+                  sub_is_cpu_only ? "cpu_only" : "accelerated",
+                  sub_info.backend_metadata.size(),
+                  backend_names.c_str(),
+                  "ignored",
+                  "duplicate_endpoint");
                 return;
               }
             }
@@ -193,6 +227,17 @@ rmw_create_publisher(
                 continue;
               }
               if (equal) {
+                TRACETOOLS_TRACEPOINT(
+                  rmw_buffer_endpoint_discovered,
+                  static_cast<const void *>(publisher),
+                  sub_info.gid.data,
+                  ros_topic.c_str(),
+                  "subscription",
+                  "cpu_only",
+                  sub_info.backend_metadata.size(),
+                  backend_names.c_str(),
+                  "ignored",
+                  "duplicate_cpu_subscriber");
                 return;
               }
             }
@@ -201,6 +246,17 @@ rmw_create_publisher(
               // CPU-only subscriber: track its GID; the shared CPU channel
               // DataWriter will serve it -- no per-subscriber endpoint needed.
               state->cpu_only_subscribers.push_back(sub_info.gid);
+              TRACETOOLS_TRACEPOINT(
+                rmw_buffer_endpoint_discovered,
+                static_cast<const void *>(publisher),
+                sub_info.gid.data,
+                ros_topic.c_str(),
+                "subscription",
+                "cpu_only",
+                sub_info.backend_metadata.size(),
+                backend_names.c_str(),
+                "accepted",
+                "shared_cpu_channel");
               RCUTILS_LOG_DEBUG_NAMED(
                 "rmw_fastrtps_cpp",
                 "Buffer publisher: CPU-only subscriber discovered on '%s', "
@@ -221,6 +277,17 @@ rmw_create_publisher(
                 continue;
               }
               if (equal) {
+                TRACETOOLS_TRACEPOINT(
+                  rmw_buffer_endpoint_discovered,
+                  static_cast<const void *>(publisher),
+                  sub_info.gid.data,
+                  ros_topic.c_str(),
+                  "subscription",
+                  "accelerated",
+                  sub_info.backend_metadata.size(),
+                  backend_names.c_str(),
+                  "ignored",
+                  "duplicate_pending_endpoint");
                 return;
               }
             }
@@ -262,6 +329,17 @@ rmw_create_publisher(
             pending.backend_metadata = sub_info.backend_metadata;
             state->pending.push_back(std::move(pending));
 
+            TRACETOOLS_TRACEPOINT(
+              rmw_buffer_endpoint_discovered,
+              static_cast<const void *>(publisher),
+              sub_info.gid.data,
+              ros_topic.c_str(),
+              "subscription",
+              "accelerated",
+              sub_info.backend_metadata.size(),
+              backend_names.c_str(),
+              "accepted",
+              backend_context ? "queued_endpoint" : "queued_endpoint_no_backend_context");
             RCUTILS_LOG_DEBUG_NAMED(
               "rmw_fastrtps_cpp",
               "Buffer publisher: non-CPU subscriber discovered, queued '%s'",

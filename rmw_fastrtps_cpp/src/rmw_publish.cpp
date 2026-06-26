@@ -12,6 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <string>
+#include <unordered_map>
 #include <vector>
 
 #include "fastcdr/Cdr.h"
@@ -41,8 +43,39 @@
 namespace
 {
 
+
+std::string
+join_backend_names(const std::unordered_map<std::string, std::string> & backend_metadata)
+{
+  std::string names;
+  for (const auto & entry : backend_metadata) {
+    if (!names.empty()) {
+      names += ",";
+    }
+    names += entry.first;
+  }
+  return names;
+}
+
+std::string
+select_backend_name(const std::unordered_map<std::string, std::string> & backend_metadata)
+{
+  for (const auto & entry : backend_metadata) {
+    if (entry.first != "cpu") {
+      return entry.first;
+    }
+  }
+  if (backend_metadata.find("cpu") != backend_metadata.end()) {
+    return "cpu";
+  }
+  return "unknown";
+}
+
+
 void
-create_pending_buffer_writers(CustomPublisherInfo * info)
+create_pending_buffer_writers(
+  CustomPublisherInfo * info,
+  const rmw_publisher_t * publisher)
 {
   auto & state = *info->buffer_state_;
   std::vector<PendingBufferPublisher> pending;
@@ -80,6 +113,18 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_cpp",
         "Failed to create per-subscriber topic '%s'", p.unique_topic.c_str());
+      auto backend_names = join_backend_names(endpoint->backend_metadata);
+      TRACETOOLS_TRACEPOINT(
+        rmw_buffer_endpoint_discovered,
+        static_cast<const void *>(publisher),
+        p.target_subscriber_gid.data,
+        p.unique_topic.c_str(),
+        "subscription",
+        "accelerated",
+        endpoint->backend_metadata.size(),
+        backend_names.c_str(),
+        "dropped",
+        "topic_create_failed");
       continue;
     }
     endpoint->topic = topic;
@@ -107,6 +152,18 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_cpp",
         "Failed to create per-subscriber DataWriter for '%s'", p.unique_topic.c_str());
+      auto backend_names = join_backend_names(endpoint->backend_metadata);
+      TRACETOOLS_TRACEPOINT(
+        rmw_buffer_endpoint_discovered,
+        static_cast<const void *>(publisher),
+        p.target_subscriber_gid.data,
+        p.unique_topic.c_str(),
+        "subscription",
+        "accelerated",
+        endpoint->backend_metadata.size(),
+        backend_names.c_str(),
+        "dropped",
+        "datawriter_create_failed");
       continue;
     }
     endpoint->data_writer = data_writer;
@@ -120,6 +177,18 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
       writer_qos.durability().kind,
       writer_qos.history().kind,
       writer_qos.history().depth);
+    auto backend_names = join_backend_names(endpoint->backend_metadata);
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_endpoint_discovered,
+      static_cast<const void *>(publisher),
+      p.target_subscriber_gid.data,
+      p.unique_topic.c_str(),
+      "subscription",
+      "accelerated",
+      endpoint->backend_metadata.size(),
+      backend_names.c_str(),
+      "endpoint_created",
+      "ok");
     new_endpoints.push_back(std::move(endpoint));
   }
 
@@ -142,7 +211,7 @@ publish_to_buffer_endpoints(
   const void * ros_message,
   const rmw_publisher_t * publisher)
 {
-  create_pending_buffer_writers(info);
+  create_pending_buffer_writers(info, publisher);
 
   auto callbacks = static_cast<const message_type_support_callbacks_t *>(info->type_support_impl_);
   auto & state = *info->buffer_state_;
@@ -153,20 +222,47 @@ publish_to_buffer_endpoints(
   eprosima::fastdds::dds::Time_t::now(stamp);
   TRACETOOLS_TRACEPOINT(rmw_publish, publisher, ros_message, stamp.to_ns());
 
-  // Publish to the shared CPU channel for all CPU-only subscribers.
-  if (!state.cpu_only_subscribers.empty() && info->cpu_data_writer_) {
-    rmw_fastrtps_shared_cpp::SerializedData cpu_data;
-    cpu_data.type = rmw_fastrtps_shared_cpp::FASTDDS_SERIALIZED_DATA_TYPE_ROS_MESSAGE;
-    cpu_data.data = const_cast<void *>(ros_message);
-    cpu_data.impl = info->type_support_impl_;
+  rmw_gid_t zero_gid{};
 
-    if (eprosima::fastdds::dds::RETCODE_OK !=
-      info->cpu_data_writer_->write_w_timestamp(
-        &cpu_data, eprosima::fastdds::dds::HANDLE_NIL, stamp))
-    {
-      RCUTILS_LOG_ERROR_NAMED(
-        "rmw_fastrtps_cpp",
-        "Failed to write to CPU channel DataWriter");
+  // Publish to the shared CPU channel for all CPU-only subscribers.
+  if (!state.cpu_only_subscribers.empty()) {
+    if (!info->cpu_data_writer_) {
+      TRACETOOLS_TRACEPOINT(
+        rmw_buffer_publish,
+        static_cast<const void *>(publisher),
+        ros_message,
+        publisher->topic_name,
+        zero_gid.data,
+        "cpu",
+        "cpu_vector",
+        static_cast<size_t>(0),
+        false,
+        "missing_cpu_data_writer");
+    } else {
+      rmw_fastrtps_shared_cpp::SerializedData cpu_data;
+      cpu_data.type = rmw_fastrtps_shared_cpp::FASTDDS_SERIALIZED_DATA_TYPE_ROS_MESSAGE;
+      cpu_data.data = const_cast<void *>(ros_message);
+      cpu_data.impl = info->type_support_impl_;
+
+      auto cpu_ret = info->cpu_data_writer_->write_w_timestamp(
+        &cpu_data, eprosima::fastdds::dds::HANDLE_NIL, stamp);
+      bool cpu_ok = eprosima::fastdds::dds::RETCODE_OK == cpu_ret;
+      if (!cpu_ok) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rmw_fastrtps_cpp",
+          "Failed to write to CPU channel DataWriter");
+      }
+      TRACETOOLS_TRACEPOINT(
+        rmw_buffer_publish,
+        static_cast<const void *>(publisher),
+        ros_message,
+        publisher->topic_name,
+        zero_gid.data,
+        "cpu",
+        "cpu_vector",
+        static_cast<size_t>(0),
+        cpu_ok,
+        cpu_ok ? "ok" : "write_failed");
     }
   }
 
@@ -183,12 +279,24 @@ publish_to_buffer_endpoints(
       eprosima::fastcdr::CdrVersion::XCDRv1);
     ser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
 
+    auto selected_backend = select_backend_name(endpoint->backend_metadata);
     auto * backend_context =
       static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(info->serialization_context_);
     if (!backend_context) {
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_cpp",
         "Buffer-aware serialize missing buffer backend context");
+      TRACETOOLS_TRACEPOINT(
+        rmw_buffer_publish,
+        static_cast<const void *>(publisher),
+        ros_message,
+        publisher->topic_name,
+        endpoint->target_subscriber_gid.data,
+        selected_backend.c_str(),
+        "endpoint_cdr",
+        static_cast<size_t>(0),
+        false,
+        "missing_backend_context");
       continue;
     }
     bool ok = false;
@@ -201,6 +309,17 @@ publish_to_buffer_endpoints(
         "rmw_fastrtps_cpp",
         "Buffer-aware serialize threw for endpoint '%s': %s",
         endpoint->key.c_str(), e.what());
+      TRACETOOLS_TRACEPOINT(
+        rmw_buffer_publish,
+        static_cast<const void *>(publisher),
+        ros_message,
+        publisher->topic_name,
+        endpoint->target_subscriber_gid.data,
+        selected_backend.c_str(),
+        "endpoint_cdr",
+        static_cast<size_t>(0),
+        false,
+        "serialize_exception");
       continue;
     }
 
@@ -208,6 +327,17 @@ publish_to_buffer_endpoints(
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_cpp",
         "Buffer-aware serialize failed for endpoint '%s'", endpoint->key.c_str());
+      TRACETOOLS_TRACEPOINT(
+        rmw_buffer_publish,
+        static_cast<const void *>(publisher),
+        ros_message,
+        publisher->topic_name,
+        endpoint->target_subscriber_gid.data,
+        selected_backend.c_str(),
+        "endpoint_cdr",
+        static_cast<size_t>(ser.get_serialized_data_length()),
+        false,
+        "serialize_failed");
       continue;
     }
 
@@ -216,14 +346,25 @@ publish_to_buffer_endpoints(
     data.data = &ser;
     data.impl = nullptr;
 
-    if (eprosima::fastdds::dds::RETCODE_OK !=
-      endpoint->data_writer->write_w_timestamp(
-        &data, eprosima::fastdds::dds::HANDLE_NIL, stamp))
-    {
+    auto write_ret = endpoint->data_writer->write_w_timestamp(
+      &data, eprosima::fastdds::dds::HANDLE_NIL, stamp);
+    bool write_ok = eprosima::fastdds::dds::RETCODE_OK == write_ret;
+    if (!write_ok) {
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_cpp",
         "Buffer-aware write failed for endpoint '%s'", endpoint->key.c_str());
     }
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_publish,
+      static_cast<const void *>(publisher),
+      ros_message,
+      publisher->topic_name,
+      endpoint->target_subscriber_gid.data,
+      selected_backend.c_str(),
+      "endpoint_cdr",
+      static_cast<size_t>(ser.get_serialized_data_length()),
+      write_ok,
+      write_ok ? "ok" : "write_failed");
   }
 }
 
@@ -256,20 +397,58 @@ rmw_publish(
     // endpoints will also receive it via their main DataReader fallback.
     size_t total_matched = info->publisher_event_->subscription_count();
     size_t buffer_aware_count;
+    size_t cpu_subscriber_count;
+    size_t accel_endpoint_count;
     {
       std::lock_guard<std::mutex> lock(info->buffer_state_->mutex);
       auto & st = *info->buffer_state_;
-      buffer_aware_count =
-        st.endpoints.size() + st.pending.size() + st.cpu_only_subscribers.size();
+      cpu_subscriber_count = st.cpu_only_subscribers.size();
+      accel_endpoint_count = st.endpoints.size() + st.pending.size();
+      buffer_aware_count = accel_endpoint_count + cpu_subscriber_count;
     }
 
     if (total_matched <= buffer_aware_count) {
+      TRACETOOLS_TRACEPOINT(
+        rmw_buffer_publish_route,
+        static_cast<const void *>(publisher),
+        ros_message,
+        publisher->topic_name,
+        total_matched,
+        buffer_aware_count,
+        cpu_subscriber_count,
+        accel_endpoint_count,
+        "buffer",
+        "all_subscribers_buffer_aware");
       publish_to_buffer_endpoints(info, ros_message, publisher);
       return RMW_RET_OK;
     }
-    // Legacy subscribers present — publish via main (legacy) DataWriter.
-    return rmw_fastrtps_shared_cpp::__rmw_publish(
+    // Legacy subscribers present: publish via main (legacy) DataWriter.
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_publish_route,
+      static_cast<const void *>(publisher),
+      ros_message,
+      publisher->topic_name,
+      total_matched,
+      buffer_aware_count,
+      cpu_subscriber_count,
+      accel_endpoint_count,
+      "legacy_fallback",
+      "legacy_subscriber_present");
+    rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_publish(
       eprosima_fastrtps_identifier, publisher, ros_message, allocation);
+    rmw_gid_t zero_gid{};
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_publish,
+      static_cast<const void *>(publisher),
+      ros_message,
+      publisher->topic_name,
+      zero_gid.data,
+      "legacy",
+      "legacy_fallback",
+      static_cast<size_t>(0),
+      ret == RMW_RET_OK,
+      ret == RMW_RET_OK ? "ok" : "legacy_publish_failed");
+    return ret;
   }
 
   return rmw_fastrtps_shared_cpp::__rmw_publish(

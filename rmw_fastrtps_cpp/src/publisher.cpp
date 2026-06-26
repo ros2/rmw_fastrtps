@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #include <string>
+#include <unordered_map>
 
 #include "fastdds/dds/core/policy/QosPolicies.hpp"
 #include "fastdds/dds/domain/DomainParticipant.hpp"
@@ -55,6 +56,25 @@
 #include "tracetools/tracetools.h"
 
 #include "type_support_common.hpp"
+
+
+namespace
+{
+
+std::string
+join_backend_names(const std::unordered_map<std::string, std::string> & backend_metadata)
+{
+  std::string names;
+  for (const auto & entry : backend_metadata) {
+    if (!names.empty()) {
+      names += ",";
+    }
+    names += entry.first;
+  }
+  return names;
+}
+
+}  // namespace
 
 rmw_publisher_t *
 rmw_fastrtps_cpp::create_publisher(
@@ -410,5 +430,19 @@ rmw_fastrtps_cpp::create_publisher(
     rmw_publisher_init,
     static_cast<const void *>(rmw_publisher),
     info->publisher_gid.data);
+  if (has_buffer_fields) {
+    auto backend_names = join_backend_names(backend_metadata);
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_endpoint_init,
+      static_cast<const void *>(rmw_publisher),
+      info->publisher_gid.data,
+      topic_name,
+      type_name.c_str(),
+      "publisher",
+      "buffer_aware",
+      backend_metadata.size(),
+      backend_names.c_str(),
+      "ok");
+  }
   return rmw_publisher;
 }
