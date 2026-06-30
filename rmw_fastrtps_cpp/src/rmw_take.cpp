@@ -139,7 +139,7 @@ take_buffer_aware(
   eprosima::fastcdr::Cdr deser(
     receive_buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN);
   try {
-    deser.deserialize_encapsulation();
+    deser.read_encapsulation();
   } catch (...) {
     RCUTILS_LOG_ERROR_ONCE_NAMED(
       "rmw_fastrtps_cpp",
