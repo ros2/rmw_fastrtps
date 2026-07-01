@@ -144,7 +144,8 @@ take_buffer_aware(
     RCUTILS_LOG_ERROR_ONCE_NAMED(
       "rmw_fastrtps_cpp",
       "Failed to read encapsulation in buffer-aware topic from publisher '%s': "
-      "Please ensure that the publisher is using the last version of rmw_fastrtps_cpp", writer_hex.c_str());
+      "Please ensure that the publisher is using the last version of rmw_fastrtps_cpp",
+      writer_hex.c_str());
     return RMW_RET_OK;
   }
 
