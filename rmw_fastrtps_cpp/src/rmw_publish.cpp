@@ -182,6 +182,7 @@ publish_to_buffer_endpoints(
       fast_buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::CdrVersion::XCDRv1);
     ser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
+    ser.serialize_encapsulation();
 
     auto * backend_context =
       static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(info->serialization_context_);
