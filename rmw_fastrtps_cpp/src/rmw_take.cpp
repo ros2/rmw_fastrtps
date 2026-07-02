@@ -137,9 +137,17 @@ take_buffer_aware(
   }
 
   eprosima::fastcdr::Cdr deser(
-    receive_buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
-    eprosima::fastcdr::CdrVersion::XCDRv1);
-  deser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
+    receive_buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN);
+  try {
+    deser.read_encapsulation();
+  } catch (...) {
+    RCUTILS_LOG_ERROR_ONCE_NAMED(
+      "rmw_fastrtps_cpp",
+      "Failed to read encapsulation in buffer-aware topic from publisher '%s': "
+      "Please ensure that the publisher is using the last version of rmw_fastrtps_cpp",
+      writer_hex.c_str());
+    return RMW_RET_OK;
+  }
 
   auto * backend_context =
     static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(info->serialization_context_);
