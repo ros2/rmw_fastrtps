@@ -16,6 +16,7 @@
 
 #include <algorithm>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -73,6 +74,21 @@ using PropertyPolicyHelper = eprosima::fastdds::rtps::PropertyPolicyHelper;
 
 namespace
 {
+
+
+std::string
+join_backend_names(const std::unordered_map<std::string, std::string> & backend_metadata)
+{
+  std::string names;
+  for (const auto & entry : backend_metadata) {
+    if (!names.empty()) {
+      names += ",";
+    }
+    names += entry.first;
+  }
+  return names;
+}
+
 
 class CpuChannelDataReaderListener final : public eprosima::fastdds::dds::DataReaderListener
 {
@@ -945,6 +961,20 @@ __create_subscription(
     rmw_subscription_init,
     static_cast<const void *>(rmw_subscription),
     info->subscription_gid_.data);
+  if (has_buffer_fields) {
+    auto backend_names = join_backend_names(filtered_backends);
+    TRACETOOLS_TRACEPOINT(
+      rmw_buffer_endpoint_init,
+      static_cast<const void *>(rmw_subscription),
+      info->subscription_gid_.data,
+      topic_name,
+      type_name.c_str(),
+      "subscription",
+      cpu_only ? "cpu_only" : "accelerated",
+      filtered_backends.size(),
+      backend_names.c_str(),
+      "ok");
+  }
   return rmw_subscription;
 }
 
