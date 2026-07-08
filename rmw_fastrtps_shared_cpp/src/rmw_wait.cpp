@@ -328,7 +328,9 @@ __rmw_wait(
       if (!condition->get_trigger_value()) {
         guard_conditions->guard_conditions[i] = 0;
       }
-      condition->set_trigger_value(false);
+      else {
+        condition->set_trigger_value(false);
+      }
     }
   }
 
