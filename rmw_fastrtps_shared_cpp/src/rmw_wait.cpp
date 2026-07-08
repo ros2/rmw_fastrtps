@@ -255,6 +255,10 @@ __rmw_wait(
       if (!has_data) {
         subscriptions->subscribers[i] = 0;
       }
+      else {
+        // We are returning a ready subscription, so we need to indicate that the wait was successful.
+        wait_result = true;
+      }
     }
   }
 
@@ -269,6 +273,10 @@ __rmw_wait(
       {
         clients->clients[i] = 0;
       }
+      else {
+        // We are returning a ready client, so we need to indicate that the wait was successful.
+        wait_result = true;
+      }
     }
   }
 
@@ -282,6 +290,10 @@ __rmw_wait(
         custom_service_info->request_reader_->get_first_untaken_info(&sample_info))
       {
         services->services[i] = 0;
+      }
+      else {
+        // We are returning a ready service, so we need to indicate that the wait was successful.
+        wait_result = true;
       }
     }
   }
@@ -318,6 +330,10 @@ __rmw_wait(
       if (!active) {
         events->events[i] = 0;
       }
+      else {
+        // We are returning a ready event, so we need to indicate that the wait was successful.
+        wait_result = true;
+      }
     }
   }
 
@@ -330,6 +346,8 @@ __rmw_wait(
       }
       else {
         condition->set_trigger_value(false);
+        // We are returning a ready guard condition, so we need to indicate that the wait was successful.
+        wait_result = true;
       }
     }
   }
