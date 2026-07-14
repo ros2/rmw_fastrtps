@@ -19,7 +19,6 @@
 #include <utility>
 #include <vector>
 
-#include "fastdds/dds/core/condition/GuardCondition.hpp"
 #include "fastdds/dds/domain/DomainParticipant.hpp"
 #include "fastdds/dds/subscriber/Subscriber.hpp"
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
@@ -74,19 +73,14 @@ using PropertyPolicyHelper = eprosima::fastdds::rtps::PropertyPolicyHelper;
 namespace
 {
 
-class CpuChannelDataReaderListener final : public eprosima::fastdds::dds::DataReaderListener
+class BufferChannelDataReaderListener final : public eprosima::fastdds::dds::DataReaderListener
 {
 public:
-  CpuChannelDataReaderListener(
-    eprosima::fastdds::dds::GuardCondition * guard,
-    RMWSubscriptionEvent * event)
-  : guard_(guard), event_(event) {}
+  explicit BufferChannelDataReaderListener(RMWSubscriptionEvent * event)
+  : event_(event) {}
 
   void on_data_available(eprosima::fastdds::dds::DataReader * reader) override
   {
-    if (guard_) {
-      guard_->set_trigger_value(true);
-    }
     auto unread = reader->get_unread_count();
     if (event_) {
       event_->notify_buffer_data_available(unread > 0 ? static_cast<size_t>(unread) : 1);
@@ -94,7 +88,6 @@ public:
   }
 
 private:
-  eprosima::fastdds::dds::GuardCondition * guard_;
   RMWSubscriptionEvent * event_;
 };
 
@@ -855,9 +848,6 @@ __create_subscription(
       info->local_endpoint_info_.endpoint_gid,
       info->subscription_gid_.data, RMW_GID_STORAGE_SIZE);
 
-    info->buffer_data_guard_ =
-      std::make_unique<eprosima::fastdds::dds::GuardCondition>();
-
     if (cpu_only) {
       // CPU-only: create a DataReader on the shared CPU channel.
       std::string cpu_topic_name = topic_name_mangled + "/_buf_cpu";
@@ -875,8 +865,7 @@ __create_subscription(
 
       eprosima::fastdds::dds::DataReaderQos cpu_rqos = info->datareader_qos_;
       info->cpu_data_reader_listener_ =
-        std::make_shared<CpuChannelDataReaderListener>(
-        info->buffer_data_guard_.get(), info->subscription_event_);
+        std::make_shared<BufferChannelDataReaderListener>(info->subscription_event_);
       info->cpu_data_reader_ = subscriber->create_datareader(
         info->cpu_topic_, cpu_rqos, info->cpu_data_reader_listener_.get(),
         eprosima::fastdds::dds::StatusMask::data_available());
@@ -887,6 +876,8 @@ __create_subscription(
         RMW_SET_ERROR_MSG("create_subscription() failed to create CPU channel DataReader");
         return nullptr;
       }
+      info->cpu_data_reader_->get_statuscondition().set_enabled_statuses(
+        eprosima::fastdds::dds::StatusMask::data_available());
     } else {
       // Accelerated: single shared DataReader for all buffer-aware publishers.
       std::string sub_hex = rmw_fastrtps_shared_cpp::gid_to_hex(info->subscription_gid_);
@@ -909,8 +900,7 @@ __create_subscription(
       accel_rqos.representation().m_value.push_back(rep);
 
       info->accel_data_reader_listener_ =
-        std::make_shared<CpuChannelDataReaderListener>(
-        info->buffer_data_guard_.get(), info->subscription_event_);
+        std::make_shared<BufferChannelDataReaderListener>(info->subscription_event_);
       info->accel_data_reader_ = subscriber->create_datareader(
         info->accel_topic_, accel_rqos, info->accel_data_reader_listener_.get(),
         eprosima::fastdds::dds::StatusMask::data_available());
@@ -921,6 +911,8 @@ __create_subscription(
         RMW_SET_ERROR_MSG("create_subscription() failed to create accelerated channel DataReader");
         return nullptr;
       }
+      info->accel_data_reader_->get_statuscondition().set_enabled_statuses(
+        eprosima::fastdds::dds::StatusMask::data_available());
     }
 
     auto * backend_context =
