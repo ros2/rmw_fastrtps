@@ -250,7 +250,12 @@ rmw_publish(
     return RMW_RET_INVALID_ARGUMENT);
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  if (info->is_buffer_aware_) {
+  // Route transient-local publishers through the main DataWriter below as
+  // transient-local is not supported by buffer backends.
+  if (info->is_buffer_aware_ &&
+    info->data_writer_->get_qos().durability().kind !=
+    eprosima::fastdds::dds::TRANSIENT_LOCAL_DURABILITY_QOS)
+  {
     // Check whether any non-backend-aware (legacy) subscribers exist.
     // If so, skip buffer channels entirely and fall through to the main
     // DataWriter so old RMW endpoints receive the message.  Buffer-aware
@@ -268,9 +273,6 @@ rmw_publish(
       publish_to_buffer_endpoints(info, ros_message, publisher);
       return RMW_RET_OK;
     }
-    // Legacy subscribers present — publish via main (legacy) DataWriter.
-    return rmw_fastrtps_shared_cpp::__rmw_publish(
-      eprosima_fastrtps_identifier, publisher, ros_message, allocation);
   }
 
   return rmw_fastrtps_shared_cpp::__rmw_publish(
