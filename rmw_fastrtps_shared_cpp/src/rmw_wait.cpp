@@ -29,6 +29,19 @@
 
 namespace rmw_fastrtps_shared_cpp
 {
+static uint64_t get_buffer_unread_count(
+  const CustomSubscriberInfo * custom_subscriber_info)
+{
+  uint64_t unread_count = 0;
+  if (custom_subscriber_info->cpu_data_reader_) {
+    unread_count += custom_subscriber_info->cpu_data_reader_->get_unread_count();
+  }
+  if (custom_subscriber_info->accel_data_reader_) {
+    unread_count += custom_subscriber_info->accel_data_reader_->get_unread_count();
+  }
+  return unread_count;
+}
+
 /// Check if any condition in the set of entities has a triggered condition.
 /**
  * If any condition is triggered before waiting, then we can skip some set-up,
@@ -249,8 +262,18 @@ __rmw_wait(
       if (!has_data && custom_subscriber_info->buffer_data_guard_ &&
         custom_subscriber_info->buffer_data_guard_->get_trigger_value())
       {
-        has_data = true;
-        custom_subscriber_info->buffer_data_guard_->set_trigger_value(false);
+        uint64_t unread_count = get_buffer_unread_count(custom_subscriber_info);
+        if (unread_count == 0) {
+          custom_subscriber_info->buffer_data_guard_->set_trigger_value(false);
+
+          // Recheck after clearing so data arriving between the first check and
+          // the reset cannot lose its wakeup.
+          unread_count = get_buffer_unread_count(custom_subscriber_info);
+          if (unread_count > 0) {
+            custom_subscriber_info->buffer_data_guard_->set_trigger_value(true);
+          }
+        }
+        has_data = unread_count > 0;
       }
       if (!has_data) {
         subscriptions->subscribers[i] = 0;
