@@ -695,13 +695,27 @@ __create_subscription(
     reader_qos.data_sharing().off();
   }
 
-  // Detect buffer-aware message type
-  bool has_buffer_fields = callbacks->has_buffer_fields;
+  // Resolve the effective QoS before deciding whether to enable buffer endpoints.
+  const bool has_buffer_fields = callbacks->has_buffer_fields;
+  if (!get_datareader_qos(
+      *qos_policies, *type_supports->get_type_hash_func(type_supports),
+      reader_qos, nullptr, nullptr))
+  {
+    RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
+    return nullptr;
+  }
+
+  // A transient-local subscription can only match publishers that use the base
+  // DataWriter, so its custom buffer endpoints would never receive data.
+  const bool use_buffer_endpoints = has_buffer_fields &&
+    reader_qos.durability().kind !=
+    eprosima::fastdds::dds::TRANSIENT_LOCAL_DURABILITY_QOS;
+
   std::unordered_map<std::string, std::string> filtered_backends;
   std::vector<std::string> my_backend_types;
   bool cpu_only = false;
 
-  if (has_buffer_fields) {
+  if (use_buffer_endpoints) {
     std::unordered_map<std::string, std::string> all_backends;
     auto * backend_context =
       static_cast<rmw_fastrtps_cpp::BufferBackendContext *>(
@@ -764,15 +778,15 @@ __create_subscription(
         }
       }
     }
-  }
 
-  if (!get_datareader_qos(
-      *qos_policies, *type_supports->get_type_hash_func(type_supports),
-      reader_qos, nullptr,
-      has_buffer_fields ? &filtered_backends : nullptr))
-  {
-    RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
-    return nullptr;
+    // Rebuild user_data with buffer backend metadata for discovery.
+    if (!get_datareader_qos(
+        *qos_policies, *type_supports->get_type_hash_func(type_supports),
+        reader_qos, nullptr, &filtered_backends))
+    {
+      RMW_SET_ERROR_MSG("create_subscription() failed setting buffer-aware data reader QoS");
+      return nullptr;
+    }
   }
 
   // Apply resource limits QoS if the type is keyed
@@ -844,9 +858,9 @@ __create_subscription(
   rmw_subscription->is_cft_supported = true;
 
   // Buffer-aware subscription setup
-  info->is_buffer_aware_ = has_buffer_fields;
-  info->is_cpu_only_ = has_buffer_fields && cpu_only;
-  if (has_buffer_fields) {
+  info->is_buffer_aware_ = use_buffer_endpoints;
+  info->is_cpu_only_ = use_buffer_endpoints && cpu_only;
+  if (use_buffer_endpoints) {
     info->serialization_context_ = participant_info->buffer_serialization_context_;
     info->my_backend_types_ = std::move(my_backend_types);
     info->local_endpoint_info_ = rmw_get_zero_initialized_topic_endpoint_info();

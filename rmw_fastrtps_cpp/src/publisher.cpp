@@ -255,10 +255,24 @@ rmw_fastrtps_cpp::create_publisher(
     writer_qos.data_sharing().off();
   }
 
-  // Detect buffer-aware message type
-  bool has_buffer_fields = callbacks->has_buffer_fields;
+  // Resolve the effective QoS before deciding whether to enable buffer endpoints.
+  const bool has_buffer_fields = callbacks->has_buffer_fields;
+  if (!get_datawriter_qos(
+      *qos_policies, *type_supports->get_type_hash_func(type_supports),
+      writer_qos, nullptr, nullptr))
+  {
+    RMW_SET_ERROR_MSG("create_publisher() failed setting data writer QoS");
+    return nullptr;
+  }
+
+  // Buffer backends do not support transient-local durability. Those publishers
+  // use only the base DataWriter, which provides the required history cache.
+  const bool use_buffer_endpoints = has_buffer_fields &&
+    writer_qos.durability().kind !=
+    eprosima::fastdds::dds::TRANSIENT_LOCAL_DURABILITY_QOS;
+
   std::unordered_map<std::string, std::string> backend_metadata;
-  if (has_buffer_fields) {
+  if (use_buffer_endpoints) {
     auto * backend_context =
       static_cast<rmw_fastrtps_cpp::BufferBackendContext *>(
       participant_info->buffer_serialization_context_);
@@ -271,16 +285,15 @@ rmw_fastrtps_cpp::create_publisher(
     if (backend_metadata.find("cpu") == backend_metadata.end()) {
       backend_metadata["cpu"] = "";
     }
-  }
 
-  // Get QoS from RMW, optionally encoding buffer backend info in user_data
-  if (!get_datawriter_qos(
-      *qos_policies, *type_supports->get_type_hash_func(type_supports),
-      writer_qos, nullptr,
-      has_buffer_fields ? &backend_metadata : nullptr))
-  {
-    RMW_SET_ERROR_MSG("create_publisher() failed setting data writer QoS");
-    return nullptr;
+    // Rebuild user_data with buffer backend metadata for discovery.
+    if (!get_datawriter_qos(
+        *qos_policies, *type_supports->get_type_hash_func(type_supports),
+        writer_qos, nullptr, &backend_metadata))
+    {
+      RMW_SET_ERROR_MSG("create_publisher() failed setting buffer-aware data writer QoS");
+      return nullptr;
+    }
   }
 
   // Apply resource limits QoS if the type is keyed
@@ -348,8 +361,8 @@ rmw_fastrtps_cpp::create_publisher(
   rmw_publisher->options = *publisher_options;
 
   // Buffer-aware publisher setup
-  info->is_buffer_aware_ = has_buffer_fields;
-  if (has_buffer_fields) {
+  info->is_buffer_aware_ = use_buffer_endpoints;
+  if (use_buffer_endpoints) {
     info->serialization_context_ = participant_info->buffer_serialization_context_;
     info->backend_metadata_ = backend_metadata;
     info->participant_ = dds_participant;
