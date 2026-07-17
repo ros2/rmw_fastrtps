@@ -267,9 +267,6 @@ rmw_publish(
       publish_to_buffer_endpoints(info, ros_message, publisher);
       return RMW_RET_OK;
     }
-    // Legacy subscribers present — publish via main (legacy) DataWriter.
-    return rmw_fastrtps_shared_cpp::__rmw_publish(
-      eprosima_fastrtps_identifier, publisher, ros_message, allocation);
   }
 
   return rmw_fastrtps_shared_cpp::__rmw_publish(
