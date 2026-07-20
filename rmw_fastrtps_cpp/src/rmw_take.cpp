@@ -23,7 +23,6 @@
 
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
 #include "fastdds/dds/core/StackAllocatedSequence.hpp"
-#include "fastdds/dds/core/condition/GuardCondition.hpp"
 
 #include "rcutils/logging_macros.h"
 
@@ -78,9 +77,6 @@ take_buffer_aware(
       cpu_vals.length(0);
       cpu_info_seq.length(0);
 
-      if (info->cpu_data_reader_->get_unread_count() > 0 && info->buffer_data_guard_) {
-        info->buffer_data_guard_->set_trigger_value(true);
-      }
       return RMW_RET_OK;
     }
     cpu_vals.length(0);
@@ -183,10 +179,6 @@ take_buffer_aware(
     }
   }
 
-  if (info->accel_data_reader_->get_unread_count() > 0 && info->buffer_data_guard_) {
-    info->buffer_data_guard_->set_trigger_value(true);
-  }
-
   return RMW_RET_OK;
 }
 
@@ -251,10 +243,6 @@ take_buffer_aware_serialized(
   }
 
   *taken = true;
-
-  if (info->cpu_data_reader_->get_unread_count() > 0 && info->buffer_data_guard_) {
-    info->buffer_data_guard_->set_trigger_value(true);
-  }
 
   return RMW_RET_OK;
 }
