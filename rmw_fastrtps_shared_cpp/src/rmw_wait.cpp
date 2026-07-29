@@ -29,6 +29,26 @@
 
 namespace rmw_fastrtps_shared_cpp
 {
+static bool data_reader_has_data(
+  eprosima::fastdds::dds::DataReader * data_reader)
+{
+  if (!data_reader) {
+    return false;
+  }
+
+  eprosima::fastdds::dds::SampleInfo sample_info;
+  return eprosima::fastdds::dds::RETCODE_OK ==
+         data_reader->get_first_untaken_info(&sample_info);
+}
+
+static bool subscription_has_data(
+  const CustomSubscriberInfo * custom_subscriber_info)
+{
+  return data_reader_has_data(custom_subscriber_info->data_reader_) ||
+         data_reader_has_data(custom_subscriber_info->cpu_data_reader_) ||
+         data_reader_has_data(custom_subscriber_info->accel_data_reader_);
+}
+
 /// Check if any condition in the set of entities has a triggered condition.
 /**
  * If any condition is triggered before waiting, then we can skip some set-up,
@@ -79,15 +99,7 @@ static bool has_triggered_condition(
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
       void * data = subscriptions->subscribers[i];
       auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
-      eprosima::fastdds::dds::SampleInfo sample_info;
-      if (eprosima::fastdds::dds::RETCODE_OK ==
-        custom_subscriber_info->data_reader_->get_first_untaken_info(&sample_info))
-      {
-        return true;
-      }
-      if (custom_subscriber_info->buffer_data_guard_ &&
-        custom_subscriber_info->buffer_data_guard_->get_trigger_value())
-      {
+      if (subscription_has_data(custom_subscriber_info)) {
         return true;
       }
     }
@@ -165,8 +177,13 @@ __rmw_wait(
         auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
         attached_conditions.push_back(
           &custom_subscriber_info->data_reader_->get_statuscondition());
-        if (custom_subscriber_info->buffer_data_guard_) {
-          attached_conditions.push_back(custom_subscriber_info->buffer_data_guard_.get());
+        if (custom_subscriber_info->cpu_data_reader_) {
+          attached_conditions.push_back(
+            &custom_subscriber_info->cpu_data_reader_->get_statuscondition());
+        }
+        if (custom_subscriber_info->accel_data_reader_) {
+          attached_conditions.push_back(
+            &custom_subscriber_info->accel_data_reader_->get_statuscondition());
         }
       }
     }
@@ -239,20 +256,7 @@ __rmw_wait(
       void * data = subscriptions->subscribers[i];
       auto custom_subscriber_info = static_cast<CustomSubscriberInfo *>(data);
 
-      bool has_data = false;
-      eprosima::fastdds::dds::SampleInfo sample_info;
-      if (eprosima::fastdds::dds::RETCODE_OK ==
-        custom_subscriber_info->data_reader_->get_first_untaken_info(&sample_info))
-      {
-        has_data = true;
-      }
-      if (!has_data && custom_subscriber_info->buffer_data_guard_ &&
-        custom_subscriber_info->buffer_data_guard_->get_trigger_value())
-      {
-        has_data = true;
-        custom_subscriber_info->buffer_data_guard_->set_trigger_value(false);
-      }
-      if (!has_data) {
+      if (!subscription_has_data(custom_subscriber_info)) {
         subscriptions->subscribers[i] = 0;
       }
     }

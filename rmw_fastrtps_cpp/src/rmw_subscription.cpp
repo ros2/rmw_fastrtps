@@ -138,7 +138,6 @@ rmw_create_subscription(
   // per-publisher metadata tracking, so skip the callback for them.
   if (info->is_buffer_aware_ && !info->is_cpu_only_) {
     auto state = info->buffer_state_;
-    auto * guard = info->buffer_data_guard_.get();
     auto * backend_context =
       static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(
       info->serialization_context_);
@@ -148,7 +147,7 @@ rmw_create_subscription(
       buf_registry->register_publisher_discovery_callback(
         subscription->topic_name,
         info->subscription_gid_,
-        [state, guard, backend_context](
+        [state, backend_context](
           const rmw_fastrtps_cpp::BufferEndpointInfo & pub_info)
         {
           if (!state->alive.load()) {
@@ -193,10 +192,6 @@ rmw_create_subscription(
             }
 
             state->publisher_metadata[pub_hex] = std::move(meta);
-
-            if (guard) {
-              guard->set_trigger_value(true);
-            }
           }
 
           RCUTILS_LOG_DEBUG_NAMED(
