@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.4.9 (2026-07-30)
+------------------
+* Fix buffer-aware subscriptions to preserve unread data across rmw_wait calls (`#900 <https://github.com/ros2/rmw_fastrtps/issues/900>`_) (`#902 <https://github.com/ros2/rmw_fastrtps/issues/902>`_)
+* Contributors: mergify[bot]
+
 9.4.8 (2026-05-13)
 ------------------
 * Change the buffer-aware BUFBE: -> bufbe. (backport `#880 <https://github.com/ros2/rmw_fastrtps//issues/880>`_) (`#884 <https://github.com/ros2/rmw_fastrtps//issues/884>`_)

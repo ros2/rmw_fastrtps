@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.4.9 (2026-07-30)
+------------------
+* Fix buffer-aware subscriptions to preserve unread data across rmw_wait calls (`#900 <https://github.com/ros2/rmw_fastrtps/issues/900>`_) (`#902 <https://github.com/ros2/rmw_fastrtps/issues/902>`_)
+* Fix transient-local publishing for buffer-aware path (`#898 <https://github.com/ros2/rmw_fastrtps/issues/898>`_) (`#901 <https://github.com/ros2/rmw_fastrtps/issues/901>`_)
+* Contributors: mergify[bot]
+
 9.4.8 (2026-05-13)
 ------------------
 * Clean up logs for the rosidl::Buffer path (`#886 <https://github.com/ros2/rmw_fastrtps//issues/886>`_) (`#887 <https://github.com/ros2/rmw_fastrtps//issues/887>`_)
