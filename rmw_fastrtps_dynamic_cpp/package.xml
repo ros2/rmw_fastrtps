@@ -2,6 +2,10 @@
 <?xml-model href="http://download.ros.org/schema/package_format3.xsd" schematypens="http://www.w3.org/2001/XMLSchema"?>
 <package format="3">
   <name>rmw_fastrtps_dynamic_cpp</name>
+  <!--
+    Remember to update the rmw_fastrtps_shared_cpp dependency below
+    when updating this tag
+  -->
   <version>9.4.9</version>
   <description>Implement the ROS middleware interface using introspection type support.</description>
 
