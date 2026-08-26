@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.5.2 (2026-07-28)
+------------------
+* use C++ 20 in default. (`#894 <https://github.com/ros2/rmw_fastrtps/issues/894>`_)
+* Contributors: Tomoya Fujita
+
 9.5.1 (2026-05-13)
 ------------------
 

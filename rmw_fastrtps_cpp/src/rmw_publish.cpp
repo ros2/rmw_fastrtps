@@ -182,6 +182,7 @@ publish_to_buffer_endpoints(
       fast_buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::CdrVersion::XCDRv1);
     ser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
+    ser.serialize_encapsulation();
 
     auto * backend_context =
       static_cast<const rmw_fastrtps_cpp::BufferBackendContext *>(info->serialization_context_);
@@ -267,9 +268,6 @@ rmw_publish(
       publish_to_buffer_endpoints(info, ros_message, publisher);
       return RMW_RET_OK;
     }
-    // Legacy subscribers present — publish via main (legacy) DataWriter.
-    return rmw_fastrtps_shared_cpp::__rmw_publish(
-      eprosima_fastrtps_identifier, publisher, ros_message, allocation);
   }
 
   return rmw_fastrtps_shared_cpp::__rmw_publish(
