@@ -16,6 +16,16 @@ if(TARGET test_rmw_qos_to_dds_attributes)
   )
 endif()
 
+ament_add_gtest(test_buffer_backend_user_data test_buffer_backend_user_data.cpp)
+if(TARGET test_buffer_backend_user_data)
+  target_link_libraries(test_buffer_backend_user_data
+    ${PROJECT_NAME}
+    rmw::rmw
+    rmw_dds_common::rmw_dds_common_library
+    rosidl_runtime_c::rosidl_runtime_c
+  )
+endif()
+
 ament_add_gmock(test_security_logging test_security_logging.cpp)
 if(TARGET test_security_logging)
   target_link_libraries(test_security_logging

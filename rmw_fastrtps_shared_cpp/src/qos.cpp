@@ -30,6 +30,7 @@
 #include "fastdds/dds/topic/qos/TopicQos.hpp"
 
 #include "rmw/error_handling.h"
+#include "rmw/impl/cpp/key_value.hpp"
 
 #include "rmw_dds_common/qos.hpp"
 
@@ -155,8 +156,14 @@ bool fill_entity_qos_from_profile(
   return true;
 }
 
-static const char * BUFFER_BACKEND_SENTINEL = "BUFBE:";
-static const size_t BUFFER_BACKEND_SENTINEL_LEN = 6;
+// Encoded as a regular key=value;-style user_data entry so that the shared
+// rmw::impl::cpp::parse_key_value parser (which only accepts alnum keys and
+// stops at the first non-alnum byte in a key) does not abort on the rest of
+// the user_data string. Inside the bufbe value, backends are joined by ',' and
+// each backend is `<name>:<aux>` (neither ',' nor ':' may appear in a name or
+// aux). The value cannot contain ';' (parse_key_value treats it as a
+// terminator).
+static const char * BUFFER_BACKEND_KEY = "bufbe";
 
 std::string
 encode_buffer_backends_for_user_data(
@@ -166,15 +173,16 @@ encode_buffer_backends_for_user_data(
     return {};
   }
   std::ostringstream ss;
-  ss << BUFFER_BACKEND_SENTINEL;
+  ss << BUFFER_BACKEND_KEY << '=';
   bool first = true;
   for (const auto & [name, aux] : backends) {
     if (!first) {
-      ss << ';';
+      ss << ',';
     }
-    ss << name << '=' << aux;
+    ss << name << ':' << aux;
     first = false;
   }
+  ss << ';';
   return ss.str();
 }
 
@@ -182,27 +190,25 @@ std::unordered_map<std::string, std::string>
 parse_buffer_backends_from_user_data(const uint8_t * data, size_t size)
 {
   std::unordered_map<std::string, std::string> result;
-  if (!data || size < BUFFER_BACKEND_SENTINEL_LEN) {
+  if (!data || size == 0) {
     return result;
   }
-  std::string str(reinterpret_cast<const char *>(data), size);
-  auto pos = str.find(BUFFER_BACKEND_SENTINEL);
-  if (pos == std::string::npos) {
+  std::vector<uint8_t> udvec(data, data + size);
+  auto kv = rmw::impl::cpp::parse_key_value(udvec);
+  auto it = kv.find(BUFFER_BACKEND_KEY);
+  if (it == kv.end()) {
     return result;
   }
-  std::string backends_str = str.substr(pos + BUFFER_BACKEND_SENTINEL_LEN);
-  if (backends_str.empty()) {
-    return result;
-  }
+  std::string backends_str(it->second.begin(), it->second.end());
   std::istringstream ss(backends_str);
   std::string entry;
-  while (std::getline(ss, entry, ';')) {
+  while (std::getline(ss, entry, ',')) {
     if (entry.empty()) {
       continue;
     }
-    size_t eq = entry.find('=');
-    std::string name = entry.substr(0, eq);
-    std::string aux = (eq == std::string::npos) ? "" : entry.substr(eq + 1);
+    size_t colon = entry.find(':');
+    std::string name = entry.substr(0, colon);
+    std::string aux = (colon == std::string::npos) ? "" : entry.substr(colon + 1);
     if (!name.empty()) {
       result[name] = aux;
     }

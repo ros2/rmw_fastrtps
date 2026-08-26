@@ -201,7 +201,7 @@ rmw_create_publisher(
               // CPU-only subscriber: track its GID; the shared CPU channel
               // DataWriter will serve it -- no per-subscriber endpoint needed.
               state->cpu_only_subscribers.push_back(sub_info.gid);
-              RCUTILS_LOG_INFO_NAMED(
+              RCUTILS_LOG_DEBUG_NAMED(
                 "rmw_fastrtps_cpp",
                 "Buffer publisher: CPU-only subscriber discovered on '%s', "
                 "served by shared CPU channel",
@@ -262,7 +262,7 @@ rmw_create_publisher(
             pending.backend_metadata = sub_info.backend_metadata;
             state->pending.push_back(std::move(pending));
 
-            RCUTILS_LOG_INFO_NAMED(
+            RCUTILS_LOG_DEBUG_NAMED(
               "rmw_fastrtps_cpp",
               "Buffer publisher: non-CPU subscriber discovered, queued '%s'",
               unique_topic.c_str());

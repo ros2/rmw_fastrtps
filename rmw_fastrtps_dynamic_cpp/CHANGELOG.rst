@@ -2,6 +2,19 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.5.2 (2026-07-28)
+------------------
+* use C++ 20 in default. (`#894 <https://github.com/ros2/rmw_fastrtps/issues/894>`_)
+* Contributors: Tomoya Fujita
+
+9.5.1 (2026-05-13)
+------------------
+
+9.5.0 (2026-05-07)
+------------------
+* Fix UB in accessing the keys (`#879 <https://github.com/ros2/rmw_fastrtps/issues/879>`_)
+* Contributors: Chris Lalancette
+
 9.4.6 (2026-04-09)
 ------------------
 * Add support for rosidl::Buffer-aware per-endpoint pub/sub (`#867 <https://github.com/ros2/rmw_fastrtps/issues/867>`_)

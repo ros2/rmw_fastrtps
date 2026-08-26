@@ -19,7 +19,6 @@
 #include <utility>
 #include <vector>
 
-#include "fastdds/dds/core/condition/GuardCondition.hpp"
 #include "fastdds/dds/domain/DomainParticipant.hpp"
 #include "fastdds/dds/subscriber/Subscriber.hpp"
 #include "fastdds/dds/subscriber/qos/DataReaderQos.hpp"
@@ -74,19 +73,14 @@ using PropertyPolicyHelper = eprosima::fastdds::rtps::PropertyPolicyHelper;
 namespace
 {
 
-class CpuChannelDataReaderListener final : public eprosima::fastdds::dds::DataReaderListener
+class BufferChannelDataReaderListener final : public eprosima::fastdds::dds::DataReaderListener
 {
 public:
-  CpuChannelDataReaderListener(
-    eprosima::fastdds::dds::GuardCondition * guard,
-    RMWSubscriptionEvent * event)
-  : guard_(guard), event_(event) {}
+  explicit BufferChannelDataReaderListener(RMWSubscriptionEvent * event)
+  : event_(event) {}
 
   void on_data_available(eprosima::fastdds::dds::DataReader * reader) override
   {
-    if (guard_) {
-      guard_->set_trigger_value(true);
-    }
     auto unread = reader->get_unread_count();
     if (event_) {
       event_->notify_buffer_data_available(unread > 0 ? static_cast<size_t>(unread) : 1);
@@ -94,7 +88,6 @@ public:
   }
 
 private:
-  eprosima::fastdds::dds::GuardCondition * guard_;
   RMWSubscriptionEvent * event_;
 };
 
@@ -695,13 +688,27 @@ __create_subscription(
     reader_qos.data_sharing().off();
   }
 
-  // Detect buffer-aware message type
-  bool has_buffer_fields = callbacks->has_buffer_fields;
+  // Resolve the effective QoS before deciding whether to enable buffer endpoints.
+  const bool has_buffer_fields = callbacks->has_buffer_fields;
+  if (!get_datareader_qos(
+      *qos_policies, *type_supports->get_type_hash_func(type_supports),
+      reader_qos, nullptr, nullptr))
+  {
+    RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
+    return nullptr;
+  }
+
+  // A transient-local subscription can only match publishers that use the base
+  // DataWriter, so its custom buffer endpoints would never receive data.
+  const bool use_buffer_endpoints = has_buffer_fields &&
+    reader_qos.durability().kind !=
+    eprosima::fastdds::dds::TRANSIENT_LOCAL_DURABILITY_QOS;
+
   std::unordered_map<std::string, std::string> filtered_backends;
   std::vector<std::string> my_backend_types;
   bool cpu_only = false;
 
-  if (has_buffer_fields) {
+  if (use_buffer_endpoints) {
     std::unordered_map<std::string, std::string> all_backends;
     auto * backend_context =
       static_cast<rmw_fastrtps_cpp::BufferBackendContext *>(
@@ -764,15 +771,15 @@ __create_subscription(
         }
       }
     }
-  }
 
-  if (!get_datareader_qos(
-      *qos_policies, *type_supports->get_type_hash_func(type_supports),
-      reader_qos, nullptr,
-      has_buffer_fields ? &filtered_backends : nullptr))
-  {
-    RMW_SET_ERROR_MSG("create_subscription() failed setting data reader QoS");
-    return nullptr;
+    // Rebuild user_data with buffer backend metadata for discovery.
+    if (!get_datareader_qos(
+        *qos_policies, *type_supports->get_type_hash_func(type_supports),
+        reader_qos, nullptr, &filtered_backends))
+    {
+      RMW_SET_ERROR_MSG("create_subscription() failed setting buffer-aware data reader QoS");
+      return nullptr;
+    }
   }
 
   // Apply resource limits QoS if the type is keyed
@@ -844,9 +851,9 @@ __create_subscription(
   rmw_subscription->is_cft_supported = true;
 
   // Buffer-aware subscription setup
-  info->is_buffer_aware_ = has_buffer_fields;
-  info->is_cpu_only_ = has_buffer_fields && cpu_only;
-  if (has_buffer_fields) {
+  info->is_buffer_aware_ = use_buffer_endpoints;
+  info->is_cpu_only_ = use_buffer_endpoints && cpu_only;
+  if (use_buffer_endpoints) {
     info->serialization_context_ = participant_info->buffer_serialization_context_;
     info->my_backend_types_ = std::move(my_backend_types);
     info->local_endpoint_info_ = rmw_get_zero_initialized_topic_endpoint_info();
@@ -854,9 +861,6 @@ __create_subscription(
     std::memcpy(
       info->local_endpoint_info_.endpoint_gid,
       info->subscription_gid_.data, RMW_GID_STORAGE_SIZE);
-
-    info->buffer_data_guard_ =
-      std::make_unique<eprosima::fastdds::dds::GuardCondition>();
 
     if (cpu_only) {
       // CPU-only: create a DataReader on the shared CPU channel.
@@ -875,8 +879,7 @@ __create_subscription(
 
       eprosima::fastdds::dds::DataReaderQos cpu_rqos = info->datareader_qos_;
       info->cpu_data_reader_listener_ =
-        std::make_shared<CpuChannelDataReaderListener>(
-        info->buffer_data_guard_.get(), info->subscription_event_);
+        std::make_shared<BufferChannelDataReaderListener>(info->subscription_event_);
       info->cpu_data_reader_ = subscriber->create_datareader(
         info->cpu_topic_, cpu_rqos, info->cpu_data_reader_listener_.get(),
         eprosima::fastdds::dds::StatusMask::data_available());
@@ -887,6 +890,8 @@ __create_subscription(
         RMW_SET_ERROR_MSG("create_subscription() failed to create CPU channel DataReader");
         return nullptr;
       }
+      info->cpu_data_reader_->get_statuscondition().set_enabled_statuses(
+        eprosima::fastdds::dds::StatusMask::data_available());
     } else {
       // Accelerated: single shared DataReader for all buffer-aware publishers.
       std::string sub_hex = rmw_fastrtps_shared_cpp::gid_to_hex(info->subscription_gid_);
@@ -909,8 +914,7 @@ __create_subscription(
       accel_rqos.representation().m_value.push_back(rep);
 
       info->accel_data_reader_listener_ =
-        std::make_shared<CpuChannelDataReaderListener>(
-        info->buffer_data_guard_.get(), info->subscription_event_);
+        std::make_shared<BufferChannelDataReaderListener>(info->subscription_event_);
       info->accel_data_reader_ = subscriber->create_datareader(
         info->accel_topic_, accel_rqos, info->accel_data_reader_listener_.get(),
         eprosima::fastdds::dds::StatusMask::data_available());
@@ -921,6 +925,8 @@ __create_subscription(
         RMW_SET_ERROR_MSG("create_subscription() failed to create accelerated channel DataReader");
         return nullptr;
       }
+      info->accel_data_reader_->get_statuscondition().set_enabled_statuses(
+        eprosima::fastdds::dds::StatusMask::data_available());
     }
 
     auto * backend_context =

@@ -2,6 +2,20 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.5.2 (2026-07-28)
+------------------
+* Fix buffer-aware subscriptions to preserve unread data across rmw_wait calls (`#900 <https://github.com/ros2/rmw_fastrtps/issues/900>`_)
+* use C++ 20 in default. (`#894 <https://github.com/ros2/rmw_fastrtps/issues/894>`_)
+* Contributors: CY Chen, Tomoya Fujita
+
+9.5.1 (2026-05-13)
+------------------
+
+9.5.0 (2026-05-07)
+------------------
+* Change the buffer-aware BUFBE: -> bufbe. (`#880 <https://github.com/ros2/rmw_fastrtps/issues/880>`_)
+* Contributors: Chris Lalancette
+
 9.4.6 (2026-04-09)
 ------------------
 * feat: set collection header element_flags TryConstructFailAction::DISCARD instead of 0 (`#875 <https://github.com/ros2/rmw_fastrtps/issues/875>`_)

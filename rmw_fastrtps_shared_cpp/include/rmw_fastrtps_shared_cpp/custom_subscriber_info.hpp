@@ -29,7 +29,6 @@
 
 #include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
 #include "fastdds/dds/core/status/LivelinessChangedStatus.hpp"
-#include "fastdds/dds/core/condition/GuardCondition.hpp"
 #include "fastdds/dds/core/status/SubscriptionMatchedStatus.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/DataReaderListener.hpp"
@@ -146,10 +145,6 @@ struct CustomSubscriberInfo : public CustomEventInfo
   const void * serialization_context_{nullptr};
   std::shared_ptr<BufferSubscriptionState> buffer_state_{
     std::make_shared<BufferSubscriptionState>()};
-  /// Guard condition triggered when buffer channel DataReaders receive data.
-  /// Used by rmw_wait to detect data on buffer-aware subscriptions.
-  std::unique_ptr<eprosima::fastdds::dds::GuardCondition> buffer_data_guard_;
-
   // CPU-only shared channel reader (when acceptable_buffer_backends is CPU-only)
   eprosima::fastdds::dds::DataReader * cpu_data_reader_{nullptr};
   eprosima::fastdds::dds::Topic * cpu_topic_{nullptr};
