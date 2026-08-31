@@ -128,6 +128,14 @@ bool RMWSubscriptionEvent::take_event(
 {
   assert(rmw_fastrtps_shared_cpp::internal::is_event_supported(event_type));
 
+  // NOTE: the DataReader status queries below (get_*_status) acquire the reader's
+  // internal mutex. Fast-DDS may invoke this subscription's listener callbacks --
+  // which take on_new_event_m_ -- while holding that reader mutex (e.g.
+  // StatefulReader::processHeartbeatMsg -> on_sample_lost). To avoid a lock-order
+  // inversion (ABBA deadlock) with the reader's receive threads, on_new_event_m_ must
+  // NOT be held across a reader get_*_status() call. Each case that queries the reader
+  // releases the lock around the query, copies into a local, then re-acquires and
+  // adopts the value only if a listener update has not arrived in the meantime.
   rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   switch (event_type) {
@@ -137,7 +145,14 @@ bool RMWSubscriptionEvent::take_event(
         if (liveliness_changed_) {
           liveliness_changed_ = false;
         } else {
-          subscriber_info_->data_reader_->get_liveliness_changed_status(liveliness_changed_status_);
+          eprosima::fastdds::dds::LivelinessChangedStatus current;
+          lock_mutex.unlock();
+          subscriber_info_->data_reader_->get_liveliness_changed_status(current);
+          lock_mutex.lock();
+          if (!liveliness_changed_) {
+            liveliness_changed_status_ = current;
+          }
+          liveliness_changed_ = false;
         }
         rmw_data->alive_count = liveliness_changed_status_.alive_count;
         rmw_data->not_alive_count = liveliness_changed_status_.not_alive_count;
@@ -153,8 +168,14 @@ bool RMWSubscriptionEvent::take_event(
         if (deadline_changed_) {
           deadline_changed_ = false;
         } else {
-          subscriber_info_->data_reader_->get_requested_deadline_missed_status(
-            requested_deadline_missed_status_);
+          eprosima::fastdds::dds::RequestedDeadlineMissedStatus current;
+          lock_mutex.unlock();
+          subscriber_info_->data_reader_->get_requested_deadline_missed_status(current);
+          lock_mutex.lock();
+          if (!deadline_changed_) {
+            requested_deadline_missed_status_ = current;
+          }
+          deadline_changed_ = false;
         }
         rmw_data->total_count = requested_deadline_missed_status_.total_count;
         rmw_data->total_count_change = requested_deadline_missed_status_.total_count_change;
@@ -167,7 +188,14 @@ bool RMWSubscriptionEvent::take_event(
         if (sample_lost_changed_) {
           sample_lost_changed_ = false;
         } else {
-          subscriber_info_->data_reader_->get_sample_lost_status(sample_lost_status_);
+          eprosima::fastdds::dds::SampleLostStatus current;
+          lock_mutex.unlock();
+          subscriber_info_->data_reader_->get_sample_lost_status(current);
+          lock_mutex.lock();
+          if (!sample_lost_changed_) {
+            sample_lost_status_ = current;
+          }
+          sample_lost_changed_ = false;
         }
         rmw_data->total_count = sample_lost_status_.total_count;
         rmw_data->total_count_change = sample_lost_status_.total_count_change;
@@ -180,8 +208,14 @@ bool RMWSubscriptionEvent::take_event(
         if (incompatible_qos_changed_) {
           incompatible_qos_changed_ = false;
         } else {
-          subscriber_info_->data_reader_->get_requested_incompatible_qos_status(
-            incompatible_qos_status_);
+          eprosima::fastdds::dds::RequestedIncompatibleQosStatus current;
+          lock_mutex.unlock();
+          subscriber_info_->data_reader_->get_requested_incompatible_qos_status(current);
+          lock_mutex.lock();
+          if (!incompatible_qos_changed_) {
+            incompatible_qos_status_ = current;
+          }
+          incompatible_qos_changed_ = false;
         }
         rmw_data->total_count = incompatible_qos_status_.total_count;
         rmw_data->total_count_change = incompatible_qos_status_.total_count_change;
@@ -193,6 +227,9 @@ bool RMWSubscriptionEvent::take_event(
       break;
     case RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE:
       {
+        // get_inconsistent_topic_status() operates on the Topic, not the DataReader, so
+        // it does not take the reader mutex and is not part of the reader-mutex inversion;
+        // left querying under the lock unchanged.
         auto rmw_data = static_cast<rmw_incompatible_type_status_t *>(event_info);
         if (inconsistent_topic_changed_) {
           inconsistent_topic_changed_ = false;
@@ -209,7 +246,9 @@ bool RMWSubscriptionEvent::take_event(
         auto rmw_data = static_cast<rmw_matched_status_t *>(event_info);
 
         eprosima::fastdds::dds::SubscriptionMatchedStatus matched_status;
+        lock_mutex.unlock();
         subscriber_info_->data_reader_->get_subscription_matched_status(matched_status);
+        lock_mutex.lock();
 
         rmw_data->total_count = static_cast<size_t>(matched_status.total_count);
         rmw_data->total_count_change = static_cast<size_t>(matched_status.total_count_change);
@@ -239,16 +278,31 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
   const void * user_data,
   rmw_event_callback_t callback)
 {
-  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
-
+  // NOTE: like take_event(), this method must not hold on_new_event_m_ across any
+  // DataReader call (get_status_mask / get_*_status / set_listener): those acquire the
+  // reader's internal mutex, and Fast-DDS may invoke this subscription's listener
+  // callbacks -- which take on_new_event_m_ -- while holding that reader mutex. Holding
+  // on_new_event_m_ across a reader call is therefore a lock-order inversion (ABBA
+  // deadlock). The lock is released around every reader query below; each get_*_status
+  // copies into a local and re-acquires before adopting, keeping any value a listener
+  // delivered during the unlocked window. get_inconsistent_topic_status() operates on
+  // the Topic (not the reader) and is left under the lock, as in take_event().
   eprosima::fastdds::dds::StatusMask status_mask =
     subscriber_info_->data_reader_->get_status_mask();
+
+  rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
 
   if (callback) {
     switch (event_type) {
       case RMW_EVENT_LIVELINESS_CHANGED:
         {
-          subscriber_info_->data_reader_->get_liveliness_changed_status(liveliness_changed_status_);
+          eprosima::fastdds::dds::LivelinessChangedStatus current;
+          lock_mutex.unlock();
+          subscriber_info_->data_reader_->get_liveliness_changed_status(current);
+          lock_mutex.lock();
+          if (!liveliness_changed_) {
+            liveliness_changed_status_ = current;
+          }
 
           if ((liveliness_changed_status_.alive_count_change > 0) ||
             (liveliness_changed_status_.not_alive_count_change > 0))
@@ -264,8 +318,13 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
         break;
       case RMW_EVENT_REQUESTED_DEADLINE_MISSED:
         {
-          subscriber_info_->data_reader_->get_requested_deadline_missed_status(
-            requested_deadline_missed_status_);
+          eprosima::fastdds::dds::RequestedDeadlineMissedStatus current;
+          lock_mutex.unlock();
+          subscriber_info_->data_reader_->get_requested_deadline_missed_status(current);
+          lock_mutex.lock();
+          if (!deadline_changed_) {
+            requested_deadline_missed_status_ = current;
+          }
 
           if (requested_deadline_missed_status_.total_count_change > 0) {
             callback(user_data, requested_deadline_missed_status_.total_count_change);
@@ -275,7 +334,13 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
         break;
       case RMW_EVENT_MESSAGE_LOST:
         {
-          subscriber_info_->data_reader_->get_sample_lost_status(sample_lost_status_);
+          eprosima::fastdds::dds::SampleLostStatus current;
+          lock_mutex.unlock();
+          subscriber_info_->data_reader_->get_sample_lost_status(current);
+          lock_mutex.lock();
+          if (!sample_lost_changed_) {
+            sample_lost_status_ = current;
+          }
 
           if (sample_lost_status_.total_count_change > 0) {
             callback(user_data, sample_lost_status_.total_count_change);
@@ -285,8 +350,13 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
         break;
       case RMW_EVENT_REQUESTED_QOS_INCOMPATIBLE:
         {
-          subscriber_info_->data_reader_->get_requested_incompatible_qos_status(
-            incompatible_qos_status_);
+          eprosima::fastdds::dds::RequestedIncompatibleQosStatus current;
+          lock_mutex.unlock();
+          subscriber_info_->data_reader_->get_requested_incompatible_qos_status(current);
+          lock_mutex.lock();
+          if (!incompatible_qos_changed_) {
+            incompatible_qos_status_ = current;
+          }
 
           if (incompatible_qos_status_.total_count_change > 0) {
             callback(user_data, incompatible_qos_status_.total_count_change);
@@ -296,6 +366,8 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
         break;
       case RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE:
         {
+          // get_inconsistent_topic_status() operates on the Topic, not the DataReader,
+          // so it does not take the reader mutex; left querying under the lock.
           subscriber_info_->topic_->get_inconsistent_topic_status(inconsistent_topic_status_);
           if (inconsistent_topic_status_.total_count_change > 0) {
             callback(user_data, inconsistent_topic_status_.total_count_change);
@@ -307,11 +379,16 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
         {
           if (matched_status_.total_count_change > 0) {
             callback(user_data, matched_status_.total_count_change);
-            subscriber_info_->data_reader_->get_subscription_matched_status(matched_status_);
+            eprosima::fastdds::dds::SubscriptionMatchedStatus current;
+            lock_mutex.unlock();
+            subscriber_info_->data_reader_->get_subscription_matched_status(current);
+            lock_mutex.lock();
+            matched_status_ = current;
             matched_status_.total_count_change = 0;
             matched_status_.current_count_change = 0;
           }
         }
+        break;
       default:
         break;
     }
@@ -331,6 +408,8 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
     }
   }
 
+  // set_listener() acquires the reader's internal mutex; release on_new_event_m_ first.
+  lock_mutex.unlock();
   subscriber_info_->data_reader_->set_listener(
     subscriber_info_->data_reader_listener_, status_mask);
 }
