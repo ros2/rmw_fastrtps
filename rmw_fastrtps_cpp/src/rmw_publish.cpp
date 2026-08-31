@@ -171,13 +171,19 @@ publish_to_buffer_endpoints(
   }
 
   // Publish to per-subscriber peer-to-peer endpoints for non-CPU subscribers.
-  for (const auto & endpoint : state.endpoints) {
-    uint32_t serialized_size = callbacks->get_serialized_size(ros_message);
-    size_t buffer_size = serialized_size + 4;  // +4 for CDR encapsulation header
-    std::vector<uint8_t> buffer_data(buffer_size);
 
-    eprosima::fastcdr::FastBuffer fast_buffer(
-      reinterpret_cast<char *>(buffer_data.data()), buffer_size);
+  // Intentionally reuse an internally managed FastBuffer across endpoints. Each Cdr
+  // starts at the beginning and owns its cursor, and `write_w_timestamp()` copies
+  // the data before returning, so reuse is safe.
+  //
+  // Preallocating with `get_serialized_size()` is not recommended: for
+  // `rosidl::Buffer`, it may report the full CPU fallback size even when only a
+  // small descriptor is sent.
+  //
+  // The buffer grows automatically and lazily without zero-initialization.
+  eprosima::fastcdr::FastBuffer fast_buffer;
+
+  for (const auto & endpoint : state.endpoints) {
     eprosima::fastcdr::Cdr ser(
       fast_buffer, eprosima::fastcdr::Cdr::DEFAULT_ENDIAN,
       eprosima::fastcdr::CdrVersion::XCDRv1);
