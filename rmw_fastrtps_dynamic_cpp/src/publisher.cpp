@@ -249,15 +249,15 @@ rmw_fastrtps_dynamic_cpp::create_publisher(
   publisher->get_datawriter_qos_from_profile(topic_name, writer_qos);
 
   // Modify specific DataWriter Qos
+  writer_qos.endpoint().history_memory_policy =
+    eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+
   if (!participant_info->leave_middleware_default_qos) {
     if (participant_info->publishing_mode == publishing_mode_t::ASYNCHRONOUS) {
       writer_qos.publish_mode().kind = eprosima::fastdds::dds::ASYNCHRONOUS_PUBLISH_MODE;
     } else if (participant_info->publishing_mode == publishing_mode_t::SYNCHRONOUS) {
       writer_qos.publish_mode().kind = eprosima::fastdds::dds::SYNCHRONOUS_PUBLISH_MODE;
     }
-
-    writer_qos.endpoint().history_memory_policy =
-      eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
     writer_qos.data_sharing().off();
   }
