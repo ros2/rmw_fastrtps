@@ -1,4 +1,5 @@
 // Copyright 2020 Open Source Robotics Foundation, Inc.
+// Copyright 2026 Torc Robotics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -22,6 +23,24 @@
 
 namespace rmw_fastrtps_shared_cpp
 {
+
+/// Check if unique network flows should be used for ROS discovery info.
+/**
+* This function is thread-safe and by default caches the result of the environment
+* variable check to avoid repeated lookups during concurrent context initialization.
+*
+* If `use_cached` is true (the default) the cached value is returned; the cache
+* is populated on the first call and subsequent calls ignore changes to the
+* environment variable. If `use_cached` is false the environment variable is
+* read and mapped to the returned enumeration on each call without modifying the
+* cached value.
+*
+* \param[in] use_cached whether to return the cached value (default: true)
+* \return the requirement for unique network flow endpoints for ROS discovery info
+*/
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+rmw_unique_network_flow_endpoints_requirement_t
+get_unique_network_flows_for_ros_discovery_info(bool use_cached = true);
 
 /// Increment `rmw_context_impl_t` reference count, destroying it if the count reaches zero.
 /**
