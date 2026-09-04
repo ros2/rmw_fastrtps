@@ -881,6 +881,7 @@ inline void deserialize_field<std::wstring>(
   } else {
     uint32_t size;
     deser >> size;
+    check_sequence_size(size, deser);
     auto sequence = static_cast<rosidl_runtime_c__U16String__Sequence *>(field);
     if (!rosidl_runtime_c__U16String__Sequence__init(sequence, size)) {
       throw std::runtime_error("unable to initialize rosidl_runtime_c__U16String sequence");
