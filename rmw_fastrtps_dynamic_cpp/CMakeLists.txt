@@ -159,6 +159,22 @@ if(BUILD_TESTING)
     test_msgs::test_msgs
   )
 
+  get_target_property(memory_tools_ld_preload_env_var
+    osrf_testing_tools_cpp::memory_tools LIBRARY_PRELOAD_ENVIRONMENT_VARIABLE)
+  ament_add_gtest(test_deserialize_sequence_size
+    test/test_deserialize_sequence_size.cpp
+    ENV ${memory_tools_ld_preload_env_var})
+  target_include_directories(test_deserialize_sequence_size PRIVATE src)
+  target_link_libraries(test_deserialize_sequence_size
+    fastcdr
+    osrf_testing_tools_cpp::memory_tools
+    rmw::rmw
+    rmw_fastrtps_dynamic_cpp
+    rosidl_typesupport_introspection_c::rosidl_typesupport_introspection_c
+    rosidl_typesupport_introspection_cpp::rosidl_typesupport_introspection_cpp
+    test_msgs::test_msgs
+  )
+
   ament_add_gtest(test_logging test/test_logging.cpp)
   target_link_libraries(test_logging
     fastdds
