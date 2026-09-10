@@ -64,3 +64,8 @@ ament_add_gtest(test_logging test_logging.cpp)
 if(TARGET test_logging)
   target_link_libraries(test_logging ${PROJECT_NAME} rmw::rmw)
 endif()
+
+ament_add_gtest(test_ensure_dds_literal test_ensure_dds_literal.cpp)
+if(TARGET test_ensure_dds_literal)
+  target_link_libraries(test_ensure_dds_literal ${PROJECT_NAME} rmw::rmw)
+endif()

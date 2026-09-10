@@ -15,8 +15,10 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__UTILS_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__UTILS_HPP_
 
+#include <cctype>
 #include <mutex>
 #include <string>
+#include <vector>
 
 #include "fastdds/dds/topic/TopicDescription.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
@@ -32,6 +34,59 @@
 
 namespace rmw_fastrtps_shared_cpp
 {
+
+/// Ensure a content filter parameter is a valid DDS SQL literal.
+///
+/// Fast DDS requires content filter parameters to be parseable as DDS SQL
+/// literals.  Bare strings like "hello" must be wrapped in single quotes to
+/// become valid string literals ('hello'), otherwise
+/// DDSFilterParameter::set_value() fails with a parse error.
+/// See https://github.com/eProsima/Fast-DDS/issues/4199
+inline std::string
+ensure_dds_literal(const std::string & value)
+{
+  if (value.empty()) {
+    return "'" + value + "'";
+  }
+
+  // Already a quoted string
+  if ((value.front() == '\'' || value.front() == '`') && value.size() >= 2 &&
+    value.back() == value.front())
+  {
+    return value;
+  }
+
+  // Boolean literals
+  if (value == "TRUE" || value == "FALSE") {
+    return value;
+  }
+
+  // Numeric: optional leading sign, then digit or dot (covers int, float, hex)
+  const char * p = value.c_str();
+  if (*p == '+' || *p == '-') {
+    ++p;
+  }
+  if (*p == '0' && (*(p + 1) == 'x' || *(p + 1) == 'X')) {
+    return value;  // hex
+  }
+  if (std::isdigit(static_cast<unsigned char>(*p)) || *p == '.') {
+    return value;  // numeric
+  }
+
+  // Not a recognized literal — wrap in single quotes
+  return "'" + value + "'";
+}
+
+/// Convert rmw content filter parameters, auto-quoting bare strings for Fast DDS.
+inline std::vector<std::string>
+prepare_content_filter_parameters(const rmw_subscription_content_filter_options_t * options)
+{
+  std::vector<std::string> expression_parameters;
+  for (size_t i = 0; i < options->expression_parameters.size; ++i) {
+    expression_parameters.push_back(ensure_dds_literal(options->expression_parameters.data[i]));
+  }
+  return expression_parameters;
+}
 
 /**
 * Convert a Fast DDS return code into the corresponding rmw_ret_t
