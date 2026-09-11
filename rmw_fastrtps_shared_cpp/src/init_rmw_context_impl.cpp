@@ -1,4 +1,5 @@
 // Copyright 2020 Open Source Robotics Foundation, Inc.
+// Copyright 2026 Torc Robotics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,6 +16,9 @@
 #include "rmw_fastrtps_shared_cpp/init_rmw_context_impl.hpp"
 
 #include <cassert>
+#include <mutex>
+
+#include "rcutils/env.h"
 
 #include "rmw/error_handling.h"
 #include "rmw/init.h"
@@ -29,6 +33,75 @@
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 
 #include "rmw_fastrtps_shared_cpp/listener_thread.hpp"
+
+namespace
+{
+
+static const rmw_unique_network_flow_endpoints_requirement_t
+  DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS =
+  RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
+
+rmw_unique_network_flow_endpoints_requirement_t g_unique_network_flows_for_ros_discovery_info =
+  DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS;
+std::once_flag g_init_flag;
+
+static rmw_unique_network_flow_endpoints_requirement_t
+read_unique_network_flows_from_env()
+{
+  const char * env_value = nullptr;
+  const char * error_str = rcutils_get_env(
+    "RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS", &env_value);
+
+  if (error_str != nullptr) {
+    RCUTILS_LOG_WARN_NAMED(
+      "rmw_fastrtps_shared_cpp",
+      "Error getting env var RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS: %s. "
+      "Using default behavior.",
+      error_str);
+    return DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS;
+  } else if (env_value == nullptr) {
+    RCUTILS_LOG_WARN_NAMED(
+      "rmw_fastrtps_shared_cpp",
+      "Invalid value for env var RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS: null. "
+      "Using default behavior.");
+    return DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS;
+  } else if (env_value[0] == '\0') {
+    return DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS;
+  } else if (strcmp(env_value, "SYSTEM_DEFAULT") == 0) {
+    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_SYSTEM_DEFAULT;
+  } else if (strcmp(env_value, "DISABLED") == 0) {
+    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_NOT_REQUIRED;
+  } else if (strcmp(env_value, "OPTIONAL") == 0) {
+    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
+  } else if (strcmp(env_value, "STRICT") == 0) {
+    return RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_STRICTLY_REQUIRED;
+  }
+
+  RCUTILS_LOG_WARN_NAMED(
+    "rmw_fastrtps_shared_cpp",
+    "Invalid value for env var RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS: %s. "
+    "Using default behavior.",
+    env_value);
+  return DEFAULT_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS;
+}
+
+void initialize_unique_network_flows()
+{
+  g_unique_network_flows_for_ros_discovery_info = read_unique_network_flows_from_env();
+}
+
+}  // anonymous namespace
+
+rmw_unique_network_flow_endpoints_requirement_t
+rmw_fastrtps_shared_cpp::get_unique_network_flows_for_ros_discovery_info(bool use_cached)
+{
+  if (use_cached) {
+    std::call_once(g_init_flag, initialize_unique_network_flows);
+    return g_unique_network_flows_for_ros_discovery_info;
+  }
+  // When bypassing the cache, use the shared helper so logic is consistent.
+  return read_unique_network_flows_from_env();
+}
 
 rmw_ret_t
 rmw_fastrtps_shared_cpp::decrement_context_impl_ref_count(

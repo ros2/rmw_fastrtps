@@ -1,4 +1,5 @@
 // Copyright 2020 Open Source Robotics Foundation, Inc.
+// Copyright 2026 Torc Robotics, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,6 +30,7 @@
 #include "rmw_fastrtps_cpp/subscription.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/init_rmw_context_impl.hpp"
 #include "rmw_fastrtps_shared_cpp/namespace_prefix.hpp"
 #include "rmw_fastrtps_shared_cpp/participant.hpp"
 #include "rmw_fastrtps_shared_cpp/publisher.hpp"
@@ -53,9 +55,10 @@ init_context_impl(
 
   // Avoid receiving graph updates from our own publication
   subscription_options.ignore_local_publications = true;
-  // Improve graph discovery by using a unique listening port for its subscription
+  // Improve graph discovery by using a unique listening port for its subscription,
+  // unless disabled by the user
   subscription_options.require_unique_network_flow_endpoints =
-    RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED;
+    rmw_fastrtps_shared_cpp::get_unique_network_flows_for_ros_discovery_info();
 
   std::unique_ptr<rmw_dds_common::Context> common_context(
     new(std::nothrow) rmw_dds_common::Context());
