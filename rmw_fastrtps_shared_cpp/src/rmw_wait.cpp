@@ -128,6 +128,7 @@ __rmw_wait(
     triggered_coditions,
     timeout
   );
+  bool wait_result = (ret_code == eprosima::fastdds::dds::RETCODE_OK);
 
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
@@ -244,7 +245,7 @@ __rmw_wait(
     }
   }
 
-  return (skip_wait || ReturnCode_t::RETCODE_OK == ret_code) ? RMW_RET_OK : RMW_RET_TIMEOUT;
+  return (skip_wait || wait_result) ? RMW_RET_OK : RMW_RET_TIMEOUT;
 }
 
 }  // namespace rmw_fastrtps_shared_cpp
