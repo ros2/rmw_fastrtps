@@ -49,6 +49,7 @@
   <exec_depend>rcpputils</exec_depend>
   <exec_depend>rcutils</exec_depend>
   <exec_depend>rmw</exec_depend>
+  <exec_depend>rmw_dds_common</exec_depend>
   <exec_depend>rmw_fastrtps_shared_cpp</exec_depend>
   <exec_depend>rosidl_dynamic_typesupport</exec_depend>
   <exec_depend>rosidl_dynamic_typesupport_fastrtps</exec_depend>
