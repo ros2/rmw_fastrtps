@@ -36,6 +36,8 @@
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 #include "rmw/error_handling.h"
+#include "rmw/ret_types.h"
+#include "rmw/serialized_message.h"
 
 #include "rosidl_typesupport_introspection_c/identifier.h"
 #include "rosidl_typesupport_introspection_cpp/identifier.hpp"
@@ -203,6 +205,23 @@ bool TypeSupport::deserialize(
           return false;
         }
         memcpy(buffer->getBuffer(), payload.data, payload.length);
+        return true;
+      }
+
+    case FASTDDS_SERIALIZED_DATA_TYPE_RMW_SERIALIZED_MESSAGE:
+      {
+        // Write the CDR payload straight into the user's
+        // rmw_serialized_message_t. This skips the intermediate FastBuffer
+        // and the follow-up memcpy in `_take_serialized_message`, halving
+        // the rmw-level memcpys for large serialized messages.
+        auto out = static_cast<rmw_serialized_message_t *>(ser_data->data);
+        if (out->buffer_capacity < payload.length) {
+          if (rmw_serialized_message_resize(out, payload.length) != RMW_RET_OK) {
+            return false;
+          }
+        }
+        memcpy(out->buffer, payload.data, payload.length);
+        out->buffer_length = payload.length;
         return true;
       }
 

@@ -41,7 +41,12 @@ enum SerializedDataType
 {
   FASTDDS_SERIALIZED_DATA_TYPE_CDR_BUFFER,
   FASTDDS_SERIALIZED_DATA_TYPE_DYNAMIC_MESSAGE,
-  FASTDDS_SERIALIZED_DATA_TYPE_ROS_MESSAGE
+  FASTDDS_SERIALIZED_DATA_TYPE_ROS_MESSAGE,
+  // `data` points to a `rmw_serialized_message_t` (aka
+  // `rcutils_uint8_array_t`). The CDR payload is written directly into that
+  // buffer on deserialize, avoiding an intermediate FastBuffer and the
+  // follow-up memcpy in `_take_serialized_message`.
+  FASTDDS_SERIALIZED_DATA_TYPE_RMW_SERIALIZED_MESSAGE
 };
 
 // Publishers write method will receive a pointer to this struct
