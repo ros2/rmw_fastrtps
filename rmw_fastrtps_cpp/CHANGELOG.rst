@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.4.10 (2026-09-15)
+-------------------
 * Add missing exec_depend on rmw_dds_common (`#920 <https://github.com/ros2/rmw_fastrtps/issues/920>`_)
 * Reuse FastBuffer managed buffer for each endpoint. (`#904 <https://github.com/ros2/rmw_fastrtps/issues/904>`_) (`#907 <https://github.com/ros2/rmw_fastrtps/issues/907>`_)
 * Contributors: mergify[bot]
