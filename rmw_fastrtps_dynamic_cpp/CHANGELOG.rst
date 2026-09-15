@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add missing exec_depend on rmw_dds_common (`#920 <https://github.com/ros2/rmw_fastrtps/issues/920>`_)
+* Check remaining buffer size before allocating C wstring sequences (`#910 <https://github.com/ros2/rmw_fastrtps/issues/910>`_) (`#911 <https://github.com/ros2/rmw_fastrtps/issues/911>`_)
+* Contributors: mergify[bot]
+
 9.4.9 (2026-07-30)
 ------------------
 
