@@ -69,6 +69,7 @@ add_library(rmw_fastrtps_cpp
   src/rmw_get_topic_endpoint_info.cpp
   src/rmw_guard_condition.cpp
   src/rmw_init.cpp
+  src/rmw_is_loaned_message_valid.cpp
   src/rmw_node.cpp
   src/rmw_node_info_and_types.cpp
   src/rmw_node_names.cpp
