@@ -2,8 +2,8 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-Forthcoming
------------
+9.6.0 (2026-09-16)
+------------------
 * Add missing exec_depend on rmw_dds_common (`#919 <https://github.com/ros2/rmw_fastrtps/issues/919>`_)
 * Unique network flows optional checks (`#872 <https://github.com/ros2/rmw_fastrtps/issues/872>`_)
 * Check remaining buffer size before allocating C wstring sequences (`#910 <https://github.com/ros2/rmw_fastrtps/issues/910>`_)
