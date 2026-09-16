@@ -2,6 +2,14 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+Forthcoming
+-----------
+* Add missing exec_depend on rmw_dds_common (`#919 <https://github.com/ros2/rmw_fastrtps/issues/919>`_)
+* Unique network flows optional checks (`#872 <https://github.com/ros2/rmw_fastrtps/issues/872>`_)
+* Fixes in `rmw_wait` (`#895 <https://github.com/ros2/rmw_fastrtps/issues/895>`_)
+* Fix deadlock in take_event and set_on_new_event_callback (`#890 <https://github.com/ros2/rmw_fastrtps/issues/890>`_)
+* Contributors: Miguel Company, Scott K Logan, Thomas Moore
+
 9.5.2 (2026-07-28)
 ------------------
 * Fix buffer-aware subscriptions to preserve unread data across rmw_wait calls (`#900 <https://github.com/ros2/rmw_fastrtps/issues/900>`_)
