@@ -128,6 +128,7 @@ __rmw_wait(
     triggered_coditions,
     timeout
   );
+  bool wait_result = (ret_code == ReturnCode_t::RETCODE_OK);
 
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
@@ -141,6 +142,10 @@ __rmw_wait(
         custom_subscriber_info->data_reader_->get_first_untaken_info(&sample_info))
       {
         subscriptions->subscribers[i] = 0;
+      } else {
+        // We are returning a ready subscription,
+        // so we need to indicate that the wait was successful.
+        wait_result = true;
       }
     }
   }
@@ -157,6 +162,10 @@ __rmw_wait(
         custom_client_info->response_reader_->get_first_untaken_info(&sample_info))
       {
         clients->clients[i] = 0;
+      } else {
+        // We are returning a ready client,
+        // so we need to indicate that the wait was successful.
+        wait_result = true;
       }
     }
   }
@@ -173,6 +182,10 @@ __rmw_wait(
         custom_service_info->request_reader_->get_first_untaken_info(&sample_info))
       {
         services->services[i] = 0;
+      } else {
+        // We are returning a ready service,
+        // so we need to indicate that the wait was successful.
+        wait_result = true;
       }
     }
   }
@@ -208,6 +221,10 @@ __rmw_wait(
 
       if (!active) {
         events->events[i] = 0;
+      } else {
+        // We are returning a ready event,
+        // so we need to indicate that the wait was successful.
+        wait_result = true;
       }
     }
   }
@@ -219,12 +236,16 @@ __rmw_wait(
       fastdds_wait_set->detach_condition(*condition);
       if (!condition->get_trigger_value()) {
         guard_conditions->guard_conditions[i] = 0;
+      } else {
+        condition->set_trigger_value(false);
+        // We are returning a ready guard condition,
+        // so we need to indicate that the wait was successful.
+        wait_result = true;
       }
-      condition->set_trigger_value(false);
     }
   }
 
-  return (skip_wait || ReturnCode_t::RETCODE_OK == ret_code) ? RMW_RET_OK : RMW_RET_TIMEOUT;
+  return (skip_wait || wait_result) ? RMW_RET_OK : RMW_RET_TIMEOUT;
 }
 
 }  // namespace rmw_fastrtps_shared_cpp
