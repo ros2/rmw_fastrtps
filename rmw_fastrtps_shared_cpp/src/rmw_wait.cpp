@@ -128,7 +128,7 @@ __rmw_wait(
     triggered_coditions,
     timeout
   );
-  bool wait_result = (ret_code == eprosima::fastdds::dds::RETCODE_OK);
+  bool wait_result = (ret_code == ReturnCode_t::RETCODE_OK);
 
   if (subscriptions) {
     for (size_t i = 0; i < subscriptions->subscriber_count; ++i) {
