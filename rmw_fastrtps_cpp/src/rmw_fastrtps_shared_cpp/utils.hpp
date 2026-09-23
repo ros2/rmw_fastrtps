@@ -38,7 +38,6 @@ namespace rmw_fastrtps_shared_cpp
 * \param[in] code The Fast DDS return code to be translated
 * \return the corresponding rmw_ret_t value
 */
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 cast_error_dds_to_rmw(eprosima::fastdds::dds::ReturnCode_t code);
 
@@ -55,7 +54,6 @@ cast_error_dds_to_rmw(eprosima::fastdds::dds::ReturnCode_t code);
 * \return true when there is no such conflict. Returned topic and type may be null
 *              if they were not previously registered on the participant.
 */
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 find_and_check_topic_and_type(
   const CustomParticipantInfo * participant_info,
@@ -72,7 +70,6 @@ find_and_check_topic_and_type(
 * \param[in] topic            Topic of the entity being deleted.
 * \param[in] type             TypeSupport of the entity being deleted.
 */
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 void
 remove_topic_and_type(
   CustomParticipantInfo * participant_info,
@@ -93,7 +90,6 @@ remove_topic_and_type(
 * \return true when the content filtered topic was created
 * \return false when the content filtered topic could not be created
 */
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 create_content_filtered_topic(
   eprosima::fastdds::dds::DomainParticipant * participant,
@@ -116,7 +112,6 @@ create_content_filtered_topic(
 * \return true when the data reader was created
 * \return false when the data reader could not be created
 */
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 create_datareader(
   const eprosima::fastdds::dds::DataReaderQos & datareader_qos,
@@ -135,7 +130,6 @@ create_datareader(
 * \param[in, out]  res_limits_qos   Resource limits entitiy QoS.
 *
 */
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 void
 apply_qos_resource_limits_for_keys(
   const eprosima::fastdds::dds::HistoryQosPolicy & history_qos,

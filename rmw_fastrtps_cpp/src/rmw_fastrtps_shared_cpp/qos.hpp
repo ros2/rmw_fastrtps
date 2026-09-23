@@ -28,15 +28,12 @@
 
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_shared_cpp/visibility_control.h"
 
 #include "rosidl_runtime_c/type_hash.h"
 
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 is_valid_qos(const rmw_qos_profile_t & qos_policies);
 
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_datareader_qos(
   const rmw_qos_profile_t & qos_policies,
@@ -45,7 +42,6 @@ get_datareader_qos(
   const rosidl_type_hash_t * ser_type_hash = nullptr,
   const std::unordered_map<std::string, std::string> * buffer_backends = nullptr);
 
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_datawriter_qos(
   const rmw_qos_profile_t & qos_policies,
@@ -55,35 +51,29 @@ get_datawriter_qos(
   const std::unordered_map<std::string, std::string> * buffer_backends = nullptr);
 
 /// Encode buffer backend info as a string for inclusion in DDS user_data.
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 std::string
 encode_buffer_backends_for_user_data(
   const std::unordered_map<std::string, std::string> & backends);
 
 /// Parse buffer backend info from DDS user_data bytes.
 /// Returns empty map if the sentinel prefix is not found.
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 std::unordered_map<std::string, std::string>
 parse_buffer_backends_from_user_data(const uint8_t * data, size_t size);
 
 /// Encode a GID with a sentinel tag for inclusion in DDS user_data.
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 std::string
 encode_endpoint_gid_for_user_data(const rmw_gid_t & gid, const char * tag);
 
 /// Parse a GID with the given sentinel tag from DDS user_data bytes.
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 parse_endpoint_gid_from_user_data(
   const uint8_t * data, size_t size, const char * tag, rmw_gid_t & gid);
 
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 bool
 get_topic_qos(
   const rmw_qos_profile_t & qos_policies,
   eprosima::fastdds::dds::TopicQos & topic_qos);
 
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_time_t
 dds_duration_to_rmw(const eprosima::fastdds::dds::Duration_t & duration);
 
@@ -226,13 +216,11 @@ rtps_qos_to_rmw_qos(
   }
 }
 
-extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
-void dds_qos_to_rmw_qos<eprosima::fastdds::dds::DataWriterQos>(
+extern template void dds_qos_to_rmw_qos<eprosima::fastdds::dds::DataWriterQos>(
   const eprosima::fastdds::dds::DataWriterQos & dds_qos,
   rmw_qos_profile_t * qos);
 
-extern template RMW_FASTRTPS_SHARED_CPP_PUBLIC
-void dds_qos_to_rmw_qos<eprosima::fastdds::dds::DataReaderQos>(
+extern template void dds_qos_to_rmw_qos<eprosima::fastdds::dds::DataReaderQos>(
   const eprosima::fastdds::dds::DataReaderQos & dds_qos,
   rmw_qos_profile_t * qos);
 

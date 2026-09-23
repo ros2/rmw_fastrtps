@@ -19,7 +19,6 @@
 #include "rmw/init.h"
 #include "rmw/types.h"
 
-#include "rmw_fastrtps_shared_cpp/visibility_control.h"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -38,7 +37,6 @@ namespace rmw_fastrtps_shared_cpp
 * \param[in] use_cached whether to return the cached value (default: true)
 * \return the requirement for unique network flow endpoints for ROS discovery info
 */
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_unique_network_flow_endpoints_requirement_t
 get_unique_network_flows_for_ros_discovery_info(bool use_cached = true);
 
@@ -46,7 +44,6 @@ get_unique_network_flows_for_ros_discovery_info(bool use_cached = true);
 /**
  * Function that should be called when destroying a node.
  */
-RMW_FASTRTPS_SHARED_CPP_PUBLIC
 rmw_ret_t
 decrement_context_impl_ref_count(rmw_context_t * context);
 
