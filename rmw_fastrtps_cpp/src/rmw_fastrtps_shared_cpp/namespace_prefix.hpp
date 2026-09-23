@@ -18,14 +18,15 @@
 #include <vector>
 #include <string>
 
+#include "rmw_fastrtps_cpp/visibility_control.h"
 
 extern "C"
 {
-extern const char * const ros_topic_prefix;
-extern const char * const ros_service_requester_prefix;
-extern const char * const ros_service_response_prefix;
+RMW_FASTRTPS_CPP_PUBLIC extern const char * const ros_topic_prefix;
+RMW_FASTRTPS_CPP_PUBLIC extern const char * const ros_service_requester_prefix;
+RMW_FASTRTPS_CPP_PUBLIC extern const char * const ros_service_response_prefix;
 
-extern const std::vector<std::string> _ros_prefixes;
+RMW_FASTRTPS_CPP_PUBLIC extern const std::vector<std::string> _ros_prefixes;
 }  // extern "C"
 
 /// Returns `name` stripped of `prefix` if exists, if not return "".
@@ -35,18 +36,22 @@ extern const std::vector<std::string> _ros_prefixes;
  * \return name stripped of prefix, or
  * \return "" if name doesn't start with prefix
  */
+RMW_FASTRTPS_CPP_PUBLIC
 std::string
 _resolve_prefix(const std::string & name, const std::string & prefix);
 
 /// Return the ROS specific prefix if it exists, otherwise "".
+RMW_FASTRTPS_CPP_PUBLIC
 std::string
 _get_ros_prefix_if_exists(const std::string & topic_name);
 
 /// Returns the topic name stripped of and ROS specific prefix if exists.
+RMW_FASTRTPS_CPP_PUBLIC
 std::string
 _strip_ros_prefix_if_exists(const std::string & topic_name);
 
 /// Returns the list of ros prefixes
+RMW_FASTRTPS_CPP_PUBLIC
 const std::vector<std::string> &
 _get_all_ros_prefixes();
 #endif  // RMW_FASTRTPS_SHARED_CPP__NAMESPACE_PREFIX_HPP_

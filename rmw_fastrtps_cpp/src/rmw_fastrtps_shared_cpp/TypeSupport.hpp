@@ -32,6 +32,7 @@
 
 #include "rosidl_runtime_c/message_type_support_struct.h"
 
+#include "rmw_fastrtps_cpp/visibility_control.h"
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -68,11 +69,13 @@ public:
     bool force_md5,
     const void * impl) const = 0;
 
+  RMW_FASTRTPS_CPP_PUBLIC
   bool compute_key(
     const void * const data,
     eprosima::fastdds::rtps::InstanceHandle_t & ihandle,
     bool force_md5 = false) override;
 
+  RMW_FASTRTPS_CPP_PUBLIC
   bool compute_key(
     eprosima::fastdds::rtps::SerializedPayload_t & data,
     eprosima::fastdds::rtps::InstanceHandle_t & ihandle,
@@ -82,22 +85,28 @@ public:
     return false;
   }
 
+  RMW_FASTRTPS_CPP_PUBLIC
   bool serialize(
     const void * const data,
     eprosima::fastdds::rtps::SerializedPayload_t & payload,
     eprosima::fastdds::dds::DataRepresentationId_t data_representation) override;
 
+  RMW_FASTRTPS_CPP_PUBLIC
   bool deserialize(eprosima::fastdds::rtps::SerializedPayload_t & payload, void * data) override;
 
+  RMW_FASTRTPS_CPP_PUBLIC
   uint32_t calculate_serialized_size(
     const void * const data,
     eprosima::fastdds::dds::DataRepresentationId_t data_representation)
   override;
 
+  RMW_FASTRTPS_CPP_PUBLIC
   void * create_data() override;
 
+  RMW_FASTRTPS_CPP_PUBLIC
   void delete_data(void * data) override;
 
+  RMW_FASTRTPS_CPP_PUBLIC
   inline bool is_bounded() const
 #ifdef TOPIC_DATA_TYPE_API_HAS_IS_BOUNDED
   override
@@ -106,26 +115,31 @@ public:
     return max_size_bound_;
   }
 
+  RMW_FASTRTPS_CPP_PUBLIC
   inline bool is_plain(eprosima::fastdds::dds::DataRepresentationId_t rep) const override
   {
     return is_plain_ && rep == eprosima::fastdds::dds::XCDR_DATA_REPRESENTATION;
   }
 
-  void register_type_object_representation() override;
+  RMW_FASTRTPS_CPP_PUBLIC void register_type_object_representation() override;
 
+  RMW_FASTRTPS_CPP_PUBLIC
   inline const rosidl_message_type_support_t * ros_message_type_supports() const
   {
     return type_supports_;
   }
 
+  RMW_FASTRTPS_CPP_PUBLIC
   inline bool is_key_unbounded() const
   {
     return key_is_unbounded_;
   }
 
+  RMW_FASTRTPS_CPP_PUBLIC
   virtual ~TypeSupport() {}
 
 protected:
+  RMW_FASTRTPS_CPP_PUBLIC
   TypeSupport(
     const rosidl_message_type_support_t * type_supports
   );

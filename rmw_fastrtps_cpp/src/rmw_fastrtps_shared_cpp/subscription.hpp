@@ -17,14 +17,17 @@
 
 #include "rmw/rmw.h"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_cpp/visibility_control.h"
 
 namespace rmw_fastrtps_shared_cpp
 {
 
+RMW_FASTRTPS_CPP_PUBLIC
 void
 __init_subscription_for_loans(
   rmw_subscription_t * subscription);
 
+RMW_FASTRTPS_CPP_PUBLIC
 rmw_ret_t
 destroy_subscription(
   const char * identifier,
