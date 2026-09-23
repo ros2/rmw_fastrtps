@@ -12,9 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__SERIALIZATION_FORMAT_HPP_
-#define RMW_FASTRTPS_CPP__SERIALIZATION_FORMAT_HPP_
+#ifndef SERIALIZATION_FORMAT_HPP_
+#define SERIALIZATION_FORMAT_HPP_
 
 extern const char * const eprosima_fastrtps_serialization_format;
 
-#endif  // RMW_FASTRTPS_CPP__SERIALIZATION_FORMAT_HPP_
+#endif  // SERIALIZATION_FORMAT_HPP_

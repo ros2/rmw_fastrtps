@@ -30,8 +30,8 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
-#include "rmw_fastrtps_cpp/init_rmw_context_impl.hpp"
+#include "identifier.hpp"
+#include "init_rmw_context_impl.hpp"
 
 extern "C"
 {

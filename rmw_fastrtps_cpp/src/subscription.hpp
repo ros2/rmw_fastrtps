@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__SUBSCRIPTION_HPP_
-#define RMW_FASTRTPS_CPP__SUBSCRIPTION_HPP_
+#ifndef SUBSCRIPTION_HPP_
+#define SUBSCRIPTION_HPP_
 
 #include "rmw/rmw.h"
 #include "rmw/subscription_options.h"
@@ -33,4 +33,4 @@ create_subscription(
   bool keyed);
 }  // namespace rmw_fastrtps_cpp
 
-#endif  // RMW_FASTRTPS_CPP__SUBSCRIPTION_HPP_
+#endif  // SUBSCRIPTION_HPP_

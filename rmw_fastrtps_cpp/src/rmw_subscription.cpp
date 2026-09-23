@@ -37,8 +37,8 @@
 #include "rmw_fastrtps_shared_cpp/subscription.hpp"
 #include "rmw_fastrtps_shared_cpp/create_rmw_gid.hpp"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
-#include "rmw_fastrtps_cpp/subscription.hpp"
+#include "identifier.hpp"
+#include "subscription.hpp"
 
 #include "buffer_backend_context.hpp"
 #include "buffer_endpoint_registry.hpp"

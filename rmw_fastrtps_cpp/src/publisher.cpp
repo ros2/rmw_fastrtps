@@ -46,8 +46,8 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
-#include "rmw_fastrtps_cpp/publisher.hpp"
+#include "identifier.hpp"
+#include "publisher.hpp"
 
 #include "buffer_backend_context.hpp"
 #include "rosidl_buffer_backend_registry/backend_utils.hpp"

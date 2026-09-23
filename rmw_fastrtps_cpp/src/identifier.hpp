@@ -12,26 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw/allocators.h"
-#include "rmw/convert_rcutils_ret_to_rmw_ret.h"
-#include "rmw/error_handling.h"
-#include "rmw/get_service_names_and_types.h"
-#include "rmw/names_and_types.h"
-#include "rmw/rmw.h"
+#ifndef IDENTIFIER_HPP_
+#define IDENTIFIER_HPP_
 
-#include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+extern const char * const eprosima_fastrtps_identifier;
 
-#include "identifier.hpp"
-
-extern "C"
-{
-rmw_ret_t
-rmw_get_service_names_and_types(
-  const rmw_node_t * node,
-  rcutils_allocator_t * allocator,
-  rmw_names_and_types_t * service_names_and_types)
-{
-  return rmw_fastrtps_shared_cpp::__rmw_get_service_names_and_types(
-    eprosima_fastrtps_identifier, node, allocator, service_names_and_types);
-}
-}  // extern "C"
+#endif  // IDENTIFIER_HPP_

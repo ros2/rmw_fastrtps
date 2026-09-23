@@ -31,7 +31,7 @@
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "identifier.hpp"
 #include "buffer_backend_context.hpp"
 
 #include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"

@@ -1,4 +1,4 @@
-// Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
+// Copyright 2017-2019 Open Source Robotics Foundation, Inc.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,9 +12,22 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__IDENTIFIER_HPP_
-#define RMW_FASTRTPS_CPP__IDENTIFIER_HPP_
+#ifndef PUBLISHER_HPP_
+#define PUBLISHER_HPP_
 
-extern const char * const eprosima_fastrtps_identifier;
+#include "rmw/rmw.h"
+#include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 
-#endif  // RMW_FASTRTPS_CPP__IDENTIFIER_HPP_
+namespace rmw_fastrtps_cpp
+{
+
+rmw_publisher_t *
+create_publisher(
+  CustomParticipantInfo * participant_info,
+  const rosidl_message_type_support_t * type_supports,
+  const char * topic_name,
+  const rmw_qos_profile_t * qos_policies,
+  const rmw_publisher_options_t * publisher_options);
+}  // namespace rmw_fastrtps_cpp
+
+#endif  // PUBLISHER_HPP_

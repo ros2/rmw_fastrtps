@@ -1,4 +1,4 @@
-// Copyright 2020 Open Source Robotics Foundation, Inc.
+// Copyright 2016-2018 Proyectos y Sistemas de Mantenimiento SL (eProsima).
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -12,22 +12,24 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__INIT_RMW_CONTEXT_IMPL_HPP_
-#define RMW_FASTRTPS_CPP__INIT_RMW_CONTEXT_IMPL_HPP_
+#ifndef MESSAGETYPESUPPORT_HPP_
+#define MESSAGETYPESUPPORT_HPP_
 
-#include "rmw/init.h"
-#include "rmw/types.h"
+#include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"
+
+#include "TypeSupport.hpp"
 
 namespace rmw_fastrtps_cpp
 {
 
-/// Increment `rmw_context_impl_t` reference count, initializing it if necessary.
-/**
- * Should be called when creating a node, and before using `context->impl`.
- */
-rmw_ret_t
-increment_context_impl_ref_count(rmw_context_t * context);
+class MessageTypeSupport : public TypeSupport
+{
+public:
+  explicit MessageTypeSupport(
+    const message_type_support_callbacks_t * members,
+    const rosidl_message_type_support_t * type_supports);
+};
 
 }  // namespace rmw_fastrtps_cpp
 
-#endif  // RMW_FASTRTPS_CPP__INIT_RMW_CONTEXT_IMPL_HPP_
+#endif  // MESSAGETYPESUPPORT_HPP_

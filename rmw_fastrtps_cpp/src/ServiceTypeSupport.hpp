@@ -12,24 +12,44 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_HPP_
-#define RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_HPP_
+#ifndef SERVICETYPESUPPORT_HPP_
+#define SERVICETYPESUPPORT_HPP_
+
+#include <cassert>
+
+#include "fastcdr/FastBuffer.h"
+#include "fastcdr/Cdr.h"
 
 #include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"
+#include "rosidl_typesupport_fastrtps_cpp/service_type_support.h"
 
 #include "TypeSupport.hpp"
 
 namespace rmw_fastrtps_cpp
 {
 
-class MessageTypeSupport : public TypeSupport
+class ServiceTypeSupport : public TypeSupport
+{
+protected:
+  explicit ServiceTypeSupport(const rosidl_message_type_support_t * type_supports);
+};
+
+class RequestTypeSupport : public ServiceTypeSupport
 {
 public:
-  explicit MessageTypeSupport(
-    const message_type_support_callbacks_t * members,
+  explicit RequestTypeSupport(
+    const service_type_support_callbacks_t * members,
+    const rosidl_message_type_support_t * type_supports);
+};
+
+class ResponseTypeSupport : public ServiceTypeSupport
+{
+public:
+  explicit ResponseTypeSupport(
+    const service_type_support_callbacks_t * members,
     const rosidl_message_type_support_t * type_supports);
 };
 
 }  // namespace rmw_fastrtps_cpp
 
-#endif  // RMW_FASTRTPS_CPP__MESSAGETYPESUPPORT_HPP_
+#endif  // SERVICETYPESUPPORT_HPP_
