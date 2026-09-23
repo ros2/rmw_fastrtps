@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TYPES__EVENT_TYPES_HPP_
-#define TYPES__EVENT_TYPES_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__TYPES__EVENT_TYPES_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__TYPES__EVENT_TYPES_HPP_
 
 #include "rmw/event.h"
 
@@ -32,4 +32,4 @@ eprosima::fastdds::dds::StatusMask rmw_event_to_dds_statusmask(
 }  // namespace internal
 }  // namespace rmw_fastrtps_shared_cpp
 
-#endif  // TYPES__EVENT_TYPES_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__TYPES__EVENT_TYPES_HPP_

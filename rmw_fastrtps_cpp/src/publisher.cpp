@@ -14,6 +14,7 @@
 // limitations under the License.
 
 #include <string>
+#include <unordered_map>
 
 #include "fastdds/dds/core/policy/QosPolicies.hpp"
 #include "fastdds/dds/domain/DomainParticipant.hpp"

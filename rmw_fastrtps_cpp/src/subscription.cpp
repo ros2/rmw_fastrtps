@@ -15,7 +15,9 @@
 #include <rosidl_dynamic_typesupport/identifier.h>
 
 #include <algorithm>
+#include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 

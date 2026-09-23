@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef TIME_UTILS_HPP_
-#define TIME_UTILS_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__TIME_UTILS_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__TIME_UTILS_HPP_
 
 #include "fastdds/dds/core/Time_t.hpp"
 
@@ -24,4 +24,4 @@ eprosima::fastdds::dds::Duration_t rmw_time_to_fastrtps(const rmw_time_t & time)
 
 }  // namespace rmw_fastrtps_shared_cpp
 
-#endif  // TIME_UTILS_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__TIME_UTILS_HPP_

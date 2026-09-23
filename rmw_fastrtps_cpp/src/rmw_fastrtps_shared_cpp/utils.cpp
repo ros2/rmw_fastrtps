@@ -16,6 +16,7 @@
 #include <atomic>
 #include <cstdint>
 #include <string>
+#include <vector>
 
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
 

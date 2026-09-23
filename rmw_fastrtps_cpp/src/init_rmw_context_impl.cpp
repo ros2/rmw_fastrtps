@@ -17,6 +17,8 @@
 
 #include <cassert>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 #include "rmw/error_handling.h"
 #include "rmw/init.h"

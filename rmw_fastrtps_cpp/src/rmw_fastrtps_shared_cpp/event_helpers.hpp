@@ -12,8 +12,8 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#ifndef EVENT_HELPERS_HPP_
-#define EVENT_HELPERS_HPP_
+#ifndef RMW_FASTRTPS_SHARED_CPP__EVENT_HELPERS_HPP_
+#define RMW_FASTRTPS_SHARED_CPP__EVENT_HELPERS_HPP_
 
 #include "fastdds/dds/core/policy/QosPolicies.hpp"
 
@@ -30,4 +30,4 @@ rmw_qos_policy_kind_t dds_qos_policy_to_rmw_qos_policy(
 }  // namespace internal
 }  // namespace rmw_fastrtps_shared_cpp
 
-#endif  // EVENT_HELPERS_HPP_
+#endif  // RMW_FASTRTPS_SHARED_CPP__EVENT_HELPERS_HPP_

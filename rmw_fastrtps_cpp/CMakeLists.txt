@@ -182,7 +182,17 @@ ament_export_libraries(rmw_fastrtps_cpp)
 # Export a modern CMake target
 ament_export_targets(rmw_fastrtps_cpp)
 
-ament_export_dependencies(fastcdr rcpputils rcutils rmw rmw_dds_common rmw_security_common rosidl_dynamic_typesupport rosidl_runtime_c rosidl_typesupport_fastrtps_cpp)
+ament_export_dependencies(
+  fastcdr
+  rcpputils
+  rcutils
+  rmw
+  rmw_dds_common
+  rmw_security_common
+  rosidl_dynamic_typesupport
+  rosidl_runtime_c
+  rosidl_typesupport_fastrtps_cpp
+)
 
 register_rmw_implementation(
   "c:rosidl_typesupport_fastrtps_c:rosidl_typesupport_introspection_c"
