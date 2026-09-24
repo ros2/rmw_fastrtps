@@ -16,16 +16,6 @@ You can specify Fast DDS as your ROS 2 middleware layer in two different ways:
     RMW_IMPLEMENTATION=rmw_fastrtps_cpp ros2 run <your_package> <your application>
     ```
 
-## Two different RMW implementations
-
-`rmw_fastrtps` actually provides not one but two different ROS 2 middleware implementations, both of them using Fast DDS as middleware layer: `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` (note that directory `rmw_fastrtps_shared_cpp` just contains the code that the two implementations share, and does not constitute a layer on its own).
-
-The main difference between the two is that `rmw_fastrtps_dynamic_cpp` uses introspection typesupport at run time to decide on the serialization/deserialization mechanism.
-On the other hand, `rmw_fastrtps_cpp` uses its own typesupport, which generates the mapping for each message type at build time.
-
-Mind that the default ROS 2 RMW implementation is `rmw_fastrtps_cpp`.
-You can however set it to `rmw_fastrtps_dynamic_cpp` using the environment variable `RMW_IMPLEMENTATION` as described above.
-
 ## Advance usage
 
 ROS 2 only allows for the configuration of certain middleware features.
@@ -61,7 +51,7 @@ This entails that any blocking call occurring during the write operation would b
 It is important to note that this mode typically yields higher throughput rates at lower latencies, since the notification and context switching between threads is not present.
 * `AUTO`: let Fast DDS select the publication mode. This implies using the publication mode set in the XML file or, failing that, the default value set in Fast DDS (which currently is set to `SYNCHRONOUS`).
 
-If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then both `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` behave as if it were set to `SYNCHRONOUS`.
+If `RMW_FASTRTPS_PUBLICATION_MODE` is not set, then `rmw_fastrtps_cpp` behaves as if it were set to `SYNCHRONOUS`.
 
 For the internal `ros_discovery_info` graph subscription, `rmw_fastrtps` requests unique network flow endpoints by default. The `RMW_FASTRTPS_ROS_DISCOVERY_INFO_UNIQUE_NETWORK_FLOWS` environment variable can be used to change the unique network flows request mode. The admissible values are:
 
@@ -282,7 +272,7 @@ ROS 2 provides [Loaned Messages](https://design.ros2.org/articles/zero_copy.html
 Furthermore, `rmw_fastrtps`, through Fast DDS, provides both a [Shared Memory Transport](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/shared_memory/shared_memory.html) and [Data Sharing delivery mechanism](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/datasharing.html) to speed up the intra-host communication.
 Combining these two features (message loaning and Data Sharing), it is possible to achieve a zero-copy message delivery pipeline, thus bringing significant performance improvements to ROS 2 application.
 
-By default, both `rmw_fastrtps_cpp` and `rmw_fastrtps_dynamic_cpp` use [Shared Memory Transport](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/shared_memory/shared_memory.html) for intra-host communication, along with network based transports (UDPv4) for inter-host message delivery.
+By default, both `rmw_fastrtps_cpp` use [Shared Memory Transport](https://fast-dds.docs.eprosima.com/en/latest/fastdds/transport/shared_memory/shared_memory.html) for intra-host communication, along with network based transports (UDPv4) for inter-host message delivery.
 
 In order to achieve a Zero Copy message delivery, applications need to both enable Fast DDS Data Sharing mechanism, and use the [Loaned Messages](https://design.ros2.org/articles/zero_copy.html) API:
 
@@ -340,7 +330,6 @@ Quality Declarations for each package in this repository:
 
 * [`rmw_fastrtps_shared_cpp`](rmw_fastrtps_shared_cpp/QUALITY_DECLARATION.md)
 * [`rmw_fastrps_cpp`](rmw_fastrtps_cpp/QUALITY_DECLARATION.md)
-* [`rmw_fastrtps_dynamic_cpp`](rmw_fastrtps_dynamic_cpp/QUALITY_DECLARATION.md)
 
 Quality Declarations for the external dependencies of these packages can be found in:
 

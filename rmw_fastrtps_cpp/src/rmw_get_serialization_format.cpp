@@ -14,7 +14,7 @@
 
 #include "rmw/rmw.h"
 
-#include "rmw_fastrtps_cpp/serialization_format.hpp"
+#include "serialization_format.hpp"
 
 extern "C"
 {

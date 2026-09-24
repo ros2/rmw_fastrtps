@@ -15,7 +15,9 @@
 #include <rosidl_dynamic_typesupport/identifier.h>
 
 #include <algorithm>
+#include <memory>
 #include <string>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -57,8 +59,8 @@
 #include "rmw_fastrtps_shared_cpp/subscription.hpp"
 #include "rmw_fastrtps_shared_cpp/utils.hpp"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
-#include "rmw_fastrtps_cpp/subscription.hpp"
+#include "identifier.hpp"
+#include "subscription.hpp"
 
 #include "buffer_backend_context.hpp"
 #include "rosidl_buffer_backend_registry/backend_utils.hpp"

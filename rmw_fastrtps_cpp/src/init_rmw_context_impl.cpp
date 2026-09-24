@@ -13,10 +13,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw_fastrtps_cpp/init_rmw_context_impl.hpp"
+#include "init_rmw_context_impl.hpp"
 
 #include <cassert>
 #include <memory>
+#include <string>
+#include <unordered_map>
 
 #include "rmw/error_handling.h"
 #include "rmw/init.h"
@@ -25,9 +27,9 @@
 #include "rmw_dds_common/context.hpp"
 #include "rmw_dds_common/msg/participant_entities_info.hpp"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
-#include "rmw_fastrtps_cpp/publisher.hpp"
-#include "rmw_fastrtps_cpp/subscription.hpp"
+#include "identifier.hpp"
+#include "publisher.hpp"
+#include "subscription.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
 #include "rmw_fastrtps_shared_cpp/init_rmw_context_impl.hpp"
