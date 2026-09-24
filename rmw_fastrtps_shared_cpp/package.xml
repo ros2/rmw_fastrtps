@@ -8,7 +8,7 @@
   <maintainer email="geoff@openrobotics.org">Geoffrey Biggs</maintainer>
   <maintainer email="sloretz@openrobotics.org">Shane Loretz</maintainer>
 
-  <license>Apache License 2.0</license>
+  <license>Apache-2.0</license>
 
   <author email="dthomas@osrfoundation.org">Dirk Thomas</author>
   <author email="michael.jeronimo@openrobotics.org">Michael Jeronimo</author>
