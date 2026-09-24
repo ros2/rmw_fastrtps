@@ -257,10 +257,10 @@ create_subscription(
   // the QoS is already the default
   subscriber->get_datareader_qos_from_profile(topic_name, reader_qos);
 
-  if (!participant_info->leave_middleware_default_qos) {
-    reader_qos.endpoint().history_memory_policy =
-      eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  reader_qos.endpoint().history_memory_policy =
+    eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
 
+  if (!participant_info->leave_middleware_default_qos) {
     reader_qos.data_sharing().off();
   }
 

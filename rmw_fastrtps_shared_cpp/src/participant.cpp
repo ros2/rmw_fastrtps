@@ -329,12 +329,10 @@ rmw_fastrtps_shared_cpp::create_participant(
     }
   }
   // allow reallocation to support discovery messages bigger than 5000 bytes
-  if (!leave_middleware_default_qos) {
-    domainParticipantQos.wire_protocol().builtin.readerHistoryMemoryPolicy =
-      eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-    domainParticipantQos.wire_protocol().builtin.writerHistoryMemoryPolicy =
-      eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
-  }
+  domainParticipantQos.wire_protocol().builtin.readerHistoryMemoryPolicy =
+    eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
+  domainParticipantQos.wire_protocol().builtin.writerHistoryMemoryPolicy =
+    eprosima::fastdds::rtps::PREALLOCATED_WITH_REALLOC_MEMORY_MODE;
   if (security_options->security_root_path) {
     // if security_root_path provided, try to find the key and certificate files
 #if HAVE_SECURITY
