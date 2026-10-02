@@ -122,10 +122,6 @@ target_link_libraries(rmw_fastrtps_shared_cpp PRIVATE
 target_compile_definitions(${PROJECT_NAME}
   PRIVATE "RMW_FASTRTPS_SHARED_CPP_BUILDING_LIBRARY")
 
-# Export old-style CMake variables
-ament_export_include_directories("include/${PROJECT_NAME}")
-ament_export_libraries(rmw_fastrtps_shared_cpp)
-
 # Export modern CMake targets
 ament_export_targets(rmw_fastrtps_shared_cpp)
 
