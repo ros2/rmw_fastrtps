@@ -265,6 +265,8 @@ private:
         {
           ser_type_hash_ptr = &ser_type_hash;
         }
+        auto buffer_backends = parse_buffer_backends_from_user_data(
+          userDataValue.data(), userDataValue.size());
         context->graph_cache.add_entity(
           rmw_fastrtps_shared_cpp::create_rmw_gid(
             identifier_,
@@ -277,13 +279,12 @@ private:
             proxyData.participant_guid),
           qos_profile,
           is_reader,
-          ser_type_hash_ptr);
+          ser_type_hash_ptr,
+          buffer_backends);
 
         // Parse buffer backend info and invoke callback if present.
         // Copy the callback outside the lock so buffer_cb_mutex_ is not held
         // during the callback (which may acquire other mutexes or do DDS work).
-        auto buffer_backends = parse_buffer_backends_from_user_data(
-          userDataValue.data(), userDataValue.size());
         if (!buffer_backends.empty()) {
           BufferDiscoveryCallback cb_copy;
           {
