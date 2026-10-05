@@ -15,7 +15,7 @@
 #include "rmw/get_service_endpoint_info.h"
 #include "rmw/service_endpoint_info_array.h"
 #include "rmw/types.h"
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "identifier.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 
 extern "C"

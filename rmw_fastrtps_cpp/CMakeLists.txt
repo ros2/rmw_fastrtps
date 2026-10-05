@@ -29,7 +29,7 @@ find_package(ament_cmake_ros_core REQUIRED)
 find_package(rcpputils REQUIRED)
 find_package(rcutils REQUIRED)
 find_package(rmw_dds_common REQUIRED)
-find_package(rmw_fastrtps_shared_cpp REQUIRED)
+find_package(rmw_security_common REQUIRED)
 find_package(tracetools REQUIRED)
 
 find_package(fastcdr 2 REQUIRED)
@@ -41,6 +41,8 @@ find_package(rosidl_dynamic_typesupport_fastrtps REQUIRED)
 find_package(rosidl_runtime_c REQUIRED)
 find_package(rosidl_typesupport_fastrtps_c REQUIRED)
 find_package(rosidl_typesupport_fastrtps_cpp REQUIRED)
+find_package(rosidl_typesupport_introspection_c REQUIRED)
+find_package(rosidl_typesupport_introspection_cpp REQUIRED)
 find_package(rosidl_buffer_backend_registry REQUIRED)
 
 add_library(rmw_fastrtps_cpp
@@ -91,24 +93,72 @@ add_library(rmw_fastrtps_cpp
   src/subscription.cpp
   src/type_support_common.cpp
   src/rmw_get_endpoint_network_flow.cpp
+  src/rmw_fastrtps_shared_cpp/custom_participant_info.cpp
+  src/rmw_fastrtps_shared_cpp/custom_publisher_info.cpp
+  src/rmw_fastrtps_shared_cpp/custom_subscriber_info.cpp
+  src/rmw_fastrtps_shared_cpp/create_rmw_gid.cpp
+  src/rmw_fastrtps_shared_cpp/demangle.cpp
+  src/rmw_fastrtps_shared_cpp/init_rmw_context_impl.cpp
+  src/rmw_fastrtps_shared_cpp/listener_thread.cpp
+  src/rmw_fastrtps_shared_cpp/namespace_prefix.cpp
+  src/rmw_fastrtps_shared_cpp/participant.cpp
+  src/rmw_fastrtps_shared_cpp/publisher.cpp
+  src/rmw_fastrtps_shared_cpp/qos.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_client.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_compare_gids_equal.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_count.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_event.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_features.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_get_endpoint_network_flow.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_get_gid_for_client.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_get_gid_for_publisher.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_get_service_endpoint_info.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_get_topic_endpoint_info.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_guard_condition.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_init.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_logging.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_node.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_node_info_and_types.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_node_names.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_publish.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_publisher.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_qos.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_request.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_response.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_security_logging.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_service.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_service_names_and_types.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_service_server_is_available.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_subscription.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_take.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_topic_names_and_types.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_trigger_guard_condition.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_wait.cpp
+  src/rmw_fastrtps_shared_cpp/rmw_wait_set.cpp
+  src/rmw_fastrtps_shared_cpp/subscription.cpp
+  src/rmw_fastrtps_shared_cpp/time_utils.cpp
+  src/rmw_fastrtps_shared_cpp/TypeSupport_impl.cpp
+  src/rmw_fastrtps_shared_cpp/utils.cpp
 )
 target_link_libraries(rmw_fastrtps_cpp PUBLIC
   ament_cmake_ros_core::ament_ros_cxx_standard
   fastcdr
   fastdds
+  rcpputils::rcpputils
+  rcutils::rcutils
   rmw::rmw
-  rmw_fastrtps_shared_cpp::rmw_fastrtps_shared_cpp
+  rmw_dds_common::rmw_dds_common_library
+  rmw_security_common::rmw_security_common_library
+  rosidl_dynamic_typesupport::rosidl_dynamic_typesupport
   rosidl_runtime_c::rosidl_runtime_c
   rosidl_typesupport_fastrtps_cpp::rosidl_typesupport_fastrtps_cpp
 )
 target_link_libraries(rmw_fastrtps_cpp PRIVATE
-  rcpputils::rcpputils
-  rcutils::rcutils
   rosidl_buffer_backend_registry::rosidl_buffer_backend_registry
-  rmw_dds_common::rmw_dds_common_library
-  rosidl_dynamic_typesupport::rosidl_dynamic_typesupport
   rosidl_dynamic_typesupport_fastrtps::rosidl_dynamic_typesupport_fastrtps
   rosidl_typesupport_fastrtps_c::rosidl_typesupport_fastrtps_c
+  rosidl_typesupport_introspection_c::rosidl_typesupport_introspection_c
+  rosidl_typesupport_introspection_cpp::rosidl_typesupport_introspection_cpp
   tracetools::tracetools
 )
 
@@ -132,7 +182,17 @@ ament_export_libraries(rmw_fastrtps_cpp)
 # Export a modern CMake target
 ament_export_targets(rmw_fastrtps_cpp)
 
-ament_export_dependencies(fastcdr rmw rmw_fastrtps_shared_cpp rosidl_runtime_c rosidl_typesupport_fastrtps_cpp)
+ament_export_dependencies(
+  fastcdr
+  rcpputils
+  rcutils
+  rmw
+  rmw_dds_common
+  rmw_security_common
+  rosidl_dynamic_typesupport
+  rosidl_runtime_c
+  rosidl_typesupport_fastrtps_cpp
+)
 
 register_rmw_implementation(
   "c:rosidl_typesupport_fastrtps_c:rosidl_typesupport_introspection_c"
@@ -146,22 +206,7 @@ if(BUILD_TESTING)
   find_package(osrf_testing_tools_cpp REQUIRED)
   find_package(test_msgs REQUIRED)
 
-  ament_add_gtest(test_get_native_entities
-    test/test_get_native_entities.cpp)
-  target_link_libraries(test_get_native_entities
-    osrf_testing_tools_cpp::memory_tools
-    rcutils::rcutils
-    rmw::rmw
-    rmw_fastrtps_cpp
-    test_msgs::test_msgs
-  )
-
-  ament_add_gtest(test_logging test/test_logging.cpp)
-  target_link_libraries(test_logging
-    fastdds
-    rmw::rmw
-    rmw_fastrtps_cpp
-  )
+  add_subdirectory(test)
 endif()
 
 ament_package(

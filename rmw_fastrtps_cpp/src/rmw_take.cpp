@@ -34,7 +34,7 @@
 
 #include "fastdds/dds/builtin/topic/PublicationBuiltinTopicData.hpp"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "identifier.hpp"
 #include "buffer_backend_context.hpp"
 
 #include "rosidl_typesupport_fastrtps_cpp/message_type_support.h"
