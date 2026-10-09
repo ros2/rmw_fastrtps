@@ -24,10 +24,10 @@
 
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
-#include "rmw_fastrtps_cpp/MessageTypeSupport.hpp"
-#include "rmw_fastrtps_cpp/ServiceTypeSupport.hpp"
+#include "MessageTypeSupport.hpp"
+#include "ServiceTypeSupport.hpp"
 
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "identifier.hpp"
 
 #include "rosidl_typesupport_fastrtps_c/identifier.h"
 #include "rosidl_typesupport_fastrtps_cpp/identifier.hpp"

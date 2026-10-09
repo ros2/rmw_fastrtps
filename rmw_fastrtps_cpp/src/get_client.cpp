@@ -18,7 +18,7 @@
 #include "rmw_fastrtps_cpp/get_client.hpp"
 
 #include "rmw_fastrtps_shared_cpp/custom_client_info.hpp"
-#include "rmw_fastrtps_cpp/identifier.hpp"
+#include "identifier.hpp"
 
 namespace rmw_fastrtps_cpp
 {

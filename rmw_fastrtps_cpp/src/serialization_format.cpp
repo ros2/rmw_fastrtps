@@ -12,6 +12,6 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include "rmw_fastrtps_cpp/serialization_format.hpp"
+#include "serialization_format.hpp"
 
 const char * const eprosima_fastrtps_serialization_format = "cdr";
