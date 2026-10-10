@@ -12,6 +12,17 @@ target_link_libraries(test_get_native_entities
   test_msgs::test_msgs
 )
 
+ament_add_gtest(test_rmw_wait_events
+  test_rmw_wait_events.cpp
+  TIMEOUT 120)
+target_link_libraries(test_rmw_wait_events
+  fastdds
+  rcutils::rcutils
+  rmw::rmw
+  rmw_fastrtps_cpp
+  test_msgs::test_msgs
+)
+
 ament_add_gtest(test_logging test_logging.cpp)
 target_link_libraries(test_logging
   fastdds

@@ -21,7 +21,6 @@
 #include "rmw_fastrtps_shared_cpp/custom_service_info.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
-#include "types/event_types.hpp"
 
 #include "fastdds/dds/core/condition/WaitSet.hpp"
 #include "fastdds/dds/core/condition/GuardCondition.hpp"
@@ -87,9 +86,9 @@ static bool has_triggered_condition(
     for (size_t i = 0; i < events->event_count; ++i) {
       auto event = static_cast<rmw_event_t *>(events->events[i]);
       auto custom_event_info = static_cast<CustomEventInfo *>(event->data);
-      if (custom_event_info->get_listener()->get_statuscondition().get_trigger_value() ||
-        custom_event_info->get_listener()->get_event_guard(event->event_type).get_trigger_value())
-      {
+      auto & guard_condition =
+        custom_event_info->get_listener()->get_event_guard(event->event_type);
+      if (guard_condition.get_trigger_value()) {
         return true;
       }
     }
@@ -207,11 +206,11 @@ __rmw_wait(
     }
 
     if (events) {
+      // Only the event guard: the entity's StatusCondition is shared with its data and its
+      // other events, and would wake this wait for statuses that are not this event's.
       for (size_t i = 0; i < events->event_count; ++i) {
         auto event = static_cast<rmw_event_t *>(events->events[i]);
         auto custom_event_info = static_cast<CustomEventInfo *>(event->data);
-        attached_conditions.push_back(
-          &custom_event_info->get_listener()->get_statuscondition());
         attached_conditions.push_back(
           &custom_event_info->get_listener()->get_event_guard(event->event_type));
       }
@@ -307,31 +306,10 @@ __rmw_wait(
       auto event = static_cast<rmw_event_t *>(events->events[i]);
       auto custom_event_info = static_cast<CustomEventInfo *>(event->data);
 
-      eprosima::fastdds::dds::StatusCondition & status_condition =
-        custom_event_info->get_listener()->get_statuscondition();
-
-      eprosima::fastdds::dds::GuardCondition & guard_condition =
-        custom_event_info->get_listener()->get_event_guard(event->event_type);
-
-      bool active = false;
-
-      if (wait_result) {
-        eprosima::fastdds::dds::Entity * entity = status_condition.get_entity();
-        eprosima::fastdds::dds::StatusMask changed_statuses = entity->get_status_changes();
-        if (changed_statuses.is_active(
-            rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(
-              event->event_type)))
-        {
-          active = true;
-        }
-
-        if (guard_condition.get_trigger_value()) {
-          active = true;
-          guard_condition.set_trigger_value(false);
-        }
-      }
-
-      if (!active) {
+      // The guard is cleared by take_event(), so an event stays ready until it is taken.
+      if (!custom_event_info->get_listener()->get_event_guard(event->event_type)
+        .get_trigger_value())
+      {
         events->events[i] = 0;
       } else {
         // We are returning a ready event,

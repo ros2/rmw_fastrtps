@@ -189,6 +189,9 @@ public:
     const void * user_data,
     rmw_event_callback_t callback) override;
 
+  RMW_FASTRTPS_CPP_PUBLIC
+  void enable_event(rmw_event_type_t event_type) override;
+
   // void
   // on_type_discovery(
   //   DomainParticipant *,
