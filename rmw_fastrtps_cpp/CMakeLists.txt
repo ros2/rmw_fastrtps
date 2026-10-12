@@ -177,7 +177,7 @@ target_compile_definitions(${PROJECT_NAME}
   PRIVATE "RMW_FASTRTPS_CPP_BUILDING_LIBRARY")
 
 # Export a modern CMake target
-ament_export_targets(rmw_fastrtps_cpp)
+ament_export_targets(rmw_fastrtps_cpp HAS_LIBRARY_TARGET)
 
 ament_export_dependencies(
   fastcdr
