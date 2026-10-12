@@ -400,6 +400,17 @@ rmw_fastrtps_cpp::create_publisher(
     }
 
     eprosima::fastdds::dds::DataWriterQos cpu_writer_qos = info->data_writer_->get_qos();
+    {
+      // Advertise the main DataWriter GID in user_data so that subscribers
+      // taking from the CPU channel can report it as publisher_gid. It must
+      // match rmw_get_gid_for_publisher(), which rclcpp relies on to drop the
+      // DDS copy of messages already delivered intra-process.
+      std::string main_gid_str =
+        encode_endpoint_gid_for_user_data(info->publisher_gid, "PGID:");
+      auto ud_vec = cpu_writer_qos.user_data().data_vec();
+      ud_vec.insert(ud_vec.end(), main_gid_str.begin(), main_gid_str.end());
+      cpu_writer_qos.user_data().setValue(ud_vec);
+    }
     info->cpu_data_writer_ = publisher->create_datawriter(
       info->cpu_topic_, cpu_writer_qos, nullptr);
     if (!info->cpu_data_writer_) {
