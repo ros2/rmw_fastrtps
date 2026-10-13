@@ -132,6 +132,13 @@ static bool has_triggered_condition(
   return false;
 }
 
+/// Wait until any of the given entities is ready, or the timeout expires.
+/**
+ * A QoS event stays ready until rmw_take_event() takes it, like a subscription stays ready
+ * while it has unread data.
+ * Calling rmw_wait() again without taking a ready event returns immediately, so a caller
+ * that waits on an event and never takes it will busy-loop.
+ */
 rmw_ret_t
 __rmw_wait(
   const char * identifier,

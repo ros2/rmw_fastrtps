@@ -239,7 +239,7 @@ public:
   size_t publisher_count() const;
 
   RMW_FASTRTPS_CPP_PUBLIC
-  void update_data_available();
+  void update_data_available(eprosima::fastdds::dds::DataReader * reader);
 
   /// Notify that buffer data is available (bypasses main DataReader unread check).
   RMW_FASTRTPS_CPP_PUBLIC

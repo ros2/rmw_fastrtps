@@ -61,9 +61,7 @@ void
 CustomDataReaderListener::on_data_available(
   eprosima::fastdds::dds::DataReader * reader)
 {
-  (void)reader;
-
-  subscription_event_->update_data_available();
+  subscription_event_->update_data_available(reader);
 }
 
 void
@@ -495,12 +493,15 @@ void RMWSubscriptionEvent::untrack_unique_publisher(eprosima::fastdds::rtps::GUI
   publishers_.erase(guid);
 }
 
-void RMWSubscriptionEvent::update_data_available()
+void RMWSubscriptionEvent::update_data_available(eprosima::fastdds::dds::DataReader * reader)
 {
   rcpputils::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
 
   if (on_new_message_cb_) {
-    auto unread_messages = subscriber_info_->data_reader_->get_unread_count(true);
+    // Use the reader that raised the callback, not subscriber_info_->data_reader_:
+    // rmw_subscription_set_content_filter() deletes the old reader before the new one is
+    // stored there, and the new reader can deliver data while it is being created.
+    auto unread_messages = reader->get_unread_count(true);
 
     if (0 < unread_messages) {
       on_new_message_cb_(new_message_user_data_, unread_messages);
