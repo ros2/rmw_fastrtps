@@ -346,6 +346,59 @@ rmw_take_sequence(
   size_t * taken,
   rmw_subscription_allocation_t * allocation)
 {
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    subscription, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    message_sequence, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    message_info_sequence, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    taken, RMW_RET_INVALID_ARGUMENT);
+
+  if (0u == count) {
+    RMW_SET_ERROR_MSG("count cannot be 0");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  if (count > message_sequence->capacity) {
+    RMW_SET_ERROR_MSG("Insufficient capacity in message_sequence");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  if (count > message_info_sequence->capacity) {
+    RMW_SET_ERROR_MSG("Insufficient capacity in message_info_sequence");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription, subscription->implementation_identifier, eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  if (info && info->is_buffer_aware_) {
+    // Buffer-aware publishers write to the buffer channels instead of the main
+    // DataReader, so take one message at a time through rmw_take_with_info,
+    // which covers the buffer channels and the main DataReader fallback.
+    *taken = 0u;
+    rmw_ret_t ret = RMW_RET_OK;
+    while (*taken < count) {
+      bool taken_flag = false;
+      ret = rmw_take_with_info(
+        subscription, message_sequence->data[*taken], &taken_flag,
+        &message_info_sequence->data[*taken], allocation);
+      if (RMW_RET_OK != ret || !taken_flag) {
+        break;
+      }
+      ++(*taken);
+    }
+    message_sequence->size = *taken;
+    message_info_sequence->size = *taken;
+    return ret;
+  }
+
   return rmw_fastrtps_shared_cpp::__rmw_take_sequence(
     eprosima_fastrtps_identifier, subscription, count, message_sequence, message_info_sequence,
     taken, allocation);
