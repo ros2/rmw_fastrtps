@@ -44,6 +44,31 @@
 namespace
 {
 
+/// Replace the sender GID in message_info with the main publisher GID that
+/// buffer-aware side-channel DataWriters (CPU channel and per-subscriber
+/// endpoints) advertise in their user_data. Samples taken from those readers
+/// carry the side-channel writer GUID, which never matches
+/// rmw_get_gid_for_publisher(); clients such as rclcpp depend on that match
+/// to deduplicate intra-process deliveries.
+void
+assign_main_publisher_gid(
+  eprosima::fastdds::dds::DataReader * reader,
+  const eprosima::fastdds::dds::SampleInfo & sample_info,
+  rmw_message_info_t * message_info)
+{
+  eprosima::fastdds::rtps::PublicationBuiltinTopicData pub_data;
+  if (eprosima::fastdds::dds::RETCODE_OK !=
+    reader->get_matched_publication_data(pub_data, sample_info.publication_handle))
+  {
+    return;
+  }
+  rmw_gid_t main_gid{};
+  const auto & ud = pub_data.user_data.data_vec();
+  if (parse_endpoint_gid_from_user_data(ud.data(), ud.size(), "PGID:", main_gid)) {
+    std::memcpy(message_info->publisher_gid.data, main_gid.data, RMW_GID_STORAGE_SIZE);
+  }
+}
+
 rmw_ret_t
 take_buffer_aware(
   const rmw_subscription_t * subscription,
@@ -73,6 +98,7 @@ take_buffer_aware(
       if (message_info) {
         rmw_fastrtps_shared_cpp::_assign_message_info(
           eprosima_fastrtps_identifier, message_info, &cpu_info_seq[0]);
+        assign_main_publisher_gid(info->cpu_data_reader_, cpu_info_seq[0], message_info);
       }
       cpu_vals.length(0);
       cpu_info_seq.length(0);
@@ -170,21 +196,7 @@ take_buffer_aware(
   if (message_info) {
     rmw_fastrtps_shared_cpp::_assign_message_info(
       eprosima_fastrtps_identifier, message_info, &info_seq[0]);
-
-    eprosima::fastdds::rtps::PublicationBuiltinTopicData pub_data;
-    if (eprosima::fastdds::dds::RETCODE_OK ==
-      info->accel_data_reader_->get_matched_publication_data(
-        pub_data, info_seq[0].publication_handle))
-    {
-      rmw_gid_t main_gid{};
-      auto & ud = pub_data.user_data.data_vec();
-      if (parse_endpoint_gid_from_user_data(
-            ud.data(), ud.size(), "PGID:", main_gid))
-      {
-        std::memcpy(
-          message_info->publisher_gid.data, main_gid.data, RMW_GID_STORAGE_SIZE);
-      }
-    }
+    assign_main_publisher_gid(info->accel_data_reader_, info_seq[0], message_info);
   }
 
   return RMW_RET_OK;
@@ -248,6 +260,7 @@ take_buffer_aware_serialized(
   if (message_info) {
     rmw_fastrtps_shared_cpp::_assign_message_info(
       eprosima_fastrtps_identifier, message_info, &info_seq[0]);
+    assign_main_publisher_gid(info->cpu_data_reader_, info_seq[0], message_info);
   }
 
   *taken = true;
