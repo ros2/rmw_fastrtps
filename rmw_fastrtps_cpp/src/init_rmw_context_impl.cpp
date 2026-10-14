@@ -216,6 +216,15 @@ init_context_impl(
       }
     });
 
+  // Hook buffer-aware subscriber removal into the DDS participant listener.
+  participant_info->listener_->set_buffer_reader_removed_callback(
+    [buffer_endpoint_registry](const rmw_gid_t & gid)
+    {
+      if (buffer_endpoint_registry) {
+        buffer_endpoint_registry->notify_subscriber_removed(gid);
+      }
+    });
+
   common_context->graph_cache.set_on_change_callback(
     [guard_condition = graph_guard_condition.get()]()
     {

@@ -15,6 +15,7 @@
 #include "buffer_endpoint_registry.hpp"
 
 #include <algorithm>
+#include <utility>
 #include <vector>
 
 #include "rcutils/logging_macros.h"
@@ -26,14 +27,16 @@ namespace rmw_fastrtps_cpp
 void BufferEndpointRegistry::register_subscriber_discovery_callback(
   const std::string & topic_name,
   const rmw_gid_t & publisher_gid,
-  BufferEndpointDiscoveryCallback callback)
+  BufferEndpointDiscoveryCallback callback,
+  BufferEndpointRemovalCallback removal_callback)
 {
   // Collect matching known endpoints while holding the lock, then fire outside.
   std::vector<BufferEndpointInfo> to_fire;
   BufferEndpointDiscoveryCallback cb_copy;
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    subscriber_callbacks_[topic_name].push_back({publisher_gid, callback});
+    subscriber_callbacks_[topic_name].push_back(
+      {publisher_gid, callback, std::move(removal_callback)});
     cb_copy = subscriber_callbacks_[topic_name].back().callback;
 
     for (const auto & info : known_subscribers_) {
@@ -57,7 +60,7 @@ void BufferEndpointRegistry::register_publisher_discovery_callback(
   BufferEndpointDiscoveryCallback cb_copy;
   {
     std::lock_guard<std::mutex> lock(mutex_);
-    publisher_callbacks_[topic_name].push_back({subscriber_gid, callback});
+    publisher_callbacks_[topic_name].push_back({subscriber_gid, callback, nullptr});
     cb_copy = publisher_callbacks_[topic_name].back().callback;
 
     for (const auto & info : known_publishers_) {
@@ -144,6 +147,52 @@ void BufferEndpointRegistry::notify_subscriber_discovered(const BufferEndpointIn
     callbacks.size(), info.topic_name.c_str());
   for (const auto & cb : callbacks) {
     cb(info);
+  }
+}
+
+void BufferEndpointRegistry::notify_subscriber_removed(const rmw_gid_t & gid)
+{
+  std::vector<BufferEndpointRemovalCallback> callbacks;
+  {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    auto known = known_subscribers_.end();
+    for (auto it = known_subscribers_.begin(); it != known_subscribers_.end(); ++it) {
+      bool equal = false;
+      rmw_ret_t ret = rmw_compare_gids_equal(&it->gid, &gid, &equal);
+      if (RMW_RET_OK != ret) {
+        RCUTILS_LOG_ERROR_NAMED(
+          "rmw_fastrtps_cpp",
+          "BufferEndpointRegistry: rmw_compare_gids_equal failed in notify_subscriber_removed");
+        continue;
+      }
+      if (equal) {
+        known = it;
+        break;
+      }
+    }
+    if (known == known_subscribers_.end()) {
+      // Not a buffer-aware subscriber, or already removed.
+      return;
+    }
+
+    const std::string topic_name = known->topic_name;
+    // Forget it, so a publisher created later does not learn of a subscriber that is gone,
+    // and a subscriber that comes back with the same GID is reported again.
+    known_subscribers_.erase(known);
+
+    auto it = subscriber_callbacks_.find(topic_name);
+    if (it != subscriber_callbacks_.end()) {
+      for (const auto & entry : it->second) {
+        if (entry.removal_callback) {
+          callbacks.push_back(entry.removal_callback);
+        }
+      }
+    }
+  }
+
+  for (const auto & cb : callbacks) {
+    cb(gid);
   }
 }
 

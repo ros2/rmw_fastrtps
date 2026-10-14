@@ -38,6 +38,9 @@ struct BufferEndpointInfo
 /// Callback invoked when a buffer-aware endpoint is discovered.
 using BufferEndpointDiscoveryCallback = std::function<void (const BufferEndpointInfo &)>;
 
+/// Callback invoked when a previously discovered buffer-aware endpoint is gone.
+using BufferEndpointRemovalCallback = std::function<void (const rmw_gid_t &)>;
+
 /// Per-context registry for buffer-aware endpoint discovery callbacks.
 ///
 /// When a buffer-aware publisher is created, it registers a "subscriber discovered"
@@ -52,10 +55,15 @@ public:
   BufferEndpointRegistry() = default;
 
   /// Register a callback for when a buffer-aware subscriber is discovered on a topic.
+  ///
+  /// If \p removal_callback is set, it is invoked when a subscriber that was
+  /// reported to \p callback is no longer discovered, so the registrant can drop
+  /// the state it keeps for that subscriber.
   void register_subscriber_discovery_callback(
     const std::string & topic_name,
     const rmw_gid_t & publisher_gid,
-    BufferEndpointDiscoveryCallback callback);
+    BufferEndpointDiscoveryCallback callback,
+    BufferEndpointRemovalCallback removal_callback = nullptr);
 
   /// Register a callback for when a buffer-aware publisher is discovered on a topic.
   void register_publisher_discovery_callback(
@@ -72,11 +80,17 @@ public:
   /// Notify that a buffer-aware publisher has been discovered.
   void notify_publisher_discovered(const BufferEndpointInfo & info);
 
+  /// Notify that a subscriber is no longer discovered.
+  ///
+  /// Does nothing if \p gid was never reported through notify_subscriber_discovered().
+  void notify_subscriber_removed(const rmw_gid_t & gid);
+
 private:
   struct CallbackEntry
   {
     rmw_gid_t registrant_gid{};
     BufferEndpointDiscoveryCallback callback;
+    BufferEndpointRemovalCallback removal_callback;
   };
 
   std::mutex mutex_;
