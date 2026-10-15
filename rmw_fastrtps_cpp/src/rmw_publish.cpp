@@ -53,6 +53,7 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
     }
     pending = std::move(state.pending);
     state.pending.clear();
+    ++state.creating_endpoints;
   }
 
   std::vector<std::shared_ptr<BufferPublisherEndpoint>> new_endpoints;
@@ -123,10 +124,53 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
     new_endpoints.push_back(std::move(endpoint));
   }
 
-  if (!new_endpoints.empty()) {
-    std::lock_guard<std::mutex> lock(state.mutex);
-    for (auto & ep : new_endpoints) {
+  std::lock_guard<std::mutex> lock(state.mutex);
+  for (auto & ep : new_endpoints) {
+    // A subscriber that left while its DataWriter was being created is in neither list, so the
+    // removal callback could not drop it. It left a record instead.
+    bool removed = false;
+    for (const auto & gone : state.removed_while_creating) {
+      bool equal = false;
+      if (RMW_RET_OK == rmw_compare_gids_equal(&ep->target_subscriber_gid, &gone, &equal) &&
+        equal)
+      {
+        removed = true;
+        break;
+      }
+    }
+    if (removed) {
+      state.retired_endpoints.push_back(std::move(ep));
+    } else {
       state.endpoints.push_back(std::move(ep));
+    }
+  }
+  if (--state.creating_endpoints == 0) {
+    state.removed_while_creating.clear();
+  }
+}
+
+/// Delete the per-subscriber endpoints whose subscriber is gone.  The discovery callback
+/// cannot do it: it runs on a DDS thread and must not delete DDS entities.
+void
+destroy_retired_buffer_endpoints(CustomPublisherInfo * info)
+{
+  auto & state = *info->buffer_state_;
+  std::vector<std::shared_ptr<BufferPublisherEndpoint>> retired;
+  {
+    std::lock_guard<std::mutex> lock(state.mutex);
+    if (state.retired_endpoints.empty()) {
+      return;
+    }
+    retired = std::move(state.retired_endpoints);
+    state.retired_endpoints.clear();
+  }
+
+  for (auto & endpoint : retired) {
+    if (endpoint->data_writer) {
+      info->dds_publisher_->delete_datawriter(endpoint->data_writer);
+    }
+    if (endpoint->topic && endpoint->owns_topic) {
+      info->participant_->delete_topic(endpoint->topic);
     }
   }
 }
@@ -257,6 +301,8 @@ rmw_publish(
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
   if (info->is_buffer_aware_) {
+    destroy_retired_buffer_endpoints(info);
+
     // Check whether any non-backend-aware (legacy) subscribers exist.
     // If so, skip buffer channels entirely and fall through to the main
     // DataWriter so old RMW endpoints receive the message.  Buffer-aware
