@@ -69,6 +69,22 @@ assign_main_publisher_gid(
   }
 }
 
+/// Whether a sample must be dropped because the subscription ignores local
+/// publications and the sample was written by a DataWriter of this participant.
+bool
+is_ignored_local_sample(
+  const rmw_subscription_t * subscription,
+  const CustomSubscriberInfo * info,
+  const eprosima::fastdds::dds::SampleInfo & sample_info)
+{
+  if (!subscription->options.ignore_local_publications) {
+    return false;
+  }
+  auto sample_writer_guid =
+    eprosima::fastdds::rtps::iHandle2GUID(sample_info.publication_handle);
+  return sample_writer_guid.guidPrefix == info->data_reader_->guid().guidPrefix;
+}
+
 rmw_ret_t
 take_buffer_aware(
   const rmw_subscription_t * subscription,
@@ -92,21 +108,25 @@ take_buffer_aware(
     const_cast<void **>(cpu_vals.buffer())[0] = &cpu_recv_data;
     eprosima::fastdds::dds::SampleInfoSeq cpu_info_seq{1};
 
-    auto cpu_ret = info->cpu_data_reader_->take(cpu_vals, cpu_info_seq, 1);
-    if (cpu_ret == eprosima::fastdds::dds::RETCODE_OK && cpu_info_seq[0].valid_data) {
-      *taken = true;
-      if (message_info) {
-        rmw_fastrtps_shared_cpp::_assign_message_info(
-          eprosima_fastrtps_identifier, message_info, &cpu_info_seq[0]);
-        assign_main_publisher_gid(info->cpu_data_reader_, cpu_info_seq[0], message_info);
+    while (eprosima::fastdds::dds::RETCODE_OK ==
+      info->cpu_data_reader_->take(cpu_vals, cpu_info_seq, 1))
+    {
+      const bool deliver = cpu_info_seq[0].valid_data &&
+        !is_ignored_local_sample(subscription, info, cpu_info_seq[0]);
+      if (deliver) {
+        *taken = true;
+        if (message_info) {
+          rmw_fastrtps_shared_cpp::_assign_message_info(
+            eprosima_fastrtps_identifier, message_info, &cpu_info_seq[0]);
+          assign_main_publisher_gid(info->cpu_data_reader_, cpu_info_seq[0], message_info);
+        }
       }
       cpu_vals.length(0);
       cpu_info_seq.length(0);
-
-      return RMW_RET_OK;
+      if (deliver) {
+        return RMW_RET_OK;
+      }
     }
-    cpu_vals.length(0);
-    cpu_info_seq.length(0);
   }
 
   // Accelerated path: single shared DataReader for all buffer-aware publishers.
@@ -124,9 +144,17 @@ take_buffer_aware(
   const_cast<void **>(data_values.buffer())[0] = &data;
   eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
 
-  auto ret_code = info->accel_data_reader_->take(data_values, info_seq, 1);
-  if (ret_code != eprosima::fastdds::dds::RETCODE_OK) {
-    return RMW_RET_OK;
+  while (true) {
+    if (eprosima::fastdds::dds::RETCODE_OK !=
+      info->accel_data_reader_->take(data_values, info_seq, 1))
+    {
+      return RMW_RET_OK;
+    }
+    if (info_seq[0].valid_data && !is_ignored_local_sample(subscription, info, info_seq[0])) {
+      break;
+    }
+    data_values.length(0);
+    info_seq.length(0);
   }
 
   auto reset = rcpputils::make_scope_exit(
@@ -134,10 +162,6 @@ take_buffer_aware(
       data_values.length(0);
       info_seq.length(0);
     });
-
-  if (!info_seq[0].valid_data) {
-    return RMW_RET_OK;
-  }
 
   // Look up publisher metadata by writer GID.
   rmw_gid_t writer_gid{};
@@ -239,12 +263,17 @@ take_buffer_aware_serialized(
       info_seq.length(0);
     });
 
-  auto ret_code = info->cpu_data_reader_->take(data_values, info_seq, 1);
-  if (ret_code != eprosima::fastdds::dds::RETCODE_OK) {
-    return RMW_RET_OK;
-  }
-  if (!info_seq[0].valid_data) {
-    return RMW_RET_OK;
+  while (true) {
+    if (eprosima::fastdds::dds::RETCODE_OK !=
+      info->cpu_data_reader_->take(data_values, info_seq, 1))
+    {
+      return RMW_RET_OK;
+    }
+    if (info_seq[0].valid_data && !is_ignored_local_sample(subscription, info, info_seq[0])) {
+      break;
+    }
+    data_values.length(0);
+    info_seq.length(0);
   }
 
   auto buffer_size = static_cast<size_t>(receive_buffer.getBufferSize());
