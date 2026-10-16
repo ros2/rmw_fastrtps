@@ -85,4 +85,18 @@ destroy_subscription(
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(RMW_RET_ERROR);  // on completion
   return RMW_RET_OK;
 }
+
+bool
+is_ignored_local_sample(
+  const rmw_subscription_t * subscription,
+  const CustomSubscriberInfo * info,
+  const eprosima::fastdds::dds::SampleInfo & sample_info)
+{
+  if (!subscription->options.ignore_local_publications) {
+    return false;
+  }
+  auto sample_writer_guid =
+    eprosima::fastdds::rtps::iHandle2GUID(sample_info.publication_handle);
+  return sample_writer_guid.guidPrefix == info->data_reader_->guid().guidPrefix;
+}
 }  // namespace rmw_fastrtps_shared_cpp

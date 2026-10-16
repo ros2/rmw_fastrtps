@@ -15,8 +15,11 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__SUBSCRIPTION_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__SUBSCRIPTION_HPP_
 
+#include "fastdds/dds/subscriber/SampleInfo.hpp"
+
 #include "rmw/rmw.h"
 #include "rmw_fastrtps_shared_cpp/custom_participant_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_cpp/visibility_control.h"
 
 namespace rmw_fastrtps_shared_cpp
@@ -34,6 +37,14 @@ destroy_subscription(
   CustomParticipantInfo * participant_info,
   rmw_subscription_t * subscription,
   bool reset_cft = false);
+
+/// Whether a sample must be dropped because the subscription ignores local
+/// publications and the sample was written by a DataWriter of this participant.
+bool
+is_ignored_local_sample(
+  const rmw_subscription_t * subscription,
+  const CustomSubscriberInfo * info,
+  const eprosima::fastdds::dds::SampleInfo & sample_info);
 
 }  // namespace rmw_fastrtps_shared_cpp
 
