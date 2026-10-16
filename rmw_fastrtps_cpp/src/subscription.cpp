@@ -900,8 +900,8 @@ __create_subscription(
       std::string accel_topic_name = topic_name_mangled + "/_buf/" + sub_hex;
 
       eprosima::fastdds::dds::TopicQos accel_tqos = info->topic_->get_qos();
-      info->accel_topic_ = dds_participant->create_topic(
-        accel_topic_name, type_name, accel_tqos);
+      info->accel_topic_ = participant_info->find_or_create_topic(
+        accel_topic_name, type_name, accel_tqos, nullptr);
       if (!info->accel_topic_) {
         RMW_SET_ERROR_MSG("create_subscription() failed to create accelerated channel topic");
         return nullptr;
@@ -922,7 +922,7 @@ __create_subscription(
         eprosima::fastdds::dds::StatusMask::data_available());
       if (!info->accel_data_reader_) {
         info->accel_data_reader_listener_.reset();
-        dds_participant->delete_topic(info->accel_topic_);
+        participant_info->delete_topic(info->accel_topic_, nullptr);
         info->accel_topic_ = nullptr;
         RMW_SET_ERROR_MSG("create_subscription() failed to create accelerated channel DataReader");
         return nullptr;
