@@ -234,33 +234,6 @@ __rmw_take_sequence(
   size_t * taken,
   rmw_subscription_allocation_t * allocation)
 {
-  RMW_CHECK_ARGUMENT_FOR_NULL(
-    subscription, RMW_RET_INVALID_ARGUMENT);
-
-  RMW_CHECK_ARGUMENT_FOR_NULL(
-    message_sequence, RMW_RET_INVALID_ARGUMENT);
-
-  RMW_CHECK_ARGUMENT_FOR_NULL(
-    message_info_sequence, RMW_RET_INVALID_ARGUMENT);
-
-  RMW_CHECK_ARGUMENT_FOR_NULL(
-    taken, RMW_RET_INVALID_ARGUMENT);
-
-  if (0u == count) {
-    RMW_SET_ERROR_MSG("count cannot be 0");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-
-  if (count > message_sequence->capacity) {
-    RMW_SET_ERROR_MSG("Insufficient capacity in message_sequence");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-
-  if (count > message_info_sequence->capacity) {
-    RMW_SET_ERROR_MSG("Insufficient capacity in message_info_sequence");
-    return RMW_RET_INVALID_ARGUMENT;
-  }
-
   return _take_sequence(
     identifier, subscription, count, message_sequence, message_info_sequence,
     taken, allocation);
