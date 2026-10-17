@@ -99,7 +99,8 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
     }
 
     auto * data_writer = info->dds_publisher_->create_datawriter(
-      topic, writer_qos, nullptr);
+      topic, writer_qos, info->buffer_data_writer_listener_.get(),
+      eprosima::fastdds::dds::StatusMask::offered_deadline_missed());
     if (!data_writer) {
       if (endpoint->owns_topic) {
         info->participant_->delete_topic(topic);
@@ -152,6 +153,15 @@ publish_to_buffer_endpoints(
   eprosima::fastdds::dds::Time_t stamp;
   eprosima::fastdds::dds::Time_t::now(stamp);
   TRACETOOLS_TRACEPOINT(rmw_publish, publisher, ros_message, stamp.to_ns());
+
+  // Report the deadline status of a channel that this publish writes to.
+  if (!state.cpu_only_subscribers.empty() && info->cpu_data_writer_) {
+    state.deadline_writer.store(info->cpu_data_writer_);
+  } else if (!state.endpoints.empty()) {
+    state.deadline_writer.store(state.endpoints.front()->data_writer);
+  } else {
+    state.deadline_writer.store(nullptr);
+  }
 
   // Publish to the shared CPU channel for all CPU-only subscribers.
   if (!state.cpu_only_subscribers.empty() && info->cpu_data_writer_) {
@@ -272,6 +282,12 @@ rmw_publish(
 
     if (total_matched <= buffer_aware_count) {
       publish_to_buffer_endpoints(info, ros_message, publisher);
+      // Liveliness is monitored on the main DataWriter, which was not written to.
+      if (info->data_writer_->get_qos().liveliness().kind ==
+        eprosima::fastdds::dds::MANUAL_BY_TOPIC_LIVELINESS_QOS)
+      {
+        info->data_writer_->assert_liveliness();
+      }
       return RMW_RET_OK;
     }
   }
