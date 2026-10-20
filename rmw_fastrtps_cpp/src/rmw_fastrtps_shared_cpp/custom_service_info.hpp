@@ -119,50 +119,44 @@ public:
   }
 
   template<class Rep, class Period>
-  bool
-  wait_for_subscription(
-    const eprosima::fastdds::rtps::GUID_t & guid,
-    const std::chrono::duration<Rep, Period> & rel_time)
-  {
-    auto guid_is_present = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_)->bool
-    {
-      return subscriptions_.find(guid) != subscriptions_.end();
-    };
-
-    std::unique_lock<std::mutex> lock(mutex_);
-    return cv_.wait_for(lock, rel_time, guid_is_present);
-  }
-
-  template<class Rep, class Period>
   client_present_t
   check_for_subscription(
     const eprosima::fastdds::rtps::GUID_t & guid,
     const std::chrono::duration<Rep, Period> & max_blocking_time)
   {
+    auto client_gone = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_)->bool
     {
-      std::lock_guard<std::mutex> lock(mutex_);
-      // Check if the guid is still in the map
-      if (clients_endpoints_.find(guid) == clients_endpoints_.end()) {
-        // Client is gone
-        return client_present_t::GONE;
-      }
-    }
-    // Wait for subscription
-    if (!wait_for_subscription(guid, max_blocking_time)) {
+      return clients_endpoints_.find(guid) == clients_endpoints_.end();
+    };
+    auto client_subscribed = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_)->bool
+    {
+      return subscriptions_.find(guid) != subscriptions_.end();
+    };
+
+    // Wake up as soon as the reader is matched, or the client goes away
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (!cv_.wait_for(
+        lock, max_blocking_time,
+        [&]() RCPPUTILS_TSA_REQUIRES(mutex_)->bool {return client_gone() || client_subscribed();}))
+    {
       return client_present_t::MAYBE;
     }
-    return client_present_t::YES;
+    return client_gone() ? client_present_t::GONE : client_present_t::YES;
   }
 
   void endpoint_erase_if_exists(
     const eprosima::fastdds::rtps::GUID_t & endpointGuid)
   {
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto endpoint = clients_endpoints_.find(endpointGuid);
-    if (endpoint != clients_endpoints_.end()) {
-      clients_endpoints_.erase(endpoint->second);
-      clients_endpoints_.erase(endpointGuid);
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      auto endpoint = clients_endpoints_.find(endpointGuid);
+      if (endpoint != clients_endpoints_.end()) {
+        clients_endpoints_.erase(endpoint->second);
+        clients_endpoints_.erase(endpointGuid);
+      }
     }
+    // Release a send_response() that is waiting on this client
+    cv_.notify_all();
   }
 
   void endpoint_add_reader_and_writer(
