@@ -30,6 +30,7 @@
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/subscription.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 #include "fastdds/dds/builtin/topic/PublicationBuiltinTopicData.hpp"
@@ -43,6 +44,31 @@
 
 namespace
 {
+
+/// Replace the sender GID in message_info with the main publisher GID that
+/// buffer-aware side-channel DataWriters (CPU channel and per-subscriber
+/// endpoints) advertise in their user_data. Samples taken from those readers
+/// carry the side-channel writer GUID, which never matches
+/// rmw_get_gid_for_publisher(); clients such as rclcpp depend on that match
+/// to deduplicate intra-process deliveries.
+void
+assign_main_publisher_gid(
+  eprosima::fastdds::dds::DataReader * reader,
+  const eprosima::fastdds::dds::SampleInfo & sample_info,
+  rmw_message_info_t * message_info)
+{
+  eprosima::fastdds::rtps::PublicationBuiltinTopicData pub_data;
+  if (eprosima::fastdds::dds::RETCODE_OK !=
+    reader->get_matched_publication_data(pub_data, sample_info.publication_handle))
+  {
+    return;
+  }
+  rmw_gid_t main_gid{};
+  const auto & ud = pub_data.user_data.data_vec();
+  if (parse_endpoint_gid_from_user_data(ud.data(), ud.size(), "PGID:", main_gid)) {
+    std::memcpy(message_info->publisher_gid.data, main_gid.data, RMW_GID_STORAGE_SIZE);
+  }
+}
 
 rmw_ret_t
 take_buffer_aware(
@@ -67,20 +93,25 @@ take_buffer_aware(
     const_cast<void **>(cpu_vals.buffer())[0] = &cpu_recv_data;
     eprosima::fastdds::dds::SampleInfoSeq cpu_info_seq{1};
 
-    auto cpu_ret = info->cpu_data_reader_->take(cpu_vals, cpu_info_seq, 1);
-    if (cpu_ret == eprosima::fastdds::dds::RETCODE_OK && cpu_info_seq[0].valid_data) {
-      *taken = true;
-      if (message_info) {
-        rmw_fastrtps_shared_cpp::_assign_message_info(
-          eprosima_fastrtps_identifier, message_info, &cpu_info_seq[0]);
+    while (eprosima::fastdds::dds::RETCODE_OK ==
+      info->cpu_data_reader_->take(cpu_vals, cpu_info_seq, 1))
+    {
+      const bool deliver = cpu_info_seq[0].valid_data &&
+        !rmw_fastrtps_shared_cpp::is_ignored_local_sample(subscription, info, cpu_info_seq[0]);
+      if (deliver) {
+        *taken = true;
+        if (message_info) {
+          rmw_fastrtps_shared_cpp::_assign_message_info(
+            eprosima_fastrtps_identifier, message_info, &cpu_info_seq[0]);
+          assign_main_publisher_gid(info->cpu_data_reader_, cpu_info_seq[0], message_info);
+        }
       }
       cpu_vals.length(0);
       cpu_info_seq.length(0);
-
-      return RMW_RET_OK;
+      if (deliver) {
+        return RMW_RET_OK;
+      }
     }
-    cpu_vals.length(0);
-    cpu_info_seq.length(0);
   }
 
   // Accelerated path: single shared DataReader for all buffer-aware publishers.
@@ -98,9 +129,19 @@ take_buffer_aware(
   const_cast<void **>(data_values.buffer())[0] = &data;
   eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
 
-  auto ret_code = info->accel_data_reader_->take(data_values, info_seq, 1);
-  if (ret_code != eprosima::fastdds::dds::RETCODE_OK) {
-    return RMW_RET_OK;
+  while (true) {
+    if (eprosima::fastdds::dds::RETCODE_OK !=
+      info->accel_data_reader_->take(data_values, info_seq, 1))
+    {
+      return RMW_RET_OK;
+    }
+    if (info_seq[0].valid_data &&
+      !rmw_fastrtps_shared_cpp::is_ignored_local_sample(subscription, info, info_seq[0]))
+    {
+      break;
+    }
+    data_values.length(0);
+    info_seq.length(0);
   }
 
   auto reset = rcpputils::make_scope_exit(
@@ -108,10 +149,6 @@ take_buffer_aware(
       data_values.length(0);
       info_seq.length(0);
     });
-
-  if (!info_seq[0].valid_data) {
-    return RMW_RET_OK;
-  }
 
   // Look up publisher metadata by writer GID.
   rmw_gid_t writer_gid{};
@@ -170,21 +207,7 @@ take_buffer_aware(
   if (message_info) {
     rmw_fastrtps_shared_cpp::_assign_message_info(
       eprosima_fastrtps_identifier, message_info, &info_seq[0]);
-
-    eprosima::fastdds::rtps::PublicationBuiltinTopicData pub_data;
-    if (eprosima::fastdds::dds::RETCODE_OK ==
-      info->accel_data_reader_->get_matched_publication_data(
-        pub_data, info_seq[0].publication_handle))
-    {
-      rmw_gid_t main_gid{};
-      auto & ud = pub_data.user_data.data_vec();
-      if (parse_endpoint_gid_from_user_data(
-            ud.data(), ud.size(), "PGID:", main_gid))
-      {
-        std::memcpy(
-          message_info->publisher_gid.data, main_gid.data, RMW_GID_STORAGE_SIZE);
-      }
-    }
+    assign_main_publisher_gid(info->accel_data_reader_, info_seq[0], message_info);
   }
 
   return RMW_RET_OK;
@@ -227,12 +250,19 @@ take_buffer_aware_serialized(
       info_seq.length(0);
     });
 
-  auto ret_code = info->cpu_data_reader_->take(data_values, info_seq, 1);
-  if (ret_code != eprosima::fastdds::dds::RETCODE_OK) {
-    return RMW_RET_OK;
-  }
-  if (!info_seq[0].valid_data) {
-    return RMW_RET_OK;
+  while (true) {
+    if (eprosima::fastdds::dds::RETCODE_OK !=
+      info->cpu_data_reader_->take(data_values, info_seq, 1))
+    {
+      return RMW_RET_OK;
+    }
+    if (info_seq[0].valid_data &&
+      !rmw_fastrtps_shared_cpp::is_ignored_local_sample(subscription, info, info_seq[0]))
+    {
+      break;
+    }
+    data_values.length(0);
+    info_seq.length(0);
   }
 
   auto buffer_size = static_cast<size_t>(receive_buffer.getBufferSize());
@@ -248,6 +278,7 @@ take_buffer_aware_serialized(
   if (message_info) {
     rmw_fastrtps_shared_cpp::_assign_message_info(
       eprosima_fastrtps_identifier, message_info, &info_seq[0]);
+    assign_main_publisher_gid(info->cpu_data_reader_, info_seq[0], message_info);
   }
 
   *taken = true;
@@ -333,6 +364,59 @@ rmw_take_sequence(
   size_t * taken,
   rmw_subscription_allocation_t * allocation)
 {
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    subscription, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    message_sequence, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    message_info_sequence, RMW_RET_INVALID_ARGUMENT);
+
+  RMW_CHECK_ARGUMENT_FOR_NULL(
+    taken, RMW_RET_INVALID_ARGUMENT);
+
+  if (0u == count) {
+    RMW_SET_ERROR_MSG("count cannot be 0");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  if (count > message_sequence->capacity) {
+    RMW_SET_ERROR_MSG("Insufficient capacity in message_sequence");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  if (count > message_info_sequence->capacity) {
+    RMW_SET_ERROR_MSG("Insufficient capacity in message_info_sequence");
+    return RMW_RET_INVALID_ARGUMENT;
+  }
+
+  RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
+    subscription, subscription->implementation_identifier, eprosima_fastrtps_identifier,
+    return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+
+  auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
+  if (info && info->is_buffer_aware_) {
+    // Buffer-aware publishers write to the buffer channels instead of the main
+    // DataReader, so take one message at a time through rmw_take_with_info,
+    // which covers the buffer channels and the main DataReader fallback.
+    *taken = 0u;
+    rmw_ret_t ret = RMW_RET_OK;
+    while (*taken < count) {
+      bool taken_flag = false;
+      ret = rmw_take_with_info(
+        subscription, message_sequence->data[*taken], &taken_flag,
+        &message_info_sequence->data[*taken], allocation);
+      if (RMW_RET_OK != ret || !taken_flag) {
+        break;
+      }
+      ++(*taken);
+    }
+    message_sequence->size = *taken;
+    message_info_sequence->size = *taken;
+    return ret;
+  }
+
   return rmw_fastrtps_shared_cpp::__rmw_take_sequence(
     eprosima_fastrtps_identifier, subscription, count, message_sequence, message_info_sequence,
     taken, allocation);
