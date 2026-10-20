@@ -317,7 +317,7 @@ rmw_destroy_subscription(rmw_node_t * node, rmw_subscription_t * subscription)
     }
     info->accel_data_reader_listener_.reset();
     if (info->accel_topic_) {
-      info->dds_participant_->delete_topic(info->accel_topic_);
+      participant_info->delete_topic(info->accel_topic_, nullptr);
       info->accel_topic_ = nullptr;
     }
 

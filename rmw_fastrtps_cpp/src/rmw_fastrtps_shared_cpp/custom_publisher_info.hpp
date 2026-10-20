@@ -81,13 +81,14 @@ private:
   RMWPublisherEvent * publisher_event_;
 };
 
+struct CustomParticipantInfo;
+
 /// Per-subscriber endpoint created for buffer-aware publishing.
 struct BufferPublisherEndpoint
 {
   std::string key;
   eprosima::fastdds::dds::DataWriter * data_writer{nullptr};
   eprosima::fastdds::dds::Topic * topic{nullptr};
-  bool owns_topic{true};
   rmw_gid_t target_subscriber_gid{};
   rmw_topic_endpoint_info_t subscriber_endpoint_info{};
   std::unordered_map<std::string, std::string> backend_metadata;
@@ -144,6 +145,8 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
 
   // DDS objects needed to create dynamic DataWriters
   eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
+  // Owner of the use-counted topics (shared with same-participant subscriptions).
+  CustomParticipantInfo * participant_info_{nullptr};
   eprosima::fastdds::dds::Publisher * dds_publisher_{nullptr};
 
   RMW_FASTRTPS_CPP_PUBLIC

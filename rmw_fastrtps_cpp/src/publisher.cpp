@@ -367,6 +367,7 @@ rmw_fastrtps_cpp::create_publisher(
     info->serialization_context_ = participant_info->buffer_serialization_context_;
     info->backend_metadata_ = backend_metadata;
     info->participant_ = dds_participant;
+    info->participant_info_ = participant_info;
     info->dds_publisher_ = publisher;
 
     info->local_endpoint_info_ = rmw_get_zero_initialized_topic_endpoint_info();
