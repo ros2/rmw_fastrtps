@@ -421,6 +421,14 @@ RMWSubscriptionEvent::set_on_new_message_callback(
 {
   if (callback) {
     auto unread_messages = subscriber_info_->data_reader_->get_unread_count(true);
+    // Buffer-aware samples are received on the buffer channel DataReaders instead.
+    for (auto * reader : {subscriber_info_->cpu_data_reader_,
+        subscriber_info_->accel_data_reader_})
+    {
+      if (reader) {
+        unread_messages += reader->get_unread_count(true);
+      }
+    }
 
     std::lock_guard<std::mutex> lock_mutex(on_new_message_m_);
 
@@ -481,12 +489,19 @@ void RMWSubscriptionEvent::update_data_available()
   }
 }
 
-void RMWSubscriptionEvent::notify_buffer_data_available(size_t count)
+void RMWSubscriptionEvent::notify_buffer_data_available(
+  eprosima::fastdds::dds::DataReader * reader)
 {
   rcpputils::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
 
-  if (on_new_message_cb_ && count > 0) {
-    on_new_message_cb_(new_message_user_data_, count);
+  // Samples are only marked as reported while a callback is set, so that the ones that
+  // arrive before are reported when it is set.
+  if (on_new_message_cb_) {
+    auto unread_messages = reader->get_unread_count(true);
+
+    if (0 < unread_messages) {
+      on_new_message_cb_(new_message_user_data_, unread_messages);
+    }
   }
 }
 
