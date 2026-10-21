@@ -15,6 +15,7 @@
 #include "buffer_endpoint_registry.hpp"
 
 #include <algorithm>
+#include <cstring>
 #include <vector>
 
 #include "rcutils/logging_macros.h"
@@ -192,6 +193,31 @@ void BufferEndpointRegistry::notify_publisher_discovered(const BufferEndpointInf
   for (const auto & cb : callbacks) {
     cb(info);
   }
+}
+
+bool BufferEndpointRegistry::get_endpoint_backend_metadata(
+  const rmw_gid_t & gid,
+  rmw_endpoint_type_t endpoint_type,
+  std::unordered_map<std::string, std::string> & backend_metadata) const
+{
+  std::lock_guard<std::mutex> lock(mutex_);
+
+  const std::vector<BufferEndpointInfo> * endpoints = nullptr;
+  if (endpoint_type == RMW_ENDPOINT_PUBLISHER) {
+    endpoints = &known_publishers_;
+  } else if (endpoint_type == RMW_ENDPOINT_SUBSCRIPTION) {
+    endpoints = &known_subscribers_;
+  } else {
+    return false;
+  }
+
+  for (const auto & endpoint : *endpoints) {
+    if (0 == std::memcmp(endpoint.gid.data, gid.data, RMW_GID_STORAGE_SIZE)) {
+      backend_metadata = endpoint.backend_metadata;
+      return true;
+    }
+  }
+  return false;
 }
 
 }  // namespace rmw_fastrtps_cpp

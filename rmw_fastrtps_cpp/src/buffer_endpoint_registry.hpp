@@ -72,6 +72,12 @@ public:
   /// Notify that a buffer-aware publisher has been discovered.
   void notify_publisher_discovered(const BufferEndpointInfo & info);
 
+  /// Copy backend metadata advertised by one discovered topic endpoint.
+  bool get_endpoint_backend_metadata(
+    const rmw_gid_t & gid,
+    rmw_endpoint_type_t endpoint_type,
+    std::unordered_map<std::string, std::string> & backend_metadata) const;
+
 private:
   struct CallbackEntry
   {
@@ -79,7 +85,7 @@ private:
     BufferEndpointDiscoveryCallback callback;
   };
 
-  std::mutex mutex_;
+  mutable std::mutex mutex_;
 
   /// topic_name -> list of (publisher_gid, callback) entries that want subscriber notifications.
   std::unordered_map<std::string, std::vector<CallbackEntry>> subscriber_callbacks_;

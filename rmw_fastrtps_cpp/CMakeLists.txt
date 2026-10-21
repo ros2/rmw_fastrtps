@@ -48,6 +48,7 @@ find_package(rosidl_buffer_backend_registry REQUIRED)
 add_library(rmw_fastrtps_cpp
   src/buffer_backend_loader.cpp
   src/buffer_endpoint_registry.cpp
+  src/get_buffer_backend_metadata.cpp
   src/get_client.cpp
   src/get_participant.cpp
   src/get_publisher.cpp

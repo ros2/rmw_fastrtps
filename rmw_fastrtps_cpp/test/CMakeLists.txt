@@ -19,6 +19,14 @@ target_link_libraries(test_logging
   rmw_fastrtps_cpp
 )
 
+ament_add_gtest(test_buffer_backend_metadata
+  test_buffer_backend_metadata.cpp
+  ../src/buffer_endpoint_registry.cpp)
+target_link_libraries(test_buffer_backend_metadata
+  rmw::rmw
+  rmw_fastrtps_cpp
+)
+
 find_package(ament_cmake_gmock REQUIRED)
 
 ament_add_gtest(test_dds_qos_to_rmw_qos rmw_fastrtps_shared_cpp/test_dds_qos_to_rmw_qos.cpp)
