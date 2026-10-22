@@ -13,7 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
+#include <mutex>
 #include <string>
+#include <vector>
 
 #include "rmw/allocators.h"
 #include "rmw/error_handling.h"
@@ -132,12 +135,30 @@ __rmw_publisher_wait_for_all_acked(
 
   eprosima::fastdds::dds::Duration_t timeout = rmw_time_to_fastrtps(wait_timeout);
 
-  eprosima::fastdds::dds::ReturnCode_t ret = info->data_writer_->wait_for_acknowledgments(timeout);
-  if (eprosima::fastdds::dds::RETCODE_OK == ret) {
-    return RMW_RET_OK;
+  // Buffer-aware samples are written by the buffer channel DataWriters instead of the
+  // main one, so wait on them too.
+  std::vector<eprosima::fastdds::dds::DataWriter *> writers{info->data_writer_};
+  std::vector<std::shared_ptr<BufferPublisherEndpoint>> endpoints;
+  if (info->is_buffer_aware_) {
+    if (info->cpu_data_writer_) {
+      writers.push_back(info->cpu_data_writer_);
+    }
+    std::lock_guard<std::mutex> lock(info->buffer_state_->mutex);
+    endpoints = info->buffer_state_->endpoints;
+  }
+  for (const auto & endpoint : endpoints) {
+    if (endpoint->data_writer) {
+      writers.push_back(endpoint->data_writer);
+    }
   }
 
-  return RMW_RET_TIMEOUT;
+  for (auto * writer : writers) {
+    if (eprosima::fastdds::dds::RETCODE_OK != writer->wait_for_acknowledgments(timeout)) {
+      return RMW_RET_TIMEOUT;
+    }
+  }
+
+  return RMW_RET_OK;
 }
 
 rmw_ret_t
