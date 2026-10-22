@@ -75,7 +75,7 @@ public:
     eprosima::fastdds::dds::DataWriter * writer,
     const eprosima::fastdds::dds::OfferedDeadlineMissedStatus & status) override
   {
-    if (writer == state_->deadline_writer.load()) {
+    if (event_ != nullptr && writer == state_->deadline_writer.load()) {
       event_->update_deadline(status.total_count, status.total_count_change);
     }
   }
