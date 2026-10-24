@@ -29,16 +29,21 @@
 
 #include "gtest/gtest.h"
 
+#include "fastdds/dds/domain/DomainParticipant.hpp"
+#include "fastdds/dds/domain/DomainParticipantFactory.hpp"
+#include "fastdds/dds/domain/DomainParticipantListener.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
+#include "fastdds/rtps/builtin/data/SubscriptionBuiltinTopicData.hpp"
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
 #include "rmw/topic_endpoint_info_array.h"
+#include "rmw_dds_common/context.hpp"
 #include "sensor_msgs/msg/image.h"
 
 #include "buffer_endpoint_registry.hpp"
 #include "rmw_fastrtps_cpp/get_subscriber.hpp"
 #include "rmw_fastrtps_shared_cpp/create_rmw_gid.hpp"
-#include "rmw_fastrtps_shared_cpp/participant.hpp"
+#include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_context_impl.hpp"
 
 namespace
@@ -54,7 +59,8 @@ thread_local InitializationGate * active_gate = nullptr;
 class DiscoveryObserver : public eprosima::fastdds::dds::DomainParticipantListener
 {
 public:
-  DiscoveryObserver(ParticipantListener * listener, InitializationGate & gate)
+  DiscoveryObserver(
+    eprosima::fastdds::dds::DomainParticipantListener * listener, InitializationGate & gate)
   : listener_(listener), gate_(gate) {}
 
   void on_participant_discovery(
@@ -82,7 +88,7 @@ public:
     bool & ignored) override;
 
 private:
-  ParticipantListener * listener_;
+  eprosima::fastdds::dds::DomainParticipantListener * listener_;
   InitializationGate & gate_;
 };
 
@@ -91,11 +97,13 @@ struct InitializationGate
   explicit InitializationGate(std::string topic)
   : dds_topic("rt" + topic) {}
 
-  void after_participant_creation(CustomParticipantInfo * info)
+  void after_participant_creation(
+    eprosima::fastdds::dds::DomainParticipant * participant,
+    eprosima::fastdds::dds::DomainParticipantListener * listener,
+    const eprosima::fastdds::dds::StatusMask & mask)
   {
-    observer = std::make_unique<DiscoveryObserver>(info->listener_, *this);
-    const auto status = info->participant_->set_listener(
-      observer.get(), eprosima::fastdds::dds::StatusMask::none());
+    observer = std::make_unique<DiscoveryObserver>(listener, *this);
+    const auto status = participant->set_listener(observer.get(), mask);
     std::unique_lock<std::mutex> lock(mutex);
     if (status != eprosima::fastdds::dds::RETCODE_OK) {
       error = "Cannot attach discovery observer";
@@ -328,41 +336,38 @@ void check_initialization_order(bool discover_during_initialization)
 
 }  // namespace
 
-namespace rmw_fastrtps_shared_cpp
+namespace eprosima::fastdds::dds
 {
 
-// Linux ELF interposition is confined to this test executable. Forward to the
-// real exported function, then hold its return until the selected DDS event has
-// been processed. rmw_create_node still executes the production initialization.
-CustomParticipantInfo * create_participant(
-  const char * identifier,
-  size_t domain_id,
-  const rmw_security_options_t * security_options,
-  const rmw_discovery_options_t * discovery_options,
-  const char * enclave,
-  rmw_dds_common::Context * common_context)
+// Intercept the Fast DDS factory, not an RMW helper that a fix may bypass.
+// The real participant is created first; its return to RMW is then gated.
+DomainParticipant * DomainParticipantFactory::create_participant(
+  DomainId_t domain_id,
+  const DomainParticipantQos & qos,
+  DomainParticipantListener * listener,
+  const StatusMask & mask)
 {
-  using Function = decltype(&create_participant);
-  static const auto original = []() -> Function {
-      Dl_info symbol{};
-      if (!dladdr(reinterpret_cast<void *>(&create_participant), &symbol) || !symbol.dli_sname) {
-        return nullptr;
-      }
-      return reinterpret_cast<Function>(dlsym(RTLD_NEXT, symbol.dli_sname));
-    }();
+  // Linux C++ ABI entry point for this non-virtual overload, with explicit this.
+  // Keep the symbol and Function signature together if the Fast DDS API changes.
+  using Function = DomainParticipant * (*)(
+    DomainParticipantFactory *, DomainId_t, const DomainParticipantQos &,
+    DomainParticipantListener *, const StatusMask &);
+  static const auto original = reinterpret_cast<Function>(dlsym(
+      RTLD_NEXT,
+      "_ZN8eprosima7fastdds3dds24DomainParticipantFactory18create_participantE"
+      "jRKNS1_20DomainParticipantQosEPNS1_25DomainParticipantListenerERKNS1_10StatusMaskE"));
   if (!original) {
-    RMW_SET_ERROR_MSG("Cannot resolve the real participant factory for the test");
+    RMW_SET_ERROR_MSG("Cannot resolve the real Fast DDS participant factory for the test");
     return nullptr;
   }
-  auto * info = original(
-    identifier, domain_id, security_options, discovery_options, enclave, common_context);
-  if (info && active_gate) {
-    active_gate->after_participant_creation(info);
+  auto * participant = original(this, domain_id, qos, listener, mask);
+  if (participant && listener && active_gate) {
+    active_gate->after_participant_creation(participant, listener, mask);
   }
-  return info;
+  return participant;
 }
 
-}  // namespace rmw_fastrtps_shared_cpp
+}  // namespace eprosima::fastdds::dds
 
 TEST(BufferDiscoveryInitialization, tracks_readers_across_initialization)
 {
