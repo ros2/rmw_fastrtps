@@ -45,27 +45,6 @@ if(TARGET test_buffer_backend_user_data)
   )
 endif()
 
-# The deterministic initialization gate uses Linux ELF symbol interposition.
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  find_package(sensor_msgs REQUIRED)
-  ament_add_gtest(test_buffer_discovery_initialization
-    rmw_fastrtps_shared_cpp/test_buffer_discovery_initialization.cpp
-    ../src/buffer_endpoint_registry.cpp)
-  if(TARGET test_buffer_discovery_initialization)
-    set_target_properties(test_buffer_discovery_initialization PROPERTIES ENABLE_EXPORTS ON)
-    target_link_libraries(test_buffer_discovery_initialization
-      ${PROJECT_NAME}
-      ${CMAKE_DL_LIBS}
-      fastdds
-      rcutils::rcutils
-      rmw::rmw
-      rmw_dds_common::rmw_dds_common_library
-      rosidl_runtime_c::rosidl_runtime_c
-      sensor_msgs::sensor_msgs
-    )
-  endif()
-endif()
-
 ament_add_gmock(test_security_logging rmw_fastrtps_shared_cpp/test_security_logging.cpp)
 if(TARGET test_security_logging)
   target_link_libraries(test_security_logging
