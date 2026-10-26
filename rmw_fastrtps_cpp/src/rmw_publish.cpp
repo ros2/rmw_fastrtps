@@ -256,6 +256,7 @@ rmw_publish(
     return RMW_RET_INVALID_ARGUMENT);
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
+  std::lock_guard<std::mutex> publish_lock(info->publish_mutex_);
   if (info->is_buffer_aware_) {
     // Check whether any non-backend-aware (legacy) subscribers exist.
     // If so, skip buffer channels entirely and fall through to the main

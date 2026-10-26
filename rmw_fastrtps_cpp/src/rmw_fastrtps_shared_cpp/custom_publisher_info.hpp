@@ -142,6 +142,9 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   eprosima::fastdds::dds::DataWriter * cpu_data_writer_{nullptr};
   eprosima::fastdds::dds::Topic * cpu_topic_{nullptr};
 
+  // Held while publishing and during wait_for_all_acked, so no sample is written while waiting
+  std::mutex publish_mutex_;
+
   // DDS objects needed to create dynamic DataWriters
   eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
   eprosima::fastdds::dds::Publisher * dds_publisher_{nullptr};
