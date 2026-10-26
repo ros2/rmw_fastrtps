@@ -45,27 +45,36 @@
 namespace
 {
 
-/// Replace the sender GID in message_info with the main publisher GID that
-/// buffer-aware side-channel DataWriters (CPU channel and per-subscriber
-/// endpoints) advertise in their user_data. Samples taken from those readers
-/// carry the side-channel writer GUID, which never matches
-/// rmw_get_gid_for_publisher(); clients such as rclcpp depend on that match
-/// to deduplicate intra-process deliveries.
+/// Get the main publisher GID that buffer-aware side-channel DataWriters (CPU
+/// channel and per-subscriber endpoints) advertise in their user_data. Samples
+/// taken from those readers carry the side-channel writer GUID instead.
+bool
+get_main_publisher_gid(
+  eprosima::fastdds::dds::DataReader * reader,
+  const eprosima::fastdds::dds::SampleInfo & sample_info,
+  rmw_gid_t & main_gid)
+{
+  eprosima::fastdds::rtps::PublicationBuiltinTopicData pub_data;
+  if (eprosima::fastdds::dds::RETCODE_OK !=
+    reader->get_matched_publication_data(pub_data, sample_info.publication_handle))
+  {
+    return false;
+  }
+  const auto & ud = pub_data.user_data.data_vec();
+  return parse_endpoint_gid_from_user_data(ud.data(), ud.size(), "PGID:", main_gid);
+}
+
+/// Replace the sender GID in message_info with the main publisher GID, which
+/// matches rmw_get_gid_for_publisher(); clients such as rclcpp depend on that
+/// match to deduplicate intra-process deliveries.
 void
 assign_main_publisher_gid(
   eprosima::fastdds::dds::DataReader * reader,
   const eprosima::fastdds::dds::SampleInfo & sample_info,
   rmw_message_info_t * message_info)
 {
-  eprosima::fastdds::rtps::PublicationBuiltinTopicData pub_data;
-  if (eprosima::fastdds::dds::RETCODE_OK !=
-    reader->get_matched_publication_data(pub_data, sample_info.publication_handle))
-  {
-    return;
-  }
   rmw_gid_t main_gid{};
-  const auto & ud = pub_data.user_data.data_vec();
-  if (parse_endpoint_gid_from_user_data(ud.data(), ud.size(), "PGID:", main_gid)) {
+  if (get_main_publisher_gid(reader, sample_info, main_gid)) {
     std::memcpy(message_info->publisher_gid.data, main_gid.data, RMW_GID_STORAGE_SIZE);
   }
 }
@@ -150,11 +159,13 @@ take_buffer_aware(
       info_seq.length(0);
     });
 
-  // Look up publisher metadata by writer GID.
+  // Look up publisher metadata by the main publisher GID, as recorded at discovery.
   rmw_gid_t writer_gid{};
-  rmw_fastrtps_shared_cpp::copy_from_fastdds_guid_to_byte_array(
-    info_seq[0].sample_identity.writer_guid(),
-    writer_gid.data);
+  if (!get_main_publisher_gid(info->accel_data_reader_, info_seq[0], writer_gid)) {
+    rmw_fastrtps_shared_cpp::copy_from_fastdds_guid_to_byte_array(
+      info_seq[0].sample_identity.writer_guid(),
+      writer_gid.data);
+  }
   std::string writer_hex = rmw_fastrtps_shared_cpp::gid_to_hex(writer_gid);
 
   rmw_topic_endpoint_info_t pub_endpoint_info = rmw_get_zero_initialized_topic_endpoint_info();
@@ -207,7 +218,7 @@ take_buffer_aware(
   if (message_info) {
     rmw_fastrtps_shared_cpp::_assign_message_info(
       eprosima_fastrtps_identifier, message_info, &info_seq[0]);
-    assign_main_publisher_gid(info->accel_data_reader_, info_seq[0], message_info);
+    std::memcpy(message_info->publisher_gid.data, writer_gid.data, RMW_GID_STORAGE_SIZE);
   }
 
   return RMW_RET_OK;
