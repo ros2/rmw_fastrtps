@@ -189,6 +189,9 @@ public:
     const void * user_data,
     rmw_event_callback_t callback) override;
 
+  RMW_FASTRTPS_CPP_PUBLIC
+  void enable_event(rmw_event_type_t event_type) override;
+
   // void
   // on_type_discovery(
   //   DomainParticipant *,
@@ -236,7 +239,7 @@ public:
   size_t publisher_count() const;
 
   RMW_FASTRTPS_CPP_PUBLIC
-  void update_data_available();
+  void update_data_available(eprosima::fastdds::dds::DataReader * reader);
 
   /// Notify that buffer data is available (bypasses main DataReader unread check).
   RMW_FASTRTPS_CPP_PUBLIC
