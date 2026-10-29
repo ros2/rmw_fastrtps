@@ -142,6 +142,10 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   eprosima::fastdds::dds::DataWriter * cpu_data_writer_{nullptr};
   eprosima::fastdds::dds::Topic * cpu_topic_{nullptr};
 
+  // Incremented before each publish, so wait_for_all_acked can tell whether a sample was
+  // published while it was waiting
+  std::atomic<uint64_t> publish_count_{0};
+
   // DDS objects needed to create dynamic DataWriters
   eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
   eprosima::fastdds::dds::Publisher * dds_publisher_{nullptr};
