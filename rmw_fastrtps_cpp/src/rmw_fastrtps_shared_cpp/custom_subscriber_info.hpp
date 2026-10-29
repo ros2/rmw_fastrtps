@@ -189,6 +189,9 @@ public:
     const void * user_data,
     rmw_event_callback_t callback) override;
 
+  RMW_FASTRTPS_CPP_PUBLIC
+  void enable_event(rmw_event_type_t event_type) override;
+
   // void
   // on_type_discovery(
   //   DomainParticipant *,
@@ -236,11 +239,11 @@ public:
   size_t publisher_count() const;
 
   RMW_FASTRTPS_CPP_PUBLIC
-  void update_data_available();
+  void update_data_available(eprosima::fastdds::dds::DataReader * reader);
 
-  /// Notify that buffer data is available (bypasses main DataReader unread check).
+  /// Notify that data is available on a buffer channel DataReader.
   RMW_FASTRTPS_CPP_PUBLIC
-  void notify_buffer_data_available(size_t count);
+  void notify_buffer_data_available(eprosima::fastdds::dds::DataReader * reader);
 
   RMW_FASTRTPS_CPP_PUBLIC
   void update_requested_deadline_missed(uint32_t total_count, uint32_t total_count_change);

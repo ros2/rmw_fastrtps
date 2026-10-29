@@ -177,6 +177,9 @@ public:
     rmw_event_callback_t callback) override;
 
   RMW_FASTRTPS_CPP_PUBLIC
+  void enable_event(rmw_event_type_t event_type) override;
+
+  RMW_FASTRTPS_CPP_PUBLIC
   void update_inconsistent_topic(uint32_t total_count, uint32_t total_count_change) override;
 
   /// Add a GUID to the internal set of unique subscriptions matched to this publisher.

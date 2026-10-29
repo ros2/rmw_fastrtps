@@ -137,7 +137,10 @@ create_pending_buffer_writers(CustomPublisherInfo * info)
 ///
 /// - Write once to the shared CPU channel for all CPU-only subscribers.
 /// - Write per-endpoint to peer-to-peer channels for non-CPU subscribers.
-void
+///
+/// A failure for one channel does not stop the others; RMW_RET_ERROR is returned
+/// if any of them failed.
+rmw_ret_t
 publish_to_buffer_endpoints(
   CustomPublisherInfo * info,
   const void * ros_message,
@@ -149,6 +152,7 @@ publish_to_buffer_endpoints(
   auto & state = *info->buffer_state_;
 
   std::lock_guard<std::mutex> lock(state.mutex);
+  rmw_ret_t ret = RMW_RET_OK;
 
   eprosima::fastdds::dds::Time_t stamp;
   eprosima::fastdds::dds::Time_t::now(stamp);
@@ -177,6 +181,7 @@ publish_to_buffer_endpoints(
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_cpp",
         "Failed to write to CPU channel DataWriter");
+      ret = RMW_RET_ERROR;
     }
   }
 
@@ -206,6 +211,7 @@ publish_to_buffer_endpoints(
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_cpp",
         "Buffer-aware serialize missing buffer backend context");
+      ret = RMW_RET_ERROR;
       continue;
     }
     bool ok = false;
@@ -218,6 +224,7 @@ publish_to_buffer_endpoints(
         "rmw_fastrtps_cpp",
         "Buffer-aware serialize threw for endpoint '%s': %s",
         endpoint->key.c_str(), e.what());
+      ret = RMW_RET_ERROR;
       continue;
     }
 
@@ -225,6 +232,7 @@ publish_to_buffer_endpoints(
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_cpp",
         "Buffer-aware serialize failed for endpoint '%s'", endpoint->key.c_str());
+      ret = RMW_RET_ERROR;
       continue;
     }
 
@@ -240,8 +248,14 @@ publish_to_buffer_endpoints(
       RCUTILS_LOG_ERROR_NAMED(
         "rmw_fastrtps_cpp",
         "Buffer-aware write failed for endpoint '%s'", endpoint->key.c_str());
+      ret = RMW_RET_ERROR;
     }
   }
+
+  if (RMW_RET_OK != ret) {
+    RMW_SET_ERROR_MSG("cannot publish data");
+  }
+  return ret;
 }
 
 }  // namespace
@@ -281,14 +295,14 @@ rmw_publish(
     }
 
     if (total_matched <= buffer_aware_count) {
-      publish_to_buffer_endpoints(info, ros_message, publisher);
+      rmw_ret_t ret = publish_to_buffer_endpoints(info, ros_message, publisher);
       // Liveliness is monitored on the main DataWriter, which was not written to.
       if (info->data_writer_->get_qos().liveliness().kind ==
         eprosima::fastdds::dds::MANUAL_BY_TOPIC_LIVELINESS_QOS)
       {
         info->data_writer_->assert_liveliness();
       }
-      return RMW_RET_OK;
+      return ret;
     }
   }
 

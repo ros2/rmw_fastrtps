@@ -83,9 +83,8 @@ public:
 
   void on_data_available(eprosima::fastdds::dds::DataReader * reader) override
   {
-    auto unread = reader->get_unread_count();
     if (event_) {
-      event_->notify_buffer_data_available(unread > 0 ? static_cast<size_t>(unread) : 1);
+      event_->notify_buffer_data_available(reader);
     }
   }
 
