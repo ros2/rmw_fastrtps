@@ -114,6 +114,9 @@ struct BufferPublisherState
   std::vector<PendingBufferPublisher> pending;
   /// GIDs of discovered CPU-only subscribers served by the shared CPU channel.
   std::vector<rmw_gid_t> cpu_only_subscribers;
+  /// Buffer channel DataWriter whose offered deadline status is reported for the
+  /// publisher. Atomic because the listener reading it must not take `mutex`.
+  std::atomic<eprosima::fastdds::dds::DataWriter *> deadline_writer{nullptr};
 };
 
 typedef struct CustomPublisherInfo : public CustomEventInfo
@@ -141,6 +144,8 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   // CPU-only shared channel (one writer serves all CPU-only subscribers)
   eprosima::fastdds::dds::DataWriter * cpu_data_writer_{nullptr};
   eprosima::fastdds::dds::Topic * cpu_topic_{nullptr};
+  // Reports the deadline status of the buffer channel DataWriters to publisher_event_.
+  std::shared_ptr<eprosima::fastdds::dds::DataWriterListener> buffer_data_writer_listener_;
 
   // DDS objects needed to create dynamic DataWriters
   eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};

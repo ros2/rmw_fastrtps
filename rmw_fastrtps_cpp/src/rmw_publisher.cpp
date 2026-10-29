@@ -391,6 +391,7 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       info->dds_publisher_->delete_datawriter(info->cpu_data_writer_);
       info->cpu_data_writer_ = nullptr;
     }
+    info->buffer_data_writer_listener_.reset();
     if (info->cpu_topic_) {
       auto * participant_info =
         static_cast<CustomParticipantInfo *>(node->context->impl->participant_info);
