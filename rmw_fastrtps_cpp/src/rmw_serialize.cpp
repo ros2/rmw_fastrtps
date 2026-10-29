@@ -57,7 +57,7 @@ rmw_serialize(
   ser.set_encoding_flag(eprosima::fastcdr::EncodingAlgorithmFlag::PLAIN_CDR);
 
   auto ret = tss.serializeROSmessage(ros_message, ser, callbacks);
-  serialized_message->buffer_length = data_length;
+  serialized_message->buffer_length = ser.get_serialized_data_length();
   serialized_message->buffer_capacity = data_length;
   return ret == true ? RMW_RET_OK : RMW_RET_ERROR;
 }
