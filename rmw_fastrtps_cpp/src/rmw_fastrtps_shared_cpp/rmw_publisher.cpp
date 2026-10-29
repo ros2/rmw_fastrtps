@@ -134,60 +134,64 @@ __rmw_publisher_wait_for_all_acked(
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
 
-  // A sample published while waiting would need a new acknowledgement.
-  std::lock_guard<std::mutex> publish_lock(info->publish_mutex_);
-
   const auto now = std::chrono::steady_clock::now();
   const auto total = std::chrono::nanoseconds(rmw_time_total_nsec(wait_timeout));
   const bool infinite = rmw_time_equal(wait_timeout, RMW_DURATION_INFINITE) ||
     total >= std::chrono::steady_clock::time_point::max() - now;
   const auto deadline = infinite ? now : now + total;
 
-  // Buffer-aware samples are written by the buffer channel DataWriters instead of the
-  // main one, so wait on them too.
-  std::vector<eprosima::fastdds::dds::DataWriter *> writers{info->data_writer_};
-  std::vector<std::shared_ptr<BufferPublisherEndpoint>> endpoints;
-  if (info->is_buffer_aware_) {
-    if (info->cpu_data_writer_) {
-      writers.push_back(info->cpu_data_writer_);
-    }
-    std::lock_guard<std::mutex> lock(info->buffer_state_->mutex);
-    endpoints = info->buffer_state_->endpoints;
-  }
-  for (const auto & endpoint : endpoints) {
-    if (endpoint->data_writer) {
-      writers.push_back(endpoint->data_writer);
-    }
-  }
+  // A sample published while waiting may have gone to a DataWriter that was already checked,
+  // so check them all again until no sample was published during a pass.
+  uint64_t published;
+  do {
+    published = info->publish_count_.load();
 
-  // Check every DataWriter without waiting first, so they all send their heartbeats at once,
-  // and keep the ones that are not acknowledged yet.
-  std::vector<eprosima::fastdds::dds::DataWriter *> pending;
-  for (auto * writer : writers) {
-    if (eprosima::fastdds::dds::RETCODE_OK !=
-      writer->wait_for_acknowledgments(eprosima::fastdds::dds::Duration_t(0, 0)))
-    {
-      pending.push_back(writer);
+    // Buffer-aware samples are written by the buffer channel DataWriters instead of the
+    // main one, so wait on them too.
+    std::vector<eprosima::fastdds::dds::DataWriter *> writers{info->data_writer_};
+    std::vector<std::shared_ptr<BufferPublisherEndpoint>> endpoints;
+    if (info->is_buffer_aware_) {
+      if (info->cpu_data_writer_) {
+        writers.push_back(info->cpu_data_writer_);
+      }
+      std::lock_guard<std::mutex> lock(info->buffer_state_->mutex);
+      endpoints = info->buffer_state_->endpoints;
     }
-  }
+    for (const auto & endpoint : endpoints) {
+      if (endpoint->data_writer) {
+        writers.push_back(endpoint->data_writer);
+      }
+    }
 
-  // Wait on the remaining ones until the deadline. Once it has passed, the remaining time is
-  // zero, so the last DataWriters are still checked.
-  for (auto * writer : pending) {
-    eprosima::fastdds::dds::Duration_t timeout = eprosima::fastdds::dds::c_TimeInfinite;
-    if (!infinite) {
-      const auto remaining = std::max(
-        std::chrono::duration_cast<std::chrono::nanoseconds>(
-          deadline - std::chrono::steady_clock::now()),
-        std::chrono::nanoseconds(0));
-      timeout = eprosima::fastdds::dds::Duration_t(
-        static_cast<int32_t>(remaining.count() / 1000000000),
-        static_cast<uint32_t>(remaining.count() % 1000000000));
+    // Check every DataWriter without waiting first, so they all send their heartbeats at once,
+    // and keep the ones that are not acknowledged yet.
+    std::vector<eprosima::fastdds::dds::DataWriter *> pending;
+    for (auto * writer : writers) {
+      if (eprosima::fastdds::dds::RETCODE_OK !=
+        writer->wait_for_acknowledgments(eprosima::fastdds::dds::Duration_t(0, 0)))
+      {
+        pending.push_back(writer);
+      }
     }
-    if (eprosima::fastdds::dds::RETCODE_OK != writer->wait_for_acknowledgments(timeout)) {
-      return RMW_RET_TIMEOUT;
+
+    // Wait on the remaining ones until the deadline. Once it has passed, the remaining time is
+    // zero, so the last DataWriters are still checked.
+    for (auto * writer : pending) {
+      eprosima::fastdds::dds::Duration_t timeout = eprosima::fastdds::dds::c_TimeInfinite;
+      if (!infinite) {
+        const auto remaining = std::max(
+          std::chrono::duration_cast<std::chrono::nanoseconds>(
+            deadline - std::chrono::steady_clock::now()),
+          std::chrono::nanoseconds(0));
+        timeout = eprosima::fastdds::dds::Duration_t(
+          static_cast<int32_t>(remaining.count() / 1000000000),
+          static_cast<uint32_t>(remaining.count() % 1000000000));
+      }
+      if (eprosima::fastdds::dds::RETCODE_OK != writer->wait_for_acknowledgments(timeout)) {
+        return RMW_RET_TIMEOUT;
+      }
     }
-  }
+  } while (info->publish_count_.load() != published);
 
   return RMW_RET_OK;
 }

@@ -96,7 +96,7 @@ __rmw_publish_serialized_message(
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
   RCUTILS_CHECK_FOR_NULL_WITH_MSG(info, "publisher info pointer is null", return RMW_RET_ERROR);
-  std::lock_guard<std::mutex> publish_lock(info->publish_mutex_);
+  info->publish_count_.fetch_add(1);
 
   eprosima::fastcdr::FastBuffer buffer(
     reinterpret_cast<char *>(serialized_message->buffer), serialized_message->buffer_length);
@@ -148,7 +148,7 @@ __rmw_publish_loaned_message(
   RMW_CHECK_ARGUMENT_FOR_NULL(ros_message, RMW_RET_INVALID_ARGUMENT);
 
   auto info = static_cast<CustomPublisherInfo *>(publisher->data);
-  std::lock_guard<std::mutex> publish_lock(info->publish_mutex_);
+  info->publish_count_.fetch_add(1);
   eprosima::fastdds::dds::Time_t stamp;
   eprosima::fastdds::dds::Time_t::now(stamp);
   TRACETOOLS_TRACEPOINT(rmw_publish, publisher, ros_message, stamp.to_ns());
