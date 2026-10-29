@@ -105,14 +105,8 @@ _take(
         info_seq.length(0);
       });
 
-    if (subscription->options.ignore_local_publications) {
-      auto sample_writer_guid =
-        eprosima::fastdds::rtps::iHandle2GUID(info_seq[0].publication_handle);
-
-      if (sample_writer_guid.guidPrefix == info->data_reader_->guid().guidPrefix) {
-        // This is a local publication. Ignore it
-        continue;
-      }
+    if (is_ignored_local_sample(subscription, info, info_seq[0])) {
+      continue;
     }
 
     if (info_seq[0].valid_data) {
@@ -303,14 +297,8 @@ _take_serialized_message(
       });
 
     if (info_seq[0].valid_data) {
-      if (subscription->options.ignore_local_publications) {
-        auto sample_writer_guid =
-          eprosima::fastdds::rtps::iHandle2GUID(info_seq[0].publication_handle);
-
-        if (sample_writer_guid.guidPrefix == info->data_reader_->guid().guidPrefix) {
-          // This is a local publication. Ignore it
-          continue;
-        }
+      if (is_ignored_local_sample(subscription, info, info_seq[0])) {
+        continue;
       }
       auto buffer_size = static_cast<size_t>(buffer.getBufferSize());
       if (serialized_message->buffer_capacity < buffer_size) {
@@ -426,7 +414,7 @@ _take_dynamic_message(
         info_seq.length(0);
       });
 
-    if (info_seq[0].valid_data) {
+    if (info_seq[0].valid_data && !is_ignored_local_sample(subscription, info, info_seq[0])) {
       if (message_info) {
         _assign_message_info(identifier, message_info, &info_seq[0]);
       }
@@ -584,7 +572,9 @@ __rmw_take_loaned_message_internal(
   while (eprosima::fastdds::dds::RETCODE_OK ==
     info->data_reader_->take(item->data_seq, item->info_seq, 1))
   {
-    if (item->info_seq[0].valid_data) {
+    if (item->info_seq[0].valid_data &&
+      !is_ignored_local_sample(subscription, info, item->info_seq[0]))
+    {
       if (nullptr != message_info) {
         _assign_message_info(identifier, message_info, &item->info_seq[0]);
       }

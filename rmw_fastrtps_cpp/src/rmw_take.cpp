@@ -30,6 +30,7 @@
 #include "rmw_fastrtps_shared_cpp/guid_utils.hpp"
 #include "rmw_fastrtps_shared_cpp/qos.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
+#include "rmw_fastrtps_shared_cpp/subscription.hpp"
 #include "rmw_fastrtps_shared_cpp/TypeSupport.hpp"
 
 #include "fastdds/dds/builtin/topic/PublicationBuiltinTopicData.hpp"
@@ -69,22 +70,6 @@ assign_main_publisher_gid(
   }
 }
 
-/// Whether a sample must be dropped because the subscription ignores local
-/// publications and the sample was written by a DataWriter of this participant.
-bool
-is_ignored_local_sample(
-  const rmw_subscription_t * subscription,
-  const CustomSubscriberInfo * info,
-  const eprosima::fastdds::dds::SampleInfo & sample_info)
-{
-  if (!subscription->options.ignore_local_publications) {
-    return false;
-  }
-  auto sample_writer_guid =
-    eprosima::fastdds::rtps::iHandle2GUID(sample_info.publication_handle);
-  return sample_writer_guid.guidPrefix == info->data_reader_->guid().guidPrefix;
-}
-
 rmw_ret_t
 take_buffer_aware(
   const rmw_subscription_t * subscription,
@@ -112,7 +97,7 @@ take_buffer_aware(
       info->cpu_data_reader_->take(cpu_vals, cpu_info_seq, 1))
     {
       const bool deliver = cpu_info_seq[0].valid_data &&
-        !is_ignored_local_sample(subscription, info, cpu_info_seq[0]);
+        !rmw_fastrtps_shared_cpp::is_ignored_local_sample(subscription, info, cpu_info_seq[0]);
       if (deliver) {
         *taken = true;
         if (message_info) {
@@ -150,7 +135,9 @@ take_buffer_aware(
     {
       return RMW_RET_OK;
     }
-    if (info_seq[0].valid_data && !is_ignored_local_sample(subscription, info, info_seq[0])) {
+    if (info_seq[0].valid_data &&
+      !rmw_fastrtps_shared_cpp::is_ignored_local_sample(subscription, info, info_seq[0]))
+    {
       break;
     }
     data_values.length(0);
@@ -269,7 +256,9 @@ take_buffer_aware_serialized(
     {
       return RMW_RET_OK;
     }
-    if (info_seq[0].valid_data && !is_ignored_local_sample(subscription, info, info_seq[0])) {
+    if (info_seq[0].valid_data &&
+      !rmw_fastrtps_shared_cpp::is_ignored_local_sample(subscription, info, info_seq[0]))
+    {
       break;
     }
     data_values.length(0);
@@ -351,6 +340,15 @@ rmw_take_with_info(
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
     subscription, subscription->implementation_identifier, eprosima_fastrtps_identifier,
     return RMW_RET_INCORRECT_RMW_IMPLEMENTATION);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    ros_message, "ros message handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    taken, "taken handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
+  RMW_CHECK_FOR_NULL_WITH_MSG(
+    message_info, "message info handle is null",
+    return RMW_RET_INVALID_ARGUMENT);
 
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
   if (info->is_buffer_aware_) {
