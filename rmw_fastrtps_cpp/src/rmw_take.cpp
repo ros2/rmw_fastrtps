@@ -66,7 +66,9 @@ get_main_publisher_gid(
 
 /// Replace the sender GID in message_info with the main publisher GID, which
 /// matches rmw_get_gid_for_publisher(); clients such as rclcpp depend on that
-/// match to deduplicate intra-process deliveries.
+/// match to deduplicate intra-process deliveries. It is unknown when the publisher
+/// is no longer matched, or does not advertise it (older rmw_fastrtps_cpp); the
+/// sender GID is kept then.
 void
 assign_main_publisher_gid(
   eprosima::fastdds::dds::DataReader * reader,
@@ -76,6 +78,12 @@ assign_main_publisher_gid(
   rmw_gid_t main_gid{};
   if (get_main_publisher_gid(reader, sample_info, main_gid)) {
     std::memcpy(message_info->publisher_gid.data, main_gid.data, RMW_GID_STORAGE_SIZE);
+  } else {
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_fastrtps_cpp",
+      "Main publisher GID of a buffer-aware sample is unknown, "
+      "using the CPU channel GID '%s'",
+      rmw_fastrtps_shared_cpp::gid_to_hex(message_info->publisher_gid).c_str());
   }
 }
 
@@ -160,11 +168,18 @@ take_buffer_aware(
     });
 
   // Look up publisher metadata by the main publisher GID, as recorded at discovery.
+  // It is unknown once the publisher is no longer matched, e.g. when it was destroyed
+  // before this sample was taken; the accelerated channel GID is used then.
   rmw_gid_t writer_gid{};
   if (!get_main_publisher_gid(info->accel_data_reader_, info_seq[0], writer_gid)) {
     rmw_fastrtps_shared_cpp::copy_from_fastdds_guid_to_byte_array(
       info_seq[0].sample_identity.writer_guid(),
       writer_gid.data);
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_fastrtps_cpp",
+      "Main publisher GID of a buffer-aware sample is unknown, "
+      "using the accelerated channel GID '%s'",
+      rmw_fastrtps_shared_cpp::gid_to_hex(writer_gid).c_str());
   }
   std::string writer_hex = rmw_fastrtps_shared_cpp::gid_to_hex(writer_gid);
 
