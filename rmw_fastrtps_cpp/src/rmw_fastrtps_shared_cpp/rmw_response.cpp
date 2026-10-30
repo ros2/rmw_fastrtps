@@ -12,7 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <cassert>
+#include <chrono>
 
 #include "fastcdr/Cdr.h"
 
@@ -33,6 +35,9 @@
 
 namespace rmw_fastrtps_shared_cpp
 {
+// Longest a server waits for a client's response reader to be matched before dropping the response
+static constexpr std::chrono::seconds kClientDiscoveryTimeout{10};
+
 rmw_ret_t
 __rmw_take_response(
   const char * identifier,
@@ -154,9 +159,13 @@ __rmw_send_response(
     auto listener = info->pub_listener_;
     auto writer_max_blocking_time =
       info->response_writer_->get_qos().reliability().max_blocking_time;
-    auto max_blocking_time =
+    // The client's reader is discovered independently of its request, and on a loaded system
+    // that can take much longer than max_blocking_time. The response is lost if it is sent
+    // before the match, so keep waiting for as long as the client is still there.
+    auto max_blocking_time = std::max<std::chrono::nanoseconds>(
       std::chrono::seconds(writer_max_blocking_time.seconds) +
-      std::chrono::nanoseconds(writer_max_blocking_time.nanosec);
+      std::chrono::nanoseconds(writer_max_blocking_time.nanosec),
+      kClientDiscoveryTimeout);
     client_present_t ret = listener->check_for_subscription(related_guid, max_blocking_time);
     if (ret == client_present_t::GONE) {
       return RMW_RET_OK;
