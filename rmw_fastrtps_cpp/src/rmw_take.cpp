@@ -48,12 +48,23 @@ namespace
 /// Get the main publisher GID that buffer-aware side-channel DataWriters (CPU
 /// channel and per-subscriber endpoints) advertise in their user_data. Samples
 /// taken from those readers carry the side-channel writer GUID instead.
+/// Cached per writer until it is unmatched, as this is called for every sample.
 bool
 get_main_publisher_gid(
+  BufferSubscriptionState & state,
   eprosima::fastdds::dds::DataReader * reader,
   const eprosima::fastdds::dds::SampleInfo & sample_info,
   rmw_gid_t & main_gid)
 {
+  {
+    std::lock_guard<std::mutex> lock(state.mutex);
+    auto it = state.main_publisher_gids.find(sample_info.publication_handle);
+    if (it != state.main_publisher_gids.end()) {
+      main_gid = it->second;
+      return true;
+    }
+  }
+
   eprosima::fastdds::rtps::PublicationBuiltinTopicData pub_data;
   if (eprosima::fastdds::dds::RETCODE_OK !=
     reader->get_matched_publication_data(pub_data, sample_info.publication_handle))
@@ -61,7 +72,13 @@ get_main_publisher_gid(
     return false;
   }
   const auto & ud = pub_data.user_data.data_vec();
-  return parse_endpoint_gid_from_user_data(ud.data(), ud.size(), "PGID:", main_gid);
+  if (!parse_endpoint_gid_from_user_data(ud.data(), ud.size(), "PGID:", main_gid)) {
+    return false;
+  }
+
+  std::lock_guard<std::mutex> lock(state.mutex);
+  state.main_publisher_gids[sample_info.publication_handle] = main_gid;
+  return true;
 }
 
 /// Replace the sender GID in message_info with the main publisher GID, which
@@ -71,12 +88,13 @@ get_main_publisher_gid(
 /// sender GID is kept then.
 void
 assign_main_publisher_gid(
+  BufferSubscriptionState & state,
   eprosima::fastdds::dds::DataReader * reader,
   const eprosima::fastdds::dds::SampleInfo & sample_info,
   rmw_message_info_t * message_info)
 {
   rmw_gid_t main_gid{};
-  if (get_main_publisher_gid(reader, sample_info, main_gid)) {
+  if (get_main_publisher_gid(state, reader, sample_info, main_gid)) {
     std::memcpy(message_info->publisher_gid.data, main_gid.data, RMW_GID_STORAGE_SIZE);
   } else {
     RCUTILS_LOG_DEBUG_NAMED(
@@ -120,7 +138,8 @@ take_buffer_aware(
         if (message_info) {
           rmw_fastrtps_shared_cpp::_assign_message_info(
             eprosima_fastrtps_identifier, message_info, &cpu_info_seq[0]);
-          assign_main_publisher_gid(info->cpu_data_reader_, cpu_info_seq[0], message_info);
+          assign_main_publisher_gid(
+            *info->buffer_state_, info->cpu_data_reader_, cpu_info_seq[0], message_info);
         }
       }
       cpu_vals.length(0);
@@ -171,7 +190,9 @@ take_buffer_aware(
   // It is unknown once the publisher is no longer matched, e.g. when it was destroyed
   // before this sample was taken; the accelerated channel GID is used then.
   rmw_gid_t writer_gid{};
-  if (!get_main_publisher_gid(info->accel_data_reader_, info_seq[0], writer_gid)) {
+  if (!get_main_publisher_gid(
+      *info->buffer_state_, info->accel_data_reader_, info_seq[0], writer_gid))
+  {
     rmw_fastrtps_shared_cpp::copy_from_fastdds_guid_to_byte_array(
       info_seq[0].sample_identity.writer_guid(),
       writer_gid.data);
@@ -304,7 +325,8 @@ take_buffer_aware_serialized(
   if (message_info) {
     rmw_fastrtps_shared_cpp::_assign_message_info(
       eprosima_fastrtps_identifier, message_info, &info_seq[0]);
-    assign_main_publisher_gid(info->cpu_data_reader_, info_seq[0], message_info);
+    assign_main_publisher_gid(
+      *info->buffer_state_, info->cpu_data_reader_, info_seq[0], message_info);
   }
 
   *taken = true;
