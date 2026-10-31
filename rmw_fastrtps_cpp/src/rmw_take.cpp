@@ -213,6 +213,45 @@ take_buffer_aware(
   return RMW_RET_OK;
 }
 
+// Samples on the accelerated DataReader carry buffer descriptors, which cannot be returned as
+// serialized bytes. Take one so that it does not keep the wait set triggered, and fail.
+rmw_ret_t
+reject_accelerated_serialized_sample(
+  const rmw_subscription_t * subscription,
+  CustomSubscriberInfo * info)
+{
+  if (!info->accel_data_reader_) {
+    return RMW_RET_OK;
+  }
+
+  eprosima::fastcdr::FastBuffer receive_buffer;
+  rmw_fastrtps_shared_cpp::SerializedData data;
+  data.type = rmw_fastrtps_shared_cpp::FASTDDS_SERIALIZED_DATA_TYPE_CDR_BUFFER;
+  data.data = &receive_buffer;
+  data.impl = nullptr;
+
+  eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> data_values;
+  const_cast<void **>(data_values.buffer())[0] = &data;
+  eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
+
+  while (eprosima::fastdds::dds::RETCODE_OK ==
+    info->accel_data_reader_->take(data_values, info_seq, 1))
+  {
+    const bool valid = info_seq[0].valid_data &&
+      !rmw_fastrtps_shared_cpp::is_ignored_local_sample(subscription, info, info_seq[0]);
+    data_values.length(0);
+    info_seq.length(0);
+    if (valid) {
+      RMW_SET_ERROR_MSG(
+        "cannot take a serialized message received through a non-CPU buffer backend, "
+        "set acceptable_buffer_backends to 'cpu' to take serialized messages");
+      return RMW_RET_ERROR;
+    }
+  }
+
+  return RMW_RET_OK;
+}
+
 // Serialized counterpart of take_buffer_aware. Reads raw CDR bytes from the
 // shared-CPU-channel DataReader that buffer-aware publishers use to serve
 // CPU-only subscribers (which is what foxglove_bridge / ros2 bag record /
@@ -231,7 +270,7 @@ take_buffer_aware_serialized(
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
 
   if (!info->cpu_data_reader_) {
-    return RMW_RET_OK;
+    return reject_accelerated_serialized_sample(subscription, info);
   }
 
   eprosima::fastcdr::FastBuffer receive_buffer;
@@ -254,7 +293,7 @@ take_buffer_aware_serialized(
     if (eprosima::fastdds::dds::RETCODE_OK !=
       info->cpu_data_reader_->take(data_values, info_seq, 1))
     {
-      return RMW_RET_OK;
+      return reject_accelerated_serialized_sample(subscription, info);
     }
     if (info_seq[0].valid_data &&
       !rmw_fastrtps_shared_cpp::is_ignored_local_sample(subscription, info, info_seq[0]))
