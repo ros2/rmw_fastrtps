@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.3.6 (2026-11-03)
+------------------
+* Fixes in `rmw_wait` (`#895 <https://github.com/ros2/rmw_fastrtps/issues/895>`_) (`#916 <https://github.com/ros2/rmw_fastrtps/issues/916>`_)
+* Contributors: mergify[bot]
+
 9.3.5 (2026-07-30)
 ------------------
 

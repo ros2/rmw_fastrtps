@@ -2,6 +2,9 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.3.6 (2026-11-03)
+------------------
+
 9.3.5 (2026-07-30)
 ------------------
 * Fix UB in accessing the keys (`#879 <https://github.com/ros2/rmw_fastrtps/issues/879>`_) (`#883 <https://github.com/ros2/rmw_fastrtps/issues/883>`_)

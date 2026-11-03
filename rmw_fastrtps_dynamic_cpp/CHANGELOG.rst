@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.3.6 (2026-11-03)
+------------------
+* Check remaining buffer size before allocating C wstring sequences (`#910 <https://github.com/ros2/rmw_fastrtps/issues/910>`_) (`#912 <https://github.com/ros2/rmw_fastrtps/issues/912>`_)
+* Contributors: mergify[bot]
+
 9.3.5 (2026-07-30)
 ------------------
 * Fix UB in accessing the keys (`#879 <https://github.com/ros2/rmw_fastrtps/issues/879>`_) (`#883 <https://github.com/ros2/rmw_fastrtps/issues/883>`_)
