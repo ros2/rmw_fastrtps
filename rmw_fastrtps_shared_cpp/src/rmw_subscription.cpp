@@ -140,6 +140,11 @@ __rmw_subscription_set_content_filter(
   eprosima::fastdds::dds::TopicDescription * des_topic = nullptr;
   const char * identifier = subscription->implementation_identifier;
 
+  // The listener callbacks enabled for initialized events and the new message callback are
+  // carried over to the new DataReader. They are enabled when it is created, because it may
+  // match endpoints and raise statuses before create_datareader() returns.
+  const eprosima::fastdds::dds::StatusMask listener_mask = info->data_reader_->get_status_mask();
+
   rmw_ret_t ret = rmw_fastrtps_shared_cpp::__rmw_destroy_subscription(
     identifier,
     info->node_,
@@ -177,7 +182,8 @@ __rmw_subscription_set_content_filter(
       subscriber,
       des_topic,
       info->data_reader_listener_,
-      &info->data_reader_))
+      &info->data_reader_,
+      listener_mask))
   {
     RMW_SET_ERROR_MSG("create_datareader() could not create data reader");
     return RMW_RET_ERROR;

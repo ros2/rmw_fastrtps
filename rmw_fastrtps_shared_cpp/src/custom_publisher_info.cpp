@@ -204,10 +204,10 @@ void RMWPublisherEvent::set_on_new_event_callback(
   const void * user_data,
   rmw_event_callback_t callback)
 {
+  // The listener callback for event_type was enabled by enable_event() when the event was
+  // initialized, and stays enabled when the callback is removed, because the event guard
+  // that rmw_wait() waits on is raised by that listener callback.
   rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
-
-  eprosima::fastdds::dds::StatusMask status_mask =
-    publisher_info_->data_writer_->get_status_mask();
 
   if (callback) {
     switch (event_type) {
@@ -261,20 +261,47 @@ void RMWPublisherEvent::set_on_new_event_callback(
 
     user_data_[event_type] = user_data;
     on_new_event_cb_[event_type] = callback;
-
-    status_mask |= rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
   } else {
     user_data_[event_type] = nullptr;
     on_new_event_cb_[event_type] = nullptr;
+  }
+}
 
-    // publication_matched status should be kept enabled, since we need to
-    // keep tracking matched subscriptions
-    if (RMW_EVENT_PUBLICATION_MATCHED != event_type) {
-      status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
+void RMWPublisherEvent::enable_event(rmw_event_type_t event_type)
+{
+  // Inconsistent topic is reported by the topic listener, which is always enabled.
+  if (RMW_EVENT_PUBLISHER_INCOMPATIBLE_TYPE == event_type) {
+    return;
+  }
+
+  eprosima::fastdds::dds::DataWriter * data_writer = publisher_info_->data_writer_;
+  const eprosima::fastdds::dds::StatusMask event_mask =
+    rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
+  bool newly_enabled = false;
+  {
+    // set_listener() acquires the writer's internal mutex, so on_new_event_m_ must not be
+    // held here. listener_mask_m_ only keeps concurrent mask updates from overwriting
+    // each other.
+    std::lock_guard<std::mutex> lock(listener_mask_m_);
+    eprosima::fastdds::dds::StatusMask status_mask = data_writer->get_status_mask();
+    if (!status_mask.is_active(event_mask)) {
+      status_mask |= event_mask;
+      data_writer->set_listener(publisher_info_->data_writer_listener_, status_mask);
+      newly_enabled = true;
     }
   }
 
-  publisher_info_->data_writer_->set_listener(publisher_info_->data_writer_listener_, status_mask);
+  // A status raised before its listener callback was enabled never reached the listener,
+  // but it stays in the writer's status changes until a get_*_status() call reads it.
+  // Any status raised after the callback was enabled goes through the listener, so
+  // checking here, after set_listener(), leaves no window in which a status is missed.
+  // If the callback was already enabled, every status went through the listener and the
+  // status change may be stale: Fast DDS sets it again after calling the listener, and
+  // take_event() does not read it when the listener already delivered the status.
+  if (newly_enabled && data_writer->get_status_changes().is_active(event_mask)) {
+    std::lock_guard<std::mutex> lock(on_new_event_m_);
+    event_guard[event_type].set_trigger_value(true);
+  }
 }
 
 void RMWPublisherEvent::track_unique_subscription(eprosima::fastrtps::rtps::GUID_t guid)

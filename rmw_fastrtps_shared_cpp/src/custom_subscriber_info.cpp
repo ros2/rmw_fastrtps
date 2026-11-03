@@ -61,9 +61,7 @@ void
 CustomDataReaderListener::on_data_available(
   eprosima::fastdds::dds::DataReader * reader)
 {
-  (void)reader;
-
-  subscription_event_->update_data_available();
+  subscription_event_->update_data_available(reader);
 }
 
 void
@@ -239,10 +237,10 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
   const void * user_data,
   rmw_event_callback_t callback)
 {
+  // The listener callback for event_type was enabled by enable_event() when the event was
+  // initialized, and stays enabled when the callback is removed, because the event guard
+  // that rmw_wait() waits on is raised by that listener callback.
   rcpputils::unique_lock<std::mutex> lock_mutex(on_new_event_m_);
-
-  eprosima::fastdds::dds::StatusMask status_mask =
-    subscriber_info_->data_reader_->get_status_mask();
 
   if (callback) {
     switch (event_type) {
@@ -318,21 +316,47 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
 
     user_data_[event_type] = user_data;
     on_new_event_cb_[event_type] = callback;
-
-    status_mask |= rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
   } else {
     user_data_[event_type] = nullptr;
     on_new_event_cb_[event_type] = nullptr;
+  }
+}
 
-    // subscription_matched status should be kept enabled, since we need to
-    // keep tracking matched publications
-    if (RMW_EVENT_SUBSCRIPTION_MATCHED != event_type) {
-      status_mask &= ~rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
+void RMWSubscriptionEvent::enable_event(rmw_event_type_t event_type)
+{
+  // Inconsistent topic is reported by the topic listener, which is always enabled.
+  if (RMW_EVENT_SUBSCRIPTION_INCOMPATIBLE_TYPE == event_type) {
+    return;
+  }
+
+  eprosima::fastdds::dds::DataReader * data_reader = subscriber_info_->data_reader_;
+  const eprosima::fastdds::dds::StatusMask event_mask =
+    rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
+  bool newly_enabled = false;
+  {
+    // set_listener() acquires the reader's internal mutex, so on_new_event_m_ must not be
+    // held here. listener_mask_m_ only keeps concurrent mask updates from overwriting
+    // each other.
+    std::lock_guard<std::mutex> lock(listener_mask_m_);
+    eprosima::fastdds::dds::StatusMask status_mask = data_reader->get_status_mask();
+    if (!status_mask.is_active(event_mask)) {
+      status_mask |= event_mask;
+      data_reader->set_listener(subscriber_info_->data_reader_listener_, status_mask);
+      newly_enabled = true;
     }
   }
 
-  subscriber_info_->data_reader_->set_listener(
-    subscriber_info_->data_reader_listener_, status_mask);
+  // A status raised before its listener callback was enabled never reached the listener,
+  // but it stays in the reader's status changes until a get_*_status() call reads it.
+  // Any status raised after the callback was enabled goes through the listener, so
+  // checking here, after set_listener(), leaves no window in which a status is missed.
+  // If the callback was already enabled, every status went through the listener and the
+  // status change may be stale: Fast DDS sets it again after calling the listener, and
+  // take_event() does not read it when the listener already delivered the status.
+  if (newly_enabled && data_reader->get_status_changes().is_active(event_mask)) {
+    std::lock_guard<std::mutex> lock(on_new_event_m_);
+    event_guard[event_type].set_trigger_value(true);
+  }
 }
 
 void
@@ -352,6 +376,7 @@ RMWSubscriptionEvent::set_on_new_message_callback(
     new_message_user_data_ = user_data;
     on_new_message_cb_ = callback;
 
+    std::lock_guard<std::mutex> lock_mask(listener_mask_m_);
     eprosima::fastdds::dds::StatusMask status_mask =
       subscriber_info_->data_reader_->get_status_mask();
     status_mask |= eprosima::fastdds::dds::StatusMask::data_available();
@@ -360,6 +385,7 @@ RMWSubscriptionEvent::set_on_new_message_callback(
   } else {
     std::lock_guard<std::mutex> lock_mutex(on_new_message_m_);
 
+    std::lock_guard<std::mutex> lock_mask(listener_mask_m_);
     eprosima::fastdds::dds::StatusMask status_mask =
       subscriber_info_->data_reader_->get_status_mask();
     status_mask &= ~eprosima::fastdds::dds::StatusMask::data_available();
@@ -389,12 +415,15 @@ void RMWSubscriptionEvent::untrack_unique_publisher(eprosima::fastrtps::rtps::GU
   publishers_.erase(guid);
 }
 
-void RMWSubscriptionEvent::update_data_available()
+void RMWSubscriptionEvent::update_data_available(eprosima::fastdds::dds::DataReader * reader)
 {
   rcpputils::unique_lock<std::mutex> lock_mutex(on_new_message_m_);
 
   if (on_new_message_cb_) {
-    auto unread_messages = subscriber_info_->data_reader_->get_unread_count(true);
+    // Use the reader that raised the callback, not subscriber_info_->data_reader_:
+    // rmw_subscription_set_content_filter() deletes the old reader before the new one is
+    // stored there, and the new reader can deliver data while it is being created.
+    auto unread_messages = reader->get_unread_count(true);
 
     if (0 < unread_messages) {
       on_new_message_cb_(new_message_user_data_, unread_messages);
