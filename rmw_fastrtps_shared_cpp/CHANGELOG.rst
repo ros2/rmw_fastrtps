@@ -2,6 +2,9 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.4.11 (2026-11-03)
+-------------------
+
 9.4.10 (2026-09-15)
 -------------------
 * Add missing exec_depend on rmw_dds_common (`#920 <https://github.com/ros2/rmw_fastrtps/issues/920>`_)

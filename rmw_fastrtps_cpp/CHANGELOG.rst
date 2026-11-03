@@ -2,6 +2,12 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.4.11 (2026-11-03)
+-------------------
+* Report main publisher GID for messages taken from the buffer-aware CPU channel. (`#927 <https://github.com/ros2/rmw_fastrtps/issues/927>`_) (`#932 <https://github.com/ros2/rmw_fastrtps/issues/932>`_)
+* Serialize encapsulation header on buffer aware topics (`#891 <https://github.com/ros2/rmw_fastrtps/issues/891>`_) (`#893 <https://github.com/ros2/rmw_fastrtps/issues/893>`_)
+* Contributors: mergify[bot]
+
 9.4.10 (2026-09-15)
 -------------------
 * Add missing exec_depend on rmw_dds_common (`#920 <https://github.com/ros2/rmw_fastrtps/issues/920>`_)
