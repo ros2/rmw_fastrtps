@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_dynamic_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+8.4.5 (2026-11-03)
+------------------
+* Check remaining buffer size before allocating C wstring sequences (`#910 <https://github.com/ros2/rmw_fastrtps/issues/910>`_) (`#913 <https://github.com/ros2/rmw_fastrtps/issues/913>`_)
+* Contributors: mergify[bot]
+
 8.4.4 (2026-06-02)
 ------------------
 * fix: remove superflous buildtool_export_depend. (`#852 <https://github.com/ros2/rmw_fastrtps/issues/852>`_) (`#857 <https://github.com/ros2/rmw_fastrtps/issues/857>`_)

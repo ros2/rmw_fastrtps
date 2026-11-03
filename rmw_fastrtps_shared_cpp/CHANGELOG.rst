@@ -2,6 +2,11 @@
 Changelog for package rmw_fastrtps_shared_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+8.4.5 (2026-11-03)
+------------------
+* Fixes in `rmw_wait` (`#895 <https://github.com/ros2/rmw_fastrtps/issues/895>`_) (`#917 <https://github.com/ros2/rmw_fastrtps/issues/917>`_)
+* Contributors: mergify[bot]
+
 8.4.4 (2026-06-02)
 ------------------
 * fix: remove superflous buildtool_export_depend. (`#852 <https://github.com/ros2/rmw_fastrtps/issues/852>`_) (`#857 <https://github.com/ros2/rmw_fastrtps/issues/857>`_)
