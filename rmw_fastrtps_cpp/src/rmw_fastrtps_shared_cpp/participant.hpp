@@ -41,6 +41,18 @@ create_participant(
   const char * enclave,
   rmw_dds_common::Context * common_context);
 
+// Internal entry point: discovery handling must be ready before DDS is enabled.
+RMW_FASTRTPS_CPP_LOCAL
+CustomParticipantInfo *
+create_participant_with_buffer_discovery(
+  const char * identifier,
+  size_t domain_id,
+  const rmw_security_options_t * security_options,
+  const rmw_discovery_options_t * discovery_options,
+  const char * enclave,
+  rmw_dds_common::Context * common_context,
+  BufferDiscoveryCallback buffer_discovery_callback);
+
 RMW_FASTRTPS_CPP_PUBLIC
 rmw_ret_t
 destroy_participant(CustomParticipantInfo * info);
