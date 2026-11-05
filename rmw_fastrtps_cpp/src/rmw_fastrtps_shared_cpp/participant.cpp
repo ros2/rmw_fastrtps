@@ -58,7 +58,8 @@ __create_participant(
   publishing_mode_t publishing_mode,
   rmw_dds_common::Context * common_context,
   size_t domain_id,
-  BufferDiscoveryCallback buffer_discovery_callback)
+  BufferDiscoveryCallback buffer_discovery_callback,
+  BufferReaderRemovedCallback buffer_reader_removed_callback)
 {
   CustomParticipantInfo * participant_info = nullptr;
 
@@ -92,6 +93,8 @@ __create_participant(
   }
   participant_info->listener_->set_buffer_discovery_callback(
     std::move(buffer_discovery_callback));
+  participant_info->listener_->set_buffer_reader_removed_callback(
+    std::move(buffer_reader_removed_callback));
 
   /////
   // Create Participant
@@ -155,7 +158,7 @@ rmw_fastrtps_shared_cpp::create_participant(
   rmw_dds_common::Context * common_context)
 {
   return create_participant_with_buffer_discovery(
-    identifier, domain_id, security_options, discovery_options, enclave, common_context, {});
+    identifier, domain_id, security_options, discovery_options, enclave, common_context, {}, {});
 }
 
 CustomParticipantInfo *
@@ -166,7 +169,8 @@ rmw_fastrtps_shared_cpp::create_participant_with_buffer_discovery(
   const rmw_discovery_options_t * discovery_options,
   const char * enclave,
   rmw_dds_common::Context * common_context,
-  BufferDiscoveryCallback buffer_discovery_callback)
+  BufferDiscoveryCallback buffer_discovery_callback,
+  BufferReaderRemovedCallback buffer_reader_removed_callback)
 {
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(nullptr);
 
@@ -434,7 +438,8 @@ rmw_fastrtps_shared_cpp::create_participant_with_buffer_discovery(
     publishing_mode,
     common_context,
     domain_id,
-    std::move(buffer_discovery_callback));
+    std::move(buffer_discovery_callback),
+    std::move(buffer_reader_removed_callback));
 }
 
 rmw_ret_t
