@@ -261,7 +261,7 @@ __rmw_send_response(
   const char * identifier,
   const rmw_service_t * service,
   rmw_request_id_t * request_header,
-  void * ros_response);
+  const void * ros_response);
 
 RMW_FASTRTPS_CPP_PUBLIC
 rmw_ret_t

@@ -112,7 +112,7 @@ __rmw_send_response(
   const char * identifier,
   const rmw_service_t * service,
   rmw_request_id_t * request_header,
-  void * ros_response)
+  const void * ros_response)
 {
   RMW_CHECK_ARGUMENT_FOR_NULL(service, RMW_RET_INVALID_ARGUMENT);
   RMW_CHECK_TYPE_IDENTIFIERS_MATCH(
