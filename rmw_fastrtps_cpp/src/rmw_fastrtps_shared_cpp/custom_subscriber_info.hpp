@@ -19,6 +19,7 @@
 #include <atomic>
 #include <cstring>
 #include <limits>
+#include <map>
 #include <memory>
 #include <mutex>
 #include <set>
@@ -112,6 +113,8 @@ struct BufferSubscriptionState
   std::mutex mutex;
   /// GID hex string -> publisher metadata, populated by discovery callback.
   std::unordered_map<std::string, PublisherBufferMetadata> publisher_metadata;
+  /// Matched channel DataWriter -> main publisher GID, so that it is not looked up per sample.
+  std::map<eprosima::fastdds::rtps::InstanceHandle_t, rmw_gid_t> main_publisher_gids;
 };
 
 struct CustomSubscriberInfo : public CustomEventInfo
