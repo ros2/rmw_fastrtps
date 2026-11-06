@@ -417,6 +417,9 @@ rmw_create_service(
     return nullptr;
   }
 
+  info->response_reader_wait_timeout_ =
+    rmw_fastrtps_shared_cpp::response_reader_wait_timeout(info->response_writer_->get_qos());
+
   // Set the StatusCondition to none to prevent triggering via WaitSets
   info->response_writer_->get_statuscondition().set_enabled_statuses(
     eprosima::fastdds::dds::StatusMask::none());
