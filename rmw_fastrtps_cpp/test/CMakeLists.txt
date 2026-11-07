@@ -45,6 +45,16 @@ if(TARGET test_buffer_backend_user_data)
   )
 endif()
 
+ament_add_gtest(test_subscription_sample_lost
+  rmw_fastrtps_shared_cpp/test_subscription_sample_lost.cpp)
+if(TARGET test_subscription_sample_lost)
+  target_link_libraries(test_subscription_sample_lost
+    ${PROJECT_NAME}
+    fastdds
+    rmw::rmw
+  )
+endif()
+
 ament_add_gmock(test_security_logging rmw_fastrtps_shared_cpp/test_security_logging.cpp)
 if(TARGET test_security_logging)
   target_link_libraries(test_security_logging
