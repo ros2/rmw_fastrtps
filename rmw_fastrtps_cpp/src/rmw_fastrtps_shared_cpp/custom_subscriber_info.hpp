@@ -256,6 +256,14 @@ public:
   RMW_FASTRTPS_CPP_PUBLIC
   void update_sample_lost(uint32_t total_count, uint32_t total_count_change);
 
+  /// Update the sample lost status with the one of the buffer channel DataReader.
+  /**
+   * Buffer-aware samples are received on a buffer channel DataReader instead of the main one,
+   * so the samples lost by both are reported together.
+   */
+  RMW_FASTRTPS_CPP_PUBLIC
+  void update_buffer_channel_sample_lost(uint32_t total_count, uint32_t total_count_change);
+
   RMW_FASTRTPS_CPP_PUBLIC
   void update_requested_incompatible_qos(
     eprosima::fastdds::dds::QosPolicyId_t last_policy_id,
@@ -287,6 +295,13 @@ private:
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
   eprosima::fastdds::dds::SampleLostStatus sample_lost_status_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
+  // Total samples lost by the main DataReader and by the buffer channel DataReader.
+  uint32_t main_sample_lost_count_
+  RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
+
+  uint32_t buffer_channel_sample_lost_count_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_);
 
   bool incompatible_qos_changed_
