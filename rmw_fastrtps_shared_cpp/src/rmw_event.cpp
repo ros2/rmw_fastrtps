@@ -18,6 +18,8 @@
 
 #include "event_helpers.hpp"
 #include "rmw_fastrtps_shared_cpp/custom_event_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_publisher_info.hpp"
+#include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 #include "rmw_fastrtps_shared_cpp/rmw_common.hpp"
 #include "types/event_types.hpp"
 
@@ -34,6 +36,15 @@ static const std::unordered_set<rmw_event_type_t> g_rmw_event_type_set{
   RMW_EVENT_SUBSCRIPTION_MATCHED,
   RMW_EVENT_PUBLICATION_MATCHED
 };
+
+static bool is_publisher_event(rmw_event_type_t event_type)
+{
+  return RMW_EVENT_LIVELINESS_LOST == event_type ||
+         RMW_EVENT_OFFERED_DEADLINE_MISSED == event_type ||
+         RMW_EVENT_OFFERED_QOS_INCOMPATIBLE == event_type ||
+         RMW_EVENT_PUBLISHER_INCOMPATIBLE_TYPE == event_type ||
+         RMW_EVENT_PUBLICATION_MATCHED == event_type;
+}
 
 namespace rmw_fastrtps_shared_cpp
 {
@@ -141,11 +152,17 @@ __rmw_init_event(
   rmw_event->implementation_identifier = topic_endpoint_impl_identifier;
   rmw_event->data = data;
   rmw_event->event_type = event_type;
+  // Events are waited on through their event guard. The entity's StatusCondition is left
+  // alone: it is shared with the entity's data and other events, so waiting on it would
+  // wake event waits for unrelated statuses.
   CustomEventInfo * event = static_cast<CustomEventInfo *>(rmw_event->data);
-  eprosima::fastdds::dds::StatusMask status_mask =
-    event->get_listener()->get_statuscondition().get_enabled_statuses();
-  status_mask |= rmw_fastrtps_shared_cpp::internal::rmw_event_to_dds_statusmask(event_type);
-  event->get_listener()->get_statuscondition().set_enabled_statuses(status_mask);
+  EventListenerInterface * listener = event->get_listener();
+  // Each event type belongs to one side, which tells the concrete listener type.
+  if (is_publisher_event(event_type)) {
+    static_cast<RMWPublisherEvent *>(listener)->enable_event(event_type);
+  } else {
+    static_cast<RMWSubscriptionEvent *>(listener)->enable_event(event_type);
+  }
 
   return RMW_RET_OK;
 }

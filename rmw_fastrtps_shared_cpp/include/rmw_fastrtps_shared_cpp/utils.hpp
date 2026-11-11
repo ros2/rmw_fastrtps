@@ -18,6 +18,7 @@
 #include <mutex>
 #include <string>
 
+#include "fastdds/dds/core/status/StatusMask.hpp"
 #include "fastdds/dds/topic/TopicDescription.hpp"
 #include "fastdds/dds/topic/TypeSupport.hpp"
 
@@ -125,6 +126,31 @@ create_datareader(
   eprosima::fastdds::dds::TopicDescription * des_topic,
   CustomDataReaderListener * listener,
   eprosima::fastdds::dds::DataReader ** data_reader);
+
+/**
+* Create data reader with the given statuses enabled on its listener from creation.
+*
+* \param[in]  datareader_qos         QoS of data reader.
+* \param[in]  subscription_options   Options of the subscription.
+* \param[in]  subscriber             A subsciber to create the data reader.
+* \param[in]  des_topic              TopicDescription returned by find_and_check_topic_and_type.
+* \param[in]  listener               The listener of the data reader.
+* \param[out] data_reader            Will hold the pointer to the data reader.
+* \param[in]  listener_mask          The statuses enabled on the listener from creation.
+*
+* \return true when the data reader was created
+* \return false when the data reader could not be created
+*/
+RMW_FASTRTPS_SHARED_CPP_PUBLIC
+bool
+create_datareader(
+  const eprosima::fastdds::dds::DataReaderQos & datareader_qos,
+  const rmw_subscription_options_t * subscription_options,
+  eprosima::fastdds::dds::Subscriber * subscriber,
+  eprosima::fastdds::dds::TopicDescription * des_topic,
+  CustomDataReaderListener * listener,
+  eprosima::fastdds::dds::DataReader ** data_reader,
+  const eprosima::fastdds::dds::StatusMask & listener_mask);
 
 }  // namespace rmw_fastrtps_shared_cpp
 
