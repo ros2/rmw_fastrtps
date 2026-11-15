@@ -14,6 +14,10 @@
 
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 
+#include <algorithm>
+#include <cstdint>
+#include <limits>
+
 #include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
 #include "fastdds/dds/core/status/LivelinessChangedStatus.hpp"
 
@@ -21,6 +25,21 @@
 #include "types/event_types.hpp"
 
 #include "rcpputils/unique_lock.hpp"
+
+namespace
+{
+
+/// Add the samples lost by the main DataReader and by the buffer channel DataReader,
+/// capped at the maximum that a SampleLostStatus total count can hold.
+int32_t
+add_sample_lost_counts(uint32_t main_count, uint32_t buffer_channel_count)
+{
+  const uint64_t total = static_cast<uint64_t>(main_count) + buffer_channel_count;
+  return static_cast<int32_t>(
+    std::min<uint64_t>(total, static_cast<uint64_t>(std::numeric_limits<int32_t>::max())));
+}
+
+}  // namespace
 
 EventListenerInterface *
 CustomSubscriberInfo::get_listener() const
@@ -197,7 +216,8 @@ bool RMWSubscriptionEvent::take_event(
           if (!sample_lost_changed_) {
             main_sample_lost_count_ = current.total_count;
             sample_lost_status_ = current;
-            sample_lost_status_.total_count += buffer_channel_sample_lost_count_;
+            sample_lost_status_.total_count = add_sample_lost_counts(
+              main_sample_lost_count_, buffer_channel_sample_lost_count_);
           }
           sample_lost_changed_ = false;
         }
@@ -346,7 +366,8 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
           if (!sample_lost_changed_) {
             main_sample_lost_count_ = current.total_count;
             sample_lost_status_ = current;
-            sample_lost_status_.total_count += buffer_channel_sample_lost_count_;
+            sample_lost_status_.total_count = add_sample_lost_counts(
+              main_sample_lost_count_, buffer_channel_sample_lost_count_);
           }
 
           if (sample_lost_status_.total_count_change > 0) {
@@ -580,7 +601,8 @@ void RMWSubscriptionEvent::update_sample_lost(uint32_t total_count, uint32_t tot
 
   // Assign absolute values
   main_sample_lost_count_ = total_count;
-  sample_lost_status_.total_count = main_sample_lost_count_ + buffer_channel_sample_lost_count_;
+  sample_lost_status_.total_count =
+    add_sample_lost_counts(main_sample_lost_count_, buffer_channel_sample_lost_count_);
   // Accumulate deltas
   sample_lost_status_.total_count_change += total_count_change;
 
@@ -596,7 +618,8 @@ void RMWSubscriptionEvent::update_buffer_channel_sample_lost(
 
   // Assign absolute values
   buffer_channel_sample_lost_count_ = total_count;
-  sample_lost_status_.total_count = main_sample_lost_count_ + buffer_channel_sample_lost_count_;
+  sample_lost_status_.total_count =
+    add_sample_lost_counts(main_sample_lost_count_, buffer_channel_sample_lost_count_);
   // Accumulate deltas
   sample_lost_status_.total_count_change += total_count_change;
 

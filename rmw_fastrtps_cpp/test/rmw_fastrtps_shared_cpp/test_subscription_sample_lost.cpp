@@ -12,6 +12,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
+#include <limits>
+
 #include "gtest/gtest.h"
 
 #include "rmw/events_statuses/message_lost.h"
@@ -44,4 +47,17 @@ TEST(TestSubscriptionSampleLost, main_and_buffer_channel_counts_are_added) {
   ASSERT_TRUE(event.take_event(RMW_EVENT_MESSAGE_LOST, &status));
   EXPECT_EQ(7u, status.total_count);
   EXPECT_EQ(1u, status.total_count_change);
+}
+
+// The total count of the status is an int32_t, so the sum is capped instead of wrapping.
+TEST(TestSubscriptionSampleLost, total_count_is_capped) {
+  RMWSubscriptionEvent event(nullptr);
+  const uint32_t max_count = static_cast<uint32_t>(std::numeric_limits<int32_t>::max());
+
+  event.update_sample_lost(max_count, 1);
+  event.update_buffer_channel_sample_lost(10, 1);
+
+  rmw_message_lost_status_t status{};
+  ASSERT_TRUE(event.take_event(RMW_EVENT_MESSAGE_LOST, &status));
+  EXPECT_EQ(static_cast<size_t>(max_count), status.total_count);
 }
