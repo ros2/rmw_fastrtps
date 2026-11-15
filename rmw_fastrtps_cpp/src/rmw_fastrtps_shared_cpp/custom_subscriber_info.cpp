@@ -36,7 +36,7 @@ add_sample_lost_counts(uint32_t main_count, uint32_t buffer_channel_count)
 {
   const uint64_t total = static_cast<uint64_t>(main_count) + buffer_channel_count;
   return static_cast<int32_t>(
-    std::min<uint64_t>(total, static_cast<uint64_t>(std::numeric_limits<int32_t>::max())));
+    (std::min)(total, static_cast<uint64_t>((std::numeric_limits<int32_t>::max)())));
 }
 
 }  // namespace
