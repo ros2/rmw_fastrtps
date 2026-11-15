@@ -45,12 +45,14 @@
 namespace
 {
 
-/// Get the main publisher GID that buffer-aware side-channel DataWriters (CPU
+/// Resolve the main publisher GID that buffer-aware side-channel DataWriters (CPU
 /// channel and per-subscriber endpoints) advertise in their user_data. Samples
 /// taken from those readers carry the side-channel writer GUID instead.
-/// Cached per writer until it is unmatched, as this is called for every sample.
+/// It is cached per writer, as this is called for every sample, and removed from the
+/// cache by the reader listener when the writer is unmatched.
+/// Returns false if the writer is no longer matched or does not advertise it.
 bool
-get_main_publisher_gid(
+resolve_main_publisher_gid(
   BufferSubscriptionState & state,
   eprosima::fastdds::dds::DataReader * reader,
   const eprosima::fastdds::dds::SampleInfo & sample_info,
@@ -94,7 +96,7 @@ assign_main_publisher_gid(
   rmw_message_info_t * message_info)
 {
   rmw_gid_t main_gid{};
-  if (get_main_publisher_gid(state, reader, sample_info, main_gid)) {
+  if (resolve_main_publisher_gid(state, reader, sample_info, main_gid)) {
     std::memcpy(message_info->publisher_gid.data, main_gid.data, RMW_GID_STORAGE_SIZE);
   } else {
     RCUTILS_LOG_DEBUG_NAMED(
@@ -190,7 +192,7 @@ take_buffer_aware(
   // It is unknown once the publisher is no longer matched, e.g. when it was destroyed
   // before this sample was taken; the accelerated channel GID is used then.
   rmw_gid_t writer_gid{};
-  if (!get_main_publisher_gid(
+  if (!resolve_main_publisher_gid(
       *info->buffer_state_, info->accel_data_reader_, info_seq[0], writer_gid))
   {
     rmw_fastrtps_shared_cpp::copy_from_fastdds_guid_to_byte_array(
