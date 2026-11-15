@@ -117,6 +117,8 @@ RMWSubscriptionEvent::RMWSubscriptionEvent(CustomSubscriberInfo * info)
 {
 }
 
+RMWSubscriptionEvent::~RMWSubscriptionEvent() = default;
+
 eprosima::fastdds::dds::StatusCondition & RMWSubscriptionEvent::get_statuscondition() const
 {
   return subscriber_info_->data_reader_->get_statuscondition();

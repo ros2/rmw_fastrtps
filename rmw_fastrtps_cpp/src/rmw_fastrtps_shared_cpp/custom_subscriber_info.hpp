@@ -167,6 +167,9 @@ public:
   RMW_FASTRTPS_CPP_PUBLIC
   explicit RMWSubscriptionEvent(CustomSubscriberInfo * info);
 
+  RMW_FASTRTPS_CPP_PUBLIC
+  ~RMWSubscriptionEvent();
+
   // Provide handlers to perform an action when a
   // new event from this listener has occurred
   RMW_FASTRTPS_CPP_PUBLIC
