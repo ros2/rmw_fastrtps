@@ -259,10 +259,10 @@ public:
   RMW_FASTRTPS_CPP_PUBLIC
   void update_sample_lost(uint32_t total_count, uint32_t total_count_change);
 
-  /// Update the sample lost status with the one of the buffer channel DataReader.
+  /// Update the sample lost status from the buffer channel DataReader.
   /**
    * Buffer-aware samples are received on a buffer channel DataReader instead of the main one,
-   * so the samples lost by both are reported together.
+   * so its total count is kept separately from the main DataReader's, and their sum is reported.
    */
   RMW_FASTRTPS_CPP_PUBLIC
   void update_buffer_channel_sample_lost(uint32_t total_count, uint32_t total_count_change);
