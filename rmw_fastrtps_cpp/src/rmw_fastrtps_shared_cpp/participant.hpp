@@ -51,7 +51,8 @@ create_participant_with_buffer_discovery(
   const rmw_discovery_options_t * discovery_options,
   const char * enclave,
   rmw_dds_common::Context * common_context,
-  BufferDiscoveryCallback buffer_discovery_callback);
+  BufferDiscoveryCallback buffer_discovery_callback,
+  BufferReaderRemovedCallback buffer_reader_removed_callback);
 
 RMW_FASTRTPS_CPP_PUBLIC
 rmw_ret_t

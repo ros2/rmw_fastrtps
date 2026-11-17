@@ -12,6 +12,17 @@ target_link_libraries(test_get_native_entities
   test_msgs::test_msgs
 )
 
+# The registry's source is compiled into the test, so the test does not depend on which of the
+# library's symbols are exported. rmw_compare_gids_equal() comes from the library.
+ament_add_gtest(test_buffer_endpoint_registry
+  test_buffer_endpoint_registry.cpp
+  ../src/buffer_endpoint_registry.cpp)
+target_link_libraries(test_buffer_endpoint_registry
+  rcutils::rcutils
+  rmw::rmw
+  rmw_fastrtps_cpp
+)
+
 ament_add_gtest(test_logging test_logging.cpp)
 target_link_libraries(test_logging
   fastdds

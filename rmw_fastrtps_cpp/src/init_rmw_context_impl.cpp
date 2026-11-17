@@ -97,6 +97,13 @@ init_context_impl(
         buffer_endpoint_registry->notify_publisher_discovered(info);
       }
     };
+  BufferReaderRemovedCallback buffer_reader_removed_callback =
+    [buffer_endpoint_registry](const rmw_gid_t & gid)
+    {
+      if (buffer_endpoint_registry) {
+        buffer_endpoint_registry->notify_subscriber_removed(gid);
+      }
+    };
 
   std::unique_ptr<CustomParticipantInfo, std::function<void(CustomParticipantInfo *)>>
   participant_info(
@@ -107,7 +114,8 @@ init_context_impl(
       &context->options.discovery_options,
       context->options.enclave,
       common_context.get(),
-      std::move(buffer_discovery_callback)),
+      std::move(buffer_discovery_callback),
+      std::move(buffer_reader_removed_callback)),
     [&](CustomParticipantInfo * participant_info)
     {
       if (RMW_RET_OK != rmw_fastrtps_shared_cpp::destroy_participant(participant_info)) {

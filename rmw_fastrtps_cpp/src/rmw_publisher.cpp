@@ -13,7 +13,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <algorithm>
 #include <cstdio>
+#include <iterator>
 #include <set>
 #include <string>
 #include <unordered_map>
@@ -267,6 +269,53 @@ rmw_create_publisher(
               "Buffer publisher: non-CPU subscriber discovered, queued '%s'",
               unique_topic.c_str());
           }
+        },
+        [state, base_topic](const rmw_gid_t & gone_gid) {
+          // The subscriber is no longer discovered.  Forget it, so the counts that
+          // rmw_publish() compares with the live subscription count stay accurate.
+          // This runs on a DDS thread: do not delete DDS entities here.
+          auto is_gone = [&gone_gid](const rmw_gid_t & gid) {
+            bool equal = false;
+            rmw_ret_t ret = rmw_compare_gids_equal(&gid, &gone_gid, &equal);
+            if (RMW_RET_OK != ret) {
+              RCUTILS_LOG_ERROR_NAMED(
+                "rmw_fastrtps_cpp",
+                "Buffer publisher: rmw_compare_gids_equal failed during removal");
+              return false;
+            }
+            return equal;
+          };
+
+          std::lock_guard<std::mutex> lock(state->mutex);
+          if (!state->alive.load()) {
+            return;
+          }
+
+          if (state->creating_endpoints > 0) {
+            state->removed_while_creating.push_back(gone_gid);
+          }
+          state->cpu_only_subscribers.erase(
+            std::remove_if(
+              state->cpu_only_subscribers.begin(), state->cpu_only_subscribers.end(), is_gone),
+            state->cpu_only_subscribers.end());
+          state->pending.erase(
+            std::remove_if(
+              state->pending.begin(), state->pending.end(),
+              [&is_gone](const PendingBufferPublisher & p) {
+                return is_gone(p.target_subscriber_gid);
+              }),
+            state->pending.end());
+          for (auto it = state->endpoints.begin(); it != state->endpoints.end(); ) {
+            if (is_gone((*it)->target_subscriber_gid)) {
+              state->retired_endpoints.push_back(std::move(*it));
+              it = state->endpoints.erase(it);
+            } else {
+              ++it;
+            }
+          }
+          RCUTILS_LOG_DEBUG_NAMED(
+            "rmw_fastrtps_cpp",
+            "Buffer publisher: subscriber on '%s' is gone", base_topic.c_str());
         });
     }
   }
@@ -367,6 +416,11 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       state.alive.store(false);
       endpoints_to_destroy = std::move(state.endpoints);
       state.endpoints.clear();
+      endpoints_to_destroy.insert(
+        endpoints_to_destroy.end(),
+        std::make_move_iterator(state.retired_endpoints.begin()),
+        std::make_move_iterator(state.retired_endpoints.end()));
+      state.retired_endpoints.clear();
       state.pending.clear();
       state.cpu_only_subscribers.clear();
     }

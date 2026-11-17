@@ -143,6 +143,10 @@ using BufferDiscoveryCallback = std::function<void (
       const rmw_gid_t &, const std::string &,
       const std::unordered_map<std::string, std::string> &, bool)>;
 
+/// Callback type for when a DDS reader is no longer discovered.
+/// Parameter: the reader's gid.
+using BufferReaderRemovedCallback = std::function<void (const rmw_gid_t &)>;
+
 class ParticipantListener : public eprosima::fastdds::dds::DomainParticipantListener
 {
 public:
@@ -157,6 +161,12 @@ public:
   {
     std::lock_guard<std::mutex> lock(buffer_cb_mutex_);
     buffer_discovery_cb_ = std::move(cb);
+  }
+
+  void set_buffer_reader_removed_callback(BufferReaderRemovedCallback cb)
+  {
+    std::lock_guard<std::mutex> lock(buffer_cb_mutex_);
+    buffer_reader_removed_cb_ = std::move(cb);
   }
 
   void on_participant_discovery(
@@ -299,11 +309,23 @@ private:
           }
         }
       } else {
-        context->graph_cache.remove_entity(
-          rmw_fastrtps_shared_cpp::create_rmw_gid(
-            identifier_,
-            proxyData.guid),
-          is_reader);
+        const rmw_gid_t gid = rmw_fastrtps_shared_cpp::create_rmw_gid(
+          identifier_,
+          proxyData.guid);
+        context->graph_cache.remove_entity(gid, is_reader);
+
+        // Tell the buffer-aware publishers that a reader is gone. As above, copy the
+        // callback outside the lock so buffer_cb_mutex_ is not held during the callback.
+        if (is_reader) {
+          BufferReaderRemovedCallback cb_copy;
+          {
+            std::lock_guard<std::mutex> lock(buffer_cb_mutex_);
+            cb_copy = buffer_reader_removed_cb_;
+          }
+          if (cb_copy) {
+            cb_copy(gid);
+          }
+        }
       }
     }
   }
@@ -313,6 +335,7 @@ private:
 
   std::mutex buffer_cb_mutex_;
   BufferDiscoveryCallback buffer_discovery_cb_;
+  BufferReaderRemovedCallback buffer_reader_removed_cb_;
 };
 
 #endif  // RMW_FASTRTPS_SHARED_CPP__CUSTOM_PARTICIPANT_INFO_HPP_

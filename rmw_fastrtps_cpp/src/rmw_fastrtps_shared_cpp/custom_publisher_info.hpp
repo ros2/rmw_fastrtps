@@ -114,6 +114,15 @@ struct BufferPublisherState
   std::vector<PendingBufferPublisher> pending;
   /// GIDs of discovered CPU-only subscribers served by the shared CPU channel.
   std::vector<rmw_gid_t> cpu_only_subscribers;
+  /// Per-subscriber endpoints whose subscriber is gone.  The discovery callback
+  /// moves them here, because it runs on a DDS thread and must not delete DDS
+  /// entities.  The publish and destroy paths delete them outside the lock.
+  std::vector<std::shared_ptr<BufferPublisherEndpoint>> retired_endpoints;
+  /// Number of publish calls that are creating DataWriters for entries they moved out of
+  /// `pending`.  While it is not zero, those entries are in neither `pending` nor `endpoints`,
+  /// so the removal callback records the GIDs it removes in `removed_while_creating`.
+  size_t creating_endpoints{0};
+  std::vector<rmw_gid_t> removed_while_creating;
 };
 
 typedef struct CustomPublisherInfo : public CustomEventInfo
