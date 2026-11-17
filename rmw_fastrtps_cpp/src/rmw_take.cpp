@@ -45,28 +45,65 @@
 namespace
 {
 
-/// Replace the sender GID in message_info with the main publisher GID that
-/// buffer-aware side-channel DataWriters (CPU channel and per-subscriber
-/// endpoints) advertise in their user_data. Samples taken from those readers
-/// carry the side-channel writer GUID, which never matches
-/// rmw_get_gid_for_publisher(); clients such as rclcpp depend on that match
-/// to deduplicate intra-process deliveries.
-void
-assign_main_publisher_gid(
+/// Resolve the main publisher GID that buffer-aware side-channel DataWriters (CPU
+/// channel and per-subscriber endpoints) advertise in their user_data. Samples
+/// taken from those readers carry the side-channel writer GUID instead.
+/// It is cached per writer, as this is called for every sample, and removed from the
+/// cache by the reader listener when the writer is unmatched.
+/// Returns false if the writer is no longer matched or does not advertise it.
+bool
+resolve_main_publisher_gid(
+  BufferSubscriptionState & state,
   eprosima::fastdds::dds::DataReader * reader,
   const eprosima::fastdds::dds::SampleInfo & sample_info,
-  rmw_message_info_t * message_info)
+  rmw_gid_t & main_gid)
 {
+  {
+    std::lock_guard<std::mutex> lock(state.mutex);
+    auto it = state.main_publisher_gids.find(sample_info.publication_handle);
+    if (it != state.main_publisher_gids.end()) {
+      main_gid = it->second;
+      return true;
+    }
+  }
+
   eprosima::fastdds::rtps::PublicationBuiltinTopicData pub_data;
   if (eprosima::fastdds::dds::RETCODE_OK !=
     reader->get_matched_publication_data(pub_data, sample_info.publication_handle))
   {
-    return;
+    return false;
   }
-  rmw_gid_t main_gid{};
   const auto & ud = pub_data.user_data.data_vec();
-  if (parse_endpoint_gid_from_user_data(ud.data(), ud.size(), "PGID:", main_gid)) {
+  if (!parse_endpoint_gid_from_user_data(ud.data(), ud.size(), "PGID:", main_gid)) {
+    return false;
+  }
+
+  std::lock_guard<std::mutex> lock(state.mutex);
+  state.main_publisher_gids[sample_info.publication_handle] = main_gid;
+  return true;
+}
+
+/// Replace the sender GID in message_info with the main publisher GID, which
+/// matches rmw_get_gid_for_publisher(); clients such as rclcpp depend on that
+/// match to deduplicate intra-process deliveries. It is unknown when the publisher
+/// is no longer matched, or does not advertise it (older rmw_fastrtps_cpp); the
+/// sender GID is kept then.
+void
+assign_main_publisher_gid(
+  BufferSubscriptionState & state,
+  eprosima::fastdds::dds::DataReader * reader,
+  const eprosima::fastdds::dds::SampleInfo & sample_info,
+  rmw_message_info_t * message_info)
+{
+  rmw_gid_t main_gid{};
+  if (resolve_main_publisher_gid(state, reader, sample_info, main_gid)) {
     std::memcpy(message_info->publisher_gid.data, main_gid.data, RMW_GID_STORAGE_SIZE);
+  } else {
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_fastrtps_cpp",
+      "Main publisher GID of a buffer-aware sample is unknown, "
+      "using the CPU channel GID '%s'",
+      rmw_fastrtps_shared_cpp::gid_to_hex(message_info->publisher_gid).c_str());
   }
 }
 
@@ -103,7 +140,8 @@ take_buffer_aware(
         if (message_info) {
           rmw_fastrtps_shared_cpp::_assign_message_info(
             eprosima_fastrtps_identifier, message_info, &cpu_info_seq[0]);
-          assign_main_publisher_gid(info->cpu_data_reader_, cpu_info_seq[0], message_info);
+          assign_main_publisher_gid(
+            *info->buffer_state_, info->cpu_data_reader_, cpu_info_seq[0], message_info);
         }
       }
       cpu_vals.length(0);
@@ -150,11 +188,22 @@ take_buffer_aware(
       info_seq.length(0);
     });
 
-  // Look up publisher metadata by writer GID.
+  // Look up publisher metadata by the main publisher GID, as recorded at discovery.
+  // It is unknown once the publisher is no longer matched, e.g. when it was destroyed
+  // before this sample was taken; the accelerated channel GID is used then.
   rmw_gid_t writer_gid{};
-  rmw_fastrtps_shared_cpp::copy_from_fastdds_guid_to_byte_array(
-    info_seq[0].sample_identity.writer_guid(),
-    writer_gid.data);
+  if (!resolve_main_publisher_gid(
+      *info->buffer_state_, info->accel_data_reader_, info_seq[0], writer_gid))
+  {
+    rmw_fastrtps_shared_cpp::copy_from_fastdds_guid_to_byte_array(
+      info_seq[0].sample_identity.writer_guid(),
+      writer_gid.data);
+    RCUTILS_LOG_DEBUG_NAMED(
+      "rmw_fastrtps_cpp",
+      "Main publisher GID of a buffer-aware sample is unknown, "
+      "using the accelerated channel GID '%s'",
+      rmw_fastrtps_shared_cpp::gid_to_hex(writer_gid).c_str());
+  }
   std::string writer_hex = rmw_fastrtps_shared_cpp::gid_to_hex(writer_gid);
 
   rmw_topic_endpoint_info_t pub_endpoint_info = rmw_get_zero_initialized_topic_endpoint_info();
@@ -207,7 +256,46 @@ take_buffer_aware(
   if (message_info) {
     rmw_fastrtps_shared_cpp::_assign_message_info(
       eprosima_fastrtps_identifier, message_info, &info_seq[0]);
-    assign_main_publisher_gid(info->accel_data_reader_, info_seq[0], message_info);
+    std::memcpy(message_info->publisher_gid.data, writer_gid.data, RMW_GID_STORAGE_SIZE);
+  }
+
+  return RMW_RET_OK;
+}
+
+// Samples on the accelerated DataReader carry buffer descriptors, which cannot be returned as
+// serialized bytes. Take one so that it does not keep the wait set triggered, and fail.
+rmw_ret_t
+reject_accelerated_serialized_sample(
+  const rmw_subscription_t * subscription,
+  CustomSubscriberInfo * info)
+{
+  if (!info->accel_data_reader_) {
+    return RMW_RET_OK;
+  }
+
+  eprosima::fastcdr::FastBuffer receive_buffer;
+  rmw_fastrtps_shared_cpp::SerializedData data;
+  data.type = rmw_fastrtps_shared_cpp::FASTDDS_SERIALIZED_DATA_TYPE_CDR_BUFFER;
+  data.data = &receive_buffer;
+  data.impl = nullptr;
+
+  eprosima::fastdds::dds::StackAllocatedSequence<void *, 1> data_values;
+  const_cast<void **>(data_values.buffer())[0] = &data;
+  eprosima::fastdds::dds::SampleInfoSeq info_seq{1};
+
+  while (eprosima::fastdds::dds::RETCODE_OK ==
+    info->accel_data_reader_->take(data_values, info_seq, 1))
+  {
+    const bool valid = info_seq[0].valid_data &&
+      !rmw_fastrtps_shared_cpp::is_ignored_local_sample(subscription, info, info_seq[0]);
+    data_values.length(0);
+    info_seq.length(0);
+    if (valid) {
+      RMW_SET_ERROR_MSG(
+        "cannot take a serialized message received through a non-CPU buffer backend, "
+        "set acceptable_buffer_backends to 'cpu' to take serialized messages");
+      return RMW_RET_ERROR;
+    }
   }
 
   return RMW_RET_OK;
@@ -231,7 +319,7 @@ take_buffer_aware_serialized(
   auto info = static_cast<CustomSubscriberInfo *>(subscription->data);
 
   if (!info->cpu_data_reader_) {
-    return RMW_RET_OK;
+    return reject_accelerated_serialized_sample(subscription, info);
   }
 
   eprosima::fastcdr::FastBuffer receive_buffer;
@@ -254,7 +342,7 @@ take_buffer_aware_serialized(
     if (eprosima::fastdds::dds::RETCODE_OK !=
       info->cpu_data_reader_->take(data_values, info_seq, 1))
     {
-      return RMW_RET_OK;
+      return reject_accelerated_serialized_sample(subscription, info);
     }
     if (info_seq[0].valid_data &&
       !rmw_fastrtps_shared_cpp::is_ignored_local_sample(subscription, info, info_seq[0]))
@@ -278,7 +366,8 @@ take_buffer_aware_serialized(
   if (message_info) {
     rmw_fastrtps_shared_cpp::_assign_message_info(
       eprosima_fastrtps_identifier, message_info, &info_seq[0]);
-    assign_main_publisher_gid(info->cpu_data_reader_, info_seq[0], message_info);
+    assign_main_publisher_gid(
+      *info->buffer_state_, info->cpu_data_reader_, info_seq[0], message_info);
   }
 
   *taken = true;

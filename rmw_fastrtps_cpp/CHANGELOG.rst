@@ -2,6 +2,24 @@
 Changelog for package rmw_fastrtps_cpp
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
+9.6.1 (2026-11-03)
+------------------
+* Report the written length in rmw_serialize (`#964 <https://github.com/ros2/rmw_fastrtps/issues/964>`_)
+* Fix buffer discovery during participant initialization (`#960 <https://github.com/ros2/rmw_fastrtps/issues/960>`_)
+* Report correct new message counts for buffer-aware subscriptions (`#951 <https://github.com/ros2/rmw_fastrtps/issues/951>`_)
+* Return an error when a buffer-aware publish fails (`#958 <https://github.com/ros2/rmw_fastrtps/issues/958>`_)
+* Check rmw_take_with_info arguments before the buffer-aware path (`#955 <https://github.com/ros2/rmw_fastrtps/issues/955>`_)
+* Fix spurious QoS event wakeups in rmw_wait (`#930 <https://github.com/ros2/rmw_fastrtps/issues/930>`_)
+* Honor ignore_local_publications on the loaned and dynamic take paths (`#944 <https://github.com/ros2/rmw_fastrtps/issues/944>`_)
+* Report an error for unknown acceptable_buffer_backends names (`#946 <https://github.com/ros2/rmw_fastrtps/issues/946>`_)
+* Support rmw_take_sequence for buffer-aware subscriptions (`#936 <https://github.com/ros2/rmw_fastrtps/issues/936>`_)
+* Honor ignore_local_publications on the buffer-aware take paths (`#934 <https://github.com/ros2/rmw_fastrtps/issues/934>`_)
+* Remove ament_export_include_directories and ament_export_libraries calls (`#924 <https://github.com/ros2/rmw_fastrtps/issues/924>`_)
+* Report main publisher GID for messages taken from the buffer-aware CPU channel. (`#927 <https://github.com/ros2/rmw_fastrtps/issues/927>`_)
+* Remove rmw_fastrtps_dynamic_cpp and rmw_fastrtps_shared_cpp (`#923 <https://github.com/ros2/rmw_fastrtps/issues/923>`_)
+* Use the SPDX identifier Apache-2.0 in package.xml license tags (`#921 <https://github.com/ros2/rmw_fastrtps/issues/921>`_)
+* Contributors: Dennis Lanov, Maurice Alexander Purnawan, Michael Carroll, Miguel Company, ObeliskGate, Tomoya Fujita
+
 9.6.0 (2026-09-16)
 ------------------
 * Add missing exec_depend on rmw_dds_common (`#919 <https://github.com/ros2/rmw_fastrtps/issues/919>`_)

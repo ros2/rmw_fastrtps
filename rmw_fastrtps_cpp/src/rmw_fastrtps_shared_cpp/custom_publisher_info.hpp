@@ -147,6 +147,10 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   // Reports the deadline status of the buffer channel DataWriters to publisher_event_.
   std::shared_ptr<eprosima::fastdds::dds::DataWriterListener> buffer_data_writer_listener_;
 
+  // Incremented before each publish, so wait_for_all_acked can tell whether a sample was
+  // published while it was waiting
+  std::atomic<uint64_t> publish_count_{0};
+
   // DDS objects needed to create dynamic DataWriters
   eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
   eprosima::fastdds::dds::Publisher * dds_publisher_{nullptr};
