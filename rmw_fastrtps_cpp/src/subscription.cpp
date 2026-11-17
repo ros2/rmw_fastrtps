@@ -78,8 +78,10 @@ namespace
 class BufferChannelDataReaderListener final : public eprosima::fastdds::dds::DataReaderListener
 {
 public:
-  explicit BufferChannelDataReaderListener(RMWSubscriptionEvent * event)
-  : event_(event) {}
+  BufferChannelDataReaderListener(
+    RMWSubscriptionEvent * event,
+    std::shared_ptr<BufferSubscriptionState> state)
+  : event_(event), state_(std::move(state)) {}
 
   void on_data_available(eprosima::fastdds::dds::DataReader * reader) override
   {
@@ -97,8 +99,19 @@ public:
     }
   }
 
+  void on_subscription_matched(
+    eprosima::fastdds::dds::DataReader *,
+    const eprosima::fastdds::dds::SubscriptionMatchedStatus & status) override
+  {
+    if (status.current_count_change < 0) {
+      std::lock_guard<std::mutex> lock(state_->mutex);
+      state_->main_publisher_gids.erase(status.last_publication_handle);
+    }
+  }
+
 private:
   RMWSubscriptionEvent * event_;
+  std::shared_ptr<BufferSubscriptionState> state_;
 };
 
 }  // namespace
@@ -898,9 +911,11 @@ __create_subscription(
 
       eprosima::fastdds::dds::DataReaderQos cpu_rqos = info->datareader_qos_;
       info->cpu_data_reader_listener_ =
-        std::make_shared<BufferChannelDataReaderListener>(info->subscription_event_);
+        std::make_shared<BufferChannelDataReaderListener>(
+        info->subscription_event_, info->buffer_state_);
       eprosima::fastdds::dds::StatusMask cpu_reader_mask =
         eprosima::fastdds::dds::StatusMask::data_available();
+      cpu_reader_mask |= eprosima::fastdds::dds::StatusMask::subscription_matched();
       cpu_reader_mask |= eprosima::fastdds::dds::StatusMask::sample_lost();
       info->cpu_data_reader_ = subscriber->create_datareader(
         info->cpu_topic_, cpu_rqos, info->cpu_data_reader_listener_.get(), cpu_reader_mask);
@@ -935,9 +950,11 @@ __create_subscription(
       accel_rqos.representation().m_value.push_back(rep);
 
       info->accel_data_reader_listener_ =
-        std::make_shared<BufferChannelDataReaderListener>(info->subscription_event_);
+        std::make_shared<BufferChannelDataReaderListener>(
+        info->subscription_event_, info->buffer_state_);
       eprosima::fastdds::dds::StatusMask accel_reader_mask =
         eprosima::fastdds::dds::StatusMask::data_available();
+      accel_reader_mask |= eprosima::fastdds::dds::StatusMask::subscription_matched();
       accel_reader_mask |= eprosima::fastdds::dds::StatusMask::sample_lost();
       info->accel_data_reader_ = subscriber->create_datareader(
         info->accel_topic_, accel_rqos, info->accel_data_reader_listener_.get(),
