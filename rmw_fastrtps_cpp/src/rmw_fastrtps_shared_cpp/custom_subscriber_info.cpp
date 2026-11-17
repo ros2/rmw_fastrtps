@@ -14,6 +14,10 @@
 
 #include "rmw_fastrtps_shared_cpp/custom_subscriber_info.hpp"
 
+#include <algorithm>
+#include <cstdint>
+#include <limits>
+
 #include "fastdds/dds/core/status/DeadlineMissedStatus.hpp"
 #include "fastdds/dds/core/status/LivelinessChangedStatus.hpp"
 
@@ -21,6 +25,21 @@
 #include "types/event_types.hpp"
 
 #include "rcpputils/unique_lock.hpp"
+
+namespace
+{
+
+/// Add the samples lost by the main DataReader and by the buffer channel DataReader,
+/// capped at the maximum that a SampleLostStatus total count can hold.
+int32_t
+add_sample_lost_counts(uint32_t main_count, uint32_t buffer_channel_count)
+{
+  const uint64_t total = static_cast<uint64_t>(main_count) + buffer_channel_count;
+  return static_cast<int32_t>(
+    (std::min)(total, static_cast<uint64_t>((std::numeric_limits<int32_t>::max)())));
+}
+
+}  // namespace
 
 EventListenerInterface *
 CustomSubscriberInfo::get_listener() const
@@ -110,10 +129,14 @@ RMWSubscriptionEvent::RMWSubscriptionEvent(CustomSubscriberInfo * info)
   deadline_changed_(false),
   liveliness_changed_(false),
   sample_lost_changed_(false),
+  main_sample_lost_count_(0),
+  buffer_channel_sample_lost_count_(0),
   incompatible_qos_changed_(false),
   matched_changes_(false)
 {
 }
+
+RMWSubscriptionEvent::~RMWSubscriptionEvent() = default;
 
 eprosima::fastdds::dds::StatusCondition & RMWSubscriptionEvent::get_statuscondition() const
 {
@@ -191,7 +214,10 @@ bool RMWSubscriptionEvent::take_event(
           subscriber_info_->data_reader_->get_sample_lost_status(current);
           lock_mutex.lock();
           if (!sample_lost_changed_) {
+            main_sample_lost_count_ = current.total_count;
             sample_lost_status_ = current;
+            sample_lost_status_.total_count = add_sample_lost_counts(
+              main_sample_lost_count_, buffer_channel_sample_lost_count_);
           }
           sample_lost_changed_ = false;
         }
@@ -338,7 +364,10 @@ void RMWSubscriptionEvent::set_on_new_event_callback(
           subscriber_info_->data_reader_->get_sample_lost_status(current);
           lock_mutex.lock();
           if (!sample_lost_changed_) {
+            main_sample_lost_count_ = current.total_count;
             sample_lost_status_ = current;
+            sample_lost_status_.total_count = add_sample_lost_counts(
+              main_sample_lost_count_, buffer_channel_sample_lost_count_);
           }
 
           if (sample_lost_status_.total_count_change > 0) {
@@ -571,7 +600,26 @@ void RMWSubscriptionEvent::update_sample_lost(uint32_t total_count, uint32_t tot
   std::lock_guard<std::mutex> lock_mutex(on_new_event_m_);
 
   // Assign absolute values
-  sample_lost_status_.total_count = total_count;
+  main_sample_lost_count_ = total_count;
+  sample_lost_status_.total_count =
+    add_sample_lost_counts(main_sample_lost_count_, buffer_channel_sample_lost_count_);
+  // Accumulate deltas
+  sample_lost_status_.total_count_change += total_count_change;
+
+  sample_lost_changed_ = true;
+
+  trigger_event(RMW_EVENT_MESSAGE_LOST);
+}
+
+void RMWSubscriptionEvent::update_buffer_channel_sample_lost(
+  uint32_t total_count, uint32_t total_count_change)
+{
+  std::lock_guard<std::mutex> lock_mutex(on_new_event_m_);
+
+  // Assign absolute values
+  buffer_channel_sample_lost_count_ = total_count;
+  sample_lost_status_.total_count =
+    add_sample_lost_counts(main_sample_lost_count_, buffer_channel_sample_lost_count_);
   // Accumulate deltas
   sample_lost_status_.total_count_change += total_count_change;
 
