@@ -13,8 +13,10 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 
 #include "fastdds/dds/core/policy/QosPolicies.hpp"
 #include "fastdds/dds/domain/DomainParticipant.hpp"
@@ -56,6 +58,34 @@
 #include "tracetools/tracetools.h"
 
 #include "type_support_common.hpp"
+
+namespace
+{
+
+// Only BufferPublisherState::deadline_writer is reported, so that a publish to
+// several channels counts as one missed deadline.
+class BufferChannelDataWriterListener final : public eprosima::fastdds::dds::DataWriterListener
+{
+public:
+  BufferChannelDataWriterListener(
+    RMWPublisherEvent * event, std::shared_ptr<BufferPublisherState> state)
+  : event_(event), state_(std::move(state)) {}
+
+  void on_offered_deadline_missed(
+    eprosima::fastdds::dds::DataWriter * writer,
+    const eprosima::fastdds::dds::OfferedDeadlineMissedStatus & status) override
+  {
+    if (event_ != nullptr && writer == state_->deadline_writer.load()) {
+      event_->update_deadline(status.total_count, status.total_count_change);
+    }
+  }
+
+private:
+  RMWPublisherEvent * event_;
+  std::shared_ptr<BufferPublisherState> state_;
+};
+
+}  // namespace
 
 rmw_publisher_t *
 rmw_fastrtps_cpp::create_publisher(
@@ -411,9 +441,13 @@ rmw_fastrtps_cpp::create_publisher(
       ud_vec.insert(ud_vec.end(), main_gid_str.begin(), main_gid_str.end());
       cpu_writer_qos.user_data().setValue(ud_vec);
     }
+    info->buffer_data_writer_listener_ = std::make_shared<BufferChannelDataWriterListener>(
+      info->publisher_event_, info->buffer_state_);
     info->cpu_data_writer_ = publisher->create_datawriter(
-      info->cpu_topic_, cpu_writer_qos, nullptr);
+      info->cpu_topic_, cpu_writer_qos, info->buffer_data_writer_listener_.get(),
+      eprosima::fastdds::dds::StatusMask::offered_deadline_missed());
     if (!info->cpu_data_writer_) {
+      info->buffer_data_writer_listener_.reset();
       participant_info->delete_topic(info->cpu_topic_, nullptr);
       info->cpu_topic_ = nullptr;
       RMW_SET_ERROR_MSG("create_publisher() failed to create CPU channel DataWriter");
