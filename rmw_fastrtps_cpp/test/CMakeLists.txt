@@ -12,6 +12,17 @@ target_link_libraries(test_get_native_entities
   test_msgs::test_msgs
 )
 
+ament_add_gtest(test_take_serialized test_take_serialized.cpp)
+target_link_libraries(test_take_serialized
+  fastcdr
+  fastdds
+  osrf_testing_tools_cpp::memory_tools
+  rcutils::rcutils
+  rmw::rmw
+  rmw_fastrtps_cpp
+  test_msgs::test_msgs
+)
+
 ament_add_gtest(test_logging test_logging.cpp)
 target_link_libraries(test_logging
   fastdds
