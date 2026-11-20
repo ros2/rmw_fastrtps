@@ -17,11 +17,12 @@
 #include "gtest/gtest.h"
 
 #include "fastcdr/FastBuffer.h"
-#include "fastdds/rtps/common/SerializedPayload.hpp"
+#include "fastdds/rtps/common/SerializedPayload.h"
 
 #include "osrf_testing_tools_cpp/scope_exit.hpp"
 
 #include "rcutils/allocator.h"
+#include "rcutils/strdup.h"
 
 #include "rmw/error_handling.h"
 #include "rmw/rmw.h"
@@ -45,8 +46,8 @@ protected:
       rmw_ret_t ret = rmw_init_options_fini(&options);
       EXPECT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
     });
-    ret = rmw_enclave_options_copy("/", &allocator, &options.enclave);
-    ASSERT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
+    options.enclave = rcutils_strdup("/", allocator);
+    ASSERT_STREQ("/", options.enclave);
     options.discovery_options.automatic_discovery_range = RMW_AUTOMATIC_DISCOVERY_RANGE_LOCALHOST;
     ret = rmw_init(&options, &context);
     ASSERT_EQ(RMW_RET_OK, ret) << rmw_get_error_string().str;
@@ -83,16 +84,16 @@ TEST_F(TestTakeSerialized, cdr_buffer_takes_each_payload) {
 
   eprosima::fastcdr::FastBuffer buffer;
   rmw_fastrtps_shared_cpp::SerializedData data{
-    rmw_fastrtps_shared_cpp::FASTDDS_SERIALIZED_DATA_TYPE_CDR_BUFFER, &buffer, nullptr};
-  eprosima::fastdds::rtps::SerializedPayload_t skipped(8);
+    rmw_fastrtps_shared_cpp::FASTRTPS_SERIALIZED_DATA_TYPE_CDR_BUFFER, &buffer, nullptr};
+  eprosima::fastrtps::rtps::SerializedPayload_t skipped(8);
   skipped.length = skipped.max_size;
   std::memset(skipped.data, 'a', skipped.length);
-  ASSERT_TRUE(type_support.deserialize(skipped, &data));
+  ASSERT_TRUE(type_support.deserialize(&skipped, &data));
 
-  eprosima::fastdds::rtps::SerializedPayload_t next(16);
+  eprosima::fastrtps::rtps::SerializedPayload_t next(16);
   next.length = next.max_size;
   std::memset(next.data, 'b', next.length);
-  ASSERT_TRUE(type_support.deserialize(next, &data));
+  ASSERT_TRUE(type_support.deserialize(&next, &data));
   ASSERT_EQ(next.length, buffer.getBufferSize());
   EXPECT_EQ(0, std::memcmp(next.data, buffer.getBuffer(), next.length));
 }
