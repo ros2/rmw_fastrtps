@@ -203,6 +203,24 @@ rmw_fastrtps_shared_cpp::create_participant_with_buffer_discovery(
   factory->load_profiles();
   auto domainParticipantQos = factory->get_default_participant_qos();
 
+  // Set FASTDDS_BUILTIN_TRANSPORTS if not already set.
+  error_str = rcutils_get_env("FASTDDS_BUILTIN_TRANSPORTS", &env_value);
+  if (error_str != NULL) {
+    RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Error getting env var: %s\n", error_str);
+    return nullptr;
+  }
+  if (nullptr == env_value) {
+    // Set FASTDDS_BUILTIN_TRANSPORTS to "DEFAULT?sockets_size=2MB". This will:
+    // * Use the default transport (UDP) with a socket buffer size of 2MB.
+    // * Use the default shared memory transport with a segment size of 4MB.
+    // If the XML profile uses custom transports, it would have use_builtin_transports set to false,
+    // and this environment variable would be ignored.
+    if(!rcutils_set_env("FASTDDS_BUILTIN_TRANSPORTS", "DEFAULT?sockets_size=2MB")) {
+      RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Error setting env var: %s\n",
+        "FASTDDS_BUILTIN_TRANSPORTS");
+    }
+  }
+
   // Configure discovery
   switch (discovery_options->automatic_discovery_range) {
     case RMW_AUTOMATIC_DISCOVERY_RANGE_NOT_SET:
@@ -229,21 +247,31 @@ rmw_fastrtps_shared_cpp::create_participant_with_buffer_discovery(
         eprosima::fastdds::rtps::Locator_t default_unicast_locator;
         domainParticipantQos.wire_protocol()
         .builtin.metatrafficUnicastLocatorList.push_back(default_unicast_locator);
-        // Disable built-in transports, since we are configuring our own.
-        domainParticipantQos.transport().use_builtin_transports = false;
-        // Add a shared memory transport
-        auto shm_transport =
-          std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
-        domainParticipantQos.transport().user_transports.push_back(shm_transport);
-        // Add UDP transport with increased max initial peers.
-        // This controls the number of participants that can be discovered on a single host,
-        // which is roughly equivalent to the number of ROS 2 processes.
-        // If it's too small then we won't connect to all participants.
-        // If it's too large then we will send a lot of announcement traffic.
-        // The default number here is picked arbitrarily.
-        auto udp_transport = std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
-        udp_transport->maxInitialPeersRange = 32;
-        domainParticipantQos.transport().user_transports.push_back(udp_transport);
+        // Change the built-in transports unless already set by the user
+        if (domainParticipantQos.transport().use_builtin_transports) {
+          // These sizes emulate what we have above for FASTDDS_BUILTIN_TRANSPORTS
+          constexpr uint32_t udp_buffer_size = 2 * 1024 * 1024;
+          constexpr uint32_t shm_segment_size = 2 * udp_buffer_size;
+          // Disable built-in transports, since we are configuring our own.
+          domainParticipantQos.transport().use_builtin_transports = false;
+          // Add a shared memory transport
+          auto shm_transport =
+            std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
+          shm_transport->segment_size(shm_segment_size);
+          domainParticipantQos.transport().user_transports.push_back(shm_transport);
+          // Add UDP transport with increased max initial peers.
+          // This controls the number of participants that can be discovered on a single host,
+          // which is roughly equivalent to the number of ROS 2 processes.
+          // If it's too small then we won't connect to all participants.
+          // If it's too large then we will send a lot of announcement traffic.
+          // The default number here is picked arbitrarily.
+          auto udp_transport =
+            std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
+          udp_transport->maxInitialPeersRange = 32;
+          udp_transport->sendBufferSize = udp_buffer_size;
+          udp_transport->receiveBufferSize = udp_buffer_size;
+          domainParticipantQos.transport().user_transports.push_back(udp_transport);
+        }
         break;
       }
     case RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET:
