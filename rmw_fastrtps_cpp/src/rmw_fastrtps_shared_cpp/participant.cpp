@@ -216,7 +216,8 @@ rmw_fastrtps_shared_cpp::create_participant_with_buffer_discovery(
     // If the XML profile uses custom transports, it would have use_builtin_transports set to false,
     // and this environment variable would be ignored.
     if(!rcutils_set_env("FASTDDS_BUILTIN_TRANSPORTS", "DEFAULT?sockets_size=2MB")) {
-      RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Error setting env var: %s\n", "FASTDDS_BUILTIN_TRANSPORTS");
+      RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Error setting env var: %s\n",
+        "FASTDDS_BUILTIN_TRANSPORTS");
     }
   }
 
@@ -264,7 +265,8 @@ rmw_fastrtps_shared_cpp::create_participant_with_buffer_discovery(
           // If it's too small then we won't connect to all participants.
           // If it's too large then we will send a lot of announcement traffic.
           // The default number here is picked arbitrarily.
-          auto udp_transport = std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
+          auto udp_transport =
+            std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
           udp_transport->maxInitialPeersRange = 32;
           udp_transport->sendBufferSize = udp_buffer_size;
           udp_transport->receiveBufferSize = udp_buffer_size;
