@@ -199,6 +199,8 @@ bool TypeSupport::deserialize(
     case FASTDDS_SERIALIZED_DATA_TYPE_CDR_BUFFER:
       {
         auto buffer = static_cast<eprosima::fastcdr::FastBuffer *>(ser_data->data);
+        // reserve() only allocates into an empty buffer, so release one used by a previous take
+        *buffer = eprosima::fastcdr::FastBuffer();
         if (!buffer->reserve(payload.length)) {
           return false;
         }
