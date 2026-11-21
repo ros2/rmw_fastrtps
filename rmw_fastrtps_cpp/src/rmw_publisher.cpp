@@ -381,8 +381,8 @@ rmw_destroy_publisher(rmw_node_t * node, rmw_publisher_t * publisher)
       if (endpoint->data_writer) {
         info->dds_publisher_->delete_datawriter(endpoint->data_writer);
       }
-      if (endpoint->topic && endpoint->owns_topic) {
-        info->participant_->delete_topic(endpoint->topic);
+      if (endpoint->topic) {
+        info->participant_info_->delete_topic(endpoint->topic, nullptr);
       }
     }
 
