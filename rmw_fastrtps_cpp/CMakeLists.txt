@@ -151,6 +151,17 @@ if(BUILD_TESTING)
     ${test_msgs_TARGETS}
   )
 
+  ament_add_gtest(test_take_serialized test/test_take_serialized.cpp)
+  target_link_libraries(test_take_serialized
+    fastcdr
+    fastrtps
+    osrf_testing_tools_cpp::memory_tools
+    rcutils::rcutils
+    rmw::rmw
+    rmw_fastrtps_cpp
+    ${test_msgs_TARGETS}
+  )
+
   ament_add_gtest(test_logging test/test_logging.cpp)
   target_link_libraries(test_logging
     fastrtps
