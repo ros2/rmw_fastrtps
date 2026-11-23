@@ -209,7 +209,7 @@ rmw_fastrtps_shared_cpp::create_participant_with_buffer_discovery(
     RCUTILS_LOG_DEBUG_NAMED("rmw_fastrtps_shared_cpp", "Error getting env var: %s\n", error_str);
     return nullptr;
   }
-  if (nullptr == env_value) {
+  if ((nullptr == env_value) || (0 == strcmp(env_value, ""))) {
     // Set FASTDDS_BUILTIN_TRANSPORTS to "DEFAULT?sockets_size=2MB". This will:
     // * Use the default transport (UDP) with a socket buffer size of 2MB.
     // * Use the default shared memory transport with a segment size of 4MB.
