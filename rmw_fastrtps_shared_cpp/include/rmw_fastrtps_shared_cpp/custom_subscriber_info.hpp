@@ -147,6 +147,10 @@ public:
     const void * user_data,
     rmw_event_callback_t callback) override;
 
+  /// Enable the listener callback that raises the event guard of an event type.
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void enable_event(rmw_event_type_t event_type);
+
   // void
   // on_type_discovery(
   //   DomainParticipant *,
@@ -195,6 +199,9 @@ public:
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void update_data_available();
+
+  RMW_FASTRTPS_SHARED_CPP_PUBLIC
+  void update_data_available(eprosima::fastdds::dds::DataReader * reader);
 
   RMW_FASTRTPS_SHARED_CPP_PUBLIC
   void update_requested_deadline_missed(uint32_t total_count, uint32_t total_count_change);
