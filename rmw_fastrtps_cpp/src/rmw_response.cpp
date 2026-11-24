@@ -36,7 +36,7 @@ rmw_ret_t
 rmw_send_response(
   const rmw_service_t * service,
   rmw_request_id_t * request_header,
-  void * ros_response)
+  const void * ros_response)
 {
   return rmw_fastrtps_shared_cpp::__rmw_send_response(
     eprosima_fastrtps_identifier, service, request_header, ros_response);
