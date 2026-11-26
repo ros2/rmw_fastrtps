@@ -15,6 +15,7 @@
 #ifndef RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_
 #define RMW_FASTRTPS_SHARED_CPP__CUSTOM_SERVICE_INFO_HPP_
 
+#include <chrono>
 #include <condition_variable>
 #include <mutex>
 #include <unordered_set>
@@ -26,6 +27,7 @@
 #include "fastdds/dds/core/status/SubscriptionMatchedStatus.hpp"
 #include "fastdds/dds/publisher/DataWriter.hpp"
 #include "fastdds/dds/publisher/DataWriterListener.hpp"
+#include "fastdds/dds/publisher/qos/DataWriterQos.hpp"
 #include "fastdds/dds/subscriber/DataReader.hpp"
 #include "fastdds/dds/subscriber/DataReaderListener.hpp"
 #include "fastdds/dds/subscriber/SampleInfo.hpp"
@@ -54,6 +56,28 @@ enum class client_present_t
   GONE      // neither reader nor writer
 };
 
+namespace rmw_fastrtps_shared_cpp
+{
+// How long send_response() waits for the client's response reader to be matched, unless
+// the response writer's max_blocking_time has been changed from the Fast DDS default.
+constexpr std::chrono::seconds kDefaultResponseReaderWaitTimeout{10};
+
+// The client's reader is discovered independently of its request, and on a loaded system
+// that can take much longer than the default max_blocking_time (100 ms). A response sent
+// before the match is lost, so use a longer default. A max_blocking_time set by the user
+// (e.g. through an XML profile) is honored as is, so it can still be made shorter.
+inline std::chrono::nanoseconds
+response_reader_wait_timeout(const eprosima::fastdds::dds::DataWriterQos & writer_qos)
+{
+  const auto & max_blocking_time = writer_qos.reliability().max_blocking_time;
+  if (max_blocking_time == eprosima::fastdds::dds::ReliabilityQosPolicy().max_blocking_time) {
+    return kDefaultResponseReaderWaitTimeout;
+  }
+  return std::chrono::seconds(max_blocking_time.seconds) +
+         std::chrono::nanoseconds(max_blocking_time.nanosec);
+}
+}  // namespace rmw_fastrtps_shared_cpp
+
 typedef struct CustomServiceInfo
 {
   eprosima::fastdds::dds::TypeSupport request_type_support_{nullptr};
@@ -68,6 +92,10 @@ typedef struct CustomServiceInfo
 
   ServiceListener * listener_{nullptr};
   ServicePubListener * pub_listener_{nullptr};
+
+  // How long send_response() waits for the client's response reader to be matched
+  std::chrono::nanoseconds response_reader_wait_timeout_{
+    rmw_fastrtps_shared_cpp::kDefaultResponseReaderWaitTimeout};
 
   const char * typesupport_identifier_{nullptr};
 } CustomServiceInfo;
@@ -119,50 +147,44 @@ public:
   }
 
   template<class Rep, class Period>
-  bool
-  wait_for_subscription(
-    const eprosima::fastdds::rtps::GUID_t & guid,
-    const std::chrono::duration<Rep, Period> & rel_time)
-  {
-    auto guid_is_present = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_)->bool
-    {
-      return subscriptions_.find(guid) != subscriptions_.end();
-    };
-
-    std::unique_lock<std::mutex> lock(mutex_);
-    return cv_.wait_for(lock, rel_time, guid_is_present);
-  }
-
-  template<class Rep, class Period>
   client_present_t
   check_for_subscription(
     const eprosima::fastdds::rtps::GUID_t & guid,
     const std::chrono::duration<Rep, Period> & max_blocking_time)
   {
+    auto client_gone = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_)->bool
     {
-      std::lock_guard<std::mutex> lock(mutex_);
-      // Check if the guid is still in the map
-      if (clients_endpoints_.find(guid) == clients_endpoints_.end()) {
-        // Client is gone
-        return client_present_t::GONE;
-      }
-    }
-    // Wait for subscription
-    if (!wait_for_subscription(guid, max_blocking_time)) {
+      return clients_endpoints_.find(guid) == clients_endpoints_.end();
+    };
+    auto client_subscribed = [this, guid]() RCPPUTILS_TSA_REQUIRES(mutex_)->bool
+    {
+      return subscriptions_.find(guid) != subscriptions_.end();
+    };
+
+    // Wake up as soon as the reader is matched, or the client goes away
+    std::unique_lock<std::mutex> lock(mutex_);
+    if (!cv_.wait_for(
+        lock, max_blocking_time,
+        [&]() RCPPUTILS_TSA_REQUIRES(mutex_)->bool {return client_gone() || client_subscribed();}))
+    {
       return client_present_t::MAYBE;
     }
-    return client_present_t::YES;
+    return client_gone() ? client_present_t::GONE : client_present_t::YES;
   }
 
   void endpoint_erase_if_exists(
     const eprosima::fastdds::rtps::GUID_t & endpointGuid)
   {
-    std::lock_guard<std::mutex> lock(mutex_);
-    auto endpoint = clients_endpoints_.find(endpointGuid);
-    if (endpoint != clients_endpoints_.end()) {
-      clients_endpoints_.erase(endpoint->second);
-      clients_endpoints_.erase(endpointGuid);
+    {
+      std::lock_guard<std::mutex> lock(mutex_);
+      auto endpoint = clients_endpoints_.find(endpointGuid);
+      if (endpoint != clients_endpoints_.end()) {
+        clients_endpoints_.erase(endpoint->second);
+        clients_endpoints_.erase(endpointGuid);
+      }
     }
+    // Release a send_response() that is waiting on this client
+    cv_.notify_all();
   }
 
   void endpoint_add_reader_and_writer(

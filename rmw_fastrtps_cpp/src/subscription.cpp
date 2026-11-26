@@ -78,19 +78,31 @@ namespace
 class BufferChannelDataReaderListener final : public eprosima::fastdds::dds::DataReaderListener
 {
 public:
-  explicit BufferChannelDataReaderListener(RMWSubscriptionEvent * event)
-  : event_(event) {}
+  BufferChannelDataReaderListener(
+    RMWSubscriptionEvent * event,
+    std::shared_ptr<BufferSubscriptionState> state)
+  : event_(event), state_(std::move(state)) {}
 
   void on_data_available(eprosima::fastdds::dds::DataReader * reader) override
   {
-    auto unread = reader->get_unread_count();
     if (event_) {
-      event_->notify_buffer_data_available(unread > 0 ? static_cast<size_t>(unread) : 1);
+      event_->notify_buffer_data_available(reader);
+    }
+  }
+
+  void on_subscription_matched(
+    eprosima::fastdds::dds::DataReader *,
+    const eprosima::fastdds::dds::SubscriptionMatchedStatus & status) override
+  {
+    if (status.current_count_change < 0) {
+      std::lock_guard<std::mutex> lock(state_->mutex);
+      state_->main_publisher_gids.erase(status.last_publication_handle);
     }
   }
 
 private:
   RMWSubscriptionEvent * event_;
+  std::shared_ptr<BufferSubscriptionState> state_;
 };
 
 }  // namespace
@@ -767,10 +779,19 @@ __create_subscription(
           continue;
         }
         auto it = all_backends.find(name);
-        if (it != all_backends.end()) {
-          filtered_backends[it->first] = it->second;
-          my_backend_types.push_back(it->first);
+        if (it == all_backends.end()) {
+          std::string available;
+          for (const auto & [k, v] : all_backends) {
+            available += (available.empty() ? "" : ", ") + k;
+          }
+          RMW_SET_ERROR_MSG_WITH_FORMAT_STRING(
+            "Buffer backend '%s' specified in acceptable_buffer_backends "
+            "is not installed. Available backends: %s",
+            name.c_str(), available.c_str());
+          return nullptr;
         }
+        filtered_backends[it->first] = it->second;
+        my_backend_types.push_back(it->first);
       }
     }
 
@@ -881,10 +902,12 @@ __create_subscription(
 
       eprosima::fastdds::dds::DataReaderQos cpu_rqos = info->datareader_qos_;
       info->cpu_data_reader_listener_ =
-        std::make_shared<BufferChannelDataReaderListener>(info->subscription_event_);
+        std::make_shared<BufferChannelDataReaderListener>(
+        info->subscription_event_, info->buffer_state_);
       info->cpu_data_reader_ = subscriber->create_datareader(
         info->cpu_topic_, cpu_rqos, info->cpu_data_reader_listener_.get(),
-        eprosima::fastdds::dds::StatusMask::data_available());
+        eprosima::fastdds::dds::StatusMask::data_available() <<
+          eprosima::fastdds::dds::StatusMask::subscription_matched());
       if (!info->cpu_data_reader_) {
         info->cpu_data_reader_listener_.reset();
         participant_info->delete_topic(info->cpu_topic_, nullptr);
@@ -916,10 +939,12 @@ __create_subscription(
       accel_rqos.representation().m_value.push_back(rep);
 
       info->accel_data_reader_listener_ =
-        std::make_shared<BufferChannelDataReaderListener>(info->subscription_event_);
+        std::make_shared<BufferChannelDataReaderListener>(
+        info->subscription_event_, info->buffer_state_);
       info->accel_data_reader_ = subscriber->create_datareader(
         info->accel_topic_, accel_rqos, info->accel_data_reader_listener_.get(),
-        eprosima::fastdds::dds::StatusMask::data_available());
+        eprosima::fastdds::dds::StatusMask::data_available() <<
+          eprosima::fastdds::dds::StatusMask::subscription_matched());
       if (!info->accel_data_reader_) {
         info->accel_data_reader_listener_.reset();
         participant_info->delete_topic(info->accel_topic_, nullptr);

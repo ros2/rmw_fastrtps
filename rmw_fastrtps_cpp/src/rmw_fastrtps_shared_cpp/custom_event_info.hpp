@@ -57,6 +57,17 @@ public:
     const void * user_data,
     rmw_event_callback_t callback) = 0;
 
+  /// Make the event guard of an event type track its status.
+  /**
+   * rmw_wait() waits on the event guard only, never on the entity's StatusCondition, which
+   * is shared with the entity's data and other events.
+   * The guard is raised by the listener callbacks, so this enables the listener callback for
+   * the event status, and raises the guard if the status was already pending.
+   *
+   * \param event_type The event type to enable.
+   */
+  virtual void enable_event(rmw_event_type_t event_type) = 0;
+
   eprosima::fastdds::dds::GuardCondition & get_event_guard(rmw_event_type_t event_type)
   {
     return event_guard[event_type];
@@ -77,6 +88,10 @@ protected:
   const void * user_data_[RMW_EVENT_TYPE_MAX] = {nullptr};
 
   std::mutex on_new_event_m_;
+
+  // Serializes read-modify-write updates of the entity's listener status mask.
+  // Never taken by listener callbacks, so it may be held across set_listener().
+  std::mutex listener_mask_m_;
 
   bool inconsistent_topic_changed_
   RCPPUTILS_TSA_GUARDED_BY(on_new_event_m_) = false;

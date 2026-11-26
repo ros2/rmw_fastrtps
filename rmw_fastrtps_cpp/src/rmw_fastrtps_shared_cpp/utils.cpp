@@ -134,7 +134,8 @@ create_datareader(
   eprosima::fastdds::dds::Subscriber * subscriber,
   eprosima::fastdds::dds::TopicDescription * des_topic,
   CustomDataReaderListener * listener,
-  eprosima::fastdds::dds::DataReader ** data_reader
+  eprosima::fastdds::dds::DataReader ** data_reader,
+  const eprosima::fastdds::dds::StatusMask & listener_mask
 )
 {
   eprosima::fastdds::dds::DataReaderQos updated_qos = datareader_qos;
@@ -229,7 +230,7 @@ create_datareader(
     des_topic,
     updated_qos,
     listener,
-    eprosima::fastdds::dds::StatusMask::subscription_matched());
+    listener_mask);
   if (!(*data_reader) &&
     (RMW_UNIQUE_NETWORK_FLOW_ENDPOINTS_OPTIONALLY_REQUIRED ==
     subscription_options->require_unique_network_flow_endpoints))
@@ -238,7 +239,7 @@ create_datareader(
       des_topic,
       datareader_qos,
       listener,
-      eprosima::fastdds::dds::StatusMask::subscription_matched());
+      listener_mask);
   }
 
   if (!(*data_reader)) {

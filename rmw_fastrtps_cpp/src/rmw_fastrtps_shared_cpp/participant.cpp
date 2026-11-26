@@ -16,6 +16,7 @@
 #include <memory>
 #include <string>
 #include <unordered_map>
+#include <utility>
 #include <vector>
 
 #include "fastdds/dds/core/status/StatusMask.hpp"
@@ -56,7 +57,8 @@ __create_participant(
   bool leave_middleware_default_qos,
   publishing_mode_t publishing_mode,
   rmw_dds_common::Context * common_context,
-  size_t domain_id)
+  size_t domain_id,
+  BufferDiscoveryCallback buffer_discovery_callback)
 {
   CustomParticipantInfo * participant_info = nullptr;
 
@@ -88,6 +90,8 @@ __create_participant(
     RMW_SET_ERROR_MSG("__create_participant failed to allocate participant listener");
     return nullptr;
   }
+  participant_info->listener_->set_buffer_discovery_callback(
+    std::move(buffer_discovery_callback));
 
   /////
   // Create Participant
@@ -149,6 +153,20 @@ rmw_fastrtps_shared_cpp::create_participant(
   const rmw_discovery_options_t * discovery_options,
   const char * enclave,
   rmw_dds_common::Context * common_context)
+{
+  return create_participant_with_buffer_discovery(
+    identifier, domain_id, security_options, discovery_options, enclave, common_context, {});
+}
+
+CustomParticipantInfo *
+rmw_fastrtps_shared_cpp::create_participant_with_buffer_discovery(
+  const char * identifier,
+  size_t domain_id,
+  const rmw_security_options_t * security_options,
+  const rmw_discovery_options_t * discovery_options,
+  const char * enclave,
+  rmw_dds_common::Context * common_context,
+  BufferDiscoveryCallback buffer_discovery_callback)
 {
   RCUTILS_CAN_RETURN_WITH_ERROR_OF(nullptr);
 
@@ -415,7 +433,8 @@ rmw_fastrtps_shared_cpp::create_participant(
     leave_middleware_default_qos,
     publishing_mode,
     common_context,
-    domain_id);
+    domain_id,
+    std::move(buffer_discovery_callback));
 }
 
 rmw_ret_t

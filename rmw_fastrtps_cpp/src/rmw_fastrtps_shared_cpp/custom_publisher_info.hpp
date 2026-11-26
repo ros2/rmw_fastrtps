@@ -143,6 +143,10 @@ typedef struct CustomPublisherInfo : public CustomEventInfo
   eprosima::fastdds::dds::DataWriter * cpu_data_writer_{nullptr};
   eprosima::fastdds::dds::Topic * cpu_topic_{nullptr};
 
+  // Incremented before each publish, so wait_for_all_acked can tell whether a sample was
+  // published while it was waiting
+  std::atomic<uint64_t> publish_count_{0};
+
   // DDS objects needed to create dynamic DataWriters
   eprosima::fastdds::dds::DomainParticipant * participant_{nullptr};
   // Owner of the use-counted topics (shared with same-participant subscriptions).
@@ -173,6 +177,9 @@ public:
     rmw_event_type_t event_type,
     const void * user_data,
     rmw_event_callback_t callback) override;
+
+  RMW_FASTRTPS_CPP_PUBLIC
+  void enable_event(rmw_event_type_t event_type) override;
 
   RMW_FASTRTPS_CPP_PUBLIC
   void update_inconsistent_topic(uint32_t total_count, uint32_t total_count_change) override;
