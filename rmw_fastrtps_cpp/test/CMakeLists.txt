@@ -90,6 +90,16 @@ if(TARGET test_qos_profile_check_compatible)
   target_link_libraries(test_qos_profile_check_compatible ${PROJECT_NAME} rmw::rmw)
 endif()
 
+ament_add_gtest(test_localhost_transports rmw_fastrtps_shared_cpp/test_localhost_transports.cpp)
+if(TARGET test_localhost_transports)
+  target_link_libraries(test_localhost_transports
+    ${PROJECT_NAME}
+    fastdds
+    rmw::rmw
+    rmw_dds_common::rmw_dds_common_library
+  )
+endif()
+
 ament_add_gtest(test_logging_shared_cpp rmw_fastrtps_shared_cpp/test_logging.cpp)
 if(TARGET test_logging_shared_cpp)
   target_link_libraries(test_logging_shared_cpp ${PROJECT_NAME} rmw::rmw)

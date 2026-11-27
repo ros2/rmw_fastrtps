@@ -13,6 +13,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+#include <cstdint>
 #include <memory>
 #include <string>
 #include <unordered_map>
@@ -145,6 +146,58 @@ __create_participant(
   return participant_info;
 }
 
+// Smallest maxInitialPeersRange used by the UDPv4 transport with the LOCALHOST discovery range.
+// This controls the number of participants that can be discovered on a single host,
+// which is roughly equivalent to the number of ROS 2 processes.
+// If it's too small then we won't connect to all participants.
+// If it's too large then we will send a lot of announcement traffic.
+// The number here is picked arbitrarily, a larger one can be set with a UDPv4 transport
+// descriptor in the default XML profile.
+static constexpr uint32_t LOCALHOST_MIN_INITIAL_PEERS_RANGE = 32;
+
+// Private function to set up the transports for the LOCALHOST discovery range.
+// It needs a shared memory transport, and a UDPv4 transport with enough initial peers.
+// The ones already in the QoS, which come from the default XML profile, are kept instead of
+// adding a second transport of the same kind.
+static void
+__configure_localhost_transports(
+  eprosima::fastdds::dds::DomainParticipantQos & domainParticipantQos)
+{
+  using eprosima::fastdds::rtps::SharedMemTransportDescriptor;
+  using eprosima::fastdds::rtps::UDPv4TransportDescriptor;
+
+  auto & user_transports = domainParticipantQos.transport().user_transports;
+  bool has_shm_transport = false;
+  bool has_udp_transport = false;
+
+  for (auto & transport : user_transports) {
+    if (std::dynamic_pointer_cast<SharedMemTransportDescriptor>(transport)) {
+      has_shm_transport = true;
+      continue;
+    }
+    auto udp_transport = std::dynamic_pointer_cast<UDPv4TransportDescriptor>(transport);
+    if (!udp_transport) {
+      continue;
+    }
+    has_udp_transport = true;
+    if (udp_transport->maxInitialPeersRange < LOCALHOST_MIN_INITIAL_PEERS_RANGE) {
+      // The descriptor is shared with the loaded XML profiles, so change a copy of it.
+      auto updated_transport = std::make_shared<UDPv4TransportDescriptor>(*udp_transport);
+      updated_transport->maxInitialPeersRange = LOCALHOST_MIN_INITIAL_PEERS_RANGE;
+      transport = updated_transport;
+    }
+  }
+
+  if (!has_shm_transport) {
+    user_transports.push_back(std::make_shared<SharedMemTransportDescriptor>());
+  }
+  if (!has_udp_transport) {
+    auto udp_transport = std::make_shared<UDPv4TransportDescriptor>();
+    udp_transport->maxInitialPeersRange = LOCALHOST_MIN_INITIAL_PEERS_RANGE;
+    user_transports.push_back(udp_transport);
+  }
+}
+
 CustomParticipantInfo *
 rmw_fastrtps_shared_cpp::create_participant(
   const char * identifier,
@@ -231,19 +284,7 @@ rmw_fastrtps_shared_cpp::create_participant_with_buffer_discovery(
         .builtin.metatrafficUnicastLocatorList.push_back(default_unicast_locator);
         // Disable built-in transports, since we are configuring our own.
         domainParticipantQos.transport().use_builtin_transports = false;
-        // Add a shared memory transport
-        auto shm_transport =
-          std::make_shared<eprosima::fastdds::rtps::SharedMemTransportDescriptor>();
-        domainParticipantQos.transport().user_transports.push_back(shm_transport);
-        // Add UDP transport with increased max initial peers.
-        // This controls the number of participants that can be discovered on a single host,
-        // which is roughly equivalent to the number of ROS 2 processes.
-        // If it's too small then we won't connect to all participants.
-        // If it's too large then we will send a lot of announcement traffic.
-        // The default number here is picked arbitrarily.
-        auto udp_transport = std::make_shared<eprosima::fastdds::rtps::UDPv4TransportDescriptor>();
-        udp_transport->maxInitialPeersRange = 32;
-        domainParticipantQos.transport().user_transports.push_back(udp_transport);
+        __configure_localhost_transports(domainParticipantQos);
         break;
       }
     case RMW_AUTOMATIC_DISCOVERY_RANGE_SUBNET:
