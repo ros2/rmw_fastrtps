@@ -90,6 +90,15 @@ public:
     }
   }
 
+  void on_requested_deadline_missed(
+    eprosima::fastdds::dds::DataReader *,
+    const eprosima::fastdds::dds::RequestedDeadlineMissedStatus & status) override
+  {
+    if (event_) {
+      event_->update_requested_deadline_missed(status.total_count, status.total_count_change);
+    }
+  }
+
   void on_subscription_matched(
     eprosima::fastdds::dds::DataReader *,
     const eprosima::fastdds::dds::SubscriptionMatchedStatus & status) override
@@ -904,10 +913,12 @@ __create_subscription(
       info->cpu_data_reader_listener_ =
         std::make_shared<BufferChannelDataReaderListener>(
         info->subscription_event_, info->buffer_state_);
+      eprosima::fastdds::dds::StatusMask cpu_reader_mask =
+        eprosima::fastdds::dds::StatusMask::data_available();
+      cpu_reader_mask |= eprosima::fastdds::dds::StatusMask::subscription_matched();
+      cpu_reader_mask |= eprosima::fastdds::dds::StatusMask::requested_deadline_missed();
       info->cpu_data_reader_ = subscriber->create_datareader(
-        info->cpu_topic_, cpu_rqos, info->cpu_data_reader_listener_.get(),
-        eprosima::fastdds::dds::StatusMask::data_available() <<
-          eprosima::fastdds::dds::StatusMask::subscription_matched());
+        info->cpu_topic_, cpu_rqos, info->cpu_data_reader_listener_.get(), cpu_reader_mask);
       if (!info->cpu_data_reader_) {
         info->cpu_data_reader_listener_.reset();
         participant_info->delete_topic(info->cpu_topic_, nullptr);
@@ -941,10 +952,13 @@ __create_subscription(
       info->accel_data_reader_listener_ =
         std::make_shared<BufferChannelDataReaderListener>(
         info->subscription_event_, info->buffer_state_);
+      eprosima::fastdds::dds::StatusMask accel_reader_mask =
+        eprosima::fastdds::dds::StatusMask::data_available();
+      accel_reader_mask |= eprosima::fastdds::dds::StatusMask::subscription_matched();
+      accel_reader_mask |= eprosima::fastdds::dds::StatusMask::requested_deadline_missed();
       info->accel_data_reader_ = subscriber->create_datareader(
         info->accel_topic_, accel_rqos, info->accel_data_reader_listener_.get(),
-        eprosima::fastdds::dds::StatusMask::data_available() <<
-          eprosima::fastdds::dds::StatusMask::subscription_matched());
+        accel_reader_mask);
       if (!info->accel_data_reader_) {
         info->accel_data_reader_listener_.reset();
         dds_participant->delete_topic(info->accel_topic_);
