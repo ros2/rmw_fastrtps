@@ -266,6 +266,40 @@ Full configuration of participant discovery can also be set with XML files; howe
 Set `ROS_AUTOMATIC_DISCOVERY_RANGE` to the value `SYSTEM_DEFAULT` to disable both ROS specific environment variables.
 See more details for [Improved Dynamic Discovery](https://docs.ros.org/en/rolling/Tutorials/Advanced/Improved-Dynamic-Discovery.html).
 
+#### Number of participants discovered with the `LOCALHOST` range
+
+With `ROS_AUTOMATIC_DISCOVERY_RANGE=LOCALHOST`, participants announce themselves with unicast messages to the participant ports of the local host.
+The number of ports is the `maxInitialPeersRange` of the UDPv4 transport, which `rmw_fastrtps` sets to 32.
+With more than 32 participants on a host (roughly one per ROS 2 process), the ones beyond the 32nd do not discover each other.
+
+To discover more participants, define a UDPv4 transport with a larger `maxInitialPeersRange` in the default participant profile of the XML file:
+
+```XML
+<?xml version="1.0" encoding="UTF-8"?>
+<dds xmlns="http://www.eprosima.com">
+  <profiles>
+    <transport_descriptors>
+      <transport_descriptor>
+        <transport_id>udp_localhost_peers</transport_id>
+        <type>UDPv4</type>
+        <maxInitialPeersRange>64</maxInitialPeersRange>
+      </transport_descriptor>
+    </transport_descriptors>
+    <participant profile_name="localhost_peers" is_default_profile="true">
+      <rtps>
+        <userTransports>
+          <transport_id>udp_localhost_peers</transport_id>
+        </userTransports>
+      </rtps>
+    </participant>
+  </profiles>
+</dds>
+```
+
+With the `LOCALHOST` range, `rmw_fastrtps` uses the UDPv4 and shared memory transports of the default participant profile, and only adds the ones that the profile does not have.
+A `maxInitialPeersRange` lower than 32 is raised to 32.
+A larger value means more announcement traffic, as every participant sends its announcements to that number of ports.
+
 ### Enable Zero Copy Data Sharing
 
 ROS 2 provides [Loaned Messages](https://design.ros2.org/articles/zero_copy.html) that allow the user application to loan the messages memory from the RMW implementation to eliminate the data copy between the ROS 2 application and the RMW implementation.
